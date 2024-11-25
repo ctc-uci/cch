@@ -1,11 +1,18 @@
-CREATE TYPE rating AS ENUM ("Excellent", "Good", "Fair", "Unsatisfactory");
-CREATE TYPE rating_help as ENUM("very helpful", "helpful", "not very helpful", "not helpful at all");
+CREATE TYPE rating AS ENUM ('Excellent', 'Good', 'Fair', 'Unsatisfactory');
+CREATE TYPE rating_help as ENUM('very helpful', 'helpful', 'not very helpful', 'not helpful at all');
+CREATE TABLE case_manager(
+    id integer PRIMARY KEY
+);
+
+CREATE TABLE locations(
+    id integer PRIMARY KEY
+);
 
 CREATE TABLE exit_survey (
-    id integer PRIMARY KEY,
-    cm_id integer NOT NULL,
+    id INT PRIMARY KEY,
+    cm_id INT NOT NULL,
     name VARCHAR(32) NOT NULL,
-    site VARCHAR(32) NOT NULL,
+    site INT NOT NULL,
     program_date_completion DATE NOT NULL,
     cch_rating rating NOT NULL,
     cch_like_most VARCHAR(2048) NOT NULL,
@@ -18,7 +25,7 @@ CREATE TABLE exit_survey (
     experience_takeaway VARCHAR(2048) NOT NULL,
     experience_accomplished VARCHAR(2048) NOT NULL,
     experience_extra_notes VARCHAR(2048) NOT NULL,
-
+	
     FOREIGN KEY(cm_id) REFERENCES case_manager(id),
     FOREIGN KEY(site) REFERENCES locations(id)
 );
