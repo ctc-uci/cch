@@ -1,5 +1,5 @@
 
-DROP TABLE IF EXISTS sample cm_monthly_stats;
+DROP TABLE IF EXISTS cm_monthly_stats;
 
 CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	id SERIAL PRIMARY KEY,
