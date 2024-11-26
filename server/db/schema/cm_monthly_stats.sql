@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	gas_cards_values INT,
 	phone_contacts INT,
 	inperson_contacts INT,
-	phone_contacts INT,
 	email_contacts INT,
 	interviews_scheduled INT,
 	interviews_conducted INT,
