@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	birthday_gift_card_values INT NOT NULL,
 	food_card_values INT NOT NULL,
 	bus_passes INT NOT NULL,
-	gas_cards_values INT NOT NULL,
+	gas_cards_value INT NOT NULL,
 	phone_contacts INT NOT NULL,
 	inperson_contacts INT NOT NULL,
 	email_contacts INT NOT NULL,
