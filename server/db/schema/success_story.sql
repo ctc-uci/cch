@@ -1,5 +1,7 @@
-CREATE TABLE IF NOT EXISTS public.success_story (
-    id INT PRIMARY KEY,
+DROP TABLE IF EXISTS success_story CASCADE;
+
+CREATE TABLE IF NOT EXISTS success_story (
+    id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
     client_id INT NOT NULL,
     cm_id INT NOT NULL,
@@ -10,6 +12,6 @@ CREATE TABLE IF NOT EXISTS public.success_story (
     quote VARCHAR(2048) NOT NULL,
     consent BOOLEAN NOT NULL,
 
-    FOREIGN KEY(client_id) REFERENCES public.clients(id),
-    FOREIGN KEY(cm_id) REFERENCES public.case_managers(id)
+    FOREIGN KEY(client_id) REFERENCES clients(id),
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );
