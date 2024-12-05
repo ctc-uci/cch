@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS case_managers;
 CREATE TYPE role AS ENUM ('superadmin', 'admin', 'case manager', 'intern');
 
 CREATE TABLE case_managers(
-	id VARCHAR(256) NOT NULL PRIMARY KEY,
+	id SERIAL NOT NULL PRIMARY KEY,
 	role role NOT NULL,
 	first_name VARCHAR(16) NOT NULL,
 	last_name VARCHAR(16) NOT NULL,

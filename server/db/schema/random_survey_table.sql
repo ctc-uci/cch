@@ -1,5 +1,5 @@
 CREATE TABLE random_survey_table (
-    id integer PRIMARY KEY NOT NULL,    
+    id SERIAL PRIMARY KEY NOT NULL,    
     date DATE NOT NULL,
     cch_qos integer NOT NULL,
     cm_qos integer NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE random_survey_table (
     recommend boolean NOT NULL,
     recommend_reasoning varchar(2048) NOT NULL,
     make_cch_more_helpful varchar(2048) NOT NULL,
-    cm_id varchar(256) NOT NULL,
+    cm_id INT NOT NULL,
     cm_feedback varchar(2048) NOT NULL,
     other_comments varchar(2048),
 

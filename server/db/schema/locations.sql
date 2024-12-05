@@ -1,8 +1,8 @@
 DROP TABLE IF EXISTS locations;
 
 CREATE TABLE locations(
-	id INT NOT NULL PRIMARY KEY,
-	cm_id VARCHAR(256) NOT NULL,
+	id SERIAL NOT NULL PRIMARY KEY,
+	cm_id INT NOT NULL,
 	name VARCHAR(64) NOT NULL,
 	date date NOT NULL,
 	caloptima_funded BOOLEAN NOT NULL,
