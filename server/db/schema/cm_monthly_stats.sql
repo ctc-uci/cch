@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS cm_monthly_stats;
 CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	id SERIAL PRIMARY KEY,
 	date DATE NOT NULL,
-	cm_id VARCHAR(256) NOT NULL,
+	cm_id INT NOT NULL,
 	babies_born INT NOT NULL,
 	enrolled_in_school INT NOT NULL,
 	earned_degree INT NOT NULL,
