@@ -20,6 +20,6 @@ CREATE TABLE exit_survey (
     experience_accomplished VARCHAR(2048) NOT NULL,
     experience_extra_notes VARCHAR(2048) NOT NULL,
 	
-    FOREIGN KEY(cm_id) REFERENCES case_manager(id),
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id),
     FOREIGN KEY("site") REFERENCES locations(id)
 );
