@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS cm_monthly_stats;
 CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	id SERIAL PRIMARY KEY,
 	date DATE NOT NULL,
-	cm_id VARCHAR(256) REFERENCES case_managers(id) NOT NULL,
+	cm_id VARCHAR(256) NOT NULL,
 	babies_born INT NOT NULL,
 	enrolled_in_school INT NOT NULL,
 	earned_degree INT NOT NULL,
@@ -24,5 +24,7 @@ CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	positive_tests INT NOT NULL,
 	no_call_no_shows INT NOT NULL,
 	other INT NOT NULL
+
+	FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );
 
