@@ -1,12 +1,5 @@
 CREATE TYPE rating AS ENUM ('Excellent', 'Good', 'Fair', 'Unsatisfactory');
 CREATE TYPE rating_help as ENUM('very helpful', 'helpful', 'not very helpful', 'not helpful at all');
-CREATE TABLE case_manager(
-    id integer PRIMARY KEY
-);
-
-CREATE TABLE locations(
-    id integer PRIMARY KEY
-);
 
 CREATE TABLE exit_survey (
     id INT PRIMARY KEY,
