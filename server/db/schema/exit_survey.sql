@@ -4,7 +4,7 @@ CREATE TYPE rating AS ENUM ('Excellent', 'Good', 'Fair', 'Unsatisfactory');
 CREATE TYPE rating_help as ENUM('very helpful', 'helpful', 'not very helpful', 'not helpful at all');
 
 CREATE TABLE exit_survey (
-    id INT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     cm_id INT NOT NULL,
     client_id INT NOT NULL,
     site INT NOT NULL,
