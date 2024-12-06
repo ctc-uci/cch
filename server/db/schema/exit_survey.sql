@@ -1,10 +1,12 @@
+DROP TABLE IF EXISTS exit_survey CASCADE;
+
 CREATE TYPE rating AS ENUM ('Excellent', 'Good', 'Fair', 'Unsatisfactory');
 CREATE TYPE rating_help as ENUM('very helpful', 'helpful', 'not very helpful', 'not helpful at all');
 
 CREATE TABLE exit_survey (
     id INT PRIMARY KEY,
     cm_id INT NOT NULL,
-    name VARCHAR(32) NOT NULL,
+    client_id INT NOT NULL,
     site INT NOT NULL,
     program_date_completion DATE NOT NULL,
     cch_rating rating NOT NULL,
@@ -19,6 +21,7 @@ CREATE TABLE exit_survey (
     experience_accomplished VARCHAR(2048) NOT NULL,
     experience_extra_notes VARCHAR(2048) NOT NULL,
 	
-    FOREIGN KEY(cm_id) REFERENCES case_manager(id),
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id),
+    FOREIGN KEY(client_id) REFERENCES clients(id),
     FOREIGN KEY(site) REFERENCES locations(id)
 );
