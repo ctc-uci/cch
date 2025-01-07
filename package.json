@@ -40,5 +40,9 @@
   "packageManager": "yarn@1.22.22",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
   }
 }
