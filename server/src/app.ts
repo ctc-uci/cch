@@ -48,4 +48,3 @@ app.use("/units", unitsRouter);
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
 });
-
