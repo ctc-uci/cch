@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import schedule from "node-schedule"; // TODO: Keep only if scheduling cronjobs
 
-import { sampleRouter } from "../routes/sample"; // TODO: delete sample router
+import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample router
 import { usersRouter } from "../routes/users";
 import { verifyToken } from "./middleware";
 
@@ -36,7 +36,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(verifyToken);
 }
 
-app.use("/", sampleRouter); // TODO: delete sample endpoint
+app.use("/exitSurvey", exitSurveyRouter); 
 app.use("/users", usersRouter);
 
 app.listen(SERVER_PORT, () => {
