@@ -2,8 +2,6 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
-// import { admin } from "../config/firebase";
-// import { verifyRole } from "../src/middleware";
 
 export const caseManagerMonthlyStatsRouter = Router();
 
@@ -16,14 +14,14 @@ caseManagerMonthlyStatsRouter.get("/", async (req, res) => {
     const conditions: string[] = [];
     const params: number[] = [];
 
-    if (req.query.startMonth) {
+    if (startMonth) {
       conditions.push(`EXTRACT(MONTH FROM date) >= $${conditions.length + 1}`);
-      params.push(parseInt(req.query.startMonth as string, 10));
+      params.push(parseInt(startMonth as string, 10));
     }
 
-    if (req.query.endMonth) {
+    if (endMonth) {
       conditions.push(`EXTRACT(MONTH FROM date) <= $${conditions.length + 1}`);
-      params.push(parseInt(req.query.endMonth as string, 10));
+      params.push(parseInt(endMonth as string, 10));
     }
 
     if (conditions.length > 0) {
