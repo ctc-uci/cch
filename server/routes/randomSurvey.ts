@@ -16,20 +16,6 @@ randomSurveyRouter.get("/", async (req, res) => {
   }
 });
 
-// // Get all randomSurveys associated with given client id
-// randomSurveyRouter.get("/:clientId", async (req, res) => {
-//   try {
-//     const { clientId } = req.params;
-//     const data = await db.query(
-//       `SELECT * FROM random_survey_table WHERE cm_id = $1`,
-//       [clientId]
-//     );
-//     res.status(200).json(keysToCamel(data));
-//   } catch (err) {
-//     res.status(500).send(err.message);
-//   }
-// });
-
 // Create new randomSurvey
 randomSurveyRouter.post("/", async (req, res) => {
   try {
@@ -138,26 +124,26 @@ randomSurveyRouter.put("/:id", async (req, res) => {
       `
         UPDATE random_survey_table
         SET
-            date = $1,
-            cch_qos = $2,
-            cm_qos = $3,
-            courteous = $4,
-            informative = $5,
-            prompt_and_helpful = $6,
-            entry_quality = $7,
-            unit_quality = $8,
-            clean = $9,
-            overall_experience = $10,
-            case_meeting_frequency = $11,
-            lifeskills = $12,
-            recommend = $13,
-            recommend_reasoning = $14,
-            make_cch_more_helpful = $15,
-            cm_id = $16,
-            cm_feedback = $17,
-            other_comments = $18
+            date = COALESCE($1, date),
+            cch_qos = COALESCE($2, cch_qos),
+            cm_qos = COALESCE($3, cm_qos),
+            courteous = COALESCE($4, courteous),
+            informative = COALESCE($5, informative),
+            prompt_and_helpful = COALESCE($6, prompt_and_helpful),
+            entry_quality = COALESCE($7, entry_quality),
+            unit_quality = COALESCE($8, unit_quality),
+            clean = COALESCE($9, clean),
+            overall_experience = COALESCE($10, overall_experience),
+            case_meeting_frequency = COALESCE($11, case_meeting_frequency),
+            lifeskills = COALESCE($12, lifeskills),
+            recommend = COALESCE($13, recommend),
+            recommend_reasoning = COALESCE($14, recommend_reasoning),
+            make_cch_more_helpful = COALESCE($15, make_cch_more_helpful),
+            cm_id = COALESCE($16, cm_id),
+            cm_feedback = COALESCE($17, cm_feedback),
+            other_comments = COALESCE($18, other_comments)
         WHERE id = $19;
-        `,
+      `,
       [
         date,
         cch_qos,
@@ -180,11 +166,13 @@ randomSurveyRouter.put("/:id", async (req, res) => {
         id,
       ]
     );
+
     res.status(200).json({ id: id });
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
+
 
 // Delete randomSurvey
 randomSurveyRouter.delete("/:id", async (req, res) => {
