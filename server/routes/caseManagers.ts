@@ -34,7 +34,6 @@ caseManagersRouter.get("/:id", async (req, res) => {
 caseManagersRouter.post("/", async (req, res) => {
   try {
     const { role, firstName, lastName, phoneNumber, email } = req.body;
-    console.log(req.body);
     const data = await db.query(
       `INSERT INTO case_managers (role, first_name, last_name, phone_number, email) VALUES ($1, $2, $3, $4, $5) RETURNING id;`,
       [role, firstName, lastName, phoneNumber, email]
@@ -52,7 +51,14 @@ caseManagersRouter.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { role, firstName, lastName, phoneNumber, email } = req.body;
     const data = await db.query(
-      `UPDATE case_managers SET role = $1, first_name = $2, last_name = $3, phone_number = $4, email = $5 WHERE id = $6 RETURNING id`,
+      `UPDATE case_managers 
+      SET role = COALESCE($1, role), 
+      first_name = COALESCE($2, first_name), 
+      last_name = COALESCE($3, last_name),
+      phone_number = COALESCE($4, phone_number), 
+      email = COALESCE ($5, email) 
+      WHERE id = $6 
+      RETURNING id`,
       [role, firstName, lastName, phoneNumber, email, id]
     );
 

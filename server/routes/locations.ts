@@ -49,7 +49,12 @@ locationsRouter.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { cmId, name, date, caloptimaFunded } = req.body;
     const data = await db.query(
-      `UPDATE locations SET cm_id = $1, name = $2, date = $3, caloptima_funded = $4 WHERE id = $5 RETURNING id`,
+      `UPDATE locations 
+      SET cm_id = COALESCE($1, cm_id), 
+      name = COALESCE($2, name), 
+      date = COALESCE($3, date), 
+      caloptima_funded = COALESCE($4, caloptima_funded) 
+      WHERE id = $5 RETURNING id`,
       [cmId, name, date, caloptimaFunded, id]
     );
 

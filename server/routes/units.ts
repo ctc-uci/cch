@@ -51,7 +51,12 @@ unitsRouter.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { locationId, name, type } = req.body;
     const data = await db.query(
-      `UPDATE units SET location_id = $1, name = $2, type = $3 WHERE id = $4 RETURNING id`,
+      `UPDATE units
+       SET location_id = COALESCE($1, location_id),
+       name = COALESCE($2, name),
+       type = COALESCE($3, type)
+       WHERE id = $4
+       RETURNING id`,
       [locationId, name, type, id]
     );
 
