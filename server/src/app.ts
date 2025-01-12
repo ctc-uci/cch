@@ -9,6 +9,8 @@ import { sampleRouter } from "../routes/sample"; // TODO: delete sample router
 import { usersRouter } from "../routes/users";
 import { clientsRouter } from '../routes/clients'
 import { verifyToken } from "./middleware";
+import { donationRouter } from "../routes/foodDonations";
+import { frontDeskRouter } from "../routes/frontDesk";
 
 dotenv.config();
 
@@ -40,6 +42,8 @@ if (process.env.NODE_ENV === "production") {
 
 app.use("/", sampleRouter); // TODO: delete sample endpoint
 app.use("/users", usersRouter);
+app.use("/foodDonations",donationRouter);
+app.use("/frontDesk", frontDeskRouter);
 app.use('/clients', clientsRouter)
 app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);
 
