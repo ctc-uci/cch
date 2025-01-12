@@ -4,12 +4,17 @@ import dotenv from "dotenv";
 import express from "express";
 import schedule from "node-schedule"; // TODO: Keep only if scheduling cronjobs
 
+import { randomSurveyRouter } from "../routes/randomSurvey";
+import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
 import { sampleRouter } from "../routes/sample"; // TODO: delete sample router
 import { usersRouter } from "../routes/users";
 import { caseManagersRouter } from "../routes/caseManagers";
 import { locationsRouter } from "../routes/locations"
 import { unitsRouter } from "../routes/units"
+import { clientsRouter } from '../routes/clients'
 import { verifyToken } from "./middleware";
+import { donationRouter } from "../routes/foodDonations";
+import { frontDeskRouter } from "../routes/frontDesk";
 
 dotenv.config();
 
@@ -44,6 +49,11 @@ app.use("/users", usersRouter);
 app.use("/caseManagers", caseManagersRouter);
 app.use("/locations", locationsRouter);
 app.use("/units", unitsRouter);
+app.use("/randomSurvey", randomSurveyRouter);
+app.use("/foodDonations",donationRouter);
+app.use("/frontDesk", frontDeskRouter);
+app.use('/clients', clientsRouter)
+app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
