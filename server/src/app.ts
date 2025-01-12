@@ -8,6 +8,9 @@ import { randomSurveyRouter } from "../routes/randomSurvey";
 import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
 import { sampleRouter } from "../routes/sample"; // TODO: delete sample router
 import { usersRouter } from "../routes/users";
+import { caseManagersRouter } from "../routes/caseManagers";
+import { locationsRouter } from "../routes/locations"
+import { unitsRouter } from "../routes/units"
 import { clientsRouter } from '../routes/clients'
 import { verifyToken } from "./middleware";
 import { donationRouter } from "../routes/foodDonations";
@@ -43,6 +46,9 @@ if (process.env.NODE_ENV === "production") {
 
 app.use("/", sampleRouter); // TODO: delete sample endpoint
 app.use("/users", usersRouter);
+app.use("/caseManagers", caseManagersRouter);
+app.use("/locations", locationsRouter);
+app.use("/units", unitsRouter);
 app.use("/randomSurvey", randomSurveyRouter);
 app.use("/foodDonations",donationRouter);
 app.use("/frontDesk", frontDeskRouter);
