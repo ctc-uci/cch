@@ -8,6 +8,8 @@ import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample 
 import { randomSurveyRouter } from "../routes/randomSurvey";
 import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
 import { usersRouter } from "../routes/users";
+import { childRouter } from "../routes/children";
+import { successRouter } from "../routes/successStory";
 import { caseManagersRouter } from "../routes/caseManagers";
 import { locationsRouter } from "../routes/locations"
 import { unitsRouter } from "../routes/units"
@@ -46,6 +48,8 @@ if (process.env.NODE_ENV === "production") {
 
 app.use("/exitSurvey", exitSurveyRouter);
 app.use("/users", usersRouter);
+app.use("/children", childRouter);
+app.use("/successStory", successRouter);
 app.use("/caseManagers", caseManagersRouter);
 app.use("/locations", locationsRouter);
 app.use("/units", unitsRouter);
