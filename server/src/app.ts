@@ -4,9 +4,9 @@ import dotenv from "dotenv";
 import express from "express";
 import schedule from "node-schedule"; // TODO: Keep only if scheduling cronjobs
 
+import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample router
 import { randomSurveyRouter } from "../routes/randomSurvey";
 import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
-import { sampleRouter } from "../routes/sample"; // TODO: delete sample router
 import { usersRouter } from "../routes/users";
 import { caseManagersRouter } from "../routes/caseManagers";
 import { locationsRouter } from "../routes/locations"
@@ -44,7 +44,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(verifyToken);
 }
 
-app.use("/", sampleRouter); // TODO: delete sample endpoint
+app.use("/exitSurvey", exitSurveyRouter);
 app.use("/users", usersRouter);
 app.use("/caseManagers", caseManagersRouter);
 app.use("/locations", locationsRouter);
