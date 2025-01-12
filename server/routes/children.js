@@ -42,10 +42,10 @@ childRouter.post("/children", async (req, res) => {
 });
 
 
-childRouter.put("/children/id", async (req, res) => {
+childRouter.put("/children/:id", async (req, res) => {
     try {
+      const { id } = req.params;
       const {
-        id,
         first_name,
         last_name,
         parent_id,
@@ -55,13 +55,14 @@ childRouter.put("/children/id", async (req, res) => {
   
       const user = await db.query(
         `UPDATE "children" SET
-        first_name = $1,
-        last_name = $2,
-        parent_id = $3,
-        date_of_birth = $4,
-        reunified = $5
+        first_name = COALESCE($1, first_name),
+        last_name = COALESCE($2, last_name),
+        parent_id = COALESCE($3, parent_id),
+        date_of_birth = COALESCE($4, date_of_birth),
+        reunified = COALESCE($5, reunified)
         WHERE id = $6
-        RETURNING id;`,
+        RETURNING id;
+        `,
         [ 
         first_name,
         last_name,

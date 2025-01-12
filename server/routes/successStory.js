@@ -47,8 +47,8 @@ successRouter.post("/successStory", async (req, res) => {
 
 successRouter.put("/successStory/:id", async (req, res) => {
     try {
+      const { id } = req.params;
       const {
-        id,
         date,
         client_id,
         cm_id,
@@ -62,17 +62,18 @@ successRouter.put("/successStory/:id", async (req, res) => {
   
       const user = await db.query(
         `UPDATE "success_story" SET
-        date = $1,
-        client_id = $2,
-        cm_id = $3,
-        previous_situation = $4,
-        cch_impact = $5,
-        where_now = $6,
-        tell_donors = $7,
-        quote = $8,
-        consent = $9
+        date = COALESCE($1, date),
+        client_id = COALESCE($2, client_id),
+        cm_id = COALESCE($3, cm_id),
+        previous_situation = COALESCE($4, previous_situation),
+        cch_impact = COALESCE($5, cch_impact),
+        where_now = COALESCE($6, where_now),
+        tell_donors = COALESCE($7, tell_donors),
+        quote = COALESCE($8, quote),
+        consent = COALESCE($9, consent)
         WHERE id = $10
-        RETURNING id;`,
+        RETURNING id;
+        `,
         [date, client_id, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent, id]
       );
   
