@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS cm_monthly_stats;
 
 CREATE TABLE IF NOT EXISTS cm_monthly_stats(
 	id SERIAL PRIMARY KEY,
-	date DATE NOT NULL,
+	date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
 	cm_id INT NOT NULL,
 	babies_born INT NOT NULL,
 	enrolled_in_school INT NOT NULL,

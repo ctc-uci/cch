@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS front_desk_monthly CASCADE;
 
 CREATE TABLE front_desk_monthly(
     id SERIAL PRIMARY KEY NOT NULL,
-    "month" varchar(256) NOT NULL,
+    date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     total_office_visits int NOT NULL,
     total_calls int NOT NULL,
     total_unduplicated_calles int NOT NULL,
