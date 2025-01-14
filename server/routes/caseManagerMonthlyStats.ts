@@ -39,7 +39,6 @@ caseManagerMonthlyStatsRouter.get("/", async (req, res) => {
 caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
   try {
     const {
-      date,
       cm_id,
       babies_born,
       enrolled_in_school,
@@ -64,7 +63,6 @@ caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
 
     const query = `
       INSERT INTO cm_monthly_stats (
-        date,
         cm_id,
         babies_born,
         enrolled_in_school,
@@ -87,13 +85,12 @@ caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
         other
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
       )
       RETURNING id;
     `;
 
     const data = await db.query(query, [
-      date,
       cm_id,
       babies_born,
       enrolled_in_school,
@@ -129,7 +126,6 @@ caseManagerMonthlyStatsRouter.put("/:id", async (req, res) => {
     const ID = req.params.id;
 
     const {
-      date,
       cm_id,
       babies_born,
       enrolled_in_school,
@@ -155,7 +151,6 @@ caseManagerMonthlyStatsRouter.put("/:id", async (req, res) => {
     const query = `
       UPDATE cm_monthly_stats
       SET
-        date = $1,
         cm_id = $2,
         babies_born = $3,
         enrolled_in_school = $4,
@@ -176,12 +171,12 @@ caseManagerMonthlyStatsRouter.put("/:id", async (req, res) => {
         positive_tests = $19,
         no_call_no_shows = $20,
         other = $21
-      WHERE id = $22
+      WHERE id = $1
       RETURNING id;
     `;
 
     const data = await db.query(query, [
-      date,
+      ID,
       cm_id,
       babies_born,
       enrolled_in_school,
@@ -202,7 +197,6 @@ caseManagerMonthlyStatsRouter.put("/:id", async (req, res) => {
       positive_tests,
       no_call_no_shows,
       other,
-      ID,
     ]);
 
     if (!data.length) {

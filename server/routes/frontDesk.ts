@@ -37,10 +37,10 @@ frontDeskRouter.get("/", async (req, res) => {
 frontDeskRouter.post("/", async (req, res) => {
   try {
     // Destructure req.body
-    const {id,month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry} = req.body;
+    const {id, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry} = req.body;
     // Do something with request body
     const data = await db.query(`INSERT INTO front_desk_monthly (id,month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry ) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9) RETURNING id`,
-        [id,month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry]);
+        [id, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry]);
 
     res.status(200).json(keysToCamel(data[0]['id']));
   } catch (err) {
@@ -50,13 +50,13 @@ frontDeskRouter.post("/", async (req, res) => {
 
 frontDeskRouter.put("/:id", async (req, res) => {
   try {
-    const {month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry} = req.body;
+    const {total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry} = req.body;
     const {id} = req.params;
 
 
 
     const data = await db.query(
-      `UPDATE front_desk_monthly SET month = COALESCE($1, month),
+      `UPDATE front_desk_monthly SET
     total_office_visits = COALESCE($2, total_office_visits),
     total_calls = COALESCE($3, total_calls),
     total_unduplicated_calles = COALESCE($4, total_unduplicated_calles),
@@ -64,7 +64,7 @@ frontDeskRouter.put("/:id", async (req, res) => {
     total_number_of_people_served_in_pantry = COALESCE($6, total_number_of_people_served_in_pantry),
     total_visits_to_placentia_pantry = COALESCE($7, total_visits_to_placentia_pantry),
     total_number_of_people_served_in_placentia_pantry = COALESCE($8, total_number_of_people_served_in_placentia_pantry)  WHERE id = $9 RETURNING id`,
-      [month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry,id]
+      [total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry,id]
     );
     // console.log(data[0]);
     res.status(200).json(keysToCamel(data[0]['id']));
