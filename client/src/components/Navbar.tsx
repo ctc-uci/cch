@@ -12,7 +12,7 @@ import { NavLink } from "react-router-dom";
 import { User } from  "../types/user";
 
 export const Navbar = (role: User["role"]) => {
-  role = "admin";
+  role = "user"
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
@@ -33,7 +33,7 @@ export const Navbar = (role: User["role"]) => {
           {makeNavTabs("Settings", "/settings")}
         </>
       );
-    } else if (role == "user") {
+    } else if (role === "user") {
       return (
         <>
           {makeNavTabs("Dashboard", "/dashboard")}
