@@ -15,6 +15,8 @@ import { Signup } from "./components/signup/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
+import { SuccessStory } from "./components/success_story/SuccessStory";
 
 const App = () => {
   return (
@@ -31,6 +33,14 @@ const App = () => {
                 <Route
                   path="/signup"
                   element={<Signup />}
+                />
+                <Route
+                  path='/exit-survey'
+                  element={<ExitSurvey />}
+                />
+                <Route
+                  path='/success-story'
+                  element={<SuccessStory />}
                 />
                 <Route
                   path="/dashboard"
