@@ -15,6 +15,7 @@ import { Signup } from "./components/signup/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { CaseManager } from "./components/caseManager/CaseManager";
 
 const App = () => {
   return (
@@ -59,6 +60,10 @@ const App = () => {
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
                 />
+                <Route
+                  path="/casemanager"
+                  element = {<CaseManager/>}
+                  />
               </Routes>
             </Router>
           </RoleProvider>
