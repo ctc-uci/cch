@@ -1,64 +1,71 @@
-  import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-  import { useEffect, useState } from "react";
-  
-  import {
-    Box,
-    Icon,
-    For,
-    Stack,
-    Table,
-    Text,
-    Image,
-    
-  } from "@chakra-ui/react";
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { useEffect, useState } from "react";
+import { Box, Table, Thead, Tbody, Tr, Th, Td } from "@chakra-ui/react";
 
-  export const ClientChildren = () => {
-    const {backend} = useBackendContext();
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const fetchData = async () => {
-        try {
-          const response = await backend.())) //fill with request from frontend routes last time
-          if (!response.ok) {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
-          }
-          const data = await response.json();
-          setItems(data); // Assuming 'data' is the array of children
-          setLoading(false); // Turn off loading once data is fetched
-        } catch (err) {
-          setError(err.message); // Set error if there's a failure
-          setLoading(false);
-        }
-      };
-      return (
-        <Stack gap="10">
-          <Table.Root size="md">
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Name</Table.ColumnHeader>
-                <Table.ColumnHeader>DOB</Table.ColumnHeader>
-                <Table.ColumnHeader>Age</Table.ColumnHeader>
-                <Table.ColumnHeader>Custody</Table.ColumnHeader>
-                <Table.ColumnHeader>School</Table.ColumnHeader>
-                <Table.ColumnHeader>Grade</Table.ColumnHeader>
-                <Table.ColumnHeader>Comments</Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {items.map((item) => (
-                <Table.Row key={item.id}>
-                  <Table.Cell>{item.name}</Table.Cell>
-                  <Table.Cell>{item.dob}</Table.Cell>
-                  <Table.Cell>{item.age}</Table.Cell>
-                  <Table.Cell>{item.custody}</Table.Cell>
-                  <Table.Cell>{item.school}</Table.Cell>
-                  <Table.Cell>{item.grade}</Table.Cell>
-                  <Table.Cell>{item.comments}</Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        </Stack>
-      );
-  }
+interface Client {
+  id: number;
+  name: string;
+  dob: string;
+  age: number;
+  custody: string;
+  school: string;
+  grade: string;
+  comments: string;
+}
+
+export const ClientChildren = () => {
+  const { backend } = useBackendContext();
+  const [items, setItems] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    try {
+      const response = await backend.get('/clients');
+      const data = response.data; // Adjust this if your response structure is different
+      setItems(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []); // Fetch data once when the component mounts
+
+  if (loading) return <Box>Loading...</Box>;
+  if (error) return <Box>Error: {error}</Box>;
+
+  return (
+    <Box>
+      <Table variant="simple">
+        <Thead>
+          <Tr>
+            <Th>Name</Th>
+            <Th>DOB</Th>
+            <Th>Age</Th>
+            <Th>Custody</Th>
+            <Th>School</Th>
+            <Th>Grade</Th>
+            <Th>Comments</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {items.map((item) => (
+            <Tr key={item.id}>
+              <Td>{item.name}</Td>
+              <Td>{item.dob}</Td>
+              <Td>{item.age}</Td>
+              <Td>{item.custody}</Td>
+              <Td>{item.school}</Td>
+              <Td>{item.grade}</Td>
+              <Td>{item.comments}</Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </Box>
+  );
+};
