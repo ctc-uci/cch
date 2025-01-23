@@ -15,6 +15,8 @@ import { Signup } from "./components/signup/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { ViewPage } from "./components/clientPage/ViewPage"
+import { Test } from "./components/clientPage/ViewPage"
 
 const App = () => {
   return (
@@ -59,6 +61,16 @@ const App = () => {
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
                 />
+                <Route
+                  path="/ViewClient/:id"
+                  element={<ViewPage />}
+                />
+
+                <Route
+                  path="/test"
+                  element={<Test />}
+                />
+
               </Routes>
             </Router>
           </RoleProvider>
