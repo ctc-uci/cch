@@ -11,11 +11,11 @@ import { CatchAll } from "./components/CatchAll";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 import { Signup } from "./components/signup/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
-import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 
 const App = () => {
   return (
@@ -62,7 +62,7 @@ const App = () => {
                 />
                 <Route
                   path="/random-client-survey"
-                  element={<RandomClientSurvey/>}
+                  element={<RandomClientSurvey />}
                 />
               </Routes>
             </Router>
