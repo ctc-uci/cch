@@ -15,6 +15,7 @@ import { Signup } from "./components/signup/Signup";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 
 const App = () => {
   return (
@@ -58,6 +59,10 @@ const App = () => {
                 <Route
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
+                />
+                <Route
+                  path="/random-client-survey"
+                  element={<RandomClientSurvey/>}
                 />
               </Routes>
             </Router>
