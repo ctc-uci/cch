@@ -75,8 +75,14 @@ export const RandomClientSurvey = () => {
     };
 
     try {
-      const response = await backend.post("/randomSurvey", surveyData);
-      console.log(response);
+      await backend.post("/randomSurvey", surveyData);
+      toast({
+        title: "Survey submitted successfully",
+        description: "Thank you for your feedback!",
+        status: "success",
+      });
+
+      form.reset();
     } catch (error) {
       toast({
         title: "An error occurred",
