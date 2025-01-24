@@ -4506,7 +4506,7 @@ npm-run-path@^4.0.1:
   dependencies:
     path-key "^3.0.0"
 
-"npo-client-template@file:C:\\Users\\alex\\Documents\\2024-2025\\CTC\\cch\\client":
+"npo-client-template@file:C:\\Users\\colin\\CTC\\cch\\client":
   version "0.0.0"
   resolved "file:client"
   dependencies:
@@ -4526,7 +4526,7 @@ npm-run-path@^4.0.1:
     react-router-dom "^6.26.1"
     zod "^3.23.8"
 
-"npo-server-template@file:C:\\Users\\alex\\Documents\\2024-2025\\CTC\\cch\\server":
+"npo-server-template@file:C:\\Users\\colin\\CTC\\cch\\server":
   version "1.0.0"
   resolved "file:server"
   dependencies:
@@ -5636,10 +5636,10 @@ tslib@2.4.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
-tsx@^4.17.0:
-  version "4.17.0"
-  resolved "https://registry.npmjs.org/tsx/-/tsx-4.17.0.tgz"
-  integrity sha512-eN4mnDA5UMKDt4YZixo9tBioibaMBpoxBkD+rIPAjVmYERSG0/dWEY1CEFuV89CgASlKL499q8AhmkMnnjtOJg==
+tsx@^4.19.2:
+  version "4.19.2"
+  resolved "https://registry.npmjs.org/tsx/-/tsx-4.19.2.tgz"
+  integrity sha512-pOUl6Vo2LUq/bSa8S5q7b91cgNSjctn9ugq/+Mvow99qW6x/UZYwzxy/3NmqoT66eHYfCVvFvACC58UBPFf28g==
   dependencies:
     esbuild "~0.23.0"
     get-tsconfig "^4.7.5"
