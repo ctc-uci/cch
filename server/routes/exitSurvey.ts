@@ -78,7 +78,6 @@ exitSurveyRouter.post("/", async (req, res) => {
 
     res.status(200).json(data[0]);
   } catch (err) {
-    console.log(err);
     res.status(500).send(err.message);
   }
 });

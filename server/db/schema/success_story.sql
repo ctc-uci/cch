@@ -3,7 +3,8 @@ DROP TABLE IF EXISTS success_story CASCADE;
 CREATE TABLE IF NOT EXISTS success_story (
     id SERIAL PRIMARY KEY,
     date DATE NOT NULL,
-    client_id INT NOT NULL,
+    client_id INT,
+    name VARCHAR(30) NOT NULL,
     cm_id INT NOT NULL,
     previous_situation VARCHAR(2048) NOT NULL,
     cch_impact VARCHAR(2048) NOT NULL,

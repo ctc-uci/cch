@@ -5,7 +5,7 @@ import { db } from "../db/db-pgp";
 const successRouter = express.Router();
 successRouter.use(express.json());
 
-successRouter.get("/successStory", async(req, res) => {
+successRouter.get("/", async(req, res) => {
     try{
         const success = await db.query(`SELECT * FROM success_story`);
         res.status(200).json(keysToCamel(success));
@@ -14,7 +14,7 @@ successRouter.get("/successStory", async(req, res) => {
     }
 });
 
-successRouter.get("/successStory/:clientId", async (req, res) => {
+successRouter.get("/:clientId", async (req, res) => {
     try {
         const { clientId } = req.params;
         const children = await db.query(`SELECT ALL * FROM success_story WHERE client_id = $1`, [clientId]);
@@ -24,11 +24,12 @@ successRouter.get("/successStory/:clientId", async (req, res) => {
     }
 });
 
-successRouter.post("/successStory", async (req, res) => {
+successRouter.post("/", async (req, res) => {
     try {
         const {
             date,
             client_id,
+            name,
             cm_id,
             previous_situation,
             cch_impact,
@@ -37,15 +38,15 @@ successRouter.post("/successStory", async (req, res) => {
             quote,
             consent
         } = req.body;
-        const success = await db.query(`INSERT INTO success_story (date, client_id, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-            [date, client_id, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent]);
+        const success = await db.query(`INSERT INTO success_story (date, client_id, name, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+            [date, client_id, name, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent]);
         res.status(200).json(keysToCamel(success));
     } catch (err) {
         res.status(500).send(err.message);
     }
 })
 
-successRouter.put("/successStory/:id", async (req, res) => {
+successRouter.put("/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const {
@@ -59,7 +60,7 @@ successRouter.put("/successStory/:id", async (req, res) => {
         quote,
         consent
        } = req.body;
-  
+
       const user = await db.query(
         `UPDATE "success_story" SET
         date = COALESCE($1, date),
@@ -76,14 +77,14 @@ successRouter.put("/successStory/:id", async (req, res) => {
         `,
         [date, client_id, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent, id]
       );
-  
+
       res.status(200).json(keysToCamel(user));
     } catch (err) {
       res.status(400).send(err.message);
     }
   });
 
-successRouter.delete("/successStory/:id", async (req, res) => {
+successRouter.delete("/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const success = await db.query(`DELETE FROM success_story WHERE id = $1`, [id]);
