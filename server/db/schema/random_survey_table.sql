@@ -10,7 +10,7 @@ CREATE TABLE random_survey_table (
     unit_quality integer NOT NULL,
     clean integer NOT NULL,
     overall_experience integer NOT NULL,
-    case_meeting_frequency integer NOT NULL,
+    case_meeting_frequency varchar(30) NOT NULL,
     lifeskills boolean NOT NULL,
     recommend boolean NOT NULL,
     recommend_reasoning varchar(2048) NOT NULL,
