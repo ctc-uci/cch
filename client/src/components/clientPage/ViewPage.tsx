@@ -399,6 +399,7 @@ const handleSaveChanges = async () => {
                     defaultValue={client?.phoneNumber}
                     onChange={(e) => setClient({ ...client, phoneNumber: e.target.value })}
                   />
+
                   <Input
                     placeholder="Grant"
                     defaultValue={client?.grant}
