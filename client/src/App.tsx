@@ -18,8 +18,6 @@ import { ClientList } from "./components/clientlist/ClientList";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
-import { ViewPage } from "./components/clientPage/ViewPage"
-// import { Comments } from "./compoenents/clientPage/Comments"
 
 
 const App = () => {
@@ -68,11 +66,6 @@ const App = () => {
                 <Route
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
-
-                />
-                <Route
-                  path="/ViewClient/:id"
-                  element={<ViewPage />}
                 />
                 <Route
                   path="/casemanager"
