@@ -14,9 +14,11 @@ import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 import { Signup } from "./components/signup/Signup";
+import { ClientList } from "./components/clientlist/ClientList";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+
 
 const App = () => {
   return (
@@ -46,6 +48,10 @@ const App = () => {
                       allowedRoles={["admin"]}
                     />
                   }
+                />
+                <Route
+                  path="/clientlist"
+                  element={<ClientList />}
                 />
 
                 <Route
