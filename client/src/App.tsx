@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 
 import { Admin } from "./components/admin/Admin";
+import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Login } from "./components/login/Login";
@@ -60,6 +61,9 @@ const App = () => {
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
                 />
+                <Route
+                  path="/casemanager"
+                  element={<CaseManager />} />
                 <Route
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
