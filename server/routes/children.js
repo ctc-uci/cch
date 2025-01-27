@@ -1,11 +1,12 @@
 import express from "express";
+
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 const childRouter = express.Router();
 childRouter.use(express.json());
 
-childRouter.get('/children', async(req, res) => {
+childRouter.get('/', async(req, res) => {
     try {
         const children = await db.query(`SELECT * FROM children`);
         res.status(200).json(keysToCamel(children));
@@ -14,7 +15,7 @@ childRouter.get('/children', async(req, res) => {
     }
 });
 
-childRouter.get("/children/:clientId", async (req, res) => {
+childRouter.get("/:clientId", async (req, res) => {
     try {
         const { clientId } = req.params;
         const children = await db.query(`SELECT ALL * FROM children WHERE parent_id = $1`, [clientId]);
@@ -24,7 +25,7 @@ childRouter.get("/children/:clientId", async (req, res) => {
     }
 });
 
-childRouter.post("/children", async (req, res) => {
+childRouter.post("/", async (req, res) => {
     try {
         const {
             first_name,
@@ -42,7 +43,7 @@ childRouter.post("/children", async (req, res) => {
 });
 
 
-childRouter.put("/children/:id", async (req, res) => {
+childRouter.put("/:id", async (req, res) => {
     try {
       const { id } = req.params;
       const {
@@ -52,7 +53,7 @@ childRouter.put("/children/:id", async (req, res) => {
         date_of_birth,
         reunified,
        } = req.body;
-  
+
       const user = await db.query(
         `UPDATE "children" SET
         first_name = COALESCE($1, first_name),
@@ -63,7 +64,7 @@ childRouter.put("/children/:id", async (req, res) => {
         WHERE id = $6
         RETURNING id;
         `,
-        [ 
+        [
         first_name,
         last_name,
         parent_id,
@@ -72,14 +73,14 @@ childRouter.put("/children/:id", async (req, res) => {
         id
         ]
       );
-  
+
       res.status(200).json(keysToCamel(user));
     } catch (err) {
       res.status(400).send(err.message);
     }
   });
 
-childRouter.delete("/children/:id", async (req, res) => {
+childRouter.delete("/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const child = await db.query(`DELETE FROM children WHERE id = $1`, [id]);

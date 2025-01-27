@@ -7,16 +7,25 @@ import {
 } from "react-router-dom";
 
 import { Admin } from "./components/admin/Admin";
+import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 import { Signup } from "./components/signup/Signup";
+import { ClientList } from "./components/clientlist/ClientList";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+<<<<<<< HEAD
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { SuccessStory } from "./components/success_story/SuccessStory";
+=======
+import { ViewPage } from "./components/clientPage/ViewPage"
+// import { Comments } from "./compoenents/clientPage/Comments"
+
+>>>>>>> main
 
 const App = () => {
   return (
@@ -55,6 +64,10 @@ const App = () => {
                     />
                   }
                 />
+                <Route
+                  path="/clientlist"
+                  element={<ClientList />}
+                />
 
                 <Route
                   path="/"
@@ -68,6 +81,18 @@ const App = () => {
                 <Route
                   path="*"
                   element={<ProtectedRoute element={<CatchAll />} />}
+
+                />
+                <Route
+                  path="/ViewClient/:id"
+                  element={<ViewPage />}
+                />
+                <Route
+                  path="/casemanager"
+                  element={<CaseManager />} />
+                <Route
+                  path="/random-client-survey"
+                  element={<RandomClientSurvey />}
                 />
               </Routes>
             </Router>

@@ -1,17 +1,15 @@
 import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
-
 import { db } from "../db/db-pgp";
 import { verifyRole } from "../src/middleware";
-
 
 export const exitSurveyRouter = Router();
 
 exitSurveyRouter.get("/", async (req, res) => {
   try {
     const data = await db.any("SELECT * FROM exit_survey");
-    res.status(200).json({data});
+    res.status(200).json({ data });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -19,9 +17,11 @@ exitSurveyRouter.get("/", async (req, res) => {
 
 exitSurveyRouter.get("/:clientId", async (req, res) => {
   try {
-    const {clientId} = req.params;
-    const data = await db.any("SELECT * FROM exit_survey WHERE id = $1", [clientId]);
-    res.status(200).json({data});
+    const { clientId } = req.params;
+    const data = await db.any("SELECT * FROM exit_survey WHERE id = $1", [
+      clientId,
+    ]);
+    res.status(200).json({ data });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -76,9 +76,8 @@ exitSurveyRouter.post("/", async (req, res) => {
       ]
     );
 
-    res.status(200).json(data[0]);
+    res.status(200);
   } catch (err) {
-    console.log(err);
     res.status(500).send(err.message);
   }
 });
@@ -144,7 +143,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
         experienceExtraNotes,
       ]
     );
-    res.status(200).json({id});
+    res.status(200).json({ id });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -152,7 +151,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
 
 exitSurveyRouter.delete("/:id", async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const data = await db.query("DELETE FROM exit_survey WHERE id = $1", [id]);
     res.sendStatus(200);
   } catch (err) {
