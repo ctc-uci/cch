@@ -17,15 +17,12 @@ clientsRouter.get("/:id", async (req, res) => {
 // Gets specific number of clients based on page count and returns either ALL or specific clients that have search keyword present.
 clientsRouter.get("/", async (req, res) => {
 
-    try {
+    const stringSearch = "'%" + String(search) + "%'";
 
-        const { page, filter, search } = req.query;
-        let queryStr = `SELECT * FROM clients`
-
-        const stringSearch = "'%" + String(search) + "%'"
-
-        if (search) {
-          queryStr = queryStr.concat(" ", `WHERE id::TEXT ILIKE ${stringSearch}
+    if (search) {
+      queryStr = queryStr.concat(
+        " ",
+        `WHERE id::TEXT ILIKE ${stringSearch}
             OR created_by::TEXT ILIKE ${stringSearch}
             OR unit_id::TEXT ILIKE ${stringSearch}
             OR "grant"::TEXT ILIKE ${stringSearch}
@@ -63,46 +60,70 @@ clientsRouter.get("/", async (req, res) => {
             OR attending_school_upon_exit::TEXT ILIKE ${stringSearch}
             OR reunified::TEXT ILIKE ${stringSearch}
             OR successful_completion::TEXT ILIKE ${stringSearch}
-            OR destination_city::TEXT ILIKE ${stringSearch}`)
-        }
-
-        queryStr += ' ORDER BY id ASC'
-
-        if (page) {
-          queryStr = queryStr.concat(" ", `LIMIT ${page}`)
-        }
-
-        const clients = await db.query(queryStr);
-
-        res.status(200).json(keysToCamel(clients));
-
-    } catch (err) {
-        res.status(500).send(err.message);
+            OR destination_city::TEXT ILIKE ${stringSearch}`
+      );
     }
+
+    queryStr += " ORDER BY id ASC";
+
+    if (page) {
+      queryStr = queryStr.concat(" ", `LIMIT ${page}`);
+    }
+
+    const clients = await db.query(queryStr);
+
+    res.status(200).json(keysToCamel(clients));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 // Creates new client based on key values provided into request body.
-clientsRouter.post('/', async (req, res) => {
-
+clientsRouter.post("/", async (req, res) => {
   try {
+    const {
+      created_by,
+      unit_id,
+      grant,
+      status,
+      first_name,
+      last_name,
+      date_of_birth,
+      age,
+      phone_number,
+      email,
+      emergency_contact_name,
+      emergency_contact_phone_number,
+      medical,
+      entrance_date,
+      estimated_exit_date,
+      exit_date,
+      bed_nights,
+      bed_nights_children,
+      pregnant_upon_entry,
+      disabled_children,
+      ethnicity,
+      race,
+      city_of_last_permanent_residence,
+      prior_living,
+      prior_living_city,
+      shelter_in_last_five_years,
+      homelessness_length,
+      chronically_homeless,
+      attending_school_upon_entry,
+      employement_gained,
+      reason_for_leaving,
+      specific_reason_for_leaving,
+      specific_destination,
+      savings_amount,
+      attending_school_upon_exit,
+      reunified,
+      successful_completion,
+      destination_city,
+    } = req.body;
 
-      const { created_by, unit_id, grant, status,
-          first_name, last_name, date_of_birth, age,
-          phone_number, email, emergency_contact_name,
-          emergency_contact_phone_number, medical, entrance_date,
-          estimated_exit_date, exit_date, bed_nights, bed_nights_children,
-          pregnant_upon_entry, disabled_children, ethnicity, race,
-          city_of_last_permanent_residence, prior_living, prior_living_city,
-          shelter_in_last_five_years, homelessness_length, chronically_homeless,
-          attending_school_upon_entry, employement_gained, reason_for_leaving,
-          specific_reason_for_leaving, specific_destination,  savings_amount,
-          attending_school_upon_exit, reunified, successful_completion,
-          destination_city,
-      } = req.body;
-
-      const data = await db.query(
-
-        `INSERT INTO clients (
+    const data = await db.query(
+      `INSERT INTO clients (
           created_by,
           unit_id,
           "grant",
@@ -148,34 +169,57 @@ clientsRouter.post('/', async (req, res) => {
         RETURNING id;
         `,
 
-        [
-          created_by, unit_id, grant, status,
-          first_name, last_name, date_of_birth, age,
-          phone_number, email, emergency_contact_name,
-          emergency_contact_phone_number, medical, entrance_date,
-          estimated_exit_date, exit_date, bed_nights, bed_nights_children,
-          pregnant_upon_entry, disabled_children, ethnicity, race,
-          city_of_last_permanent_residence, prior_living, prior_living_city,
-          shelter_in_last_five_years, homelessness_length, chronically_homeless,
-          attending_school_upon_entry, employement_gained, reason_for_leaving,
-          specific_reason_for_leaving, specific_destination,  savings_amount,
-          attending_school_upon_exit, reunified, successful_completion,
-          destination_city
-        ]
+      [
+        created_by,
+        unit_id,
+        grant,
+        status,
+        first_name,
+        last_name,
+        date_of_birth,
+        age,
+        phone_number,
+        email,
+        emergency_contact_name,
+        emergency_contact_phone_number,
+        medical,
+        entrance_date,
+        estimated_exit_date,
+        exit_date,
+        bed_nights,
+        bed_nights_children,
+        pregnant_upon_entry,
+        disabled_children,
+        ethnicity,
+        race,
+        city_of_last_permanent_residence,
+        prior_living,
+        prior_living_city,
+        shelter_in_last_five_years,
+        homelessness_length,
+        chronically_homeless,
+        attending_school_upon_entry,
+        employement_gained,
+        reason_for_leaving,
+        specific_reason_for_leaving,
+        specific_destination,
+        savings_amount,
+        attending_school_upon_exit,
+        reunified,
+        successful_completion,
+        destination_city,
+      ]
+    );
 
-      );
-
-      res.status(200).json({id: data[0].id});
-
+    res.status(200).json({ id: data[0].id });
   } catch (err) {
       res.status(500).send(err.message);
 
   }
-})
+});
 
 // Updates a client based on ID.
 clientsRouter.put("/:id", async (req, res) => {
-
   try {
 
     const {
@@ -310,11 +354,8 @@ clientsRouter.put("/:id", async (req, res) => {
 
     await db.query(query, values);
 
-    res.status(200).json(keysToCamel({id}));
-
+    res.status(200).json(keysToCamel({ id }));
   } catch (err) {
-
     res.status(400).send(err.message);
-
   }
 });

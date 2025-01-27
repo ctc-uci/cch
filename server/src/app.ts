@@ -4,19 +4,20 @@ import dotenv from "dotenv";
 import express from "express";
 import schedule from "node-schedule"; // TODO: Keep only if scheduling cronjobs
 
-import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample router
-import { randomSurveyRouter } from "../routes/randomSurvey";
 import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
-import { usersRouter } from "../routes/users";
-import { childRouter } from "../routes/children";
-import { successRouter } from "../routes/successStory";
 import { caseManagersRouter } from "../routes/caseManagers";
-import { locationsRouter } from "../routes/locations"
-import { unitsRouter } from "../routes/units"
-import { clientsRouter } from '../routes/clients'
-import { verifyToken } from "./middleware";
+import { childRouter } from "../routes/children";
+import { clientsRouter } from "../routes/clients";
+import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample router
+
 import { donationRouter } from "../routes/foodDonations";
 import { frontDeskRouter } from "../routes/frontDesk";
+import { locationsRouter } from "../routes/locations";
+import { randomSurveyRouter } from "../routes/randomSurvey";
+import { successRouter } from "../routes/successStory";
+import { unitsRouter } from "../routes/units";
+import { usersRouter } from "../routes/users";
+import { verifyToken } from "./middleware";
 
 dotenv.config();
 
@@ -54,9 +55,9 @@ app.use("/caseManagers", caseManagersRouter);
 app.use("/locations", locationsRouter);
 app.use("/units", unitsRouter);
 app.use("/randomSurvey", randomSurveyRouter);
-app.use("/foodDonations",donationRouter);
+app.use("/foodDonations", donationRouter);
 app.use("/frontDesk", frontDeskRouter);
-app.use('/clients', clientsRouter)
+app.use("/clients", clientsRouter);
 app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);
 
 app.listen(SERVER_PORT, () => {

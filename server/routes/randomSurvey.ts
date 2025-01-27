@@ -88,7 +88,7 @@ randomSurveyRouter.post("/", async (req, res) => {
       other_comments,
     ]);
 
-    res.status(200).json({id: data[0].id})
+    res.status(200).json({ id: data[0].id });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -172,7 +172,6 @@ randomSurveyRouter.put("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
 
 // Delete randomSurvey
 randomSurveyRouter.delete("/:id", async (req, res) => {
