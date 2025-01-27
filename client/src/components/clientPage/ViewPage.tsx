@@ -45,6 +45,49 @@ interface Client {
   unitId: number;
 }
 
+const emptyClient: Client = {
+  age: 0,
+  attendingSchoolUponEntry: false,
+  attendingSchoolUponExit: false,
+  bedNights: 0,
+  bedNightsChildren: 0,
+  chronicallyHomeless: false,
+  cityOfLastPermanentResidence: '',
+  createdBy: 0,
+  dateOfBirth: '',
+  destinationcity: '',
+  disabledChildren: false,
+  email: '',
+  emergencyContactName: '',
+  emergencyContactPhoneNumber: '',
+  employmentGained: false,
+  entranceDate: '',
+  estimatedExitdate: '',
+  ethnicity: '',
+  exitDate: '',
+  firstName: '',
+  grant: '',
+  homelessnessLength: 0,
+  id: 0,
+  lastName: '',
+  medical: false,
+  phoneNumber: '',
+  pregnantUponEntry: false,
+  priorLiving: '',
+  priorLivingCity: '',
+  race: '',
+  reasonForLeaving: '',
+  reunified: false,
+  savingsAmount: '',
+  shelterInLastFiveYears: false,
+  specificDestination: '',
+  specificReasonForLeaving: '',
+  status: '',
+  successfulCompletion: false,
+  unitId: 0,
+};
+
+
 interface Children {
   id: number;
   firstName: string;
@@ -54,7 +97,7 @@ interface Children {
 
 export const ViewPage = () => {
   const { backend } = useBackendContext();
-  const [client, setClient] = useState<Client>();
+  const [client, setClient] = useState<Client>(emptyClient);
   const [children, setChildren] = useState<Children[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +176,7 @@ const handleSaveChanges = async () => {
     const clientData = toSnakeCase(client);
     console.log('Saving client changes...', clientData);
     // Send the updated client data in snake_case format
-    console.log(clientData);
+    //console.log(clientData);
     await backend.put(`/clients/${client.id}`, clientData);
 
     console.log('Client information updated successfully!');
@@ -355,11 +398,6 @@ const handleSaveChanges = async () => {
                     placeholder="Phone Number"
                     defaultValue={client?.phoneNumber}
                     onChange={(e) => setClient({ ...client, phoneNumber: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Email"
-                    defaultValue={client?.createdBy}
-                    onChange={(e) => setClient({ ...client, createdBy: e.target.value })}
                   />
                   <Input
                     placeholder="Grant"
