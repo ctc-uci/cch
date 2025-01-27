@@ -1,5 +1,6 @@
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Box, Table, Thead, Tbody, Tr, Th, Td, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
 
 interface Client {
@@ -29,7 +30,7 @@ interface Client {
   lastName: string;
   medical: boolean;
   phoneNumber: string;
-  pregnantUponEntry: boolean; 
+  pregnantUponEntry: boolean;
   priorLiving: string;
   priorLivingCity: string;
   race: string;
@@ -37,9 +38,9 @@ interface Client {
   reunified: boolean;
   savingsAmount: string;
   shelterInLastFiveYears: boolean;
-  specificDestination: string; 
+  specificDestination: string;
   specificReasonForLeaving: string;
-  status: string; 
+  status: string;
   successfulCompletion: boolean;
   unitId: number;
 }
@@ -57,14 +58,15 @@ export const ViewPage = () => {
   const [children, setChildren] = useState<Children[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const params = useParams<{ id: string }>();
 
   //Toggles visibility
   const [isEditing, setIsEditing] = useState(false);
 
   //fetches the database for children
-  const fetchChildren = async () => {
+  const fetchChildren = async (id: number) => {
     try {
-      const response = await backend.get('/children/children/2');
+      const response = await backend.get(`/children/${id}`);
       setChildren(response.data); // Adjust this if the response structure is different
     } catch (err) {
       setError(err.message);
@@ -72,11 +74,10 @@ export const ViewPage = () => {
   };
 
   //fetches the database for clients
-  const fetchClient = async () => {
+  const fetchClient = async (id: number) => {
     try {
-      const response = await backend.get('/clients'); // Replace `/client/1` with the correct endpoint
-      setClient(response.data[0]); // Adjust this if the response structure is different
-      console.log(response.data);
+      const response = await backend.get(`clients/${id}`);
+      setClient(response.data[0]);
     } catch (err) {
       setError(err.message);
     }
@@ -86,7 +87,10 @@ export const ViewPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      await Promise.all([fetchChildren(), fetchClient()]); // Fetch both routes simultaneously
+      if (params.id) {
+        const intId = parseInt(params.id);
+        await Promise.all([fetchChildren(intId), fetchClient(intId)]); // Fetch both routes simultaneously
+      }
       setLoading(false);
     };
     fetchData();
@@ -108,7 +112,7 @@ export const ViewPage = () => {
 // Function to convert camelCase to snake_case
 function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
   const snakeCased: { [key: string]: any } = {};
-  
+
   for (const [key, value] of Object.entries(obj)) {
     const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
     snakeCased[snakeKey] = value;
@@ -129,6 +133,7 @@ const handleSaveChanges = async () => {
     const clientData = toSnakeCase(client);
     console.log('Saving client changes...', clientData);
     // Send the updated client data in snake_case format
+    console.log(clientData);
     await backend.put(`/clients/${client.id}`, clientData);
 
     console.log('Client information updated successfully!');
@@ -321,57 +326,57 @@ const handleSaveChanges = async () => {
               <Box mt={4}>
                 <h3>Edit Client Information</h3>
                 <Stack spacing={3}>
-                  <Input 
+                  <Input
                     placeholder="First Name"
                     defaultValue={client.firstName}
                     onChange={(e) => setClient({ ...client, firstName: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Last Name"
                     defaultValue={client.lastName}
                     onChange={(e) => setClient({ ...client, lastName: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Age"
                     defaultValue={client.age}
                     onChange={(e) => setClient({ ...client, age: parseInt(e.target.value) })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Date of Birth"
                     defaultValue={client?.dateOfBirth}
                     onChange={(e) => setClient({ ...client, dateOfBirth: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Email"
                     defaultValue={client?.email}
                     onChange={(e) => setClient({ ...client, email: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Phone Number"
                     defaultValue={client?.phoneNumber}
                     onChange={(e) => setClient({ ...client, phoneNumber: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Email"
                     defaultValue={client?.createdBy}
                     onChange={(e) => setClient({ ...client, createdBy: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Grant"
                     defaultValue={client?.grant}
                     onChange={(e) => setClient({ ...client, grant: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Status"
                     defaultValue={client?.status}
                     onChange={(e) => setClient({ ...client, status: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Ethnicity"
                     defaultValue={client?.ethnicity}
                     onChange={(e) => setClient({ ...client, ethnicity: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Race"
                     defaultValue={client?.race}
                     onChange={(e) => setClient({ ...client, race: e.target.value })}
@@ -386,21 +391,21 @@ const handleSaveChanges = async () => {
                       })
                     }
                   />
-                  <Input 
+                  <Input
                     placeholder="Emergency Contact Name"
                     defaultValue={client?.emergencyContactName}
                     onChange={(e) => setClient({ ...client, emergencyContactName: e.target.value })}
-                  />    
-                  <Input 
+                  />
+                  <Input
                     placeholder="Emergency Contact Phone	"
                     defaultValue={client?.emergencyContactPhoneNumber}
                     onChange={(e) => setClient({ ...client, emergencyContactPhoneNumber: e.target.value })}
-                  /> 
-                  <Input 
+                  />
+                  <Input
                     placeholder="Homelessness Length	"
                     defaultValue={client?.homelessnessLength}
                     onChange={(e) => setClient({ ...client, homelessnessLength: parseInt(e.target.value) })}
-                  /> 
+                  />
                   <Input
                     placeholder="Reunified"
                     value={client?.reunified ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
@@ -430,7 +435,7 @@ const handleSaveChanges = async () => {
                         pregnantUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
                       })
                     }
-                  />  
+                  />
                   <Input
                     placeholder="Disabled Children"
                     value={client?.disabledChildren ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
@@ -461,37 +466,37 @@ const handleSaveChanges = async () => {
                       })
                     }
                   />
-                  <Input 
+                  <Input
                     placeholder="Saving Account"
                     defaultValue={client?.savingsAmount}
                     onChange={(e) => setClient({ ...client, savingsAmount: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Specific Destination"
                     defaultValue={client?.specificDestination}
                     onChange={(e) => setClient({ ...client, specificDestination: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Estimated Exit Date"
                     defaultValue={client?.estimatedExitdate}
                     onChange={(e) => setClient({ ...client, estimatedExitdate: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Exit Date"
                     defaultValue={client?.exitDate}
                     onChange={(e) => setClient({ ...client, exitDate: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Unit ID"
                     defaultValue={client?.unitId}
                     onChange={(e) => setClient({ ...client, unitId: parseInt(e.target.value) })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Prior Living	"
                     defaultValue={client?.priorLiving}
                     onChange={(e) => setClient({ ...client, priorLiving: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Prior Living City"
                     defaultValue={client?.priorLivingCity}
                     onChange={(e) => setClient({ ...client, priorLivingCity: e.target.value })}
@@ -506,12 +511,12 @@ const handleSaveChanges = async () => {
                       })
                     }
                   />
-                  <Input 
+                  <Input
                     placeholder="Specific Reason for Leaving"
                     defaultValue={client?.specificReasonForLeaving}
                     onChange={(e) => setClient({ ...client, specificReasonForLeaving: e.target.value })}
                   />
-                  <Input 
+                  <Input
                     placeholder="Reason for Leaving"
                     defaultValue={client?.reasonForLeaving}
                     onChange={(e) => setClient({ ...client, reasonForLeaving: e.target.value })}

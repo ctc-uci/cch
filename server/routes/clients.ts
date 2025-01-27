@@ -4,9 +4,18 @@ import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 export const clientsRouter = Router();
+clientsRouter.get("/:id", async (req, res) => {
+  try {
+      const { id } = req.params;
+      const clients = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
+      res.status(200).json(keysToCamel(clients));
+  } catch (err) {
+      res.status(500).send(err.message);
+  }
+});
 
 // Gets specific number of clients based on page count and returns either ALL or specific clients that have search keyword present.
-clientsRouter.get("/:page?/:filter?/:search?", async (req, res) => {
+clientsRouter.get("/", async (req, res) => {
 
     try {
 
@@ -159,7 +168,6 @@ clientsRouter.post('/', async (req, res) => {
       res.status(200).json({id: data[0].id});
 
   } catch (err) {
-
       res.status(500).send(err.message);
 
   }
@@ -170,19 +178,137 @@ clientsRouter.put("/:id", async (req, res) => {
 
   try {
 
-    const updateData = req.body;
+    const {
+      created_by,
+      unit_id,
+      grant,
+      status,
+      first_name,
+      last_name,
+      date_of_birth,
+      age,
+      phone_number,
+      email,
+      emergency_contact_name,
+      emergency_contact_phone_number,
+      medical,
+      entrance_date,
+      estimated_exit_date,
+      exit_date,
+      bed_nights,
+      bed_nights_children,
+      pregnant_upon_entry,
+      disabled_children,
+      ethnicity,
+      race,
+      city_of_last_permanent_residence,
+      prior_living,
+      prior_living_city,
+      shelter_in_last_five_years,
+      homelessness_length,
+      chronically_homeless,
+      attending_school_upon_entry,
+      employement_gained,
+      reason_for_leaving,
+      specific_reason_for_leaving,
+      specific_destination,
+      savings_amount,
+      attending_school_upon_exit,
+      reunified,
+      successful_completion,
+      destination_city,
+      clientId,
+    } = req.body;
     const { id } = req.params;
 
-    let query = `UPDATE clients SET `;
+    const query = `
+      UPDATE clients
+      SET
+        created_by = COALESCE($1, created_by),
+        unit_id = COALESCE($2, unit_id),
+        "grant" = COALESCE($3, "grant"),
+        "status" = COALESCE($4, "status"),
+        first_name = COALESCE($5, first_name),
+        last_name = COALESCE($6, last_name),
+        date_of_birth = COALESCE($7, date_of_birth),
+        age = COALESCE($8, age),
+        phone_number = COALESCE($9, phone_number),
+        email = COALESCE($10, email),
+        emergency_contact_name = COALESCE($11, emergency_contact_name),
+        emergency_contact_phone_number = COALESCE($12, emergency_contact_phone_number),
+        medical = COALESCE($13, medical),
+        entrance_date = COALESCE($14, entrance_date),
+        estimated_exit_date = COALESCE($15, estimated_exit_date),
+        exit_date = COALESCE($16, exit_date),
+        bed_nights = COALESCE($17, bed_nights),
+        bed_nights_children = COALESCE($18, bed_nights_children),
+        pregnant_upon_entry = COALESCE($19, pregnant_upon_entry),
+        disabled_children = COALESCE($20, disabled_children),
+        ethnicity = COALESCE($21, ethnicity),
+        race = COALESCE($22, race),
+        city_of_last_permanent_residence = COALESCE($23, city_of_last_permanent_residence),
+        prior_living = COALESCE($24, prior_living),
+        prior_living_city = COALESCE($25, prior_living_city),
+        shelter_in_last_five_years = COALESCE($26, shelter_in_last_five_years),
+        homelessness_length = COALESCE($27, homelessness_length),
+        chronically_homeless = COALESCE($28, chronically_homeless),
+        attending_school_upon_entry = COALESCE($29, attending_school_upon_entry),
+        employement_gained = COALESCE($30, employement_gained),
+        reason_for_leaving = COALESCE($31, reason_for_leaving),
+        specific_reason_for_leaving = COALESCE($32, specific_reason_for_leaving),
+        specific_destination = COALESCE($33, specific_destination),
+        savings_amount = COALESCE($34, savings_amount),
+        attending_school_upon_exit = COALESCE($35, attending_school_upon_exit),
+        reunified = COALESCE($36, reunified),
+        successful_completion = COALESCE($37, successful_completion),
+        destination_city = COALESCE($38, destination_city)
+      WHERE id = $39
+      RETURNING *;
+    `;
 
-    for (const [key, value] of Object.entries(updateData)) {
-      query += `${key} = ${value}, `;
-    }
+    const values = [
+      created_by,
+      unit_id,
+      grant,
+      status,
+      first_name,
+      last_name,
+      date_of_birth,
+      age,
+      phone_number,
+      email,
+      emergency_contact_name,
+      emergency_contact_phone_number,
+      medical,
+      entrance_date,
+      estimated_exit_date,
+      exit_date,
+      bed_nights,
+      bed_nights_children,
+      pregnant_upon_entry,
+      disabled_children,
+      ethnicity,
+      race,
+      city_of_last_permanent_residence,
+      prior_living,
+      prior_living_city,
+      shelter_in_last_five_years,
+      homelessness_length,
+      chronically_homeless,
+      attending_school_upon_entry,
+      employement_gained,
+      reason_for_leaving,
+      specific_reason_for_leaving,
+      specific_destination,
+      savings_amount,
+      attending_school_upon_exit,
+      reunified,
+      successful_completion,
+      destination_city,
+      clientId,
+    ];
 
-    query = query.slice(0, -2);
-    query += ` WHERE id = ${id}`;
-
-    await db.query(query);
+    await db.query(query, values);
 
     res.status(200).json(keysToCamel({id}));
 
