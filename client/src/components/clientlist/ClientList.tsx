@@ -35,9 +35,9 @@ export const ClientList = () => {
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
-  const [clients, setClients] = useState<Client[]>([]);  
+  const [clients, setClients] = useState<Client[]>([]);
   const [searchKey, setSearchKey] = useState("");
-  
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export const ClientList = () => {
       }
     };
     fetchData();
-  }, [backend, clients, searchKey]);
+  }, [backend, searchKey]);
 
   return (
     <VStack
@@ -90,7 +90,7 @@ export const ClientList = () => {
         sx={{
           overflowX: "auto",
           maxWidth: "100%",
-          boarder: "1px solid gray"
+          border: "1px solid gray"
         }}
       >
         <Table variant="striped">
