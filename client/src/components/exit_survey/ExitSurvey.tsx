@@ -16,15 +16,66 @@ import {
     Text,
     Radio,
     RadioGroup,
+    Select
   } from "@chakra-ui/react";
-
-import { z } from "zod";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { useEffect, useState } from "react";
 
 export const ExitSurvey = () => {
 
+    type CaseManager = {
+        id: number;
+        role: string;  
+        firstName: string;
+        lastName: string;
+        phone_number: string;
+        email: string;
+    };
+
+    type Location = {
+        id: number;
+        cm_id: number;  
+        name: string;
+        date: Date;
+        caloptima_funded: boolean;
+    };
+
+    const [locations, setLocations] = useState([]);
+    const [caseManagers, setCaseManagers] = useState([]);
     const { backend } = useBackendContext();
     const toast = useToast();
+
+   
+
+    useEffect(() => {
+        const getLocations = async () => {
+            try {
+                const response = await backend.get("/locations");
+                setLocations(response.data);
+            } catch (e) {
+                toast({
+                    title: "An error occurred",
+                    description: `Locations were not fetched: ${e.message}`,
+                    status: "error",
+                });
+            }
+        }
+    
+        const getCaseManagers = async () => {
+            try {
+                const response = await backend.get("/caseManagers");
+                setCaseManagers(response.data);
+            } catch (e) {
+                toast({
+                    title: "An error occurred",
+                    description: `Case Managers were not fetched: ${e.message}`,
+                    status: "error",
+                });
+            }
+        }
+        getLocations();
+        getCaseManagers();
+    }, [backend, toast]);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 
@@ -34,8 +85,12 @@ export const ExitSurvey = () => {
         const data = Object.fromEntries(formData);
 
         try {
-            const response = await backend.post("/exitSurvey", data);
-            console.log(response)
+            await backend.post("/exitSurvey", data);
+            toast({
+                title: "Form submitted",
+                description: `Thanks for your feedback!`,
+                status: "success",
+            });
         } catch (e) {
             toast({
                 title: "An error occurred",
@@ -64,13 +119,25 @@ export const ExitSurvey = () => {
                     </FormControl>  
 
                     <FormControl isRequired>
-                        <FormLabel>Site</FormLabel>
-                        <Input name='site' placeholder='Site' />
+                        <FormLabel>Case Manager</FormLabel>
+                        <Select name="cmId" placeholder="Select your case manager">
+                        {caseManagers.map((manager: CaseManager) => (
+                            <option key={manager.id}  value={manager.id}>
+                                {manager.firstName} {manager.lastName}
+                            </option >
+                            ))}
+                        </Select>
                     </FormControl>  
 
                     <FormControl isRequired>
-                        <FormLabel>Case Manager</FormLabel>
-                        <Input name='cmId' placeholder='Case Manager' />
+                        <FormLabel>Site</FormLabel>
+                        <Select name="site" placeholder="Site">
+                        {locations.map((location: Location) => (
+                            <option key={location.id}  value={location.id}>
+                                {location.name}
+                            </option >
+                            ))}
+                        </Select>
                     </FormControl> 
 
                     </HStack>
@@ -88,10 +155,10 @@ export const ExitSurvey = () => {
                         <FormLabel>How would you rate Colette’s Children’s Home overall? (circle one)</FormLabel>
                         <RadioGroup name='cchRating'>
                             <HStack spacing={4}>
-                                <Radio value='excellent'>Excellent</Radio>
-                                <Radio value='good'>Good</Radio>
-                                <Radio value='fair'>Fair</Radio>
-                                <Radio value='poor'>Unsatisfactory</Radio>
+                                <Radio value='Excellent'>Excellent</Radio>
+                                <Radio value='Good'>Good</Radio>
+                                <Radio value='Fair'>Fair</Radio>
+                                <Radio value='Poor'>Unsatisfactory</Radio>
                             </HStack>
                         </RadioGroup>
                     </FormControl>
@@ -110,7 +177,7 @@ export const ExitSurvey = () => {
 
                     <FormControl isRequired>
                         <FormLabel>How helpful were the Life Skills Meetings?  (circle one)</FormLabel>
-                        <RadioGroup name='life_skills_rating'>
+                        <RadioGroup name='lifeSkillsRating'>
                             <HStack spacing={4}>
                                 <Radio value='very helpful'>Very Helpful</Radio>
                                 <Radio value='helpful'>Helpful</Radio>

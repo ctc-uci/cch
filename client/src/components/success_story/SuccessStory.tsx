@@ -1,10 +1,7 @@
 import {
     Button,
-    Center,
     Link as ChakraLink,
     FormControl,
-    FormErrorMessage,
-    FormHelperText,
     FormLabel,
     Heading,
     Input,
@@ -13,26 +10,72 @@ import {
     Radio,
     RadioGroup,
     Textarea,
-    useToast
+    useToast,
+    Select
   } from "@chakra-ui/react";
 
-import {useState} from "react"
-import { useForm } from "react-hook-form"
+import {useState, useEffect} from "react"
 
-import { z } from "zod";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 
 export const SuccessStory = () => {
-    const [ClientStatus, setStatus] = useState('1');
-    const [consent, setConsent] = useState(false);
-
-    const handleChange = (event) => {
-      setConsent(event.target.consent);
+    type CaseManager = {
+        id: number;
+        role: string;  
+        firstName: string;
+        lastName: string;
+        phone_number: string;
+        email: string;
     };
+
+    type Location = {
+        id: number;
+        cm_id: number;  // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
+        name: string;
+        date: Date;
+        caloptima_funded: boolean;
+    };
+
+    const [ClientStatus, setStatus] = useState('1');
+    const [locations, setLocations] = useState([]);
+    const [caseManagers, setCaseManagers] = useState([]);
+
 
     const { backend } = useBackendContext();
     const toast = useToast();
+
+      useEffect(() => {
+            const getLocations = async () => {
+                try {
+                    const response = await backend.get("/locations");
+                    setLocations(response.data);
+                } catch (e) {
+                    toast({
+                        title: "An error occurred",
+                        description: `Locations were not fetched: ${e.message}`,
+                        status: "error",
+                    });
+                }
+            }
+        
+            const getCaseManagers = async () => {
+                try {
+                    const response = await backend.get("/caseManagers");
+                    setCaseManagers(response.data);
+                } catch (e) {
+                    toast({
+                        title: "An error occurred",
+                        description: `Case Managers were not fetched: ${e.message}`,
+                        status: "error",
+                    });
+                }
+            }
+            getLocations();
+            getCaseManagers();
+        }, [backend, toast]);
+
+
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
 
@@ -40,14 +83,15 @@ export const SuccessStory = () => {
         const form = event.currentTarget;
         const formData = new FormData(form);
         const data = Object.fromEntries(formData);
-
-        const finalData = {
-            'consent': consent,
-            ...data
-        }
+        console.log("CONSETN!!!", data.consent);
 
         try {
-            const response = await backend.post("/successStory", finalData);
+            await backend.post("/successStory", data);
+            toast({
+                title: "Form submitted",
+                description: `Thanks for your feedback!`,
+                status: "success",
+            });
         } catch (e) {
             toast({
                 title: "An error occurred",
@@ -71,17 +115,29 @@ export const SuccessStory = () => {
 
             <FormControl isRequired>
                 <FormLabel>Client Name</FormLabel>
-                <Input placeholder='First name' />
+                <Input name="name" placeholder='First name' />
             </FormControl>  
             
             <FormControl isRequired>
                 <FormLabel>Case Manager</FormLabel>
-                <Input placeholder='Case Manager'/>
+                <Select name="cm_id" placeholder="Select your case manager">
+                        {caseManagers.map((manager: CaseManager) => (
+                            <option key={manager.id}  value={manager.id}>
+                                {manager.firstName} {manager.lastName}
+                            </option >
+                            ))}
+                        </Select>
             </FormControl>  
 
             <FormControl isRequired>
                 <FormLabel>Site</FormLabel>
-                <Input placeholder='Site' />
+                <Select name="site" placeholder="Site">
+                        {locations.map((location: Location) => (
+                            <option key={location.id}  value={location.id}>
+                                {location.name}
+                            </option >
+                            ))}
+                </Select>
             </FormControl>  
 
             <RadioGroup onChange={setStatus} value={ClientStatus}>
@@ -93,12 +149,12 @@ export const SuccessStory = () => {
 
             <FormControl isRequired>
                 <FormLabel>Entrance Date to CCH</FormLabel>
-                <Input type="date"/>
+                <Input name="entrance_date"type="date"/>
             </FormControl>  
             
             <FormControl isRequired>
                 <FormLabel>Exit Date to CCH</FormLabel>
-                <Input type="date"/>
+                <Input name="exit_date"type="date"/>
             </FormControl>  
 
             <FormControl isRequired>
@@ -135,7 +191,10 @@ export const SuccessStory = () => {
 
             I consent to letting Colette’s Children’s Home se all or part of my story in their 
             marketing materials, such as website, newsletter, brochures, videos, etc. 
-            <Input type="radio" onChange={handleChange}>Yes</Input>
+            <FormControl isRequired>
+                <FormLabel>Consent </FormLabel>
+                <Radio type="radio" name="consent" value="true">Yes</Radio>
+            </FormControl>  
             <FormControl isRequired>
                 <FormLabel>Client Signature:
                 </FormLabel>
