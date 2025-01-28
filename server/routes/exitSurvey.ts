@@ -30,7 +30,6 @@ exitSurveyRouter.get("/:clientId", async (req, res) => {
 exitSurveyRouter.post("/", async (req, res) => {
   try {
     const {
-      id,
       cmId,
       name,
       site,
@@ -38,6 +37,7 @@ exitSurveyRouter.post("/", async (req, res) => {
       cchRating,
       cchLikeMost,
       cchCouldBeImproved,
+      lifeSkillsRating,
       lifeSkillsHelpfulTopics,
       lifeSkillsOfferTopicsInTheFuture,
       cmRating,
@@ -50,14 +50,13 @@ exitSurveyRouter.post("/", async (req, res) => {
 
     const data = await db.query(
       `INSERT INTO exit_survey (
-        id, cm_id, name, site, program_date_completion, cch_rating, cch_like_most, cch_could_be_improved, 
-        life_skills_helpful_topics, life_skills_offer_topics_in_the_future, cm_rating, cm_change_about, 
+        cm_id, name, site, program_date_completion, cch_rating, cch_like_most, cch_could_be_improved,
+        life_skills_rating, life_skills_helpful_topics, life_skills_offer_topics_in_the_future, cm_rating, cm_change_about,
         cm_most_beneficial, experience_takeaway, experience_accomplished, experience_extra_notes
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
-      )`,
+      ) RETURNING id`,
       [
-        id,
         cmId,
         name,
         site,
@@ -65,6 +64,7 @@ exitSurveyRouter.post("/", async (req, res) => {
         cchRating,
         cchLikeMost,
         cchCouldBeImproved,
+        lifeSkillsRating,
         lifeSkillsHelpfulTopics,
         lifeSkillsOfferTopicsInTheFuture,
         cmRating,
@@ -76,7 +76,7 @@ exitSurveyRouter.post("/", async (req, res) => {
       ]
     );
 
-    res.status(200).json({ id });
+    res.status(200);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -93,6 +93,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
       cchRating,
       cchLikeMost,
       cchCouldBeImproved,
+      lifeSkillsRating,
       lifeSkillsHelpfulTopics,
       lifeSkillsOfferTopicsInTheFuture,
       cmRating,
@@ -104,22 +105,23 @@ exitSurveyRouter.put("/:id", async (req, res) => {
     } = req.body;
 
     const user = await db.query(
-      `UPDATE exit_survey 
-      SET cm_id = COALESCE($2, cm_id), 
-      name = COALESCE($3, name), 
-      site = COALESCE($4, site), 
-      program_date_completion = COALESCE($5, program_date_completion), 
+      `UPDATE exit_survey
+      SET cm_id = COALESCE($2, cm_id),
+      name = COALESCE($3, name),
+      site = COALESCE($4, site),
+      program_date_completion = COALESCE($5, program_date_completion),
       cch_rating = COALESCE($6, cch_rating),
-      cch_like_most = COALESCE($7, cch_like_most), 
-      cch_could_be_improved = COALESCE($8, cch_could_be_improved), 
-      life_skills_helpful_topics = COALESCE($9, life_skills_helpful_topics), 
-      life_skills_offer_topics_in_the_future = COALESCE($10, life_skills_offer_topics_in_the_future), 
-      cm_rating = COALESCE($11, cm_rating), 
-      cm_change_about = COALESCE($12, cm_change_about), 
-      cm_most_beneficial = COALESCE($13, cm_most_beneficial), 
-      experience_takeaway = COALESCE($14, experience_takeaway), 
-      experience_accomplished = COALESCE($15, experience_accomplished), 
-      experience_extra_notes = COALESCE($16, experience_extra_notes)  
+      cch_like_most = COALESCE($7, cch_like_most),
+      cch_could_be_improved = COALESCE($8, cch_could_be_improved),
+      life_skills_rating = COALESCE($9, life_skills_rating),
+      life_skills_helpful_topics = COALESCE($10, life_skills_helpful_topics),
+      life_skills_offer_topics_in_the_future = COALESCE($11, life_skills_offer_topics_in_the_future),
+      cm_rating = COALESCE($12, cm_rating),
+      cm_change_about = COALESCE($13, cm_change_about),
+      cm_most_beneficial = COALESCE($14, cm_most_beneficial),
+      experience_takeaway = COALESCE($15, experience_takeaway),
+      experience_accomplished = COALESCE($16, experience_accomplished),
+      experience_extra_notes = COALESCE($17, experience_extra_notes)
       WHERE id = $1 RETURNING *`,
       [
         id,
@@ -130,6 +132,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
         cchRating,
         cchLikeMost,
         cchCouldBeImproved,
+        lifeSkillsRating,
         lifeSkillsHelpfulTopics,
         lifeSkillsOfferTopicsInTheFuture,
         cmRating,

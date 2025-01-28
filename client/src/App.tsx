@@ -18,6 +18,8 @@ import { ClientList } from "./components/clientlist/ClientList";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
+import { SuccessStory } from "./components/success_story/SuccessStory";
 import { ViewPage } from "./components/clientPage/ViewPage"
 // import { Comments } from "./compoenents/clientPage/Comments"
 
@@ -37,6 +39,14 @@ const App = () => {
                 <Route
                   path="/signup"
                   element={<Signup />}
+                />
+                <Route
+                  path='/exit-survey'
+                  element={<ExitSurvey />}
+                />
+                <Route
+                  path='/success-story'
+                  element={<SuccessStory />}
                 />
                 <Route
                   path="/dashboard"
