@@ -3,7 +3,7 @@ import {Button} from "@chakra-ui/react";
 const CSVButton = ( { data } ) => {
 
    
-    const header = [
+    const headers = [
         "age",
         "attendingSchoolUponEntry",
         "attendingSchoolUponExit",
@@ -46,7 +46,7 @@ const CSVButton = ( { data } ) => {
     ];
     
     
-    const convertToCSV = (headers, objArray) => {
+    const convertToCSV = () => {
         const csvRows = [];
         csvRows.push(headers.join(","));
         console.log(csvRows);
@@ -68,7 +68,7 @@ const CSVButton = ( { data } ) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'data.csv'; // Name of the file to download
+        link.download = 'clientlist.csv'; // Name of the file to download
         document.body.appendChild(link); // Required for Firefox
         link.click();
         document.body.removeChild(link); // Clean up
@@ -76,7 +76,7 @@ const CSVButton = ( { data } ) => {
 
     return (
         <>
-            <Button colorScheme="blue" onClick={() => convertToCSV(header, data)}>
+            <Button colorScheme="blue" onClick={() => convertToCSV()}>
                 Download CSV
             </Button>
         </>
