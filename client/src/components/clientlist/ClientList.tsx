@@ -56,7 +56,7 @@ export const ClientList = () => {
         "Birthday": client.dateOfBirth
       }});
     
-      downloadCSV(headers, data)
+      downloadCSV(headers, data, `clients.csv`)
   }
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-export const downloadCSV = (headers, data) => {
+export const downloadCSV = (headers, data, fileName) => {
     const csvRows = [];
 
     csvRows.push(headers.join(','));
@@ -19,7 +19,7 @@ export const downloadCSV = (headers, data) => {
     const link = document.createElement('a');
 
     link.href = url;
-    link.download = 'data.csv';
+    link.download = fileName;
 
     document.body.appendChild(link);
     link.click();
