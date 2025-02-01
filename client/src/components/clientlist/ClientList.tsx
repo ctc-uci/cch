@@ -26,8 +26,6 @@ import { Client } from "../../types/client";
 import { downloadCSV } from "../../utils/downloadCSV";
 
 export const ClientList = () => {
-  const { currentUser } = useAuthContext();
-  const { backend } = useBackendContext();
   const headers = [
     "Client First Name",
     "Client Last Name",
@@ -38,21 +36,28 @@ export const ClientList = () => {
     "Birthday",
   ];
 
+  const navigate = useNavigate();
+
+  const { currentUser } = useAuthContext();
+  const { backend } = useBackendContext();
+
   const [clients, setClients] = useState<Client[]>([]);
-
-  const data = clients.map(client => {return {
-    "Client First Name": client.firstName,
-    "Client Last Name": client.lastName,
-    "Phone Number": client.phoneNumber,
-    "E-mail": client.email,
-    "Entrance Date": client.entranceDate,
-    "Exit Date": client.exitDate,
-    "Birthday": client.dateOfBirth
-  }});
-
   const [searchKey, setSearchKey] = useState("");
 
-  const navigate = useNavigate();
+  const onPressCSVButton = () => {
+    const data = 
+      clients.map(client => {return {
+        "Client First Name": client.firstName,
+        "Client Last Name": client.lastName,
+        "Phone Number": client.phoneNumber,
+        "E-mail": client.email,
+        "Entrance Date": client.entranceDate,
+        "Exit Date": client.exitDate,
+        "Birthday": client.dateOfBirth
+      }});
+    
+      downloadCSV(headers, data)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +66,6 @@ export const ClientList = () => {
           ? await backend.get(`/clients?page=&filter=&search=${searchKey}`)
           : await backend.get("/clients");
         setClients(response.data);
-        console.log(clients);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -118,10 +122,7 @@ export const ClientList = () => {
             <IconButton
               aria-label="Download CSV"
               onClick={() =>
-                downloadCSV(
-                  headers,
-                  data
-                )
+                onPressCSVButton()
               }
             >
               <FiUpload />
