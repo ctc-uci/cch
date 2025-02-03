@@ -24,7 +24,7 @@ export const FrontDeskMonthlyStats = () => {
 
     const fetchFrontDesk = async () => {
         try {
-            const response = await backend.get(`/frontDeskMonthlyStats/`);
+            const response = await backend.get("frontDesk", { params: { date: "2024-01-01" } });
             console.log(response.data);
             setMonthlyStats(response.data); // Adjust this if the response structure is different
         }catch (err){ 
@@ -44,7 +44,7 @@ export const FrontDeskMonthlyStats = () => {
 
     
 
-    return (<p>hello</p>/*
+    return (
         <Table variant="simple">
             <Thead>
                 <Tr>
@@ -70,6 +70,6 @@ export const FrontDeskMonthlyStats = () => {
                 </Tr>
                 ))}
             </Tbody>
-        </Table>*/
+        </Table>
     )
 };

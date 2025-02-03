@@ -23,7 +23,7 @@ frontDeskRouter.get("/", async (req, res) => {
 frontDeskRouter.get("/", async (req, res) => {
   try {
     // Query database
-    const { date } = req.body;
+    const { date } = req.query;
     const data = await db.query(
       `SELECT * FROM front_desk_monthly WHERE date = $1`,
       [date]
