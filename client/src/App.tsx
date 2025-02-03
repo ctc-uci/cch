@@ -21,6 +21,7 @@ import { RoleProvider } from "./contexts/RoleContext";
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { SuccessStory } from "./components/success_story/SuccessStory";
 import { ViewPage } from "./components/clientPage/ViewPage"
+import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -90,6 +91,10 @@ const App = () => {
                 <Route
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
+                />
+                <Route 
+                  path ="/frontDeskMonthlyStats/:id"
+                  element ={<FrontDeskMonthlyStats/>}
                 />
               </Routes>
             </Router>
