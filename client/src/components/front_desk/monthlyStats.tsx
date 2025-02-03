@@ -16,14 +16,16 @@ interface MonthlyStats {
 
 export const FrontDeskMonthlyStats = () => {
     const { backend } = useBackendContext();
-    const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>();
+    const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
     const params = useParams<{ id: string }>();
   
 
-    const fetchFrontDesk = async (id: number) => {
+    const fetchFrontDesk = async () => {
         try {
-            const response = await backend.get(`/frontDesk`);
+            const response = await backend.get(`/frontDeskMonthlyStats/`);
+            console.log(response.data);
             setMonthlyStats(response.data); // Adjust this if the response structure is different
         }catch (err){ 
             setError(err.message);
@@ -31,7 +33,18 @@ export const FrontDeskMonthlyStats = () => {
         }
     };
 
-    return (
+    useEffect(() => {
+        const fetchData = async () => {
+          setLoading(true);
+          await Promise.all([fetchFrontDesk()]);
+          setLoading(false);
+        };
+        fetchData();
+      }, []); 
+
+    
+
+    return (<p>hello</p>/*
         <Table variant="simple">
             <Thead>
                 <Tr>
@@ -57,6 +70,6 @@ export const FrontDeskMonthlyStats = () => {
                 </Tr>
                 ))}
             </Tbody>
-        </Table>
+        </Table>*/
     )
 };
