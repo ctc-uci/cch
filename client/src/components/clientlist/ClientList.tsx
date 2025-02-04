@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import {
   Button,
-  Input,
   Heading,
+  HStack,
+  Input,
   Table,
   TableContainer,
   Tbody,
@@ -14,8 +14,9 @@ import {
   Thead,
   Tr,
   VStack,
-  HStack,
 } from "@chakra-ui/react";
+
+import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -45,7 +46,9 @@ export const ClientList = () => {
       try {
         let response;
         if (searchKey) {
-          response = await backend.get(`/clients?page=&filter=&search=${searchKey}`);
+          response = await backend.get(
+            `/clients?page=&filter=&search=${searchKey}`
+          );
         } else {
           response = await backend.get("/clients");
         }
@@ -59,30 +62,50 @@ export const ClientList = () => {
 
   return (
     <VStack
-      spacing = {2}
-      align = "start"
+      spacing={2}
+      align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
-      <Heading paddingBottom = "4%">Welcome, {currentUser?.displayName}</Heading>
+      <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
       <HStack width="100%">
-        <Heading size = "md">My Complete Client Table</Heading>
-        <Heading size = "sm" paddingLeft = "10%">Last Updated: {}</Heading>
+        <Heading size="md">My Complete Client Table</Heading>
+        <Heading
+          size="sm"
+          paddingLeft="10%"
+        >
+          Last Updated: {}
+        </Heading>
       </HStack>
 
-      <VStack>
-      </VStack>
-      <HStack width = "100%" justifyContent = "space-between">
-        <Input fontSize = "12px" width = "20%" height= "30px" placeholder = 'search' onChange={(e) => setSearchKey(e.target.value)}/>
-        <HStack width  = "55%" justifyContent="space-between">
-          <Text fontSize = "12px">showing {Object.keys(clients).length} results on this page</Text>
+      <VStack></VStack>
+      <HStack
+        width="100%"
+        justifyContent="space-between"
+      >
+        <Input
+          fontSize="12px"
+          width="20%"
+          height="30px"
+          placeholder="search"
+          onChange={(e) => setSearchKey(e.target.value)}
+        />
+        <HStack
+          width="55%"
+          justifyContent="space-between"
+        >
+          <Text fontSize="12px">
+            showing {Object.keys(clients).length} results on this page
+          </Text>
           <HStack>
             <Button></Button>
-            <Text fontSize = "12px">page {} of {Math.ceil((Object.keys(clients).length)/20)}</Text>
+            <Text fontSize="12px">
+              page {} of {Math.ceil(Object.keys(clients).length / 20)}
+            </Text>
             <Button></Button>
           </HStack>
           <HStack>
-            <Button fontSize = "12px">delete</Button>
-            <Button fontSize = "12px">add</Button>
+            <Button fontSize="12px">delete</Button>
+            <Button fontSize="12px">add</Button>
           </HStack>
         </HStack>
       </HStack>
@@ -90,7 +113,7 @@ export const ClientList = () => {
         sx={{
           overflowX: "auto",
           maxWidth: "100%",
-          border: "1px solid gray"
+          border: "1px solid gray",
         }}
       >
         <Table variant="striped">
@@ -108,7 +131,11 @@ export const ClientList = () => {
           <Tbody>
             {clients
               ? clients.map((client) => (
-                  <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
+                  <Tr
+                    key={client.id}
+                    onClick={() => navigate(``)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <Td>{client.firstName}</Td>
                     <Td>{client.lastName}</Td>
                     <Td>{client.phoneNumber}</Td>
