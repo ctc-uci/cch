@@ -21,6 +21,7 @@ import { RoleProvider } from "./contexts/RoleContext";
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { SuccessStory } from "./components/success_story/SuccessStory";
 import { ViewPage } from "./components/clientPage/ViewPage"
+import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -51,6 +52,10 @@ const App = () => {
                 <Route
                   path="/dashboard"
                   element={<ProtectedRoute element={<Dashboard />} />}
+                />
+                <Route
+                  path="/client-interview-screening"
+                  element={<ClientInterviewScreening />}
                 />
                 <Route
                   path="/admin"

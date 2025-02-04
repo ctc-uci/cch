@@ -15,6 +15,8 @@ import { frontDeskRouter } from "../routes/frontDesk";
 import { locationsRouter } from "../routes/locations";
 import { randomSurveyRouter } from "../routes/randomSurvey";
 import { successRouter } from "../routes/successStory";
+import { screenerCommentRouter } from "../routes/screenerComment";
+import { initialInterviewRouter } from "../routes/initialInterview";
 import { unitsRouter } from "../routes/units";
 import { usersRouter } from "../routes/users";
 import { verifyToken } from "./middleware";
@@ -59,6 +61,8 @@ app.use("/foodDonations", donationRouter);
 app.use("/frontDesk", frontDeskRouter);
 app.use("/clients", clientsRouter);
 app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);
+app.use("/screenerComment", screenerCommentRouter);
+app.use("/initialInterview", initialInterviewRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
