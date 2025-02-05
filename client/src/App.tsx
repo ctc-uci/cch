@@ -22,6 +22,7 @@ import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { SuccessStory } from "./components/success_story/SuccessStory";
 import { ViewPage } from "./components/clientPage/ViewPage"
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
+import { MonthlyStatView } from "./components/caseManager/MonthlyStatView"
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -96,6 +97,12 @@ const App = () => {
                   path ="/frontDeskMonthlyStats/:id"
                   element ={<FrontDeskMonthlyStats/>}
                 />
+
+                <Route 
+                  path ="/MonthlyStatView/:id"
+                  element ={<MonthlyStatView/>}
+                />
+
               </Routes>
             </Router>
           </RoleProvider>
