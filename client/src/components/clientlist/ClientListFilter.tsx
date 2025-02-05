@@ -112,6 +112,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
             duration: 3000,
             isClosable: true,
           });
+          console.log(filterRows[filterRows.length - 1]);
         return;
     }
     setFilterRows([
@@ -235,7 +236,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
 
                   <Select
                     placeholder="Select Field"
-                    minWidth="150px"
+                    width="150px"
                     value={row.field}
                     onChange={(e) => updateFilterValue(row.id, 'field', e.target.value)}
                     borderRightRadius="0"
@@ -275,7 +276,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
                           <>
                              <Select
                               placeholder="Select Operator"
-                              minWidth="150px"
+                              width="150px"
                               value={row.operator}
                               onChange={(e) => updateFilterValue(row.id, 'operator', e.target.value)}
                               borderRadius="0"
@@ -288,9 +289,11 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
                               </Select>
                               {fieldType === "boolean" ? (
                               <Select
-                                minWidth="150px"
+                              width="150px"
+                                placeholder="Select Value"
                                 value={row.value}
                                 onChange={(e) => updateFilterValue(row.id, "value", e.target.value)}
+                                borderRadius="0"
                               >
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
@@ -298,7 +301,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
                             ) : (
                               <Input
                                 placeholder="Enter a value"
-                                minWidth="150px"
+                                width="150px"
                                 value={row.value}
                                 onChange={(e) => updateFilterValue(row.id, "value", e.target.value)}
                                 borderRadius="0"

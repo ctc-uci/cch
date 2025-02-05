@@ -85,7 +85,6 @@ export const ClientList = () => {
             `/clients?page=&filter=&search=${searchKey}`
           );
         } else if (filterQuery.length > 1) {
-          console.log(filterQuery.join(""))
           response = await backend.get(
             `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
           );
