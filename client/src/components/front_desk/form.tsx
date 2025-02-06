@@ -95,7 +95,7 @@ function FormFrontDesk() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent maxW='700px'>
-          <ModalHeader>Case Manager Form</ModalHeader>
+          <ModalHeader>Front Desk Form</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             {fields.map(({ name, label }) => (
