@@ -2,7 +2,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Box, Table, Thead, Tbody, Tr, Th, Td, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
-
+import CSVButton from "./CSVButton";
 interface Client {
   age: number;
   attendingSchoolUponEntry: boolean;
@@ -363,6 +363,7 @@ const handleSaveChanges = async () => {
         <Button colorScheme="blue" onClick={toggleEditForm}>
           {isEditing ? 'Cancel' : 'Edit Client Information'}
         </Button>
+        <CSVButton data={client} />
 
         {/* Conditionally render the edit form */}
         {isEditing && (
@@ -564,6 +565,7 @@ const handleSaveChanges = async () => {
                   <Button colorScheme="green" onClick={handleSaveChanges}>
                     Save Changes
                   </Button>
+                 
                 </Stack>
               </Box>
         )}

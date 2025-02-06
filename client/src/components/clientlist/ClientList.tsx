@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import CSVButton from "./CSVButton.tsx";
 import {
   Button,
   Input,
@@ -122,6 +122,7 @@ export const ClientList = () => {
           </Tbody>
         </Table>
       </TableContainer>
+      <CSVButton data={clients} />
     </VStack>
   );
 };
