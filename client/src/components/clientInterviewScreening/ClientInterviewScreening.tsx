@@ -47,6 +47,9 @@ export const ClientInterviewScreening = () => {
             );
     
             setItems(screeningCommentsResponse.data);
+            //console.log(screeningCommentsResponse.data);
+            //console.log(items);
+
           } catch (error) {
             console.error("Error fetching data:", error);
           }
@@ -54,7 +57,6 @@ export const ClientInterviewScreening = () => {
     
         getData();
 
-        console.log(items)
       }, []);
     
 
@@ -122,32 +124,31 @@ export const ClientInterviewScreening = () => {
                         <Th>Decision</Th>
                         <Th>Additional Comments</Th>
                     </Thead>
-
                     <Tbody>
 
                         {items.map((item, index) => (
                             <Tr key={index}>
                                 <Td>{item.id}</Td>
-                                <Td>{item.initial_interview_id}</Td>
-                                <Td>{item.cm_id }</Td>
+                                <Td>{item.initialInterviewId}</Td>
+                                <Td>{item.cmId }</Td>
                                 <Td>{item.willingness }</Td>
                                 <Td>{item.employability }</Td>
                                 <Td>{item.attitude }</Td>
-                                <Td>{item.length_of_sobriety }</Td>
-                                <Td>{item.completed_tx }</Td>
-                                <Td>{item.drug_test_results }</Td>
-                                <Td>{item.homeless_episode_one }</Td>
-                                <Td>{item.homeless_episode_two }</Td>
-                                <Td>{item.homeless_episode_three }</Td>
-                                <Td>{item.homeless_episode_four }</Td>
-                                <Td>{item.disabling_condition }</Td>
+                                <Td>{item.lengthOfSobriety }</Td>
+                                <Td>{item.completedTx }</Td>
+                                <Td>{item.drugTestResults }</Td>
+                                <Td>{item.homelessEpisodeOne }</Td>
+                                <Td>{item.homelessEpisodeTwo }</Td>
+                                <Td>{item.homelessEpisodeThree }</Td>
+                                <Td>{item.homelessEpisodeFour }</Td>
+                                <Td>{item.disablingCondition }</Td>
                                 <Td>{item.employed }</Td>
-                                <Td>{item.driver_license }</Td>
-                                <Td>{item.num_of_children }</Td>
-                                <Td>{item.children_in_custody }</Td>
-                                <Td>{item.last_city_perm_residence }</Td>
+                                <Td>{item.driverLicense }</Td>
+                                <Td>{item.numOfChildren }</Td>
+                                <Td>{item.childrenInCustody }</Td>
+                                <Td>{item.lastCityPermResidence }</Td>
                                 <Td>{item.decision }</Td>
-                                <Td>{item.additional_comments }</Td>
+                                <Td>{item.additionalComments }</Td>
                             </Tr>
                         ))}
 
