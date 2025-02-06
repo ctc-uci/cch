@@ -102,27 +102,29 @@ export const ClientInterviewScreening = () => {
                     <Text>Showing 12 results on this page</Text>
                 </HStack>    
                 <Table>
-                    <Thead>
-                        <Th>Initial Interview ID</Th>
-                        <Th>Case Manager ID</Th>
-                        <Th>Willingness</Th>
-                        <Th>Employability </Th>
-                        <Th>Attitude</Th>
-                        <Th>Length of Sobriety</Th>
-                        <Th>Completed TX</Th>
-                        <Th>Drug Test Results</Th>
-                        <Th>Homeless Episode One</Th>
-                        <Th>Homeless Episode Two</Th>
-                        <Th>Homeless Episode Three</Th>
-                        <Th>Homeless Episode Four</Th>
-                        <Th>Disabling Condition</Th>
-                        <Th>Employed</Th>
-                        <Th>Driver License</Th>
-                        <Th>Number of Children</Th>
-                        <Th>Children In Custody</Th>
-                        <Th>Last City Permenant Residence</Th>
-                        <Th>Decision</Th>
-                        <Th>Additional Comments</Th>
+                        <Thead>
+                            <Tr>
+                            <Th>Initial Interview ID</Th>
+                            <Th>Case Manager ID</Th>
+                            <Th>Willingness</Th>
+                            <Th>Employability </Th>
+                            <Th>Attitude</Th>
+                            <Th>Length of Sobriety</Th>
+                            <Th>Completed TX</Th>
+                            <Th>Drug Test Results</Th>
+                            <Th>Homeless Episode One</Th>
+                            <Th>Homeless Episode Two</Th>
+                            <Th>Homeless Episode Three</Th>
+                            <Th>Homeless Episode Four</Th>
+                            <Th>Disabling Condition</Th>
+                            <Th>Employed</Th>
+                            <Th>Driver License</Th>
+                            <Th>Number of Children</Th>
+                            <Th>Children In Custody</Th>
+                            <Th>Last City Permenant Residence</Th>
+                            <Th>Decision</Th>
+                            <Th>Additional Comments</Th>
+                            </Tr>
                     </Thead>
                     <Tbody>
 
