@@ -109,7 +109,7 @@ export const FormTable = () => {
           (item: RandomSurvey) => ({
             id: item.id,
             date: item.date,
-            name: "N/A",
+            name: "Not Available",
             title: "Random Survey",
           })
         );
