@@ -1,6 +1,3 @@
-// Grab data from 3 endpoints
-// Show Date, name, and formtitle (Exit Survey, Random Survey, Success Story)
-
 import { useEffect, useState } from "react";
 
 import {
@@ -81,21 +78,17 @@ type FormItem = {
 
 export const FormTable = () => {
   const { backend } = useBackendContext();
-
-  // const [monthlyData, setMonthlyData] = useState<MonthlyStat[]>([]);
   const [items, setItems] = useState<FormItem[]>([]);
 
   useEffect(() => {
     const getData = async () => {
       try {
-        // Should this be all or nothing?
         const successStoryResponse = await backend.get(`/successStory`);
 
         const randomSurveyResponse = await backend.get(`/randomSurvey`);
 
         const exitSurveyResponse = await backend.get(`/exitSurvey`);
 
-        console.log(exitSurveyResponse);
         const successStories: FormItem[] = successStoryResponse.data.map(
           (item: SuccessStory) => ({
             id: item.id,
