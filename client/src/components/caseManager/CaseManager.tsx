@@ -16,7 +16,7 @@ export const CaseManager = () => {
         const monthlyStatsResponse = await backend.get(
           `/caseManagerMonthlyStats`
         );
-
+        console.log(monthlyStatsResponse.data);
         setMonthlyData(monthlyStatsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
