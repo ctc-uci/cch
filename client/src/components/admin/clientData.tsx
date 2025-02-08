@@ -13,94 +13,35 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-// import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { CaseManager } from "../caseManager/CaseManager";
 
-interface Client {
+interface ClientData {
   id: string;
   firstName: string;
   lastName: string;
-  phoneNumber: string;
-  email: string;
-  entranceDate: string;
-  exitDate: string;
-  dateOfBirth: string;
+  type: string;
+  bedNightsChildren: string;
+  cmFirst: string;
+  cmLast: string;
+  lName: string;
 }
 
-interface Unit {
-    id: string;
-    locationId: string;
-    name: string;
-    type: string;
-  }
-
-  interface Location {
-    id: string;
-    cmId: string;
-    name: string;
-    date: string;
-    caloptimaFunded: string;
-  }
-
-  interface CaseManager {
-    id: string;
-    role: string;
-    firstName: string;
-    lastName: string;
-    phoneNumber: string;
-    email: string;
-  }
-
 export const ClientData = () => {
-//   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
-  const [clients, setClients] = useState<Client[]>([]);
-  const [units, setUnits] = useState<Unit[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [caseManagers, setClientManagers] = useState<CaseManager[]>([]);
+  const [clients, setClients] = useState<ClientData[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const clientResponse = await backend.get("/clients");
+        const clientResponse = await backend.get("/clientData");
         setClients(clientResponse.data);
-        const unitResponse = await backend.get("/units")
-        setUnits(unitResponse.data);
-        const locationResponse = await backend.get("/locations")
-        setLocations(locationResponse.data);
-        const cmResponse = await backend.get("/caseManagers")
-        setClientManagers(cmResponse.data);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
     fetchData();
   }, [backend]);
-
-  const getUnit = (unitId: string) => {
-    console.log(units);
-    if (!units.length) return "Loading unit..."; // Handle case when units are not yet loaded
-    const unit = units.find((unit) => unit.id === unitId);
-    return unit ? unit : "Unknown unit type";
-  };
-
-  const getCaseManager = (cmId: string) => {
-    console.log(caseManagers);
-    if (!caseManagers.length) return "Loading unit..."; // Handle case when units are not yet loaded
-    const cm = caseManagers.find((caseManager) => caseManager.id === cmId);
-    return cm ? (cm.firstName + " " + cm.lastName) : "Unknown Case Manager";
-  };
-
-  const getLocation = (locationId: string) => {
-    console.log(locations);
-    if (!locations.length) return "Loading unit..."; // Handle case when units are not yet loaded
-    const location = locations.find((location) => location.id === locationId);
-    return location ? location.name : "Unknown location";
-  };
-
-//   const navigate = useNavigate();
 
   return (
     <VStack
@@ -133,14 +74,13 @@ export const ClientData = () => {
           <Tbody>
             {clients
               ? clients.map((client) => (
-                //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
                   <Tr key={client.id}>
                     <Td>{client.firstName}</Td>
                     <Td>{client.lastName}</Td>
-                    <Td>{getUnit(client.unitId).type }</Td>
+                    <Td>{client.type}</Td>
                     <Td>{client.bedNightsChildren + 1}</Td>
-                    <Td>{getCaseManager(client.createdBy)}</Td>
-                    <Td>{getLocation(getUnit(client.unitId).locationId)}</Td>
+                    <Td>{client.cmFirst + ' '+ client.cmLast}</Td>
+                    <Td>{client.lName}</Td>
                   </Tr>
                 ))
               : null}

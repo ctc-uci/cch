@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navbar } from "../Navbar";
+// import { Navbar } from "../Navbar";
 
 import {
   Table,
@@ -27,53 +27,47 @@ import {
   DrawerCloseButton,
 } from "@chakra-ui/react"
 
-import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
+interface Person {
+  id: string;
+  firstName: string;
+  lastName: string;
+  location: string;
+  type: string;
+  email: string;
+}
+
+const roles_dict = {
+  "admin": "Administrator",
+  "cms": "Case Manager",
+  "clients": "Client"
+}
+
+type RoleKey = keyof typeof roles_dict;
+
 export const Admin = () => {
-  // const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
-  const [data, setData] = useState([]);
-  const [view, setView] = useState("admin"); // "admin" | "cms" | "clients"
+  const [data, setData] = useState<Person[]>([]);
+  const [view, setView] = useState<RoleKey>("admin"); // "admin" | "cms" | "clients"
   const [open, setOpen] = useState(false);
-  const [selectedData, setSelectedData] = useState([]);
-  const [locationData, setLocationData] = useState([]);
-  const [clientData, setClientData] = useState([]);
+  const [selectedData, setSelectedData] = useState<Person>({
+    id: "",
+    firstName: "",
+    lastName: "",
+    location: "",
+    type: "",
+    email: "",
+  });
+  const [clientData, setClientData] = useState<Person[]>([]);
 
-  const roles_dict = {
-    "admin": "Administrator",
-    "cms": "Case Manager",
-    "clients": "Client"
-  }
-
-  const handleRowClick = (datum) => {
+  const handleRowClick = (datum : Person) => {
     setSelectedData(datum);
     setOpen(true);
   };
 
-  const getLocationFromCM = (id) => {
-    let match = "Cannot get location";
-    for (let i = 0; i < locationData.length; i++) {
-      if (locationData[i].cmId === id) {
-        match = locationData[i].name;
-        break;
-      }
-    }
-    return match;
-  }
-
-  const getCMClients = (id) => {
-    const matches = [];
-    for (let i = 0; i < clientData.length; i++) {
-      if (clientData[i].createdBy === id) {
-        matches.push(clientData[i].firstName + " " + clientData[i].lastName);
-      }
-    }
-    return matches;
-  }
-
-  const outputDrawerData = (data) => {
+  const outputDrawerData = (data : Person, view : string) => {
     switch (view) {
       case "admin":
         return (
@@ -81,6 +75,7 @@ export const Admin = () => {
             <Text>{data.firstName} {data.lastName}</Text>
             <Text>{data.email}</Text>
             <Text>Administrator</Text>
+            <Text>{data.location}</Text>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
@@ -93,17 +88,19 @@ export const Admin = () => {
             <Text>{data.firstName} {data.lastName}</Text>
             <Text>{data.email}</Text>
             <Text>Case Manager</Text>
-            <Text>{getLocationFromCM(data.id)}</Text>
+            <Text>{data.location}</Text>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
             <br></br>
             <Text>Case Manager's Clients</Text>
-            <Text>{getCMClients(data.id).length} Clients</Text>
-            <>{getCMClients(data.id) ? getCMClients(data.id).map((datum, index) => (
-              <Text key = {index}>{index + 1}. {datum}</Text>
-              )): 
-            null}
+            <Text>{clientData.length} Clients</Text>
+            <>
+              {clientData.length > 0 
+                ? clientData.map((datum, index) => (
+                    <Text key={index}>{index + 1}. {datum.firstName} {datum.lastName}</Text>
+                  ))
+                : null}
             </>
           </>
         );
@@ -113,6 +110,7 @@ export const Admin = () => {
             <Text>{data.firstName} {data.lastName}</Text>
             <Text>{data.email}</Text>
             <Text>Client</Text>
+            <Text>{data.location}</Text>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
@@ -126,43 +124,32 @@ export const Admin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const loc_response = await backend.get("/locations");
-        setLocationData(loc_response.data);
-        const client_response = await backend.get("/clients");
-        setClientData(client_response.data);
-      } catch (error) {
-        console.log("Error fetching client data: ", error);
-      }
-    }
-    fetchData();
-  }, [backend])
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
         if (view === "admin") {
-          const response = await backend.get("/caseManagers");
-          const adminData = response.data.filter((user: { role: string; }) => user.role === "admin" || user.role === "superadmin");
-          setData(adminData);
+          const response = await backend.get("/admin/admins");
+          setData(response.data);
         }
         else if (view === "clients") {
-          setData(clientData);
+          const response = await backend.get("/admin/clients");
+          setData(response.data);
         }
         else {
-          const response = await backend.get("/caseManagers");
-          const cmData = response.data.filter((user: { role: string; }) => user.role === "case manager");
-          setData(cmData);
+          const response = await backend.get("/admin/caseManagers");
+          setData(response.data);
+        }
+        if (open && view === "cms") {
+          const response = await backend.get(`/admin/${selectedData.id}`);
+          setClientData(response.data);
         }
       } catch (error) {
-        console.log("Error fetching client data: ", error);
+        console.error("Error fetching client data: ", error);
       }
     };
     fetchData();  
-  }, [view, backend, clientData]);
+  }, [view, backend, open, selectedData]);
 
   return (
     <>
-      <Navbar/>
+      {/* <Navbar/> */}
       <HStack justifyContent="space-between">
         <VStack
         justifyContent = "flex-start" 
@@ -189,14 +176,16 @@ export const Admin = () => {
               <Tr>
                 <Th>Name</Th>
                 <Th>Email</Th>
+                <Th>Location</Th>
               </Tr>
             </Thead>
             <Tbody>
               {data
-                ? data.map((datum) => (
-                    <Tr key={datum.id} onClick={() => handleRowClick(datum)}>
+                ? data.map((datum, index) => (
+                    <Tr key={index} onClick={() => handleRowClick(datum)}>
                       <Td>{datum.firstName} {datum.lastName}</Td>
                       <Td>{datum.email}</Td>
+                      <Td>{datum.location}</Td>
                     </Tr>
                   ))
                 : null}
@@ -204,9 +193,6 @@ export const Admin = () => {
           </Table>
         </TableContainer>
         <Button>+ Add New {roles_dict[view]}</Button>
-        {/* <Button colorScheme="brand" onClick={() => setOpen(!open)}>
-          Open
-        </Button> */}
         <Drawer
           isOpen={open}
           placement="right"
