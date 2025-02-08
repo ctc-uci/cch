@@ -95,7 +95,7 @@ function FormFrontDesk() {
           <ModalCloseButton />
           <ModalBody>
             {fields.map(({ name, label }) => (
-              <Box
+              <Box 
                 key={name}
                 display="flex"
                 flexDirection="row"
@@ -104,6 +104,7 @@ function FormFrontDesk() {
               >
                 <Text width="50%">{label}</Text>
                 <Input
+                  type = {name === "date" ? "date" : "number"}
                   width='100%'
                   height="30px"
                   name={name}

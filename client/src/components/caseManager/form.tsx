@@ -135,6 +135,7 @@ function FormCM() {
               >
                 <Text width="50%">{label}</Text>
                 <Input
+                  type = {name === "date" ? "date" : "number"}
                   width='100%'
                   height="30px"
                   name={name}
