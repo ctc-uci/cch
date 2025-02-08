@@ -20,7 +20,7 @@ frontDeskRouter.get("/", async (req, res) => {
   }
 });
 
-frontDeskRouter.get("/", async (req, res) => {
+frontDeskRouter.get("/:date", async (req, res) => {
   try {
     // Query database
     const { date } = req.query;

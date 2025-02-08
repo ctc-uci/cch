@@ -20,6 +20,7 @@ import {
 import FormFrontDesk from "./form";
 
 interface MonthlyStats {
+  date: string;
   id: number;
   totalOfficeVisits: number;
   totalCalls: number;
@@ -41,7 +42,7 @@ export const FrontDeskMonthlyStats = () => {
 
   const fetchFrontDesk = async () => {
     try {
-      const response = await backend.get("frontDesk", { params: { date: "2024-01-01" } });
+      const response = await backend.get("frontDesk/");
       console.log(response.data);
       setMonthlyStats(response.data);
     } catch (err) {
@@ -68,6 +69,8 @@ export const FrontDeskMonthlyStats = () => {
       <Table variant="simple">
         <Thead>
           <Tr>
+            <Th>Date</Th>
+            <Th>ID</Th>
             <Th>Total Office Visits</Th>
             <Th>Total # of Calls</Th>
             <Th>Total # of Unduplicated Calls</Th>
@@ -84,6 +87,8 @@ export const FrontDeskMonthlyStats = () => {
               onClick={() => handleRowClick(stat)}
               cursor="pointer"
             >
+              <Td>{stat.date}</Td>
+              <Td>{stat.id}</Td>
               <Td>{stat.totalOfficeVisits}</Td>
               <Td>{stat.totalCalls}</Td>
               <Td>{stat.totalUnduplicatedCalles}</Td>
