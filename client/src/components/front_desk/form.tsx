@@ -23,7 +23,6 @@ function FormFrontDesk() {
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     date: "",
-    cm_id: "",
     total_office_visits: "",
     total_calls: "",
     total_unduplicated_calles: "",
@@ -35,7 +34,6 @@ function FormFrontDesk() {
 
   const fields = [
     { name: "date", label: "Date" },
-    { name: "cm_id", label: "CM ID" },
     { name: "total_office_visits", label: "Total Office Visits" },
     { name: "total_calls", label: "Total # of Calls" },
     { name: "total_unduplicated_calles", label: "Total # of unduplicated calls" },
@@ -57,7 +55,6 @@ function FormFrontDesk() {
     try {
     const monthlyStatData = {
         date: formData.date,
-        cm_id: parseInt(formData.cm_id || "0", 10),
         total_office_visits: parseInt(formData.total_office_visits || "0", 10),
         total_calls: parseInt(formData.total_calls || "0", 10),
         total_unduplicated_calles: parseInt(formData.total_unduplicated_calles || "0", 10),
@@ -70,7 +67,6 @@ function FormFrontDesk() {
         await backend.post("/frontDeskMonthlyStats", monthlyStatData);
         setFormData({
             date: "",
-            cm_id: "",
             total_office_visits: "",
             total_calls: "",
             total_unduplicated_calles: "",
