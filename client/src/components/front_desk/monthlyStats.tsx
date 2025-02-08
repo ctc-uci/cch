@@ -43,7 +43,6 @@ export const FrontDeskMonthlyStats = () => {
   const fetchFrontDesk = async () => {
     try {
       const response = await backend.get("frontDesk/");
-      console.log(response.data);
       setMonthlyStats(response.data);
     } catch (err) {
       setError(err.message);
@@ -60,6 +59,7 @@ export const FrontDeskMonthlyStats = () => {
   }, []);
 
   const handleRowClick = (stat: MonthlyStats) => {
+    console.log(stat);
     setSelectedRow(stat);
     onOpen(); // Open modal
   };
@@ -114,34 +114,12 @@ export const FrontDeskMonthlyStats = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  <Tr>
-                    <Td>Total Office Visits</Td>
-                    <Td>{selectedRow.totalOfficeVisits}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of Calls</Td>
-                    <Td>{selectedRow.totalCalls}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of Unduplicated Calls</Td>
-                    <Td>{selectedRow.totalUnduplicatedCalles}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of Visits to the HB Pantry/Donations Room</Td>
-                    <Td>{selectedRow.totalVisitsToPantryAndDonationsRoom}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of People Served in the HB Pantry</Td>
-                    <Td>{selectedRow.totalNumberOfPeopleServedInPantry}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of Visits to the Placentia Pantry</Td>
-                    <Td>{selectedRow.totalVisitsToPlacentiaPantry}</Td>
-                  </Tr>
-                  <Tr>
-                    <Td>Total # of People Served in the Placentia Pantry</Td>
-                    <Td>{selectedRow.totalNumberOfPeopleServedInPlacentiaPantry}</Td>
-                  </Tr>
+                    {Object.entries(selectedRow).map(([key, value], index) => (
+                      <Tr key={index}>
+                        <Td>{key}</Td>
+                        <Td>{value}</Td>
+                      </Tr>
+                    ))}
                 </Tbody>
             </Table>
             )}

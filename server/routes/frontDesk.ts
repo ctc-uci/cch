@@ -40,6 +40,7 @@ frontDeskRouter.post("/", async (req, res) => {
     // Destructure req.body
     const {
       id,
+      date,
       total_office_visits,
       total_calls,
       total_unduplicated_calles,
@@ -50,9 +51,10 @@ frontDeskRouter.post("/", async (req, res) => {
     } = req.body;
     // Do something with request body
     const data = await db.query(
-      `INSERT INTO front_desk_monthly (id,month, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry ) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9) RETURNING id`,
+      `INSERT INTO front_desk_monthly (id, date, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry ) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9) RETURNING id`,
       [
         id,
+        date,
         total_office_visits,
         total_calls,
         total_unduplicated_calles,

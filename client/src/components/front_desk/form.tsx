@@ -1,5 +1,5 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
+import {FrontDeskMonthlyStats} from "./monthlyStats";
 import {
   Box,
   Button,
@@ -15,13 +15,29 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
+//This will be used to refresh the screen when pressing submit
+interface MonthlyStats {
+  date: string;
+  id: number;
+  totalOfficeVisits: number;
+  totalCalls: number;
+  totalUnduplicatedCalles: number;
+  totalVisitsToPantryAndDonationsRoom: number;
+  totalNumberOfPeopleServedInPantry: number;
+  totalVisitsToPlacentiaPantry: number;
+  totalNumberOfPeopleServedInPlacentiaPantry: number;
+}
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 function FormFrontDesk() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { backend } = useBackendContext();
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
+    id: "",
     date: "",
     total_office_visits: "",
     total_calls: "",
@@ -33,6 +49,7 @@ function FormFrontDesk() {
   });
 
   const fields = [
+    { name: "id", label: "ID"},
     { name: "date", label: "Date" },
     { name: "total_office_visits", label: "Total Office Visits" },
     { name: "total_calls", label: "Total # of Calls" },
@@ -43,6 +60,24 @@ function FormFrontDesk() {
     { name: "total_number_of_people_served_in_placentia_pantry", label: "Total # of people served in the Placentia pantry/donations" },
   ];
 
+  //fetches the database
+  const fetchData = async() =>{
+    try {
+      const response = await backend.get("frontDesk/");
+      console.log(response.data);
+      setMonthlyStats(response.data);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+  
+useEffect(() => {
+  if (isFormSubmitted) {
+    fetchData();
+    setIsFormSubmitted(false);
+  }
+}, [isFormSubmitted]);
+
   const handleChange = (event) => {
     const name = event.target.name;
     const value = event.target.value;
@@ -51,34 +86,41 @@ function FormFrontDesk() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-    const monthlyStatData = {
-        date: formData.date,
-        total_office_visits: parseInt(formData.total_office_visits || "0", 10),
-        total_calls: parseInt(formData.total_calls || "0", 10),
-        total_unduplicated_calles: parseInt(formData.total_unduplicated_calles || "0", 10),
-        total_visits_to_pantry_and_donations_room: parseInt(formData.total_visits_to_pantry_and_donations_room || "0", 10),
-        total_number_of_people_served_in_pantry: parseInt(formData.total_number_of_people_served_in_pantry || "0", 10),
-        total_visits_to_placentia_pantry: parseInt(formData.total_visits_to_placentia_pantry || "0", 10),
-        total_number_of_people_served_in_placentia_pantry: parseInt(formData.total_number_of_people_served_in_placentia_pantry || "0", 10),
-    };
+      const monthlyStatData = {
+          id: formData.id,
+          date: formData.date,
+          total_office_visits: parseInt(formData.total_office_visits || "0", 10),
+          total_calls: parseInt(formData.total_calls || "0", 10),
+          total_unduplicated_calles: parseInt(formData.total_unduplicated_calles || "0", 10),
+          total_visits_to_pantry_and_donations_room: parseInt(formData.total_visits_to_pantry_and_donations_room || "0", 10),
+          total_number_of_people_served_in_pantry: parseInt(formData.total_number_of_people_served_in_pantry || "0", 10),
+          total_visits_to_placentia_pantry: parseInt(formData.total_visits_to_placentia_pantry || "0", 10),
+          total_number_of_people_served_in_placentia_pantry: parseInt(formData.total_number_of_people_served_in_placentia_pantry || "0", 10),
+      };
 
-        await backend.post("/frontDeskMonthlyStats", monthlyStatData);
-        setFormData({
-            date: "",
-            total_office_visits: "",
-            total_calls: "",
-            total_unduplicated_calles: "",
-            total_visits_to_pantry_and_donations_room: "",
-            total_number_of_people_served_in_pantry: "",
-            total_visits_to_placentia_pantry: "",
-            total_number_of_people_served_in_placentia_pantry: "",
-          });
-        setError(null);  // Clear any previous error
-      } catch (error) {
-        console.error("Error submitting form:", error);
-        setError("Failed to submit form. Please try again.");
+      console.log(monthlyStatData);
+
+      await backend.post("/frontDesk", monthlyStatData);
+      setFormData({
+          id: "",
+          date: "",
+          total_office_visits: "",
+          total_calls: "",
+          total_unduplicated_calles: "",
+          total_visits_to_pantry_and_donations_room: "",
+          total_number_of_people_served_in_pantry: "",
+          total_visits_to_placentia_pantry: "",
+          total_number_of_people_served_in_placentia_pantry: "",
+      });
+      //Handles refreshing the table to handle 
+      // fetchData();
+      //FrontDeskMonthlyStats();
+      setIsFormSubmitted(true);
+      setError(null);  // Clear any previous error
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      setError("Failed to submit form. Please try again.");
     } finally {
       onClose();
     }
@@ -87,7 +129,6 @@ function FormFrontDesk() {
   return (
     <>
       <Button onClick={onOpen}>Open Modal</Button>
-
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent maxW='700px'>

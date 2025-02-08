@@ -108,94 +108,12 @@ const TableCM = ({ items }: TableCMProps) => {
               </Tr>
             </Thead>
             <Tbody>
-              <Tr>
-                <Td>ID</Td>
-                <Td>{selectedRow.id}</Td>
-              </Tr>
-              <Tr>
-                <Td>Date</Td>
-                <Td>{selectedRow.date}</Td>
-              </Tr>
-              <Tr>
-                <Td>CM ID</Td>
-                <Td>{selectedRow.cmId}</Td>
-              </Tr>
-              <Tr>
-                <Td>Babies Born</Td>
-                <Td>{selectedRow.babiesBorn}</Td>
-              </Tr>
-              <Tr>
-                <Td>Enrolled in School</Td>
-                <Td>{selectedRow.enrolledInSchool}</Td>
-              </Tr>
-              <Tr>
-                <Td>Earned Degree</Td>
-                <Td>{selectedRow.earnedDegree}</Td>
-              </Tr>
-              <Tr>
-                <Td>Earned Drivers License</Td>
-                <Td>{selectedRow.earnedDriversLicense}</Td>
-              </Tr>
-              <Tr>
-                <Td>Reunified With Children</Td>
-                <Td>{selectedRow.reunifiedWithChildren}</Td>
-              </Tr>
-              <Tr>
-                <Td>Womens Birthdays</Td>
-                <Td>{selectedRow.womensBirthdays}</Td>
-              </Tr>
-              <Tr>
-                <Td>Childrens Birthdays</Td>
-                <Td>{selectedRow.childrensBirthdays}</Td>
-              </Tr>
-              <Tr>
-                <Td>Birthday Gift Card Value</Td>
-                <Td>{selectedRow.birthdayGiftCardValues}</Td>
-              </Tr>
-              <Tr>
-                <Td>Food Card Values</Td>
-                <Td>{selectedRow.foodCardValues}</Td>
-              </Tr>
-              <Tr>
-                <Td>Bus Passes</Td>
-                <Td>{selectedRow.busPasses}</Td>
-              </Tr>
-              <Tr>
-                <Td>Gas Cards Values</Td>
-                <Td>{selectedRow.gasCardsValue}</Td>
-              </Tr>
-              <Tr>
-                <Td>Phone Contacts</Td>
-                <Td>{selectedRow.phoneContacts}</Td>
-              </Tr>
-              <Tr>
-                <Td>Inperson Contacts</Td>
-                <Td>{selectedRow.inpersonContacts}</Td>
-              </Tr>
-              <Tr>
-                <Td>Email Contacts</Td>
-                <Td>{selectedRow.emailContacts}</Td>
-              </Tr>
-              <Tr>
-                <Td>Interviews Scheduled</Td>
-                <Td>{selectedRow.interviewsScheduled}</Td>
-              </Tr>
-              <Tr>
-                <Td>Interviews Conducted</Td>
-                <Td>{selectedRow.interviewsConducted}</Td>
-              </Tr>
-              <Tr>
-                <Td>Positive Tests</Td>
-                <Td>{selectedRow.positiveTests}</Td>
-              </Tr>
-              <Tr>
-                <Td>No Call No Shows</Td>
-                <Td>{selectedRow.noCallNoShows}</Td>
-              </Tr>
-              <Tr>
-                <Td>Other</Td>
-                <Td>{selectedRow.other}</Td>
-              </Tr>
+              {Object.entries(selectedRow).map(([key, value], index) => (
+                <Tr key={index}>
+                  <Td>{key}</Td>
+                  <Td>{value}</Td>
+                </Tr>
+              ))}
             </Tbody>
         </Table>
         )}
