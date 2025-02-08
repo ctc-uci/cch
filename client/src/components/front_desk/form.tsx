@@ -29,7 +29,7 @@ interface MonthlyStats {
 }
 interface FormFrontDeskProps {
   onFormSubmitSuccess: () => void;
-}
+} 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {

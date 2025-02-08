@@ -67,11 +67,11 @@ export const FrontDeskMonthlyStats = () => {
     console.log(stat);
     setSelectedRow(stat);
     onOpen(); // Open modal
-  };
+  }; 
   const handleFormSubmitSuccess = () => {
     setRefreshStatus(true);
   };
-  return (
+  return ( 
     <div>
       <Table variant="simple">
         <Thead>
