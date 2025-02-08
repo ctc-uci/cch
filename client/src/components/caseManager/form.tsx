@@ -16,8 +16,10 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
-function FormCM() {
+interface FormCMProps {
+  onFormSubmitSuccess: () => void;
+} 
+function FormCM({ onFormSubmitSuccess }: FormCMProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { backend } = useBackendContext();
 
@@ -104,6 +106,7 @@ function FormCM() {
       };
       console.log(monthlyStatData);
       await backend.post("/caseManagerMonthlyStats", monthlyStatData);
+      onFormSubmitSuccess();
       // Do we need to clear monthlyStatData?
     } catch (error) {
       console.error("Error creating monthly stat:", error);
