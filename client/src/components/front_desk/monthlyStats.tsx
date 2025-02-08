@@ -39,6 +39,7 @@ export const FrontDeskMonthlyStats = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedRow, setSelectedRow] = useState<MonthlyStats | null>(null);
   const params = useParams<{ id: string }>();
+  const [refreshStatus, setRefreshStatus] = useState(true);
 
   const fetchFrontDesk = async () => {
     try {
@@ -55,15 +56,21 @@ export const FrontDeskMonthlyStats = () => {
       await Promise.all([fetchFrontDesk()]);
       setLoading(false);
     };
-    fetchData();
-  }, []);
+    if (refreshStatus) {
+      fetchData();
+      setRefreshStatus(false);
+    }
+    
+  }, [refreshStatus]);
 
   const handleRowClick = (stat: MonthlyStats) => {
     console.log(stat);
     setSelectedRow(stat);
     onOpen(); // Open modal
   };
-
+  const handleFormSubmitSuccess = () => {
+    setRefreshStatus(true);
+  };
   return (
     <div>
       <Table variant="simple">
@@ -131,7 +138,7 @@ export const FrontDeskMonthlyStats = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <FormFrontDesk />
+      <FormFrontDesk onFormSubmitSuccess={handleFormSubmitSuccess} />
     </div>
   );
 };

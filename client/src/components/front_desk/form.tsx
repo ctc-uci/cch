@@ -27,15 +27,16 @@ interface MonthlyStats {
   totalVisitsToPlacentiaPantry: number;
   totalNumberOfPeopleServedInPlacentiaPantry: number;
 }
-
+interface FormFrontDeskProps {
+  onFormSubmitSuccess: () => void;
+}
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-function FormFrontDesk() {
+function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { backend } = useBackendContext();
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     id: "",
     date: "",
@@ -59,24 +60,7 @@ function FormFrontDesk() {
     { name: "total_visits_to_placentia_pantry", label: "Total # of visits to the Placentia pantry/donations room" },
     { name: "total_number_of_people_served_in_placentia_pantry", label: "Total # of people served in the Placentia pantry/donations" },
   ];
-
-  //fetches the database
-  const fetchData = async() =>{
-    try {
-      const response = await backend.get("frontDesk/");
-      console.log(response.data);
-      setMonthlyStats(response.data);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
   
-useEffect(() => {
-  if (isFormSubmitted) {
-    fetchData();
-    setIsFormSubmitted(false);
-  }
-}, [isFormSubmitted]);
 
   const handleChange = (event) => {
     const name = event.target.name;
@@ -113,11 +97,8 @@ useEffect(() => {
           total_visits_to_placentia_pantry: "",
           total_number_of_people_served_in_placentia_pantry: "",
       });
-      //Handles refreshing the table to handle 
-      // fetchData();
-      //FrontDeskMonthlyStats();
-      setIsFormSubmitted(true);
-      setError(null);  // Clear any previous error
+      setError(null);
+      onFormSubmitSuccess();
     } catch (error) {
       console.error("Error submitting form:", error);
       setError("Failed to submit form. Please try again.");
