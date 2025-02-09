@@ -35,7 +35,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
     const columns = [
       { name: "Client First Name", value: "clients.first_name", type: "string" },
       { name: "Client Last Name", value: "clients.last_name", type: "string" },
-      { name: "Date of Birth", value: "clients.date_of_birth", type: "string" },
+      { name: "Date of Birth", value: "clients.date_of_birth", type: "date" },
       { name: "Case Manager First Name", value: "case_managers.first_name", type: "string" },
       { name: "Case Manager Last Name", value: "case_managers.last_name", type: "string" },
       { name: "Location", value: "locations.name", type: "string" },
@@ -48,9 +48,9 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
       { name: "Emergency Contact Name", value: "clients.emergency_contact_name", type: "string" },
       { name: "Emergency Contact Phone", value: "clients.emergency_contact_phone_number", type: "string" },
       { name: "Medical", value: "clients.medical", type: "boolean" },
-      { name: "Entrance Date", value: "clients.entrance_date", type: "string" },
-      { name: "Estimated Exit Date", value: "clients.estimated_exit_date", type: "string" },
-      { name: "Exit Date", value: "clients.exit_date", type: "string" },
+      { name: "Entrance Date", value: "clients.entrance_date", type: "date" },
+      { name: "Estimated Exit Date", value: "clients.estimated_exit_date", type: "date" },
+      { name: "Exit Date", value: "clients.exit_date", type: "date" },
       { name: "Bed Nights", value: "clients.bed_nights", type: "number" },
       { name: "Bed Nights for Children", value: "clients.bed_nights_children", type: "number" },
       { name: "Pregnant Upon Entry", value: "clients.pregnant_upon_entry", type: "boolean" },
@@ -260,7 +260,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
                             { value: ">", label: "greater than" },
                             { value: "<", label: "less than" },
                           ];
-                        } else if (fieldType === "boolean") {
+                        } else if (fieldType === "boolean" || fieldType === "date") {
                           operators = [
                             { value: "=", label: "is" },
                             { value: "!=", label: "is not" },
@@ -298,6 +298,14 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
                               </Select>
+                            ) : fieldType === "date" ? (
+                              <Input
+                                type="date"
+                                width="150px"
+                                value={row.value}
+                                onChange={(e) => updateFilterValue(row.id, "value", e.target.value)}
+                                borderRadius="0"
+                              />
                             ) : (
                               <Input
                                 placeholder="Enter a value"

@@ -17,8 +17,6 @@ clientsRouter.get("/:id", async (req, res) => {
 // Gets specific number of clients based on page count and returns either ALL or specific clients that have search keyword present.
 clientsRouter.get("/", async (req, res) => {
   try {
-    console.log("Handler reached");
-
     const { search, page, filter } = req.query;
     let queryStr = `
       SELECT 
