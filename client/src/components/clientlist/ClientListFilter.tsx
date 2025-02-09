@@ -94,6 +94,9 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
         if (row.field !== "" && row.operator !== "" && row.value !== "") {
           if (row.operator === "contains") {
             return `${row.selector} ${row.field} ILIKE '%${row.value}%'`;
+          } 
+          else if (row.operator === "=") {
+            return `${row.selector} ${row.field} ILIKE '%${row.value}%'`;
           }
           return `${row.selector} ${row.field} ${row.operator} '${row.value}'`;
         }
