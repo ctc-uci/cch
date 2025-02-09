@@ -4,6 +4,7 @@ import {
   Button,
   Heading,
   HStack,
+  IconButton,
   Input,
   Table,
   TableContainer,
@@ -16,42 +17,54 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
+import { FiUpload } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
-interface Client {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  entranceDate: string;
-  exitDate: string;
-  dateOfBirth: string;
-}
+import { Client } from "../../types/client";
+import { downloadCSV } from "../../utils/downloadCSV";
 
 export const ClientList = () => {
+  const headers = [
+    "Client First Name",
+    "Client Last Name",
+    "Phone Number",
+    "E-mail",
+    "Entrance Date",
+    "Exit Date",
+    "Birthday",
+  ];
+
+  const navigate = useNavigate();
+
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
   const [clients, setClients] = useState<Client[]>([]);
   const [searchKey, setSearchKey] = useState("");
 
-  const navigate = useNavigate();
+  const onPressCSVButton = () => {
+    const data =
+      clients.map(client => {return {
+        "Client First Name": client.firstName,
+        "Client Last Name": client.lastName,
+        "Phone Number": client.phoneNumber,
+        "E-mail": client.email,
+        "Entrance Date": client.entranceDate,
+        "Exit Date": client.exitDate,
+        "Birthday": client.dateOfBirth
+      }});
+
+      downloadCSV(headers, data, `clients.csv`)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let response;
-        if (searchKey) {
-          response = await backend.get(
-            `/clients?page=&filter=&search=${searchKey}`
-          );
-        } else {
-          response = await backend.get("/clients");
-        }
+        const response = searchKey
+          ? await backend.get(`/clients?page=&filter=&search=${searchKey}`)
+          : await backend.get("/clients");
         setClients(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -94,18 +107,26 @@ export const ClientList = () => {
           justifyContent="space-between"
         >
           <Text fontSize="12px">
-            showing {Object.keys(clients).length} results on this page
+            showing {clients.length} results on this page
           </Text>
           <HStack>
             <Button></Button>
             <Text fontSize="12px">
-              page {} of {Math.ceil(Object.keys(clients).length / 20)}
+              page {} of {Math.ceil(clients.length / 20)}
             </Text>
             <Button></Button>
           </HStack>
           <HStack>
             <Button fontSize="12px">delete</Button>
             <Button fontSize="12px">add</Button>
+            <IconButton
+              aria-label="Download CSV"
+              onClick={() =>
+                onPressCSVButton()
+              }
+            >
+              <FiUpload />
+            </IconButton>
           </HStack>
         </HStack>
       </HStack>
@@ -119,13 +140,9 @@ export const ClientList = () => {
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th>Client First Name</Th>
-              <Th>Client Last Name</Th>
-              <Th>Phone Number</Th>
-              <Th>E-mail</Th>
-              <Th>Entrance Date</Th>
-              <Th>Exit Date</Th>
-              <Th>Birthday</Th>
+              {headers.map((header, index) => (
+                <Th key={index}>{header}</Th>
+              ))}
             </Tr>
           </Thead>
           <Tbody>
@@ -133,7 +150,7 @@ export const ClientList = () => {
               ? clients.map((client) => (
                   <Tr
                     key={client.id}
-                    onClick={() => navigate(``)}
+                    onClick={() => navigate(`/ViewClient/${client.id}`)}
                     style={{ cursor: "pointer" }}
                   >
                     <Td>{client.firstName}</Td>
