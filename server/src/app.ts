@@ -20,6 +20,8 @@ import { initialInterviewRouter } from "../routes/initialInterview.js";
 import { unitsRouter } from "../routes/units";
 import { usersRouter } from "../routes/users";
 import { verifyToken } from "./middleware";
+import { clientDataRouter } from "../routes/clientData";
+import { adminRouter } from "../routes/admin";
 
 dotenv.config();
 
@@ -61,6 +63,8 @@ app.use("/foodDonations", donationRouter);
 app.use("/frontDesk", frontDeskRouter);
 app.use("/clients", clientsRouter);
 app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);
+app.use("/admin", adminRouter);
+app.use("/clientData", clientDataRouter);
 app.use("/screenerComment", screenerCommentRouter);
 app.use("/initialInterview", initialInterviewRouter);
 

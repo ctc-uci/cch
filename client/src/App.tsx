@@ -8,11 +8,13 @@ import {
 } from "react-router-dom";
 
 import { Admin } from "./components/admin/Admin";
+import { ClientData } from "./components/admin/clientData";
 import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
+import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { FormTable } from "./components/formsTable/formsTable";
 import { Login } from "./components/login/Login";
@@ -71,6 +73,16 @@ const App = () => {
                 <Route
                   path="/clientlist"
                   element={<ClientList />}
+                />
+
+                <Route
+                  path="/clientdata"
+                  element={<ClientData />}
+                />
+
+                <Route
+                  path = "/donations"
+                  element = {<Donations />}
                 />
 
                 <Route
