@@ -1,4 +1,5 @@
 import express from "express";
+
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
@@ -6,92 +7,92 @@ const successRouter = express.Router();
 successRouter.use(express.json());
 
 successRouter.get("/", async (req, res) => {
-    try {
-        const success = await db.query(`SELECT * FROM success_story`);
-        res.status(200).json(keysToCamel(success));
-    } catch (err) {
-        res.status(400).send(err.message);
-    }
+  try {
+    const success = await db.query(`SELECT * FROM success_story`);
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 successRouter.get("/:clientId", async (req, res) => {
-    try {
-        const { clientId } = req.params;
-        const children = await db.query(
-            `SELECT * FROM success_story WHERE client_id = $1`,
-            [clientId]
-        );
-        res.status(200).json(keysToCamel(children));
-    } catch (err) {
-        res.status(400).send(err.message);
-    }
+  try {
+    const { clientId } = req.params;
+    const children = await db.query(
+      `SELECT * FROM success_story WHERE client_id = $1`,
+      [clientId]
+    );
+    res.status(200).json(keysToCamel(children));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 successRouter.post("/", async (req, res) => {
-    try {
-        const {
-            date,
-            client_id,
-            name,
-            cm_id,
-            previous_situation,
-            cch_impact,
-            where_now,
-            tell_donors,
-            quote,
-            consent,
-            site,
-            exit_date,
-            entrance_date
-        } = req.body;
+  try {
+    const {
+      date,
+      client_id,
+      name,
+      cm_id,
+      previous_situation,
+      cch_impact,
+      where_now,
+      tell_donors,
+      quote,
+      consent,
+      site,
+      exit_date,
+      entrance_date,
+    } = req.body;
 
-        const success = await db.query(
-            `INSERT INTO success_story 
+    const success = await db.query(
+      `INSERT INTO success_story 
             (date, client_id, name, cm_id, previous_situation, cch_impact, where_now, tell_donors, quote, consent, site, exit_date, entrance_date) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
             RETURNING id`,
-            [
-                date,
-                client_id,
-                name,
-                cm_id,
-                previous_situation,
-                cch_impact,
-                where_now,
-                tell_donors,
-                quote,
-                consent,
-                site,
-                exit_date,
-                entrance_date
-            ]
-        );
-        res.status(200).json(keysToCamel(success));
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
+      [
+        date,
+        client_id,
+        name,
+        cm_id,
+        previous_situation,
+        cch_impact,
+        where_now,
+        tell_donors,
+        quote,
+        consent,
+        site,
+        exit_date,
+        entrance_date,
+      ]
+    );
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 successRouter.put("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const {
-            date,
-            client_id,
-            cm_id,
-            previous_situation,
-            cch_impact,
-            where_now,
-            tell_donors,
-            quote,
-            consent,
-            site,
-            exit_date,
-            entrance_date
-        } = req.body;
+  try {
+    const { id } = req.params;
+    const {
+      date,
+      client_id,
+      cm_id,
+      previous_situation,
+      cch_impact,
+      where_now,
+      tell_donors,
+      quote,
+      consent,
+      site,
+      exit_date,
+      entrance_date,
+    } = req.body;
 
-        const user = await db.query(
-            `UPDATE success_story SET
+    const user = await db.query(
+      `UPDATE success_story SET
             date = COALESCE($1, date),
             client_id = COALESCE($2, client_id),
             cm_id = COALESCE($3, cm_id),
@@ -106,40 +107,39 @@ successRouter.put("/:id", async (req, res) => {
             entrance_date = COALESCE($12, entrance_date)
             WHERE id = $13
             RETURNING id`,
-            [
-                date,
-                client_id,
-                cm_id,
-                previous_situation,
-                cch_impact,
-                where_now,
-                tell_donors,
-                quote,
-                consent,
-                site,
-                exit_date,
-                entrance_date,
-                id
-            ]
-        );
+      [
+        date,
+        client_id,
+        cm_id,
+        previous_situation,
+        cch_impact,
+        where_now,
+        tell_donors,
+        quote,
+        consent,
+        site,
+        exit_date,
+        entrance_date,
+        id,
+      ]
+    );
 
-        res.status(200).json(keysToCamel(user));
-    } catch (err) {
-        res.status(400).send(err.message);
-    }
+    res.status(200).json(keysToCamel(user));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 successRouter.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const success = await db.query(
-            `DELETE FROM success_story WHERE id = $1`,
-            [id]
-        );
-        res.status(200).json(keysToCamel(success));
-    } catch (err) {
-        res.status(400).send(err.message);
-    }
+  try {
+    const { id } = req.params;
+    const success = await db.query(`DELETE FROM success_story WHERE id = $1`, [
+      id,
+    ]);
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
 });
 
 export { successRouter };

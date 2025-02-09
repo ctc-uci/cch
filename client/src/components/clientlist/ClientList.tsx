@@ -45,7 +45,7 @@ export const ClientList = () => {
   const [searchKey, setSearchKey] = useState("");
 
   const onPressCSVButton = () => {
-    const data = 
+    const data =
       clients.map(client => {return {
         "Client First Name": client.firstName,
         "Client Last Name": client.lastName,
@@ -55,7 +55,7 @@ export const ClientList = () => {
         "Exit Date": client.exitDate,
         "Birthday": client.dateOfBirth
       }});
-    
+
       downloadCSV(headers, data, `clients.csv`)
   }
 

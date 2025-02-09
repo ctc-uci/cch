@@ -9,10 +9,11 @@ import {
 } from "@chakra-ui/react";
 
 import { NavLink } from "react-router-dom";
-import { User } from  "../types/user";
+
+import { User } from "../types/user";
 
 export const Navbar = (role: User["role"]) => {
-  role = "user"
+  role = "user";
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
@@ -24,7 +25,7 @@ export const Navbar = (role: User["role"]) => {
     );
   };
 
-  const createTabs = (role: User['role']) => {
+  const createTabs = (role: User["role"]) => {
     if (role === "admin") {
       return (
         <>
@@ -53,9 +54,7 @@ export const Navbar = (role: User["role"]) => {
           <HStack>
             <Avatar src={"/vite.svg"} />
             <Box>Colette's Children's Home</Box>
-            <HStack spacing={5}>
-              {createTabs(role)}
-            </HStack>
+            <HStack spacing={5}>{createTabs(role)}</HStack>
           </HStack>
         </Flex>
       </Box>
