@@ -80,7 +80,12 @@ export const ClientList = () => {
       try {
         console.log(filterQuery)
         let response;
-        if (searchKey) {
+
+        if (searchKey && filterQuery.length > 1) {
+          response = await backend.get(
+            `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
+          );
+        } else if (searchKey) {
           response = await backend.get(
             `/clients?page=&filter=&search=${searchKey}`
           );

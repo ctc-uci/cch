@@ -89,7 +89,7 @@ export const ClientListFilter = ({setFilterQuery}: ClientListFilterProps) => {
 
   useEffect(() => {
     setFilterQuery([
-      "WHERE",
+      "",
       ...filterRows.map((row) => {
         if (row.field !== "" && row.operator !== "" && row.value !== "") {
           if (row.operator === "contains") {

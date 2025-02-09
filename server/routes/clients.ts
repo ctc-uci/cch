@@ -17,6 +17,8 @@ clientsRouter.get("/:id", async (req, res) => {
 // Gets specific number of clients based on page count and returns either ALL or specific clients that have search keyword present.
 clientsRouter.get("/", async (req, res) => {
   try {
+    console.log("Handler reached");
+
     const { search, page, filter } = req.query;
     let queryStr = `
       SELECT 
@@ -28,13 +30,14 @@ clientsRouter.get("/", async (req, res) => {
       LEFT JOIN case_managers ON clients.created_by = case_managers.id
       LEFT JOIN units ON clients.unit_id = units.id
       LEFT JOIN locations ON units.location_id = locations.id
+      WHERE 1=1
     `;
 
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
       queryStr += ` 
-        WHERE clients.id::TEXT ILIKE ${stringSearch}
+      AND (clients.id::TEXT ILIKE ${stringSearch}
         OR clients.created_by::TEXT ILIKE ${stringSearch}
         OR clients.unit_id::TEXT ILIKE ${stringSearch}
         OR clients."grant"::TEXT ILIKE ${stringSearch}
@@ -76,11 +79,11 @@ clientsRouter.get("/", async (req, res) => {
         OR case_managers.first_name::TEXT ILIKE ${stringSearch}
         OR case_managers.last_name::TEXT ILIKE ${stringSearch}
         OR locations.name::TEXT ILIKE ${stringSearch}
-      `;
+      )`;
     }
 
     if (filter) {
-      queryStr += filter;
+      queryStr += `AND ${filter}`;
     }
 
     queryStr += " ORDER BY clients.id ASC";
