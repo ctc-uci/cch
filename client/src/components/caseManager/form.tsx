@@ -119,9 +119,12 @@ function FormCM() {
     <>
       <Button onClick={onOpen}>Open Modal</Button>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+      >
         <ModalOverlay />
-        <ModalContent maxW='700px'>
+        <ModalContent maxW="700px">
           <ModalHeader>Case Manager Form</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -135,7 +138,7 @@ function FormCM() {
               >
                 <Text width="50%">{label}</Text>
                 <Input
-                  width='100%'
+                  width="100%"
                   height="30px"
                   name={name}
                   value={formData[name]}
@@ -146,10 +149,18 @@ function FormCM() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={handleSubmit}
+            >
               Submit
             </Button>
-            <Button colorScheme="red" mr={3} onClick={onClose}>
+            <Button
+              colorScheme="red"
+              mr={3}
+              onClick={onClose}
+            >
               Cancel
             </Button>
           </ModalFooter>
