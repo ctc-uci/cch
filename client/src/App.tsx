@@ -25,9 +25,6 @@ import { SuccessStory } from "./components/success_story/SuccessStory";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
-import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { SuccessStory } from "./components/success_story/SuccessStory";
-import { ViewPage } from "./components/clientPage/ViewPage"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
