@@ -25,6 +25,8 @@ import { SuccessStory } from "./components/success_story/SuccessStory";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+// import { Comments } from "./compoenents/clientPage/Comments"
 
 
 // import { Comments } from "./compoenents/clientPage/Comments"
@@ -57,6 +59,10 @@ const App = () => {
                   path="/dashboard"
                   element={<ProtectedRoute element={<Dashboard />} />}
                 />
+                <Route
+                  path="/client-interview-screening"
+                  element={<ClientInterviewScreening />}
+                /> 
                 <Route
                   path="/forms-table"
                   element={<FormTable />}
