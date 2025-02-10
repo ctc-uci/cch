@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CSVButton from "./CSVButton.tsx";
 import {
   Button,
   Input,
@@ -108,7 +107,7 @@ export const ClientList = () => {
           <Tbody>
             {clients
               ? clients.map((client) => (
-                  <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
+                  <Tr key={client.id} onClick={() => navigate(`/ViewClient/${client.id}`)} style={{ cursor: "pointer" }}>
                     <Td>{client.firstName}</Td>
                     <Td>{client.lastName}</Td>
                     <Td>{client.phoneNumber}</Td>
@@ -122,7 +121,6 @@ export const ClientList = () => {
           </Tbody>
         </Table>
       </TableContainer>
-      <CSVButton data={clients} />
     </VStack>
   );
 };
