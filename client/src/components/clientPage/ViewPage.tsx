@@ -1,8 +1,23 @@
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useEffect, useState } from "react";
+
+import {
+  Box,
+  Button,
+  Input,
+  Stack,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@chakra-ui/react";
+
 import { useParams } from "react-router-dom";
 import { Box, Table, Thead, Tbody, Tr, Th, Td, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
 import CSVButton from "./CSVButton";
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+
 interface Client {
   age: number;
   attendingSchoolUponEntry: boolean;
@@ -52,41 +67,40 @@ const emptyClient: Client = {
   bedNights: 0,
   bedNightsChildren: 0,
   chronicallyHomeless: false,
-  cityOfLastPermanentResidence: '',
+  cityOfLastPermanentResidence: "",
   createdBy: 0,
-  dateOfBirth: '',
-  destinationcity: '',
+  dateOfBirth: "",
+  destinationcity: "",
   disabledChildren: false,
-  email: '',
-  emergencyContactName: '',
-  emergencyContactPhoneNumber: '',
+  email: "",
+  emergencyContactName: "",
+  emergencyContactPhoneNumber: "",
   employmentGained: false,
-  entranceDate: '',
-  estimatedExitdate: '',
-  ethnicity: '',
-  exitDate: '',
-  firstName: '',
-  grant: '',
+  entranceDate: "",
+  estimatedExitdate: "",
+  ethnicity: "",
+  exitDate: "",
+  firstName: "",
+  grant: "",
   homelessnessLength: 0,
   id: 0,
-  lastName: '',
+  lastName: "",
   medical: false,
-  phoneNumber: '',
+  phoneNumber: "",
   pregnantUponEntry: false,
-  priorLiving: '',
-  priorLivingCity: '',
-  race: '',
-  reasonForLeaving: '',
+  priorLiving: "",
+  priorLivingCity: "",
+  race: "",
+  reasonForLeaving: "",
   reunified: false,
-  savingsAmount: '',
+  savingsAmount: "",
   shelterInLastFiveYears: false,
-  specificDestination: '',
-  specificReasonForLeaving: '',
-  status: '',
+  specificDestination: "",
+  specificReasonForLeaving: "",
+  status: "",
   successfulCompletion: false,
   unitId: 0,
 };
-
 
 interface Children {
   id: number;
@@ -145,46 +159,49 @@ export const ViewPage = () => {
   const toggleEditForm = () => {
     setIsEditing(!isEditing); // Toggle the editing state
   };
-/*
+  /*
   //TODO: WORK ON THIS
   // Function to handle saving changes (dummy example for now)
   const handleSaveChanges = () => {
       setIsEditing(false); // Hide the form after saving
   };
 */
-// Function to convert camelCase to snake_case
-function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
-  const snakeCased: { [key: string]: any } = {};
+  // Function to convert camelCase to snake_case
+  function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
+    const snakeCased: { [key: string]: any } = {};
 
-  for (const [key, value] of Object.entries(obj)) {
-    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
-    snakeCased[snakeKey] = value;
-  }
-
-  return snakeCased;
-}
-
-const handleSaveChanges = async () => {
-  console.log(client);
-  try {
-    if (!client) {
-      console.error("Client data is undefined!");
-      return;  // Exit early if `client` is undefined
+    for (const [key, value] of Object.entries(obj)) {
+      const snakeKey = key.replace(
+        /[A-Z]/g,
+        (letter) => `_${letter.toLowerCase()}`
+      );
+      snakeCased[snakeKey] = value;
     }
 
-    // Convert client object from camelCase to snake_case before sending it to the backend
-    const clientData = toSnakeCase(client);
-    console.log('Saving client changes...', clientData);
-    // Send the updated client data in snake_case format
-    //console.log(clientData);
-    await backend.put(`/clients/${client.id}`, clientData);
-
-    console.log('Client information updated successfully!');
-    setIsEditing(false);  // Hide the form after saving
-  } catch (error) {
-    console.error('Error updating client information:', error.message);
+    return snakeCased;
   }
-};
+
+  const handleSaveChanges = async () => {
+    console.log(client);
+    try {
+      if (!client) {
+        console.error("Client data is undefined!");
+        return; // Exit early if `client` is undefined
+      }
+
+      // Convert client object from camelCase to snake_case before sending it to the backend
+      const clientData = toSnakeCase(client);
+      console.log("Saving client changes...", clientData);
+      // Send the updated client data in snake_case format
+      //console.log(clientData);
+      await backend.put(`/clients/${client.id}`, clientData);
+
+      console.log("Client information updated successfully!");
+      setIsEditing(false); // Hide the form after saving
+    } catch (error) {
+      console.error("Error updating client information:", error.message);
+    }
+  };
   //Table for Children Info
   return (
     <Box>
@@ -213,194 +230,205 @@ const handleSaveChanges = async () => {
         </Table>
       </Box>
       <Box mb={6}>
-        {!isEditing?(
-          <h2>Client Information</h2>
-        ) : <p></p>
-        }
-      {!isEditing && client ? (
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Question</Th>
-              <Th>Answer</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            <Tr>
-              <Td>ID</Td>
-              <Td>{client.id}</Td>
-            </Tr>
-            <Tr>
-              <Td>First Name</Td>
-              <Td>{client.firstName}</Td>
-            </Tr>
-            <Tr>
-              <Td>Last Name</Td>
-              <Td>{client.lastName}</Td>
-            </Tr>
-            <Tr>
-              <Td>Age</Td>
-              <Td>{client.age}</Td>
-            </Tr>
-            <Tr>
-              <Td>Date of Birth</Td>
-              <Td>{client.dateOfBirth}</Td>
-            </Tr>
-            <Tr>
-              <Td>Email</Td>
-              <Td>{client.email}</Td>
-            </Tr>
-            <Tr>
-              <Td>Phone Number</Td>
-              <Td>{client.phoneNumber}</Td>
-            </Tr>
-            <Tr>
-              <Td>Created By</Td>
-              <Td>{client.createdBy}</Td>
-            </Tr>
-            <Tr>
-              <Td>Grant</Td>
-              <Td>{client.grant}</Td>
-            </Tr>
-            <Tr>
-              <Td>Status</Td>
-              <Td>{client.status}</Td>
-            </Tr>
-            <Tr>
-              <Td>Ethnicity</Td>
-              <Td>{client.ethnicity}</Td>
-            </Tr>
-            <Tr>
-              <Td>Race</Td>
-              <Td>{client.race}</Td>
-            </Tr>
-            <Tr>
-              <Td>Medical</Td>
-              <Td>{client.medical ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Emergency Contact Name</Td>
-              <Td>{client.emergencyContactName}</Td>
-            </Tr>
-            <Tr>
-              <Td>Emergency Contact Phone</Td>
-              <Td>{client.emergencyContactPhoneNumber}</Td>
-            </Tr>
-            <Tr>
-              <Td>Homelessness Length</Td>
-              <Td>{client.homelessnessLength} years</Td>
-            </Tr>
-            <Tr>
-              <Td>Reunified</Td>
-              <Td>{client.reunified ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Successful Completion</Td>
-              <Td>{client.successfulCompletion ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Pregnant Upon Entry</Td>
-              <Td>{client.pregnantUponEntry ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Disabled Children</Td>
-              <Td>{client.disabledChildren ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Attending School Upon Entry</Td>
-              <Td>{client.attendingSchoolUponEntry ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Attending School Upon Exit</Td>
-              <Td>{client.attendingSchoolUponExit ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Savings Amount</Td>
-              <Td>{client.savingsAmount}</Td>
-            </Tr>
-            <Tr>
-              <Td>Specific Destination</Td>
-              <Td>{client.specificDestination}</Td>
-            </Tr>
-            <Tr>
-              <Td>Estimated Exit Date</Td>
-              <Td>{client.estimatedExitdate}</Td>
-            </Tr>
-            <Tr>
-              <Td>Exit Date</Td>
-              <Td>{client.exitDate}</Td>
-            </Tr>
-            <Tr>
-              <Td>Unit ID</Td>
-              <Td>{client.unitId}</Td>
-            </Tr>
-            <Tr>
-              <Td>Prior Living</Td>
-              <Td>{client.priorLiving}</Td>
-            </Tr>
-            <Tr>
-              <Td>Prior Living City</Td>
-              <Td>{client.priorLivingCity}</Td>
-            </Tr>
-            <Tr>
-              <Td>Shelter in Last Five Years</Td>
-              <Td>{client.shelterInLastFiveYears ? 'Yes' : 'No'}</Td>
-            </Tr>
-            <Tr>
-              <Td>Specific Reason for Leaving</Td>
-              <Td>{client.specificReasonForLeaving}</Td>
-            </Tr>
-            <Tr>
-              <Td>Reason for Leaving</Td>
-              <Td>{client.reasonForLeaving}</Td>
-            </Tr>
-          </Tbody>
-        </Table>
+        {!isEditing ? <h2>Client Information</h2> : <p></p>}
+        {!isEditing && client ? (
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Question</Th>
+                <Th>Answer</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              <Tr>
+                <Td>ID</Td>
+                <Td>{client.id}</Td>
+              </Tr>
+              <Tr>
+                <Td>First Name</Td>
+                <Td>{client.firstName}</Td>
+              </Tr>
+              <Tr>
+                <Td>Last Name</Td>
+                <Td>{client.lastName}</Td>
+              </Tr>
+              <Tr>
+                <Td>Age</Td>
+                <Td>{client.age}</Td>
+              </Tr>
+              <Tr>
+                <Td>Date of Birth</Td>
+                <Td>{client.dateOfBirth}</Td>
+              </Tr>
+              <Tr>
+                <Td>Email</Td>
+                <Td>{client.email}</Td>
+              </Tr>
+              <Tr>
+                <Td>Phone Number</Td>
+                <Td>{client.phoneNumber}</Td>
+              </Tr>
+              <Tr>
+                <Td>Created By</Td>
+                <Td>{client.createdBy}</Td>
+              </Tr>
+              <Tr>
+                <Td>Grant</Td>
+                <Td>{client.grant}</Td>
+              </Tr>
+              <Tr>
+                <Td>Status</Td>
+                <Td>{client.status}</Td>
+              </Tr>
+              <Tr>
+                <Td>Ethnicity</Td>
+                <Td>{client.ethnicity}</Td>
+              </Tr>
+              <Tr>
+                <Td>Race</Td>
+                <Td>{client.race}</Td>
+              </Tr>
+              <Tr>
+                <Td>Medical</Td>
+                <Td>{client.medical ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Emergency Contact Name</Td>
+                <Td>{client.emergencyContactName}</Td>
+              </Tr>
+              <Tr>
+                <Td>Emergency Contact Phone</Td>
+                <Td>{client.emergencyContactPhoneNumber}</Td>
+              </Tr>
+              <Tr>
+                <Td>Homelessness Length</Td>
+                <Td>{client.homelessnessLength} years</Td>
+              </Tr>
+              <Tr>
+                <Td>Reunified</Td>
+                <Td>{client.reunified ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Successful Completion</Td>
+                <Td>{client.successfulCompletion ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Pregnant Upon Entry</Td>
+                <Td>{client.pregnantUponEntry ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Disabled Children</Td>
+                <Td>{client.disabledChildren ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Attending School Upon Entry</Td>
+                <Td>{client.attendingSchoolUponEntry ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Attending School Upon Exit</Td>
+                <Td>{client.attendingSchoolUponExit ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Savings Amount</Td>
+                <Td>{client.savingsAmount}</Td>
+              </Tr>
+              <Tr>
+                <Td>Specific Destination</Td>
+                <Td>{client.specificDestination}</Td>
+              </Tr>
+              <Tr>
+                <Td>Estimated Exit Date</Td>
+                <Td>{client.estimatedExitdate}</Td>
+              </Tr>
+              <Tr>
+                <Td>Exit Date</Td>
+                <Td>{client.exitDate}</Td>
+              </Tr>
+              <Tr>
+                <Td>Unit ID</Td>
+                <Td>{client.unitId}</Td>
+              </Tr>
+              <Tr>
+                <Td>Prior Living</Td>
+                <Td>{client.priorLiving}</Td>
+              </Tr>
+              <Tr>
+                <Td>Prior Living City</Td>
+                <Td>{client.priorLivingCity}</Td>
+              </Tr>
+              <Tr>
+                <Td>Shelter in Last Five Years</Td>
+                <Td>{client.shelterInLastFiveYears ? "Yes" : "No"}</Td>
+              </Tr>
+              <Tr>
+                <Td>Specific Reason for Leaving</Td>
+                <Td>{client.specificReasonForLeaving}</Td>
+              </Tr>
+              <Tr>
+                <Td>Reason for Leaving</Td>
+                <Td>{client.reasonForLeaving}</Td>
+              </Tr>
+            </Tbody>
+          </Table>
         ) : (
           <p></p>
         )}
 
-        <Button colorScheme="blue" onClick={toggleEditForm}>
-          {isEditing ? 'Cancel' : 'Edit Client Information'}
+        <Button
+          colorScheme="blue"
+          onClick={toggleEditForm}
+        >
+          {isEditing ? "Cancel" : "Edit Client Information"}
         </Button>
         <CSVButton data={client} />
 
         {/* Conditionally render the edit form */}
         {isEditing && (
-              <Box mt={4}>
-                <h3>Edit Client Information</h3>
-                <Stack spacing={3}>
-                  <Input
-                    placeholder="First Name"
-                    defaultValue={client.firstName}
-                    onChange={(e) => setClient({ ...client, firstName: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Last Name"
-                    defaultValue={client.lastName}
-                    onChange={(e) => setClient({ ...client, lastName: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Age"
-                    defaultValue={client.age}
-                    onChange={(e) => setClient({ ...client, age: parseInt(e.target.value) })}
-                  />
-                  <Input
-                    placeholder="Date of Birth"
-                    defaultValue={client?.dateOfBirth}
-                    onChange={(e) => setClient({ ...client, dateOfBirth: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Email"
-                    defaultValue={client?.email}
-                    onChange={(e) => setClient({ ...client, email: e.target.value })}
-                  />
-                  <Input
-                    placeholder="Phone Number"
-                    defaultValue={client?.phoneNumber}
-                    onChange={(e) => setClient({ ...client, phoneNumber: e.target.value })}
-                  />
-
+          <Box mt={4}>
+            <h3>Edit Client Information</h3>
+            <Stack spacing={3}>
+              <Input
+                placeholder="First Name"
+                defaultValue={client.firstName}
+                onChange={(e) =>
+                  setClient({ ...client, firstName: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Last Name"
+                defaultValue={client.lastName}
+                onChange={(e) =>
+                  setClient({ ...client, lastName: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Age"
+                defaultValue={client.age}
+                onChange={(e) =>
+                  setClient({ ...client, age: parseInt(e.target.value) })
+                }
+              />
+              <Input
+                placeholder="Date of Birth"
+                defaultValue={client?.dateOfBirth}
+                onChange={(e) =>
+                  setClient({ ...client, dateOfBirth: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Email"
+                defaultValue={client?.email}
+                onChange={(e) =>
+                  setClient({ ...client, email: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Phone Number"
+                defaultValue={client?.phoneNumber}
+                onChange={(e) =>
+                  setClient({ ...client, phoneNumber: e.target.value })
+                }
+              />
                   <Input
                     placeholder="Grant"
                     defaultValue={client?.grant}
@@ -569,7 +597,7 @@ const handleSaveChanges = async () => {
                 </Stack>
               </Box>
         )}
-    </Box>
+      </Box>
     </Box>
   );
 };

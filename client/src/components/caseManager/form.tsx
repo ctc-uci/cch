@@ -16,8 +16,10 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
-function FormCM() {
+interface FormCMProps {
+  onFormSubmitSuccess: () => void;
+} 
+function FormCM({ onFormSubmitSuccess }: FormCMProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { backend } = useBackendContext();
 
@@ -89,10 +91,7 @@ function FormCM() {
         reunified_with_children: parseInt(formData.reunified_with_children, 10),
         womens_birthdays: parseInt(formData.womens_birthdays, 10),
         childrens_birthdays: parseInt(formData.childrens_birthdays, 10),
-        birthday_gift_card_values: parseInt(
-          formData.birthday_gift_card_values,
-          10
-        ),
+        birthday_gift_card_values: parseInt(formData.birthday_gift_card_values,10),
         food_card_values: parseInt(formData.food_card_values, 10),
         bus_passes: parseInt(formData.bus_passes, 10),
         gas_cards_value: parseInt(formData.gas_cards_value, 10),
@@ -105,8 +104,9 @@ function FormCM() {
         no_call_no_shows: parseInt(formData.no_call_no_shows, 10),
         other: parseInt(formData.other, 10),
       };
-
+      console.log(monthlyStatData);
       await backend.post("/caseManagerMonthlyStats", monthlyStatData);
+      onFormSubmitSuccess();
       // Do we need to clear monthlyStatData?
     } catch (error) {
       console.error("Error creating monthly stat:", error);
@@ -119,9 +119,12 @@ function FormCM() {
     <>
       <Button onClick={onOpen}>Open Modal</Button>
 
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+      >
         <ModalOverlay />
-        <ModalContent maxW='700px'>
+        <ModalContent maxW="700px">
           <ModalHeader>Case Manager Form</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
@@ -135,6 +138,7 @@ function FormCM() {
               >
                 <Text width="50%">{label}</Text>
                 <Input
+                  type = {name === "date" ? "date" : "number"}
                   width='100%'
                   height="30px"
                   name={name}
@@ -146,10 +150,18 @@ function FormCM() {
           </ModalBody>
 
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={handleSubmit}
+            >
               Submit
             </Button>
-            <Button colorScheme="red" mr={3} onClick={onClose}>
+            <Button
+              colorScheme="red"
+              mr={3}
+              onClick={onClose}
+            >
               Cancel
             </Button>
           </ModalFooter>
