@@ -18,64 +18,82 @@ clientsRouter.get("/:id", async (req, res) => {
 clientsRouter.get("/", async (req, res) => {
   try {
     const { search, page, filter } = req.query;
-    let queryStr = `SELECT * FROM clients`;
+    let queryStr = `
+      SELECT 
+        clients.*, 
+        case_managers.first_name AS case_manager_first_name, 
+        case_managers.last_name AS case_manager_last_name,
+        locations.name AS location_name  -- Get location name
+      FROM clients
+      LEFT JOIN case_managers ON clients.created_by = case_managers.id
+      LEFT JOIN units ON clients.unit_id = units.id
+      LEFT JOIN locations ON units.location_id = locations.id
+      WHERE 1=1
+    `;
+
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
-      queryStr = queryStr.concat(
-        " ",
-        `WHERE id::TEXT ILIKE ${stringSearch}
-            OR created_by::TEXT ILIKE ${stringSearch}
-            OR unit_id::TEXT ILIKE ${stringSearch}
-            OR "grant"::TEXT ILIKE ${stringSearch}
-            OR "status"::TEXT ILIKE ${stringSearch}
-            OR first_name::TEXT ILIKE ${stringSearch}
-            OR last_name::TEXT ILIKE ${stringSearch}
-            OR date_of_birth::TEXT ILIKE ${stringSearch}
-            OR age::TEXT ILIKE ${stringSearch}
-            OR phone_number::TEXT ILIKE ${stringSearch}
-            OR email::TEXT ILIKE ${stringSearch}
-            OR emergency_contact_name::TEXT ILIKE ${stringSearch}
-            OR emergency_contact_phone_number::TEXT ILIKE ${stringSearch}
-            OR medical::TEXT ILIKE ${stringSearch}
-            OR entrance_date::TEXT ILIKE ${stringSearch}
-            OR estimated_exit_date::TEXT ILIKE ${stringSearch}
-            OR exit_date::TEXT ILIKE ${stringSearch}
-            OR bed_nights::TEXT ILIKE ${stringSearch}
-            OR bed_nights_children::TEXT ILIKE ${stringSearch}
-            OR pregnant_upon_entry::TEXT ILIKE ${stringSearch}
-            OR disabled_children::TEXT ILIKE ${stringSearch}
-            OR ethnicity::TEXT ILIKE ${stringSearch}
-            OR race::TEXT ILIKE ${stringSearch}
-            OR city_of_last_permanent_residence::TEXT ILIKE ${stringSearch}
-            OR prior_living::TEXT ILIKE ${stringSearch}
-            OR prior_living_city::TEXT ILIKE ${stringSearch}
-            OR shelter_in_last_five_years::TEXT ILIKE ${stringSearch}
-            OR homelessness_length::TEXT ILIKE ${stringSearch}
-            OR chronically_homeless::TEXT ILIKE ${stringSearch}
-            OR attending_school_upon_entry::TEXT ILIKE ${stringSearch}
-            OR employement_gained::TEXT ILIKE ${stringSearch}
-            OR reason_for_leaving::TEXT ILIKE ${stringSearch}
-            OR specific_reason_for_leaving::TEXT ILIKE ${stringSearch}
-            OR specific_destination::TEXT ILIKE ${stringSearch}
-            OR savings_amount::TEXT ILIKE ${stringSearch}
-            OR attending_school_upon_exit::TEXT ILIKE ${stringSearch}
-            OR reunified::TEXT ILIKE ${stringSearch}
-            OR successful_completion::TEXT ILIKE ${stringSearch}
-            OR destination_city::TEXT ILIKE ${stringSearch}`
-      );
+      queryStr += ` 
+      AND (clients.id::TEXT ILIKE ${stringSearch}
+        OR clients.created_by::TEXT ILIKE ${stringSearch}
+        OR clients.unit_id::TEXT ILIKE ${stringSearch}
+        OR clients."grant"::TEXT ILIKE ${stringSearch}
+        OR clients."status"::TEXT ILIKE ${stringSearch}
+        OR clients.first_name::TEXT ILIKE ${stringSearch}
+        OR clients.last_name::TEXT ILIKE ${stringSearch}
+        OR clients.date_of_birth::TEXT ILIKE ${stringSearch}
+        OR clients.age::TEXT ILIKE ${stringSearch}
+        OR clients.phone_number::TEXT ILIKE ${stringSearch}
+        OR clients.email::TEXT ILIKE ${stringSearch}
+        OR clients.emergency_contact_name::TEXT ILIKE ${stringSearch}
+        OR clients.emergency_contact_phone_number::TEXT ILIKE ${stringSearch}
+        OR clients.medical::TEXT ILIKE ${stringSearch}
+        OR clients.entrance_date::TEXT ILIKE ${stringSearch}
+        OR clients.estimated_exit_date::TEXT ILIKE ${stringSearch}
+        OR clients.exit_date::TEXT ILIKE ${stringSearch}
+        OR clients.bed_nights::TEXT ILIKE ${stringSearch}
+        OR clients.bed_nights_children::TEXT ILIKE ${stringSearch}
+        OR clients.pregnant_upon_entry::TEXT ILIKE ${stringSearch}
+        OR clients.disabled_children::TEXT ILIKE ${stringSearch}
+        OR clients.ethnicity::TEXT ILIKE ${stringSearch}
+        OR clients.race::TEXT ILIKE ${stringSearch}
+        OR clients.city_of_last_permanent_residence::TEXT ILIKE ${stringSearch}
+        OR clients.prior_living::TEXT ILIKE ${stringSearch}
+        OR clients.prior_living_city::TEXT ILIKE ${stringSearch}
+        OR clients.shelter_in_last_five_years::TEXT ILIKE ${stringSearch}
+        OR clients.homelessness_length::TEXT ILIKE ${stringSearch}
+        OR clients.chronically_homeless::TEXT ILIKE ${stringSearch}
+        OR clients.attending_school_upon_entry::TEXT ILIKE ${stringSearch}
+        OR clients.employement_gained::TEXT ILIKE ${stringSearch}
+        OR clients.reason_for_leaving::TEXT ILIKE ${stringSearch}
+        OR clients.specific_reason_for_leaving::TEXT ILIKE ${stringSearch}
+        OR clients.specific_destination::TEXT ILIKE ${stringSearch}
+        OR clients.savings_amount::TEXT ILIKE ${stringSearch}
+        OR clients.attending_school_upon_exit::TEXT ILIKE ${stringSearch}
+        OR clients.reunified::TEXT ILIKE ${stringSearch}
+        OR clients.successful_completion::TEXT ILIKE ${stringSearch}
+        OR clients.destination_city::TEXT ILIKE ${stringSearch}
+        OR case_managers.first_name::TEXT ILIKE ${stringSearch}
+        OR case_managers.last_name::TEXT ILIKE ${stringSearch}
+        OR locations.name::TEXT ILIKE ${stringSearch}
+      )`;
     }
 
-    queryStr += " ORDER BY id ASC";
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY clients.id ASC";
 
     if (page) {
-      queryStr = queryStr.concat(" ", `LIMIT ${page}`);
+      queryStr += ` LIMIT ${page}`;
     }
 
     const clients = await db.query(queryStr);
-
     res.status(200).json(keysToCamel(clients));
   } catch (err) {
+    console.log(err.message)
     res.status(500).send(err.message);
   }
 });
