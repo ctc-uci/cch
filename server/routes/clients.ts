@@ -6,11 +6,11 @@ import { db } from "../db/db-pgp";
 export const clientsRouter = Router();
 clientsRouter.get("/:id", async (req, res) => {
   try {
-      const { id } = req.params;
-      const clients = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
-      res.status(200).json(keysToCamel(clients));
+    const { id } = req.params;
+    const clients = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
+    res.status(200).json(keysToCamel(clients));
   } catch (err) {
-      res.status(500).send(err.message);
+    res.status(500).send(err.message);
   }
 });
 
@@ -215,15 +215,13 @@ clientsRouter.post("/", async (req, res) => {
 
     res.status(200).json({ id: data[0].id });
   } catch (err) {
-      res.status(500).send(err.message);
-
+    res.status(500).send(err.message);
   }
 });
 
 // Updates a client based on ID.
 clientsRouter.put("/:id", async (req, res) => {
   try {
-
     const {
       created_by,
       unit_id,
