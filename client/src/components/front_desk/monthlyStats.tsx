@@ -43,7 +43,7 @@ export const FrontDeskMonthlyStats = () => {
 
   const fetchFrontDesk = async () => {
     try {
-      const response = await backend.get("frontDesk/");
+      const response = await backend.get("/frontDesk");
       setMonthlyStats(response.data);
     } catch (err) {
       setError(err.message);
