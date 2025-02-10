@@ -1,4 +1,5 @@
 import { Router } from "express";
+
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 export const screenerCommentRouter = Router();
@@ -39,6 +40,7 @@ screenerCommentRouter.get("/", async (req, res) => {
     queryStr += " ORDER BY " + sortBy + " ASC";
 
     const data = await db.query(queryStr);
+
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);

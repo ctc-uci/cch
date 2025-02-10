@@ -1,26 +1,26 @@
+import { useEffect, useState } from "react";
+
 import {
   Button,
   FormControl,
   FormLabel,
   Heading,
   HStack,
+  Input,
   Radio,
   RadioGroup,
+  Select,
   Text,
   Textarea,
   useToast,
   VStack,
-  Input,
-  Select,
-
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { useEffect, useState } from "react";
 
 type CaseManager = {
   id: number;
-  role: string;  // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
+  role: string; // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
   firstName: string;
   lastName: string;
   phone_number: string;
@@ -32,18 +32,17 @@ export const RandomClientSurvey = () => {
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
   const toast = useToast();
 
-  useEffect (() => {
+  useEffect(() => {
     const getCaseManagers = async () => {
-      try{
+      try {
         const response = await backend.get("/caseManagers");
         setCaseManagers(response.data);
+      } catch (error) {
+        console.log("error retrieving case managers: ", error.message);
       }
-      catch(error){
-        console.log("error retrieving case managers: ", error.message)
-      }
-    }
+    };
     getCaseManagers();
-  },[]);
+  }, []);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -112,11 +111,7 @@ export const RandomClientSurvey = () => {
         style={{ width: "100%" }}
         onSubmit={handleSubmit}
       >
-
         <VStack spacing={6}>
-
-
-
           <FormControl isRequired>
             <FormLabel>
               Please rate the quality of the service in the CCH program.
@@ -435,17 +430,22 @@ export const RandomClientSurvey = () => {
               placeholder="Enter your response..."
             />
           </FormControl>
-                <FormControl isRequired>
-                <FormLabel>Who is your case manager?</FormLabel>
-                  <Select name="cm_id" placeholder="Select your case manager">
-                  {caseManagers.map((manager: CaseManager) => (
-                      <option key={manager.id}  value={manager.id}>
-                        {manager.firstName} {manager.lastName}
-                      </option >
-                    ))}
-                  </Select>
-              </FormControl>
-        
+          <FormControl isRequired>
+            <FormLabel>Who is your case manager?</FormLabel>
+            <Select
+              name="cm_id"
+              placeholder="Select your case manager"
+            >
+              {caseManagers.map((manager: CaseManager) => (
+                <option
+                  key={manager.id}
+                  value={manager.id}
+                >
+                  {manager.firstName} {manager.lastName}
+                </option>
+              ))}
+            </Select>
+          </FormControl>
 
           <FormControl isRequired>
             <FormLabel>
@@ -468,9 +468,13 @@ export const RandomClientSurvey = () => {
           </FormControl>
 
           <FormControl isRequired>
-                <FormLabel>Date of Program Completion</FormLabel>
-                <Input name='date' type='date' placeholder='Date' />
-            </FormControl> 
+            <FormLabel>Date of Program Completion</FormLabel>
+            <Input
+              name="date"
+              type="date"
+              placeholder="Date"
+            />
+          </FormControl>
 
           <Button
             type="submit"

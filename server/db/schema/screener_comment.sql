@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS screener_comment_table CASCADE;
+
 CREATE TABLE screener_comment (
-    id SERIAL PRIMARY KEY NOT NULL,
+    id SERIAL PRIMARY KEY NOT NULL,    
     initial_interview_id int NOT NULL,
     cm_id int NOT NULL,
     willingness int NOT NULL,
@@ -24,3 +25,4 @@ CREATE TABLE screener_comment (
     FOREIGN KEY(cm_id) REFERENCES case_manager(id)
     FOREIGN KEY(initial_interview_id) REFERENCES initial_interview(id)
 );
+
