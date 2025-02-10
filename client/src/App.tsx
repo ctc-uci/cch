@@ -25,6 +25,7 @@ import { SuccessStory } from "./components/success_story/SuccessStory";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
+import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
@@ -116,6 +117,11 @@ const App = () => {
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
                 />
+                <Route 
+                  path ="/frontDesk"
+                  element ={<FrontDeskMonthlyStats/>}
+                />
+
               </Routes>
             </Router>
           </RoleProvider>

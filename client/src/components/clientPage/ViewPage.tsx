@@ -379,8 +379,6 @@ export const ViewPage = () => {
         >
           {isEditing ? "Cancel" : "Edit Client Information"}
         </Button>
-
-        {/* Conditionally render the edit form */}
         {isEditing && (
           <Box mt={4}>
             <h3>Edit Client Information</h3>

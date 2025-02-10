@@ -7,7 +7,7 @@ import TableCM from "./table";
 
 export const CaseManager = () => {
   const { backend } = useBackendContext();
-
+  const [refreshStatus, setRefreshStatus] = useState(true);
   const [monthlyData, setMonthlyData] = useState<MonthlyStat[]>([]);
 
   useEffect(() => {
@@ -16,20 +16,25 @@ export const CaseManager = () => {
         const monthlyStatsResponse = await backend.get(
           `/caseManagerMonthlyStats`
         );
-
+        console.log(monthlyStatsResponse.data);
         setMonthlyData(monthlyStatsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
-    getData();
-  }, []);
-
+    if (refreshStatus){
+      setRefreshStatus(false);
+      getData();
+    }
+    
+  }, [refreshStatus]);
+  const handleFormSubmitSuccess = () => {
+    setRefreshStatus(true);
+  };
   return (
     <div>
       <TableCM items={monthlyData} />
-      <FormCM />
+      <FormCM onFormSubmitSuccess={handleFormSubmitSuccess}/>
     </div>
   );
 };
