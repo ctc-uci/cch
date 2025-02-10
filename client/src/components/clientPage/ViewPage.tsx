@@ -14,7 +14,6 @@ import {
 } from "@chakra-ui/react";
 
 import { useParams } from "react-router-dom";
-import { Box, Table, Thead, Tbody, Tr, Th, Td, Input, Stack, Button, ButtonGroup } from "@chakra-ui/react";
 import CSVButton from "./CSVButton";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 

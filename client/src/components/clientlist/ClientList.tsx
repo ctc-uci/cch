@@ -18,7 +18,6 @@ import {
 } from "@chakra-ui/react";
 
 import { FiUpload } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
