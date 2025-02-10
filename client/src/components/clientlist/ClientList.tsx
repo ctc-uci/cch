@@ -4,6 +4,7 @@ import {
   Button,
   Heading,
   HStack,
+  IconButton,
   Input,
   Table,
   TableContainer,
@@ -16,6 +17,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
+import { FiUpload } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -65,7 +67,23 @@ interface Client {
   locationName: string;
 }
 
+import { Client } from "../../types/client";
+import { downloadCSV } from "../../utils/downloadCSV";
+
+
 export const ClientList = () => {
+  const headers = [
+    "Client First Name",
+    "Client Last Name",
+    "Phone Number",
+    "E-mail",
+    "Entrance Date",
+    "Exit Date",
+    "Birthday",
+  ];
+
+  const navigate = useNavigate();
+
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
@@ -73,7 +91,20 @@ export const ClientList = () => {
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
 
-  const navigate = useNavigate();
+  const onPressCSVButton = () => {
+    const data =
+      clients.map(client => {return {
+        "Client First Name": client.firstName,
+        "Client Last Name": client.lastName,
+        "Phone Number": client.phoneNumber,
+        "E-mail": client.email,
+        "Entrance Date": client.entranceDate,
+        "Exit Date": client.exitDate,
+        "Birthday": client.dateOfBirth
+      }});
+
+      downloadCSV(headers, data, `clients.csv`)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,18 +170,26 @@ export const ClientList = () => {
           justifyContent="space-between"
         >
           <Text fontSize="12px">
-            showing {Object.keys(clients).length} results on this page
+            showing {clients.length} results on this page
           </Text>
           <HStack>
             <Button></Button>
             <Text fontSize="12px">
-              page {} of {Math.ceil(Object.keys(clients).length / 20)}
+              page {} of {Math.ceil(clients.length / 20)}
             </Text>
             <Button></Button>
           </HStack>
           <HStack>
             <Button fontSize="12px">delete</Button>
             <Button fontSize="12px">add</Button>
+            <IconButton
+              aria-label="Download CSV"
+              onClick={() =>
+                onPressCSVButton()
+              }
+            >
+              <FiUpload />
+            </IconButton>
           </HStack>
         </HStack>
       </HStack>
@@ -208,7 +247,7 @@ export const ClientList = () => {
               ? clients.map((client) => (
                   <Tr
                     key={client.id}
-                    onClick={() => navigate(``)}
+                    onClick={() => navigate(`/ViewClient/${client.id}`)}
                     style={{ cursor: "pointer" }}
                   >
                     <Td>{client.firstName}</Td>
