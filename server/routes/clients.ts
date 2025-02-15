@@ -140,6 +140,7 @@ clientsRouter.post("/", async (req, res) => {
       reunified,
       successful_completion,
       destination_city,
+      comments,
     } = req.body;
 
     const data = await db.query(
@@ -182,9 +183,10 @@ clientsRouter.post("/", async (req, res) => {
           reunified,
           successful_completion,
           destination_city,
+          comments,
         ) VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $27,
-          $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38
+          $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
         )
         RETURNING id;
         `,
@@ -228,6 +230,7 @@ clientsRouter.post("/", async (req, res) => {
         reunified,
         successful_completion,
         destination_city,
+        comments,
       ]
     );
 
@@ -280,6 +283,7 @@ clientsRouter.put("/:id", async (req, res) => {
       successful_completion,
       destination_city,
       clientId,
+      comments,
     } = req.body;
     const { id } = req.params;
 
@@ -323,8 +327,9 @@ clientsRouter.put("/:id", async (req, res) => {
         attending_school_upon_exit = COALESCE($35, attending_school_upon_exit),
         reunified = COALESCE($36, reunified),
         successful_completion = COALESCE($37, successful_completion),
-        destination_city = COALESCE($38, destination_city)
-      WHERE id = $39
+        destination_city = COALESCE($38, destination_city),
+        comments = COALESCE($39 comments)
+      WHERE id = $40
       RETURNING *;
     `;
 
@@ -368,6 +373,7 @@ clientsRouter.put("/:id", async (req, res) => {
       successful_completion,
       destination_city,
       clientId,
+      comments,
     ];
 
     await db.query(query, values);

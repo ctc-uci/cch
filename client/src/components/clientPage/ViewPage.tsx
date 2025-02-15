@@ -19,6 +19,7 @@ import CSVButton from "./CSVButton";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import Comments from "./comments";
 import ChildrenCards from "./childrenCards";
+import Forms from "./forms"
 interface Client {
   age: number;
   attendingSchoolUponEntry: boolean;
@@ -59,6 +60,7 @@ interface Client {
   status: string;
   successfulCompletion: boolean;
   unitId: number;
+  comments: string;
 }
 
 const emptyClient: Client = {
@@ -101,6 +103,7 @@ const emptyClient: Client = {
   status: "",
   successfulCompletion: false,
   unitId: 0,
+  comments: "",
 };
 
 export interface Children {
@@ -134,8 +137,7 @@ export const ViewPage = () => {
   //fetches the database for clients
   const fetchClient = async (id: number) => {
     try {
-      const response = await backend.get(`clients/${id}`);
-      console.log(response.data);
+      const response = await backend.get(`/clients/${id}`);
       setClient(response.data[0]);
     } catch (err) {
       setError(err.message);
@@ -184,7 +186,6 @@ export const ViewPage = () => {
   }
 
   const handleSaveChanges = async () => {
-    console.log(client);
     try {
       if (!client) {
         console.error("Client data is undefined!");
@@ -195,7 +196,6 @@ export const ViewPage = () => {
       const clientData = toSnakeCase(client);
       console.log("Saving client changes...", clientData);
       // Send the updated client data in snake_case format
-      //console.log(clientData);
       await backend.put(`/clients/${client.id}`, clientData);
 
       console.log("Client information updated successfully!");
@@ -219,10 +219,10 @@ export const ViewPage = () => {
             <ChildrenCards items={children} />
           </TabPanel>
           <TabPanel>
-            <p>two!</p>
+            <Forms/>
           </TabPanel>
           <TabPanel>
-            <Comments/>
+            <Comments clientId={client.id}/>
           </TabPanel>
         </TabPanels>
       </Tabs>

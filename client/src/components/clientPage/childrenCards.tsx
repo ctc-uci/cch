@@ -1,4 +1,4 @@
-import { SimpleGrid, Card, CardHeader, Heading, CardBody, Text, CardFooter } from '@chakra-ui/react'
+import { SimpleGrid, Card, CardHeader, Heading, CardBody, Text, CardFooter, Input, Button} from '@chakra-ui/react'
 
 import {Children} from './ViewPage'
 
@@ -14,9 +14,13 @@ function ChildrenCards({items} : ChildrenProps) {
                     <CardHeader>
                         <Heading>{item.firstName} {item.lastName}</Heading>
                     </CardHeader>
-                    <CardBody>
+                    <CardBody> 
                         <Text>{item.dateOfBirth}</Text>
                     </CardBody>
+                    <CardFooter>
+                        <Input/>
+                        <Button>Save</Button>
+                    </CardFooter>
                 </Card>
             ))}
         </SimpleGrid>
