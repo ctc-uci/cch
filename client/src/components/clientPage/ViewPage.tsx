@@ -59,6 +59,7 @@ interface Client {
   status: string;
   successfulCompletion: boolean;
   unitId: number;
+  comments: string;
 }
 
 const emptyClient: Client = {
@@ -101,6 +102,7 @@ const emptyClient: Client = {
   status: "",
   successfulCompletion: false,
   unitId: 0,
+  comments: "",
 };
 
 export interface Children {
@@ -108,6 +110,7 @@ export interface Children {
   firstName: string;
   lastName: string;
   dateOfBirth: number;
+  comments: string;
 }
 
 export const ViewPage = () => {

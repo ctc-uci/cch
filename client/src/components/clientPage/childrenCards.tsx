@@ -17,6 +17,9 @@ function ChildrenCards({items} : ChildrenProps) {
                     <CardBody>
                         <Text>{item.dateOfBirth}</Text>
                     </CardBody>
+                    <CardBody>
+                        <Text>{item.comments}</Text>
+                    </CardBody>
                 </Card>
             ))}
         </SimpleGrid>

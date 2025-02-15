@@ -33,7 +33,7 @@ childRouter.post("/", async (req, res) => {
     const { first_name, last_name, parent_id, date_of_birth, reunified } =
       req.body;
     const child = await db.query(
-      `INSERT INTO children (first_name, last_name, parent_id, date_of_birth, reunified) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      `INSERT INTO children (first_name, last_name, parent_id, date_of_birth, reunified, comments) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [first_name, last_name, parent_id, date_of_birth, reunified]
     );
     res.status(200).json(keysToCamel(child));
