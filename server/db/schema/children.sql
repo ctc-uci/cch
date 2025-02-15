@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS children (
     parent_id INT NOT NULL,
     date_of_birth DATE NOT NULL,
     reunified BOOL NOT NULL,
+    comments VARCHAR(2048),
     FOREIGN KEY (parent_id) REFERENCES clients(id)
 );
