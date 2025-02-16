@@ -172,6 +172,7 @@ export const ViewPage = () => {
 */
   // Function to convert camelCase to snake_case
   function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
+    // console.log("hello");
     const snakeCased: { [key: string]: any } = {};
 
     for (const [key, value] of Object.entries(obj)) {
@@ -181,7 +182,7 @@ export const ViewPage = () => {
       );
       snakeCased[snakeKey] = value;
     }
-
+    // console.log("hello");
     return snakeCased;
   }
 
@@ -427,173 +428,172 @@ export const ViewPage = () => {
                     setClient({ ...client, phoneNumber: e.target.value })
                   }
                 />
-                    <Input
-                      placeholder="Grant"
-                      defaultValue={client?.grant}
-                      onChange={(e) => setClient({ ...client, grant: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Status"
-                      defaultValue={client?.status}
-                      onChange={(e) => setClient({ ...client, status: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Ethnicity"
-                      defaultValue={client?.ethnicity}
-                      onChange={(e) => setClient({ ...client, ethnicity: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Race"
-                      defaultValue={client?.race}
-                      onChange={(e) => setClient({ ...client, race: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Medical"
-                      value={client.medical ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          medical: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Emergency Contact Name"
-                      defaultValue={client?.emergencyContactName}
-                      onChange={(e) => setClient({ ...client, emergencyContactName: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Emergency Contact Phone	"
-                      defaultValue={client?.emergencyContactPhoneNumber}
-                      onChange={(e) => setClient({ ...client, emergencyContactPhoneNumber: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Homelessness Length	"
-                      defaultValue={client?.homelessnessLength}
-                      onChange={(e) => setClient({ ...client, homelessnessLength: parseInt(e.target.value) })}
-                    />
-                    <Input
-                      placeholder="Reunified"
-                      value={client?.reunified ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          reunified: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Successful Completion"
-                      value={client?.successfulCompletion ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          successfulCompletion: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Pregnant Upon Entry"
-                      value={client?.pregnantUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          pregnantUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Disabled Children"
-                      value={client?.disabledChildren ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          disabledChildren: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Attending School Upon Entry"
-                      value={client?.attendingSchoolUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          attendingSchoolUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Attending School Upon Exit	"
-                      value={client?.attendingSchoolUponExit ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          attendingSchoolUponExit: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Saving Account"
-                      defaultValue={client?.savingsAmount}
-                      onChange={(e) => setClient({ ...client, savingsAmount: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Specific Destination"
-                      defaultValue={client?.specificDestination}
-                      onChange={(e) => setClient({ ...client, specificDestination: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Estimated Exit Date"
-                      defaultValue={client?.estimatedExitdate}
-                      onChange={(e) => setClient({ ...client, estimatedExitdate: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Exit Date"
-                      defaultValue={client?.exitDate}
-                      onChange={(e) => setClient({ ...client, exitDate: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Unit ID"
-                      defaultValue={client?.unitId}
-                      onChange={(e) => setClient({ ...client, unitId: parseInt(e.target.value) })}
-                    />
-                    <Input
-                      placeholder="Prior Living	"
-                      defaultValue={client?.priorLiving}
-                      onChange={(e) => setClient({ ...client, priorLiving: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Prior Living City"
-                      defaultValue={client?.priorLivingCity}
-                      onChange={(e) => setClient({ ...client, priorLivingCity: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Shelter in Last Five Years"
-                      value={client?.shelterInLastFiveYears ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                      onChange={(e) =>
-                        setClient({
-                          ...client,
-                          shelterInLastFiveYears: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                        })
-                      }
-                    />
-                    <Input
-                      placeholder="Specific Reason for Leaving"
-                      defaultValue={client?.specificReasonForLeaving}
-                      onChange={(e) => setClient({ ...client, specificReasonForLeaving: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Reason for Leaving"
-                      defaultValue={client?.reasonForLeaving}
-                      onChange={(e) => setClient({ ...client, reasonForLeaving: e.target.value })}
-                    />
-                    {/* Add more fields as needed for editing */}
-                    <Button colorScheme="green" onClick={handleSaveChanges}>
-                      Save Changes
-                    </Button>
-                  
-                  </Stack>
-                </Box>
+                <Input
+                  placeholder="Grant"
+                  defaultValue={client?.grant}
+                  onChange={(e) => setClient({ ...client, grant: e.target.value })}
+                />
+                <Input
+                  placeholder="Status"
+                  defaultValue={client?.status}
+                  onChange={(e) => setClient({ ...client, status: e.target.value })}
+                />
+                <Input
+                  placeholder="Ethnicity"
+                  defaultValue={client?.ethnicity}
+                  onChange={(e) => setClient({ ...client, ethnicity: e.target.value })}
+                />
+                <Input
+                  placeholder="Race"
+                  defaultValue={client?.race}
+                  onChange={(e) => setClient({ ...client, race: e.target.value })}
+                />
+                <Input
+                  placeholder="Medical"
+                  value={client.medical ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      medical: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Emergency Contact Name"
+                  defaultValue={client?.emergencyContactName}
+                  onChange={(e) => setClient({ ...client, emergencyContactName: e.target.value })}
+                />
+                <Input
+                  placeholder="Emergency Contact Phone	"
+                  defaultValue={client?.emergencyContactPhoneNumber}
+                  onChange={(e) => setClient({ ...client, emergencyContactPhoneNumber: e.target.value })}
+                />
+                <Input
+                  placeholder="Homelessness Length	"
+                  defaultValue={client?.homelessnessLength}
+                  onChange={(e) => setClient({ ...client, homelessnessLength: parseInt(e.target.value) })}
+                />
+                <Input
+                  placeholder="Reunified"
+                  value={client?.reunified ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      reunified: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Successful Completion"
+                  value={client?.successfulCompletion ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      successfulCompletion: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Pregnant Upon Entry"
+                  value={client?.pregnantUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      pregnantUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Disabled Children"
+                  value={client?.disabledChildren ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      disabledChildren: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Attending School Upon Entry"
+                  value={client?.attendingSchoolUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      attendingSchoolUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Attending School Upon Exit	"
+                  value={client?.attendingSchoolUponExit ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      attendingSchoolUponExit: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Saving Account"
+                  defaultValue={client?.savingsAmount}
+                  onChange={(e) => setClient({ ...client, savingsAmount: e.target.value })}
+                />
+                <Input
+                  placeholder="Specific Destination"
+                  defaultValue={client?.specificDestination}
+                  onChange={(e) => setClient({ ...client, specificDestination: e.target.value })}
+                />
+                <Input
+                  placeholder="Estimated Exit Date"
+                  defaultValue={client?.estimatedExitdate}
+                  onChange={(e) => setClient({ ...client, estimatedExitdate: e.target.value })}
+                />
+                <Input
+                  placeholder="Exit Date"
+                  defaultValue={client?.exitDate}
+                  onChange={(e) => setClient({ ...client, exitDate: e.target.value })}
+                />
+                <Input
+                  placeholder="Unit ID"
+                  defaultValue={client?.unitId}
+                  onChange={(e) => setClient({ ...client, unitId: parseInt(e.target.value) })}
+                />
+                <Input
+                  placeholder="Prior Living	"
+                  defaultValue={client?.priorLiving}
+                  onChange={(e) => setClient({ ...client, priorLiving: e.target.value })}
+                />
+                <Input
+                  placeholder="Prior Living City"
+                  defaultValue={client?.priorLivingCity}
+                  onChange={(e) => setClient({ ...client, priorLivingCity: e.target.value })}
+                />
+                <Input
+                  placeholder="Shelter in Last Five Years"
+                  value={client?.shelterInLastFiveYears ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
+                  onChange={(e) =>
+                    setClient({
+                      ...client,
+                      shelterInLastFiveYears: e.target.value.toLowerCase() === "yes", // Convert to boolean
+                    })
+                  }
+                />
+                <Input
+                  placeholder="Specific Reason for Leaving"
+                  defaultValue={client?.specificReasonForLeaving}
+                  onChange={(e) => setClient({ ...client, specificReasonForLeaving: e.target.value })}
+                />
+                <Input
+                  placeholder="Reason for Leaving"
+                  defaultValue={client?.reasonForLeaving}
+                  onChange={(e) => setClient({ ...client, reasonForLeaving: e.target.value })}
+                />
+                {/* Add more fields as needed for editing */}
+                <Button colorScheme="green" onClick={handleSaveChanges}>
+                  Save Changes
+                </Button>
+              </Stack>
+            </Box>
           )}
         </Box>
       </Box>
