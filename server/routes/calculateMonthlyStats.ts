@@ -14,8 +14,6 @@ type CategoryStatisticsRow = {
 	total: number;
 }
 
-// category name is also present in each row despite the key being the same because we need to account for cases of duplicate category names (e.g. if two case managers have the same first and last name)
-
 type CallsAndOfficeVisitsStats = {
 	"Calls (includes dups)": CategoryStatisticsRow;
 	"Duplicated Calls": CategoryStatisticsRow;
@@ -30,13 +28,22 @@ type InterviewsTable = {
 	"Total Interviews Scheduled": CategoryStatisticsRow;
 }
 type FoodCardsTable = Record<string, CategoryStatisticsRow>;
-
+type BusPassesTable = Record<string, CategoryStatisticsRow>;
 type WomensBirthdaysCelebratedTable = Record<string, CategoryStatisticsRow>;
 
+type StatsTabData = {
+  tabName: string;
+  tables: StatsTableData[]
+}
+
+type StatsTableData = {
+    tableName: string;
+    tableData: any;
+};
 
 export const calculateMonthlyStats = Router();
 
-const getCallsAndOfficeVisitTable = async (year: string) => {
+const getCallsAndOfficeVisitData = async (year: string) => {
 	const query = `
 	SELECT
     m.month,
@@ -51,7 +58,7 @@ const getCallsAndOfficeVisitTable = async (year: string) => {
 
 	const data = await db.any(query, [year]);
 
-	const formattedData: CallsAndOfficeVisitsStats = {
+	const callsAndOfficeVisitsTable: CallsAndOfficeVisitsStats = {
 		"Calls (includes dups)": {
 			"categoryName": "Calls (includes dups)",
 			"entries": [],
@@ -77,31 +84,38 @@ const getCallsAndOfficeVisitTable = async (year: string) => {
 		const total_office_visits = Number(entry.total_office_visits)
 
 		// Calls including duplicates
-		formattedData["Calls (includes dups)"].entries.push({
+		callsAndOfficeVisitsTable["Calls (includes dups)"].entries.push({
 			"month": monthName,
 			"count": total_calls
 		})
-		formattedData["Calls (includes dups)"].total += total_calls
+		callsAndOfficeVisitsTable["Calls (includes dups)"].total += total_calls
 
 		// Duplicated calls (total - unduplicated)
-		formattedData["Duplicated Calls"].entries.push({
+		callsAndOfficeVisitsTable["Duplicated Calls"].entries.push({
 			"month": monthName,
 			"count": total_unduplicated_calls
 		})
-		formattedData["Duplicated Calls"].total += total_unduplicated_calls
+		callsAndOfficeVisitsTable["Duplicated Calls"].total += total_unduplicated_calls
 
 		// Total number of office visits
-		formattedData["Total Number of Office Visits"].entries.push({
+		callsAndOfficeVisitsTable["Total Number of Office Visits"].entries.push({
 			"month": monthName,
 			"count": total_office_visits
 		})
-		formattedData["Total Number of Office Visits"].total += total_office_visits
+		callsAndOfficeVisitsTable["Total Number of Office Visits"].total += total_office_visits
 	})
+
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Calls and Office Visits",
+      tableData: callsAndOfficeVisitsTable
+    }
+  ]
 
 	return formattedData;
 };
 
-const getInterviewsTable = async (year: string) => {
+const getInterviewsData = async (year: string) => {
 	const query = `SELECT
 	m.month,
 	COALESCE(SUM(interviews_conducted), 0) as interviews_conducted,
@@ -117,7 +131,7 @@ ORDER BY m.month;`;
 
 	const data = await db.any(query, [year]);
 
-	const formattedData: InterviewsTable = {
+	const interviewsData: InterviewsTable = {
 		"Number of Interviews Conducted": {
 			"categoryName": "Number of Interviews Conducted",
 			"entries": [],
@@ -154,41 +168,48 @@ ORDER BY m.month;`;
 		const other = Number(entry.other)
 		const interviewsScheduled = Number(entry.interviews_scheduled)
 
-		formattedData["Number of Interviews Conducted"].entries.push({
+		interviewsData["Number of Interviews Conducted"].entries.push({
 			"month": monthName,
 			"count": interviewsConducted
 		})
-		formattedData["Number of Interviews Conducted"].total += interviewsConducted
+		interviewsData["Number of Interviews Conducted"].total += interviewsConducted
 
-		formattedData["Number of Pos. Tests"].entries.push({
+		interviewsData["Number of Pos. Tests"].entries.push({
 			"month": monthName,
 			"count": positiveTests
 		})
-		formattedData["Number of Pos. Tests"].total += positiveTests
+		interviewsData["Number of Pos. Tests"].total += positiveTests
 
-		formattedData["Number of NCNS"].entries.push({
+		interviewsData["Number of NCNS"].entries.push({
 			"month": monthName,
 			"count": noCallNoShows
 		})
-		formattedData["Number of NCNS"].total += noCallNoShows
+		interviewsData["Number of NCNS"].total += noCallNoShows
 
-		formattedData["Number of Others (too late, left)"].entries.push({
+		interviewsData["Number of Others (too late, left)"].entries.push({
 			"month": monthName,
 			"count": other
 		})
-		formattedData["Number of Others (too late, left)"].total += other
+		interviewsData["Number of Others (too late, left)"].total += other
 
-		formattedData["Total Interviews Scheduled"].entries.push({
+		interviewsData["Total Interviews Scheduled"].entries.push({
 			"month": monthName,
 			"count": interviewsScheduled
 		})
-		formattedData["Total Interviews Scheduled"].total += interviewsScheduled
+		interviewsData["Total Interviews Scheduled"].total += interviewsScheduled
 	})
 
-	return formattedData
+	const formattedData: StatsTableData[] = [
+		{
+			tableName: "Interviews",
+			tableData: interviewsData
+		}
+	]
+
+	return formattedData;
 }
 
-const getETHFoodBusTable = async (year: string) => {
+const getETHFoodBusData = async (year: string) => {
 	// Query to get food card and bus pass statistics for active case managers
 	const query = `
 		SELECT
@@ -216,38 +237,61 @@ const getETHFoodBusTable = async (year: string) => {
 	`;
 
 	const data = await db.any(query, [year]);
-	const formattedData: FoodCardsTable = {};
+	const foodCardsData: FoodCardsTable = {};
+  const busPassesData: BusPassesTable = {};
 
 	data.forEach((entry) => {
 		const cmId = entry.cm_id;
 		const fullName = `${entry.first_name} ${entry.last_name}`;
 		const monthName = getMonthName(entry.month);
 		const foodCards = Number(entry.food_cards);
+    const busPasses = Number(entry.bus_passes);
 
-		// Initialize case manager's stats if not exists
-		if (!formattedData[cmId]) {
-			formattedData[cmId] = {
+		if (!foodCardsData[cmId]) {
+			foodCardsData[cmId] = {
 				categoryName: fullName,
 				entries: [],
 				total: 0,
 			};
 		}
 
-		// Add entry for the month
-		formattedData[cmId].entries.push({
+		foodCardsData[cmId].entries.push({
 			month: monthName,
 			count: foodCards,
 		});
+    foodCardsData[cmId].total += foodCards;
 
-		// Update total food cards
-		formattedData[cmId].total += foodCards;
+    if (!busPassesData[cmId]) {
+			busPassesData[cmId] = {
+				categoryName: fullName,
+				entries: [],
+				total: 0,
+			};
+		}
+    busPassesData[cmId].entries.push({
+			month: monthName,
+			count: busPasses,
+		});
+
+    busPassesData[cmId].total += busPasses;
 	});
+
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Food Cards",
+      tableData: foodCardsData
+    },
+    {
+      tableName: "Bus Passes",
+      tableData: busPassesData
+    }
+  ]
 
 	return formattedData;
 }
 
 
-const getWomensBirthdaysCelebratedTable = async (year: string) => {
+const getBirthdaysData = async (year: string) => {
 	const query = `SELECT
     m.month,
     cm.id AS cm_id,
@@ -269,28 +313,27 @@ ORDER BY
     cm.id, m.month;`;
 
 	const data = await db.any(query, [year]);
-	const formattedData: WomensBirthdaysCelebratedTable = {}
+	const womenBirthdaysCelebratedData: WomensBirthdaysCelebratedTable = {}
 
 	data.map((entry) => {
 		const name = `${entry.first_name} ${entry.last_name}`
     const cmId = entry.cm_id
+    const monthName = getMonthName(entry.month);
+		const womensBirthdays = Number(entry.womens_birthdays)
 
-		if (!(cmId in formattedData)) {
-			formattedData[cmId] = {
+		if (!(womenBirthdaysCelebratedData[cmId])) {
+			womenBirthdaysCelebratedData[cmId] = {
         "categoryName": name,
 				"entries": [],
 				"total": 0
 			}
 		}
 
-		const monthName = getMonthName(entry.month);
-		const womensBirthdays = Number(entry.womens_birthdays)
-
-		formattedData[cmId].entries.push({
+		womenBirthdaysCelebratedData[cmId].entries.push({
 			"month": monthName,
 			"count": womensBirthdays
 		})
-		formattedData[cmId].total += womensBirthdays
+		womenBirthdaysCelebratedData[cmId].total += womensBirthdays
 	})
 
 // 	const totalMonthlyQuery = `SELECT
@@ -322,6 +365,13 @@ ORDER BY
 // 		"total": totalMonthlyTotal
 // 	}
 
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Womens Birthdays Celebrated",
+      tableData: womenBirthdaysCelebratedData
+    }
+  ]
+
 	return formattedData
 }
 
@@ -329,23 +379,27 @@ ORDER BY
 
 calculateMonthlyStats.get("/:year", async (req, res) => {
 	const { year } = req.params
-	const callsAndOfficeVisitData = await getCallsAndOfficeVisitTable(year);
-	const interviewData = await getInterviewsTable(year);
-	const ETHFoodBusData = await getETHFoodBusTable(year);
-	const womensBirthdayData = await getWomensBirthdaysCelebratedTable(year);
+	const callsAndOfficeVisitData = await getCallsAndOfficeVisitData(year);
+	const interviewData = await getInterviewsData(year);
+	const ETHFoodBusData = await getETHFoodBusData(year); // returns 2 tables: food cards and bus passes
+	const birthdaysData = await getBirthdaysData(year);
 
-	const response = [
+	const response : StatsTabData[] = [
 		{
 			"tabName": "Calls and Office Visits",
-			"data": callsAndOfficeVisitData
+			"tables": callsAndOfficeVisitData
 		},
 		{
 			"tabName": "Interviews",
-			"data": interviewData
+			"tables": interviewData
 		},
 		{
-			"tabName": "just the food card table",
-			"data": ETHFoodBusData
+			"tabName": "E&TH Food & Bus",
+			"tables": ETHFoodBusData
+		},
+		{
+			"tabName": "Birthdays",
+			"tables": birthdaysData
 		}
 	]
 

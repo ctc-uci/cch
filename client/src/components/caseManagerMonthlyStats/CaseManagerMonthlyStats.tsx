@@ -18,15 +18,21 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { StatsTable } from "./StatsTable.tsx";
 
+type StatsTableData = {
+  tabName: string;
+  tables: any[];
+};
+
+
 export const CaseManagerMonthlyStats = () => {
-  const [allTables, setAllTables] = useState([]);
+  const [allTabData, setAllTabData] = useState<StatsTableData[]>([]);
   const { backend } = useBackendContext();
 
   useEffect(() => {
     const getData = async () => {
       try {
         const response = await backend.get(`/calculateMonthlyStats/2025`);
-        setAllTables(response.data);
+        setAllTabData(response.data);
         console.log(response.data)
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -67,22 +73,26 @@ export const CaseManagerMonthlyStats = () => {
         <TabList whiteSpace="nowrap">
           {/* "All Statistics" tab plus one tab for each table */}
           <Tab key="all">All Statistics</Tab>
-          {allTables.map((table) => (
-            <Tab key={table.tabName}>{table.tabName}</Tab>
+          {allTabData.map((tab) => (
+              <Tab key={tab.tabName}>{tab.tabName}</Tab>
           ))}
         </TabList>
         <TabPanels>
           {/* All Statistics: render all tables */}
           <TabPanel>
-            {allTables.map((table) => (
-              <StatsTable key={table.tabName} title={table.tabName} data={table.data} />
+            {allTabData.map((tab) => (
+                tab.tables.map((table) => (
+                    <StatsTable key={table.tableName} title={table.tableName} data={table.tableData} />
+                ))
             ))}
           </TabPanel>
           {/* Render each table in its own tab panel */}
-          {allTables.map((table) => ( 
-            <TabPanel key={table.tabName}>
-              <StatsTable title={table.tabName} data={table.data} />
-            </TabPanel>
+          {allTabData.map((tab) => (
+              <TabPanel key={tab.tabName}>
+                  {tab.tables.map((table) => (
+                      <StatsTable key={table.tableName} title={table.tableName} data={table.tableData} />
+                  ))}
+              </TabPanel>
           ))}
         </TabPanels>
       </Tabs>

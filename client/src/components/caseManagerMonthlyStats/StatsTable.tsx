@@ -19,6 +19,7 @@ import {
   useNumberInput,
   VStack,
 } from "@chakra-ui/react";
+import { useEffect } from "react";
 
 import {
   MdFileUpload,
@@ -40,6 +41,9 @@ export const StatsTable = ({ title, data }) => {
   const inc = getIncrementButtonProps();
   const dec = getDecrementButtonProps();
   const input = getInputProps();
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
 
   const monthNames = [
     "January",
