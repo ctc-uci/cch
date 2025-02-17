@@ -145,15 +145,15 @@ export const StatsTable = ({ title, data }) => {
             </Tr>
           </Thead>
           <Tbody>
-              {Object.entries(data).map(([categoryName, category]) => (
+              {Object.entries(data).map(([categoryName, categoryData]) => (
                 <Tr key={categoryName}>
                   <Td textAlign="left">{categoryName}</Td>
-                  {category.entries.map((entry) => (
+                  {categoryData.entries.map((entry) => (
                     <Td key={entry.name} textAlign="center">
                       {entry.count}
                     </Td>
                   ))}
-                  <Td textAlign="center">{category.total}</Td>
+                  <Td textAlign="center">{categoryData.total}</Td>
                 </Tr>
               ))}
             </Tbody>

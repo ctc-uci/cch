@@ -14,17 +14,17 @@ type StatsTable = {
 }
 
 type CallsAndOfficeVisitsStats = {
-  "Calls (includes dups)": StatsTable;
-  "Duplicated Calls": StatsTable;
-  "Total Number of Office Visits": StatsTable;
+	"Calls (includes dups)": StatsTable;
+	"Duplicated Calls": StatsTable;
+	"Total Number of Office Visits": StatsTable;
 }
 
 type InterviewsTable = {
-  "Number of Interviews Conducted": StatsTable;
-  "Number of Pos. Tests": StatsTable;
-  "Number of NCNS": StatsTable;
-  "Number of Others (too late, left)": StatsTable;
-  "Total Interviews Scheduled": StatsTable;
+	"Number of Interviews Conducted": StatsTable;
+	"Number of Pos. Tests": StatsTable;
+	"Number of NCNS": StatsTable;
+	"Number of Others (too late, left)": StatsTable;
+	"Total Interviews Scheduled": StatsTable;
 }
 
 export const calculateMonthlyStats = Router();
@@ -156,7 +156,7 @@ ORDER BY m.month;`;
 			"count": noCallNoShows
 		})
 		formattedData["Number of NCNS"].total += noCallNoShows
-		
+
 		formattedData["Number of Others (too late, left)"].entries.push({
 			"name": monthName,
 			"count": other
@@ -200,7 +200,7 @@ ORDER BY
 	data.map((entry) => {
 		const name = `${entry.first_name} ${entry.last_name}`
 
-		if(!(name in formattedData)) {
+		if (!(name in formattedData)) {
 			formattedData[name] = {
 				"entries": [],
 				"total": 0
@@ -216,6 +216,35 @@ ORDER BY
 		})
 		formattedData[name].total += womensBirthdays
 	})
+
+	const totalMonthlyQuery = `SELECT 
+    m.month, 
+    COALESCE(SUM(s.womens_birthdays), 0) AS womens_birthdays
+FROM 
+    generate_series(1, 12) AS m(month) 
+LEFT JOIN 
+    cm_monthly_stats s 
+    ON EXTRACT(MONTH FROM s.date) = m.month 
+    AND EXTRACT(YEAR FROM s.date) = $1 
+GROUP BY 
+    m.month
+ORDER BY 
+    m.month;`
+
+	const totalMonthlyData = await db.any(query, [year]);
+	let totalMonthlyTotal = 0
+
+	formattedData["Total Monthly"] = {
+		"entries": totalMonthlyData.map((entry) => {
+			totalMonthlyTotal += Number(entry.womens_birthdays)
+
+			return {
+				"name": getMonthName(entry.month),
+				"count": Number(entry.womens_birthdays)
+			}
+		}),
+		"total": totalMonthlyTotal
+	}
 
 	return formattedData
 }
@@ -248,29 +277,28 @@ const getETHFoodBusTable = async (year) => {
 	const formattedData = {}
 
 	data.forEach((entry) => {
-    const name = `${entry.first_name} ${entry.last_name}`;
-    
-    // Initialize case manager's stats if not exists
-    if (!(name in formattedData)) {
-      formattedData[name] = {
-        entries: [],
-        total: 0
-      };
-    }
+		const name = `${entry.first_name} ${entry.last_name}`;
 
-    const monthName = getMonthName(entry.month);
-    const foodCards = Number(entry.food_cards);
+		// Initialize case manager's stats if not exists
+		if (!(name in formattedData)) {
+			formattedData[name] = {
+				entries: [],
+				total: 0
+			};
+		}
 
-    formattedData[name].entries.push({
-      name: monthName,
-      count: foodCards
-    });
-    
-    formattedData[name].total += foodCards
-  });
+		const monthName = getMonthName(entry.month);
+		const foodCards = Number(entry.food_cards);
 
-  return formattedData;
+		formattedData[name].entries.push({
+			name: monthName,
+			count: foodCards
+		});
 
+		formattedData[name].total += foodCards
+	});
+
+	return formattedData;
 }
 
 
@@ -290,7 +318,8 @@ calculateMonthlyStats.get("/:year", async (req, res) => {
 			"tabName": "Interviews",
 			"data": interviewData
 		},
-		{ "tabName": "just the food card table",
+		{
+			"tabName": "just the food card table",
 			"data": ETHFoodBusData
 		}
 	]
