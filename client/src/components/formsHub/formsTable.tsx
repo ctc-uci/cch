@@ -4,17 +4,16 @@ import {
   Button,
   Flex,
   IconButton,
-  Select,
   Table,
   TableContainer,
   Tbody,
+  Text,
   Td,
   Th,
   Thead,
   Tr,
 } from "@chakra-ui/react";
 // import { ArrowUpIcon } from "@chakra-ui/icons";
-
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 type SuccessStory = {
@@ -84,6 +83,16 @@ type FormItem = {
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
+  // Zoom state: 1 = 100%, 0.75 = 75%, etc.
+  const [zoom, setZoom] = useState(1);
+
+  const formatDate = (x: string) => {
+    const date = new Date(x);
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${month}/${day}/${year}`;
+  };
 
   useEffect(() => {
     const getData = async () => {
@@ -128,62 +137,64 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
+  // Zoom in/out handlers adjusting the zoom state by 10%
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2)); // max 200%
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5)); // min 50%
+
+  // Adjust internal font size based on a base size (16px)
+  const baseFontSize = 16; // in pixels
+  const computedFontSize = `${baseFontSize * zoom}px`;
+
   return (
-    <Box p="4">
-      {/* Top toolbar */}
+    // Outermost container remains fixed with a black background
+    // <Box p="4" bg="black">
+      <Box p="4">
+      {/* Toolbar */}
       <Flex mb="4" gap="2" alignItems="center">
         <Button variant="outline" onClick={() => alert("Filter clicked!")}>
           Filter
         </Button>
-        <Button variant="outline" onClick={() => alert("Zoom clicked!")}>
-          Zoom
+        <Text>Zoom</Text>
+        <Box border="1px solid" p={1} borderRadius="md">{Math.round(zoom * 100)}%</Box>
+        <Button variant="ghost" onClick={handleZoomOut}>
+          -
         </Button>
-        <Select
-          width="auto"
-          onChange={() => alert("Zoom level changed!")}
-          defaultValue="100%"
-        >
-          <option value="100%">100%</option>
-          <option value="75%">75%</option>
-          <option value="50%">50%</option>
-        </Select>
-        <Button variant="outline" onClick={() => alert("Add clicked!")}>
+        <Button variant="ghost" onClick={handleZoomIn}>
           +
         </Button>
       </Flex>
 
-      {/* Table */}
-      <TableContainer borderRadius="md" boxShadow="sm" bg="white">
-        <Table variant="striped">
-          <Thead bg="gray.100">
-            <Tr>
-              <Th>Date</Th>
-              <Th>Name</Th>
-              <Th>Form Title</Th>
-              <Th>Export</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {items.map((item, index) => (
-              <Tr key={index} _hover={{ bg: "gray.50" }}>
-                <Td>{item.date}</Td>
-                <Td>{item.name}</Td>
-                <Td>{item.title}</Td>
-                <Td>
-                  {/* Export button (icon) */}
-                  <IconButton
-                    aria-label="Export"
-                    // icon={<ArrowUpIcon />}
-                    variant="ghost"
-                    colorScheme="blue"
-                    onClick={() => alert(`Export row #${index + 1}`)}
-                  />
-                </Td>
+      {/* Table container that stays within the bounds of the outer Box */}
+      <Box maxW="100%" overflow="auto" bg="white" p="4">
+        <TableContainer fontSize={computedFontSize}>
+          <Table variant="striped" colorScheme="gray">
+            <Thead>
+              <Tr>
+                <Th>Index</Th>
+                <Th>Date</Th>
+                <Th>Name</Th>
+                <Th minW="200px">Form Title</Th>
+                <Th w="50px" textAlign="right">
+                  Export
+                </Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+            </Thead>
+            <Tbody>
+              {items.map((item, index) => (
+                <Tr key={index} _hover={{ bg: "gray.200" }}>
+                  <Td>{index + 1}</Td>
+                  <Td>{formatDate(item.date)}</Td>
+                  <Td>{item.name}</Td>
+                  <Td minW="200px">{item.title}</Td>
+                  <Td w="50px" textAlign="right">
+                    {/* <Icon></Icon> */}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
+      </Box>
     </Box>
   );
 };
