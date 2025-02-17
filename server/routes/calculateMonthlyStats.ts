@@ -30,7 +30,7 @@ type InterviewsTable = {
 type FoodCardsTable = Record<string, CategoryStatisticsRow>;
 type BusPassesTable = Record<string, CategoryStatisticsRow>;
 type WomensBirthdaysCelebratedTable = Record<string, CategoryStatisticsRow>;
-
+type ChildrensBirthdaysCelebratedTable = Record<string, CategoryStatisticsRow>;
 type StatsTabData = {
   tabName: string;
   tables: StatsTableData[]
@@ -209,6 +209,36 @@ ORDER BY m.month;`;
 	return formattedData;
 }
 
+const getContactsData = async (year: string) => {
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Contacts",
+      tableData: {}
+    },
+  ]
+
+  return formattedData
+}
+
+const getDonationPantryVisitsData = async (year: string) => {
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Donation Room",
+      tableData: {}
+    },
+    {
+      tableName: "Pantry and Neighborhood Visits",
+      tableData: {}
+    },
+    {
+      tableName: "People Served",
+      tableData: {}
+    },
+  ]
+
+  return formattedData
+}
+
 const getETHFoodBusData = async (year: string) => {
 	// Query to get food card and bus pass statistics for active case managers
 	const query = `
@@ -291,29 +321,36 @@ const getETHFoodBusData = async (year: string) => {
 }
 
 
-const getBirthdaysData = async (year: string) => {
-	const query = `SELECT
+const getWomensBirthdaysCelebratedData = async (year: string) => {
+	// Query to get women's birthdays statistics for case managers who have celebrated women's birthdays that year
+const query = `
+SELECT
     m.month,
     cm.id AS cm_id,
     cm.first_name,
     cm.last_name,
     COALESCE(SUM(s.womens_birthdays), 0) AS womens_birthdays
 FROM
-    generate_series(1, 12) AS m(month)
-CROSS JOIN
     case_managers cm
-LEFT JOIN
-    cm_monthly_stats s
-    ON EXTRACT(MONTH FROM s.date) = m.month
+JOIN (
+    SELECT cm_id
+    FROM cm_monthly_stats
+    WHERE EXTRACT(YEAR FROM date) = $1
+    GROUP BY cm_id
+    HAVING SUM(womens_birthdays) > 0 -- Ensure only those with women's birthdays
+) active ON active.cm_id = cm.id
+CROSS JOIN generate_series(1, 12) AS m(month)
+LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+    AND EXTRACT(MONTH FROM s.date) = m.month
     AND EXTRACT(YEAR FROM s.date) = $1
-    AND s.cm_id = cm.id
 GROUP BY
     m.month, cm.id, cm.first_name, cm.last_name
 ORDER BY
-    cm.id, m.month;`;
+    cm.id, m.month;
+`;
 
 	const data = await db.any(query, [year]);
-	const womenBirthdaysCelebratedData: WomensBirthdaysCelebratedTable = {}
+	const womensBirthdaysCelebratedData: WomensBirthdaysCelebratedTable = {}
 
 	data.map((entry) => {
 		const name = `${entry.first_name} ${entry.last_name}`
@@ -321,20 +358,22 @@ ORDER BY
     const monthName = getMonthName(entry.month);
 		const womensBirthdays = Number(entry.womens_birthdays)
 
-		if (!(womenBirthdaysCelebratedData[cmId])) {
-			womenBirthdaysCelebratedData[cmId] = {
+		if (!(womensBirthdaysCelebratedData[cmId])) {
+			womensBirthdaysCelebratedData[cmId] = {
         "categoryName": name,
 				"entries": [],
 				"total": 0
 			}
 		}
 
-		womenBirthdaysCelebratedData[cmId].entries.push({
+		womensBirthdaysCelebratedData[cmId].entries.push({
 			"month": monthName,
 			"count": womensBirthdays
 		})
-		womenBirthdaysCelebratedData[cmId].total += womensBirthdays
+		womensBirthdaysCelebratedData[cmId].total += womensBirthdays
 	})
+
+  return womensBirthdaysCelebratedData
 
 // 	const totalMonthlyQuery = `SELECT
 //     m.month,
@@ -365,25 +404,118 @@ ORDER BY
 // 		"total": totalMonthlyTotal
 // 	}
 
+}
+
+const getChildrensBirthdaysCelebratedData = async (year: string) => {
+  const query = `
+  SELECT
+      m.month,
+      cm.id AS cm_id,
+      cm.first_name,
+      cm.last_name,
+      COALESCE(SUM(s.childrens_birthdays), 0) AS childrens_birthdays
+  FROM
+      case_managers cm
+  JOIN (
+      SELECT cm_id
+      FROM cm_monthly_stats
+      WHERE EXTRACT(YEAR FROM date) = $1
+      GROUP BY cm_id
+      HAVING SUM(childrens_birthdays) > 0 -- Ensure only those with childrens birthdays
+  ) active ON active.cm_id = cm.id
+  CROSS JOIN generate_series(1, 12) AS m(month)
+  LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+      AND EXTRACT(MONTH FROM s.date) = m.month
+      AND EXTRACT(YEAR FROM s.date) = $1
+  GROUP BY
+      m.month, cm.id, cm.first_name, cm.last_name
+  ORDER BY
+      cm.id, m.month;
+  `;
+
+	const data = await db.any(query, [year]);
+	const childrensBirthdaysCelebratedData: ChildrensBirthdaysCelebratedTable = {}
+
+	data.map((entry) => {
+		const name = `${entry.first_name} ${entry.last_name}`
+    const cmId = entry.cm_id
+    const monthName = getMonthName(entry.month);
+		const childrensBirthdays = Number(entry.childrens_birthdays)
+
+		if (!(childrensBirthdaysCelebratedData[cmId])) {
+			childrensBirthdaysCelebratedData[cmId] = {
+        "categoryName": name,
+				"entries": [],
+				"total": 0
+			}
+		}
+
+		childrensBirthdaysCelebratedData[cmId].entries.push({
+			"month": monthName,
+			"count": childrensBirthdays
+		})
+		childrensBirthdaysCelebratedData[cmId].total += childrensBirthdays
+	})
+
+  return childrensBirthdaysCelebratedData
+}
+
+const getBirthdaysData = async (year: string) => {
+  const womensBirthdaysCelebratedData = await getWomensBirthdaysCelebratedData(year);
+  const childrensBirthdaysCelebratedData = await getChildrensBirthdaysCelebratedData(year);
   const formattedData: StatsTableData[] = [
     {
       tableName: "Womens Birthdays Celebrated",
-      tableData: womenBirthdaysCelebratedData
+      tableData: womensBirthdaysCelebratedData
+    },
+    {
+      tableName: "Kids Birthdays Celebrated",
+      tableData: childrensBirthdaysCelebratedData
     }
   ]
 
 	return formattedData
 }
 
+const getMiscData = async (year: string) => {
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Babies Born",
+      tableData: {}
+    },
+    {
+      tableName: "Women who enroll in School or a trade program while in CCH",
+      tableData: {}
+    },
+  ]
 
+  return formattedData
+}
 
+const getReferralsData = async (year: string) => {
+  const formattedData: StatsTableData[] = [
+    {
+      tableName: "Healthcare Referrals for Women",
+      tableData: {}
+    },
+    {
+      tableName: "Healthcare Referrals for Kids",
+      tableData: {}
+    },
+  ]
+
+  return formattedData
+}
 calculateMonthlyStats.get("/:year", async (req, res) => {
 	const { year } = req.params
 	const callsAndOfficeVisitData = await getCallsAndOfficeVisitData(year);
 	const interviewData = await getInterviewsData(year);
+	const contactsData = await getContactsData(year);
+	const donationPantryVisitsData = await getDonationPantryVisitsData(year);
 	const ETHFoodBusData = await getETHFoodBusData(year); // returns 2 tables: food cards and bus passes
 	const birthdaysData = await getBirthdaysData(year);
-
+  const miscData = await getMiscData(year);
+  const referralsData = await getReferralsData(year);
 	const response : StatsTabData[] = [
 		{
 			"tabName": "Calls and Office Visits",
@@ -393,14 +525,30 @@ calculateMonthlyStats.get("/:year", async (req, res) => {
 			"tabName": "Interviews",
 			"tables": interviewData
 		},
+    {
+      "tabName": "Contacts",
+      "tables": contactsData
+    },
+    {
+      "tabName": "Donation & Pantry Visits",
+      "tables": donationPantryVisitsData
+    },
+    {
+			"tabName": "Birthdays",
+			"tables": birthdaysData
+		},
 		{
 			"tabName": "E&TH Food & Bus",
 			"tables": ETHFoodBusData
 		},
-		{
-			"tabName": "Birthdays",
-			"tables": birthdaysData
-		}
+    {
+			"tabName": "Referrals",
+			"tables": referralsData
+		},
+    {
+			"tabName": "Misc.",
+			"tables": miscData
+		},
 	]
 
 	res.status(200).json(response);
