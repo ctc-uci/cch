@@ -6,23 +6,29 @@ import {
   Link as ChakraLink,
   FormControl,
   FormErrorMessage,
-  FormHelperText,
   Heading,
   Input,
   Stack,
   useToast,
   VStack,
+  Grid,
+  Box,
+  Circle,
+  Text,
+  HStack,
+  Image,
+  IconButton
 } from "@chakra-ui/react";
+import { MdOutlineArrowBackIos } from "react-icons/md";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { FaGoogle } from "react-icons/fa6";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+import cch from "../../../public/cch_logo.png";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { authenticateGoogleUser } from "../../utils/auth/providers";
 
 const signinSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -34,6 +40,8 @@ type SigninFormValues = z.infer<typeof signinSchema>;
 export const Login = () => {
   const navigate = useNavigate();
   const toast = useToast();
+  const { userType } = useParams<{ userType: string }>();
+  const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Admin" ? "AD" : "CL";
 
   const { login, handleRedirectResult } = useAuthContext();
   const { backend } = useBackendContext();
@@ -98,31 +106,52 @@ export const Login = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    await authenticateGoogleUser();
-  };
-
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);
   }, [backend, handleRedirectResult, navigate, toast]);
 
   return (
-    <VStack
-      spacing={8}
-      sx={{ width: 300, marginX: "auto" }}
-    >
-      <Heading>Login</Heading>
+    <Grid templateColumns="1fr 2fr" height="100vh">
 
-      <form
-        onSubmit={handleSubmit(handleLogin)}
-        style={{ width: "100%" }}
-      >
-        <Stack spacing={2}>
-          <FormControl
-            isInvalid={!!errors.email}
-            w={"100%"}
-          >
-            <Center>
+    <Box display="flex" alignItems="center" justifyContent="center" bg="#E2E8F0">
+      <VStack spacing='20px'>
+        <Circle size="250px" bg="#63B3ED" color="black" fontSize="210%">
+          {userAbbreviation}
+        </Circle>
+        <Text fontSize='3xl' fontWeight="bold">{userType}</Text>
+      </VStack>
+    </Box>
+
+
+    <Center>
+
+      <VStack spacing={8} sx={{ width: 400 }}>
+        <HStack 
+          justifyContent="space-between"
+          position="absolute"
+          top={0}
+          right={0}
+          width="66%"
+          p={4}
+          height="80px"
+        >
+          <IconButton
+            icon={<MdOutlineArrowBackIos />} 
+            aria-label="Go Back"
+            onClick={() => {navigate("/choose-login")}}
+            variant="ghost"
+            boxSize={"50px"}
+            size={"lg"}
+          />
+          <Image src={cch} alt="logo"  height="50px" />
+        </HStack>
+
+        <Heading>Welcome Back!</Heading>
+
+        <form onSubmit={handleSubmit(handleLogin)} style={{ width: "100%" }}>
+          <Stack>
+            <Text fontWeight="bold">Email</Text>
+            <FormControl isInvalid={!!errors.email} w={"100%"}>
               <Input
                 placeholder="Email"
                 type="email"
@@ -131,14 +160,13 @@ export const Login = () => {
                 name="email"
                 isRequired
                 autoComplete="email"
+                mb={2}
               />
-            </Center>
-            <FormErrorMessage>
-              {errors.email?.message?.toString()}
-            </FormErrorMessage>
-          </FormControl>
-          <FormControl isInvalid={!!errors.password}>
-            <Center>
+              <FormErrorMessage>{errors.email?.message?.toString()}</FormErrorMessage>
+            </FormControl>
+
+            <Text fontWeight="bold" >Password</Text>
+            <FormControl isInvalid={!!errors.password}>
               <Input
                 placeholder="Password"
                 type="password"
@@ -147,39 +175,39 @@ export const Login = () => {
                 name="password"
                 isRequired
                 autoComplete="current-password"
+                mb={1}
               />
-            </Center>
-            <FormErrorMessage>
-              {errors.password?.message?.toString()}
-            </FormErrorMessage>
-            <ChakraLink
-              as={Link}
-              to="/signup"
+              <FormErrorMessage>{errors.password?.message?.toString()}</FormErrorMessage>
+              <ChakraLink as={Link} to={`/forgot-password/${userType}`} display="block" textAlign="center" m="2">
+                <Text as="u" fontSize="sm" fontWeight="light" >Forgot password?</Text>
+              </ChakraLink>
+             
+            </FormControl>
+
+            <Button
+              type="submit"
+              size={"lg"}
+              bg={"#4299E1"}
+              color={"white"}
+              sx={{ width: "65%" }}
+              isDisabled={Object.keys(errors).length > 0}
+              mx={"auto"}
+              mb={4}
             >
-              <FormHelperText>Click here to sign up</FormHelperText>
-            </ChakraLink>
-          </FormControl>
+              Login
+            </Button>
 
-          <Button
-            type="submit"
-            size={"lg"}
-            sx={{ width: "100%" }}
-            isDisabled={Object.keys(errors).length > 0}
-          >
-            Login
-          </Button>
-        </Stack>
-      </form>
-
-      <Button
-        leftIcon={<FaGoogle />}
-        variant={"solid"}
-        size={"lg"}
-        onClick={handleGoogleLogin}
-        sx={{ width: "100%" }}
-      >
-        Login with Google
-      </Button>
-    </VStack>
+            <Text fontSize="sm" fontWeight="light" mx={"auto"}>
+              Don't have an account?{" "}
+              <ChakraLink as={Link} to={`/signup/${userType}`} color="blue.500" display="inline">
+                <Text as="u" display="inline">Create account</Text>
+              </ChakraLink>
+            </Text>
+            
+          </Stack>
+        </form>
+      </VStack>
+    </Center>
+  </Grid>
   );
 };
