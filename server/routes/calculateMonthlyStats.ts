@@ -338,7 +338,7 @@ const getBusPassesData = async (year: string): Promise<CaseManagersTable> => {
     return busPassesData;
 };
 
-const getETHFoodBusData = async (year: string): Promise<StatsTableData[]> => {
+const getFoodBusData = async (year: string): Promise<StatsTableData[]> => {
     const foodCardsData = await getFoodCardsData(year);
     const busPassesData = await getBusPassesData(year);
 
@@ -662,7 +662,7 @@ calculateMonthlyStats.get("/:year", async (req, res) => {
 	const contactsData = await getContactsData(year);
 	const donationPantryVisitsData = await getDonationPantryVisitsData(year);
 	const birthdaysData = await getBirthdaysData(year); // returns 2 tables: womens birthdays and kids birthdays
-  const ETHFoodBusData = await getETHFoodBusData(year); // returns 2 tables: food cards and bus passes
+  const foodBusData = await getFoodBusData(year); // returns 2 tables: food cards and bus passes
   const referralsData = await getReferralsData(year); // returns 2 tables: healthcare referrals for women and healthcare referrals for kids
   const miscData = await getMiscData(year); // returns 2 tables: babies born and women who enroll in school or a trade program while in CCH
 	const response : StatsTabData[] = [
@@ -688,7 +688,7 @@ calculateMonthlyStats.get("/:year", async (req, res) => {
 		},
 		{
 			"tabName": "E&TH Food & Bus",
-			"tables": ETHFoodBusData
+			"tables": foodBusData
 		},
     {
 			"tabName": "Referrals",
