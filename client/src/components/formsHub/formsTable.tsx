@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-
 import {
+  Box,
+  Button,
+  Flex,
+  IconButton,
+  Select,
   Table,
   TableContainer,
   Tbody,
@@ -9,6 +13,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
+// import { ArrowUpIcon } from "@chakra-ui/icons";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
@@ -84,9 +89,7 @@ export const FormTable = () => {
     const getData = async () => {
       try {
         const successStoryResponse = await backend.get(`/successStory`);
-
         const randomSurveyResponse = await backend.get(`/randomSurvey`);
-
         const exitSurveyResponse = await backend.get(`/exitSurvey`);
 
         const successStories: FormItem[] = successStoryResponse.data.map(
@@ -123,31 +126,64 @@ export const FormTable = () => {
     };
 
     getData();
-  }, []);
+  }, [backend]);
 
-  return <div>
-    <TableContainer>
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>index</Th>
-            <Th>date</Th>
-            <Th>name</Th>
-            <Th>title</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {items.map((item: FormItem, index: number) => (
-            <Tr key={index}>
-              <Td>{index}</Td>
-              <Td>{item.date}</Td>
-              <Td>{item.name}</Td>
-              <Td>{item.title}</Td>
+  return (
+    <Box p="4">
+      {/* Top toolbar */}
+      <Flex mb="4" gap="2" alignItems="center">
+        <Button variant="outline" onClick={() => alert("Filter clicked!")}>
+          Filter
+        </Button>
+        <Button variant="outline" onClick={() => alert("Zoom clicked!")}>
+          Zoom
+        </Button>
+        <Select
+          width="auto"
+          onChange={() => alert("Zoom level changed!")}
+          defaultValue="100%"
+        >
+          <option value="100%">100%</option>
+          <option value="75%">75%</option>
+          <option value="50%">50%</option>
+        </Select>
+        <Button variant="outline" onClick={() => alert("Add clicked!")}>
+          +
+        </Button>
+      </Flex>
 
+      {/* Table */}
+      <TableContainer borderRadius="md" boxShadow="sm" bg="white">
+        <Table variant="striped">
+          <Thead bg="gray.100">
+            <Tr>
+              <Th>Date</Th>
+              <Th>Name</Th>
+              <Th>Form Title</Th>
+              <Th>Export</Th>
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    </TableContainer>
-  </div>;
+          </Thead>
+          <Tbody>
+            {items.map((item, index) => (
+              <Tr key={index} _hover={{ bg: "gray.50" }}>
+                <Td>{item.date}</Td>
+                <Td>{item.name}</Td>
+                <Td>{item.title}</Td>
+                <Td>
+                  {/* Export button (icon) */}
+                  <IconButton
+                    aria-label="Export"
+                    // icon={<ArrowUpIcon />}
+                    variant="ghost"
+                    colorScheme="blue"
+                    onClick={() => alert(`Export row #${index + 1}`)}
+                  />
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
 };

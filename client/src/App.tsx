@@ -16,7 +16,7 @@ import { ViewPage } from "./components/clientPage/ViewPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { FormTable } from "./components/formsTable/formsTable";
+import { FormTable } from "./components/formsHub/formsTable";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
@@ -27,6 +27,7 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { StartForms } from "./components/formsHub/startForm";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -63,10 +64,14 @@ const App = () => {
                 <Route
                   path="/client-interview-screening"
                   element={<ClientInterviewScreening />}
-                /> 
+                />
                 <Route
                   path="/forms-table"
                   element={<FormTable />}
+                />
+                <Route
+                  path="/start-form"
+                  element={<StartForms />}
                 />
                 <Route
                   path="/admin"
@@ -117,7 +122,7 @@ const App = () => {
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
                 />
-                <Route 
+                <Route
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
                 />
