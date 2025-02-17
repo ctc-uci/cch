@@ -5,13 +5,17 @@ import {
   Heading,
   HStack,
   IconButton,
-  Input, InputGroup, InputRightElement,
+  Input,
+  InputGroup,
+  InputRightElement,
   Table,
   TableContainer,
   Tbody,
+  Td,
   Text,
   Th,
-  Thead, Tr,
+  Thead,
+  Tr,
   useNumberInput,
   VStack,
 } from "@chakra-ui/react";
@@ -24,7 +28,7 @@ import {
   MdZoomIn,
 } from "react-icons/md";
 
-export const StatsTable = () => {
+export const StatsTable = ({ title, data }) => {
   const { getInputProps, getIncrementButtonProps, getDecrementButtonProps } =
     useNumberInput({
       step: 1,
@@ -37,6 +41,21 @@ export const StatsTable = () => {
   const dec = getDecrementButtonProps();
   const input = getInputProps();
 
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
   const buttonStyle = {
     variant: "ghost",
   };
@@ -47,7 +66,7 @@ export const StatsTable = () => {
       spacing="24px"
       paddingTop="24px"
     >
-      <Heading fontSize="20px">Calls and Office Visits</Heading>
+      <Heading fontSize="20px">{title}</Heading>
       <Box
         borderWidth="1px"
         borderRadius="12px"
@@ -78,8 +97,11 @@ export const StatsTable = () => {
             <Text>Zoom</Text>
             <Flex maxW="163px">
               <InputGroup>
-                <Input type="number" {...input} />
-                <InputRightElement children="%"/>
+                <Input
+                  type="number"
+                  {...input}
+                />
+                <InputRightElement children="%" />
               </InputGroup>
               <Button
                 {...buttonStyle}
@@ -110,42 +132,30 @@ export const StatsTable = () => {
           </HStack>
         </HStack>
         <TableContainer>
-          <Table
-            variant="striped"
-          >
-            <Thead>
+        <Table variant="striped">
+          <Thead>
+            <Tr>
               <Th textAlign="left">Category</Th>
-              <Th>January</Th>
-              <Th>February</Th>
-              <Th>March</Th>
-              <Th>April</Th>
-              <Th>May</Th>
-              <Th>June</Th>
-              <Th>July</Th>
-              <Th>August</Th>
-              <Th>September</Th>
-              <Th>October</Th>
-              <Th>November</Th>
-              <Th>December</Th>
-              <Th>Total</Th>
-            </Thead>
-            <Tbody>
-              <Tr>
-                <Th textAlign="center">Calls (includes dups)</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-                <Th textAlign="center">1</Th>
-              </Tr>
+              {monthNames.map((month) => (
+                <Th key={month} textAlign="center">
+                  {month}
+                </Th>
+              ))}
+              <Th textAlign="center">Total</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+              {Object.entries(data).map(([categoryName, category]) => (
+                <Tr key={categoryName}>
+                  <Td textAlign="left">{categoryName}</Td>
+                  {category.entries.map((entry) => (
+                    <Td key={entry.name} textAlign="center">
+                      {entry.count}
+                    </Td>
+                  ))}
+                  <Td textAlign="center">{category.total}</Td>
+                </Tr>
+              ))}
             </Tbody>
           </Table>
         </TableContainer>
