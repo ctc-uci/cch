@@ -132,24 +132,30 @@ export const StatsTable = ({ title, data }) => {
           </HStack>
         </HStack>
         <TableContainer>
-        <Table variant="striped">
-          <Thead>
-            <Tr>
-              <Th textAlign="left">Category</Th>
-              {monthNames.map((month) => (
-                <Th key={month} textAlign="center">
-                  {month}
-                </Th>
-              ))}
-              <Th textAlign="center">Total</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-              {Object.entries(data).map(([categoryName, categoryData]) => (
-                <Tr key={categoryName}>
-                  <Td textAlign="left">{categoryName}</Td>
+          <Table variant="striped">
+            <Thead>
+              <Tr>
+                <Th textAlign="left">Category</Th>
+                {monthNames.map((month) => (
+                  <Th
+                    key={month}
+                    textAlign="center"
+                  >
+                    {month}
+                  </Th>
+                ))}
+                <Th textAlign="center">Total</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {Object.entries(data).map(([key, categoryData]) => (
+                <Tr key={key}>
+                  <Td textAlign="left">{categoryData.categoryName}</Td>
                   {categoryData.entries.map((entry) => (
-                    <Td key={entry.name} textAlign="center">
+                    <Td
+                      key={entry.month}
+                      textAlign="center"
+                    >
                       {entry.count}
                     </Td>
                   ))}
