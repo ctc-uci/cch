@@ -46,16 +46,16 @@ export const calculateMonthlyStats = Router();
 
 const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 	const query = `
-	SELECT
-    m.month,
-    COALESCE(SUM(total_calls), 0) as total_calls,
-    COALESCE(SUM(total_unduplicated_calles), 0) as total_unduplicated_calles,
-    COALESCE(SUM(total_office_visits), 0) as total_office_visits
-	FROM generate_series(1, 12) AS m(month)
-	LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
+    SELECT
+      m.month,
+      COALESCE(SUM(total_calls), 0) as total_calls,
+      COALESCE(SUM(total_unduplicated_calles), 0) as total_unduplicated_calles,
+      COALESCE(SUM(total_office_visits), 0) as total_office_visits
+	  FROM generate_series(1, 12) AS m(month)
+	  LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
     AND EXTRACT(YEAR FROM f.date) = $1
-	GROUP BY m.month
-	ORDER BY m.month;`;
+	  GROUP BY m.month
+	  ORDER BY m.month;`;
 
 	const data = await db.any(query, [year]);
 
@@ -114,18 +114,19 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 };
 
 const getInterviewsData = async (year: string): Promise<Table[]> => {
-	const query = `SELECT
-	m.month,
-	COALESCE(SUM(interviews_conducted), 0) as interviews_conducted,
-	COALESCE(SUM(positive_tests), 0) as positive_tests,
-	COALESCE(SUM(no_call_no_shows), 0) as no_call_no_shows,
-	COALESCE(SUM(other), 0) as other,
-	COALESCE(SUM(interviews_scheduled), 0) as interviews_scheduled
-FROM generate_series(1, 12) AS m(month)
-LEFT JOIN cm_monthly_stats f ON EXTRACT(MONTH FROM f.date) = m.month
-	AND EXTRACT(YEAR FROM f.date) = $1
-GROUP BY m.month
-ORDER BY m.month;`;
+	const query = `
+    SELECT
+	    m.month,
+	    COALESCE(SUM(interviews_conducted), 0) as interviews_conducted,
+	    COALESCE(SUM(positive_tests), 0) as positive_tests,
+	    COALESCE(SUM(no_call_no_shows), 0) as no_call_no_shows,
+	    COALESCE(SUM(other), 0) as other,
+	    COALESCE(SUM(interviews_scheduled), 0) as interviews_scheduled
+    FROM generate_series(1, 12) AS m(month)
+    LEFT JOIN cm_monthly_stats c ON EXTRACT(MONTH FROM c.date) = m.month
+	  AND EXTRACT(YEAR FROM c.date) = $1
+    GROUP BY m.month
+    ORDER BY m.month;`;
 
 	const data = await db.any(query, [year]);
 
@@ -239,27 +240,27 @@ const getDonationPantryVisitsData = async (year: string): Promise<Table[]> => {
 
 const getFoodCardsData = async (year: string): Promise<TableData> => {
     const query = `
-        SELECT
-            gs.month,
-            cm.id AS cm_id,
-            cm.first_name,
-            cm.last_name,
-            COALESCE(SUM(s.food_card_values), 0) AS food_cards
-        FROM
-            case_managers cm
-        JOIN (
-            SELECT DISTINCT cm_id
-            FROM cm_monthly_stats
-            WHERE EXTRACT(YEAR FROM date) = $1
+      SELECT
+        m.month,
+        cm.id AS cm_id,
+        cm.first_name,
+        cm.last_name,
+        COALESCE(SUM(s.food_card_values), 0) AS food_cards
+      FROM
+        case_managers cm
+      JOIN (
+          SELECT DISTINCT cm_id
+          FROM cm_monthly_stats
+          WHERE EXTRACT(YEAR FROM date) = $1
         ) active ON active.cm_id = cm.id
-        CROSS JOIN generate_series(1, 12) AS gs(month)
-        LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
-            AND EXTRACT(MONTH FROM s.date) = gs.month
-            AND EXTRACT(YEAR FROM s.date) = $1
-        GROUP BY
-            cm.id, cm.first_name, cm.last_name, gs.month
-        ORDER BY
-            cm.id, gs.month;
+      CROSS JOIN generate_series(1, 12) AS m(month)
+      LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+        AND EXTRACT(MONTH FROM s.date) = m.month
+        AND EXTRACT(YEAR FROM s.date) = $1
+      GROUP BY
+        cm.id, cm.first_name, cm.last_name, m.month
+      ORDER BY
+        cm.id, m.month;
     `;
 
     const data = await db.any(query, [year]);
@@ -292,7 +293,7 @@ const getFoodCardsData = async (year: string): Promise<TableData> => {
 const getBusPassesData = async (year: string): Promise<TableData> => {
     const query = `
         SELECT
-            gs.month,
+            m.month,
             cm.id AS cm_id,
             cm.first_name,
             cm.last_name,
@@ -303,15 +304,17 @@ const getBusPassesData = async (year: string): Promise<TableData> => {
             SELECT DISTINCT cm_id
             FROM cm_monthly_stats
             WHERE EXTRACT(YEAR FROM date) = $1
+            GROUP BY cm_id
+            HAVING SUM(bus_passes) > 0
         ) active ON active.cm_id = cm.id
-        CROSS JOIN generate_series(1, 12) AS gs(month)
+        CROSS JOIN generate_series(1, 12) AS m(month)
         LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
-            AND EXTRACT(MONTH FROM s.date) = gs.month
+            AND EXTRACT(MONTH FROM s.date) = m.month
             AND EXTRACT(YEAR FROM s.date) = $1
         GROUP BY
-            cm.id, cm.first_name, cm.last_name, gs.month
+            cm.id, cm.first_name, cm.last_name, m.month
         ORDER BY
-            cm.id, gs.month;
+            cm.id, m.month;
     `;
 
     const data = await db.any(query, [year]);
@@ -361,31 +364,31 @@ const getFoodBusData = async (year: string): Promise<Table[]> => {
 
 const getWomensBirthdaysCelebratedData = async (year: string): Promise<TableData> => {
 	// Query to get women's birthdays statistics for case managers who have celebrated women's birthdays that year
-const query = `
-SELECT
-    m.month,
-    cm.id AS cm_id,
-    cm.first_name,
-    cm.last_name,
-    COALESCE(SUM(s.womens_birthdays), 0) AS womens_birthdays
-FROM
-    case_managers cm
-JOIN (
-    SELECT cm_id
-    FROM cm_monthly_stats
-    WHERE EXTRACT(YEAR FROM date) = $1
-    GROUP BY cm_id
-    HAVING SUM(womens_birthdays) > 0 -- Ensure only those with women's birthdays
-) active ON active.cm_id = cm.id
-CROSS JOIN generate_series(1, 12) AS m(month)
-LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
-    AND EXTRACT(MONTH FROM s.date) = m.month
-    AND EXTRACT(YEAR FROM s.date) = $1
-GROUP BY
-    m.month, cm.id, cm.first_name, cm.last_name
-ORDER BY
+  const query = `
+    SELECT
+      m.month,
+      cm.id AS cm_id,
+      cm.first_name,
+      cm.last_name,
+      COALESCE(SUM(s.womens_birthdays), 0) AS womens_birthdays
+    FROM
+      case_managers cm
+    JOIN (
+      SELECT cm_id
+      FROM cm_monthly_stats
+      WHERE EXTRACT(YEAR FROM date) = $1
+      GROUP BY cm_id
+      HAVING SUM(womens_birthdays) > 0
+    ) active ON active.cm_id = cm.id
+    CROSS JOIN generate_series(1, 12) AS m(month)
+    LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+      AND EXTRACT(MONTH FROM s.date) = m.month
+      AND EXTRACT(YEAR FROM s.date) = $1
+    GROUP BY
+      m.month, cm.id, cm.first_name, cm.last_name
+    ORDER BY
     cm.id, m.month;
-`;
+  `;
 
 	const data = await db.any(query, [year]);
 	const womensBirthdaysCelebratedData: TableData = {}
@@ -446,30 +449,30 @@ ORDER BY
 
 const getChildrensBirthdaysCelebratedData = async (year: string): Promise<TableData> => {
   const query = `
-  SELECT
+    SELECT
       m.month,
       cm.id AS cm_id,
       cm.first_name,
       cm.last_name,
       COALESCE(SUM(s.childrens_birthdays), 0) AS childrens_birthdays
-  FROM
+    FROM
       case_managers cm
-  JOIN (
+    JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
       WHERE EXTRACT(YEAR FROM date) = $1
       GROUP BY cm_id
       HAVING SUM(childrens_birthdays) > 0 -- Ensure only those with childrens birthdays
-  ) active ON active.cm_id = cm.id
-  CROSS JOIN generate_series(1, 12) AS m(month)
-  LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+    ) active ON active.cm_id = cm.id
+    CROSS JOIN generate_series(1, 12) AS m(month)
+    LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
       AND EXTRACT(YEAR FROM s.date) = $1
-  GROUP BY
-      m.month, cm.id, cm.first_name, cm.last_name
-  ORDER BY
+    GROUP BY
+        m.month, cm.id, cm.first_name, cm.last_name
+    ORDER BY
       cm.id, m.month;
-  `;
+    `;
 
 	const data = await db.any(query, [year]);
 	const childrensBirthdaysCelebratedData: TableData = {}
@@ -532,28 +535,28 @@ const getReferralsData = async (year: string): Promise<Table[]> => {
 
 const getBabiesBornData = async (year: string): Promise<TableData> => {
   const query = `
-  SELECT
+    SELECT
       m.month,
       cm.id AS cm_id,
       cm.first_name,
       cm.last_name,
       COALESCE(SUM(s.babies_born), 0) AS babies_born
-  FROM
+    FROM
       case_managers cm
-  JOIN (
+    JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
       WHERE EXTRACT(YEAR FROM date) = $1
       GROUP BY cm_id
-      HAVING SUM(babies_born) > 0 -- Only include those with babies born
-  ) active ON active.cm_id = cm.id
-  CROSS JOIN generate_series(1, 12) AS m(month)
-  LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
+      HAVING SUM(babies_born) > 0
+    ) active ON active.cm_id = cm.id
+    CROSS JOIN generate_series(1, 12) AS m(month)
+    LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
       AND EXTRACT(YEAR FROM s.date) = $1
-  GROUP BY
+    GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
-  ORDER BY
+    ORDER BY
       cm.id, m.month;
   `;
 
@@ -600,7 +603,7 @@ const getEnrolledData = async (year: string): Promise<TableData> => {
       FROM cm_monthly_stats
       WHERE EXTRACT(YEAR FROM date) = $1
       GROUP BY cm_id
-      HAVING SUM(enrolled_in_school) > 0 -- Only include those with enrolled in school
+      HAVING SUM(enrolled_in_school) > 0
   ) active ON active.cm_id = cm.id
   CROSS JOIN generate_series(1, 12) AS m(month)
   LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
