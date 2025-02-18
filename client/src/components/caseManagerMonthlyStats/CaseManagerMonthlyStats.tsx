@@ -27,11 +27,14 @@ type StatsTableData = {
 export const CaseManagerMonthlyStats = () => {
   const [allTabData, setAllTabData] = useState<StatsTableData[]>([]);
   const { backend } = useBackendContext();
+  const startYear = 2025;
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear); // State for selected year
 
   useEffect(() => {
     const getData = async () => {
       try {
-        const response = await backend.get(`/calculateMonthlyStats/2025`);
+        const response = await backend.get(`/calculateMonthlyStats/${selectedYear}`);
         setAllTabData(response.data);
         console.log(response.data)
       } catch (error) {
@@ -39,7 +42,7 @@ export const CaseManagerMonthlyStats = () => {
       }
     };
     getData();
-  }, [backend]);
+  }, [backend, selectedYear]);
 
   const buttonStyle = {
     variant: "outline",
@@ -64,9 +67,14 @@ export const CaseManagerMonthlyStats = () => {
           <Button {...buttonStyle}>Start Front Desk Form</Button>
           <Button {...buttonStyle}>Start Case Manager Form</Button>
         </ButtonGroup>
-        <Select>
-          <option>2025</option>
-        </Select>
+        <Select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+        >
+        {Array.from({ length: currentYear - startYear + 1 }, (_, index) => currentYear - index).map(year => (
+          <option key={year} value={year}>{year}</option>
+        ))}
+      </Select>
       </HStack>
 
       <Tabs isFitted w="full">
