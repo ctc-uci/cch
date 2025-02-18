@@ -27,6 +27,8 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
+import { FormProvider } from "./components/interviewScreeningForm/formContext";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -38,6 +40,7 @@ const App = () => {
       <BackendProvider>
         <AuthProvider>
           <RoleProvider>
+            <FormProvider>
             <Router>
               <Routes>
                 <Route
@@ -91,7 +94,7 @@ const App = () => {
                   path = "/donations"
                   element = {<Donations />}
                 />
-
+           
                 <Route
                   path="/"
                   element={
@@ -121,9 +124,14 @@ const App = () => {
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
                 />
+                <Route 
+                  path ="/personal"
+                  element ={<PersonalInformation/>}
+                />
 
               </Routes>
             </Router>
+            </FormProvider>
           </RoleProvider>
         </AuthProvider>
       </BackendProvider>
