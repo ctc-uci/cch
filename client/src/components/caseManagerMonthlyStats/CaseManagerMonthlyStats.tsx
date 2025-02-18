@@ -16,8 +16,8 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
-import { StatsTable } from "./StatsTable.tsx";
 import type { TabData } from "../../types/monthlyStat.ts";
+import { StatsTable } from "./StatsTable.tsx";
 
 export const CaseManagerMonthlyStats = () => {
   const { backend } = useBackendContext();
@@ -29,9 +29,10 @@ export const CaseManagerMonthlyStats = () => {
   useEffect(() => {
     const getData = async () => {
       try {
-        const response = await backend.get(`/calculateMonthlyStats/${selectedYear}`);
+        const response = await backend.get(
+          `/calculateMonthlyStats/${selectedYear}`
+        );
         setAllTabData(response.data);
-        console.log(response.data)
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -66,36 +67,53 @@ export const CaseManagerMonthlyStats = () => {
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
         >
-        {Array.from({ length: currentYear - startYear + 1 }, (_, index) => currentYear - index).map(year => (
-          <option key={year} value={year}>{year}</option>
-        ))}
-      </Select>
+          {Array.from(
+            { length: currentYear - startYear + 1 },
+            (_, index) => currentYear - index
+          ).map((year) => (
+            <option
+              key={year}
+              value={year}
+            >
+              {year}
+            </option>
+          ))}
+        </Select>
       </HStack>
 
-      <Tabs isFitted w="full">
+      <Tabs
+        isFitted
+        w="full"
+      >
         <TabList whiteSpace="nowrap">
           {/* "All Statistics" tab plus one tab for each table */}
           <Tab key="all">All Statistics</Tab>
           {allTabData.map((tab) => (
-              <Tab key={tab.tabName}>{tab.tabName}</Tab>
+            <Tab key={tab.tabName}>{tab.tabName}</Tab>
           ))}
         </TabList>
         <TabPanels>
           {/* All Statistics: render all tables */}
           <TabPanel>
-            {allTabData.map((tab) => (
-                tab.tables.map((table) => (
-                    <StatsTable key={table.tableName} table={table} />
-                ))
-            ))}
+            {allTabData.map((tab) =>
+              tab.tables.map((table) => (
+                <StatsTable
+                  key={table.tableName}
+                  table={table}
+                />
+              ))
+            )}
           </TabPanel>
           {/* Render each table in its own tab panel */}
           {allTabData.map((tab) => (
-              <TabPanel key={tab.tabName}>
-                  {tab.tables.map((table) => (
-                      <StatsTable key={table.tableName} table={table} />
-                  ))}
-              </TabPanel>
+            <TabPanel key={tab.tabName}>
+              {tab.tables.map((table) => (
+                <StatsTable
+                  key={table.tableName}
+                  table={table}
+                />
+              ))}
+            </TabPanel>
           ))}
         </TabPanels>
       </Tabs>

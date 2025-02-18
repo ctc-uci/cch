@@ -29,6 +29,7 @@ import {
 } from "react-icons/md";
 
 import type { Table as StatsTableProps } from "../../types/monthlyStat.ts";
+import { downloadCSV } from "../../utils/downloadCSV.ts";
 
 export const StatsTable = ({ table }: { table: StatsTableProps }) => {
   const { tableName, tableData } = table;
@@ -62,6 +63,18 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
   const buttonStyle = {
     variant: "ghost",
   };
+
+  const csvHeaders = ["Category", ...monthNames, "Total"];
+  const csvData = Object.values(tableData).map((row) => {
+    return {
+      Category: row.categoryName,
+      ...row.monthlyCounts.reduce((acc, m) => {
+        acc[m.month] = m.count;
+        return acc;
+      }, {}),
+      Total: row.total,
+    };
+  });
 
   return (
     <VStack
@@ -129,6 +142,9 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
             <Button
               {...buttonStyle}
               leftIcon={<MdFileUpload />}
+              onClick={() =>
+                downloadCSV(csvHeaders, csvData, `${tableName}Stats.csv`)
+              }
             >
               Export
             </Button>
