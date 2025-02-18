@@ -95,7 +95,7 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 			"month": monthName,
 			"count": total_duplicated_calls
 		})
-		callsAndOfficeVisitsTable["Duplicated Calls"].total += total_unduplicated_calls
+		callsAndOfficeVisitsTable["Duplicated Calls"].total += total_duplicated_calls
 
 		callsAndOfficeVisitsTable["Total Number of Office Visits"].monthlyCounts.push({
 			"month": monthName,
