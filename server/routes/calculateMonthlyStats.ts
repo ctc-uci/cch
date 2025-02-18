@@ -82,6 +82,7 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 
 		const total_calls = Number(entry.total_calls)
 		const total_unduplicated_calls = Number(entry.total_unduplicated_calles)
+		const total_duplicated_calls = total_calls - total_unduplicated_calls
 		const total_office_visits = Number(entry.total_office_visits)
 
 		callsAndOfficeVisitsTable["Calls (includes dups)"].monthlyCounts.push({
@@ -92,7 +93,7 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 
 		callsAndOfficeVisitsTable["Duplicated Calls"].monthlyCounts.push({
 			"month": monthName,
-			"count": total_unduplicated_calls
+			"count": total_duplicated_calls
 		})
 		callsAndOfficeVisitsTable["Duplicated Calls"].total += total_unduplicated_calls
 
