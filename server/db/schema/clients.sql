@@ -9,7 +9,7 @@ CREATE TABLE clients (
     created_by INT NOT NULL,
     unit_id INT NOT NULL,
     "grant" VARCHAR(256) NOT NULL,
-    "status" client_status NOT NULL, 
+    "status" client_status NOT NULL,
     first_name VARCHAR(16) NOT NULL,
     last_name VARCHAR(16) NOT NULL,
     date_of_birth DATE NOT NULL,
@@ -44,6 +44,7 @@ CREATE TABLE clients (
     reunified BOOLEAN,
     successful_completion BOOLEAN,
     destination_city VARCHAR(32),
+    comments VARCHAR(2048),
     FOREIGN KEY (created_by) REFERENCES case_managers(id),
     FOREIGN KEY (unit_id) REFERENCES units(id)
 );
