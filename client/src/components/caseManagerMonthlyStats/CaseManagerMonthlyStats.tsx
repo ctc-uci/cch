@@ -17,19 +17,14 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { StatsTable } from "./StatsTable.tsx";
-
-type StatsTableData = {
-  tabName: string;
-  tables: any[];
-};
-
+import type { TabData } from "../../types/monthlyStat.ts";
 
 export const CaseManagerMonthlyStats = () => {
-  const [allTabData, setAllTabData] = useState<StatsTableData[]>([]);
   const { backend } = useBackendContext();
   const startYear = 2025;
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<number>(currentYear); // State for selected year
+  const [allTabData, setAllTabData] = useState<TabData[]>([]);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
   useEffect(() => {
     const getData = async () => {
@@ -90,7 +85,7 @@ export const CaseManagerMonthlyStats = () => {
           <TabPanel>
             {allTabData.map((tab) => (
                 tab.tables.map((table) => (
-                    <StatsTable key={table.tableName} title={table.tableName} data={table.tableData} />
+                    <StatsTable key={table.tableName} table={table} />
                 ))
             ))}
           </TabPanel>
@@ -98,7 +93,7 @@ export const CaseManagerMonthlyStats = () => {
           {allTabData.map((tab) => (
               <TabPanel key={tab.tabName}>
                   {tab.tables.map((table) => (
-                      <StatsTable key={table.tableName} title={table.tableName} data={table.tableData} />
+                      <StatsTable key={table.tableName} table={table} />
                   ))}
               </TabPanel>
           ))}

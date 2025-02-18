@@ -19,7 +19,6 @@ import {
   useNumberInput,
   VStack,
 } from "@chakra-ui/react";
-import { useEffect } from "react";
 
 import {
   MdFileUpload,
@@ -29,7 +28,10 @@ import {
   MdZoomIn,
 } from "react-icons/md";
 
-export const StatsTable = ({ title, data }) => {
+import type { Table as StatsTableProps } from "../../types/monthlyStat.ts";
+
+export const StatsTable = ({ table }: { table: StatsTableProps }) => {
+  const { tableName, tableData } = table;
   const { getInputProps, getIncrementButtonProps, getDecrementButtonProps } =
     useNumberInput({
       step: 1,
@@ -41,9 +43,6 @@ export const StatsTable = ({ title, data }) => {
   const inc = getIncrementButtonProps();
   const dec = getDecrementButtonProps();
   const input = getInputProps();
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
 
   const monthNames = [
     "January",
@@ -70,7 +69,7 @@ export const StatsTable = ({ title, data }) => {
       spacing="24px"
       paddingTop="24px"
     >
-      <Heading fontSize="20px">{title}</Heading>
+      <Heading fontSize="20px">{tableName}</Heading>
       <Box
         borderWidth="1px"
         borderRadius="12px"
@@ -152,18 +151,18 @@ export const StatsTable = ({ title, data }) => {
               </Tr>
             </Thead>
             <Tbody>
-              {Object.entries(data).map(([key, categoryData]) => (
+              {Object.entries(tableData).map(([key, tableRow]) => (
                 <Tr key={key}>
-                  <Td textAlign="left">{categoryData.categoryName}</Td>
-                  {categoryData.entries.map((entry) => (
+                  <Td textAlign="left">{tableRow.categoryName}</Td>
+                  {tableRow.monthlyCounts.map((monthlyCount) => (
                     <Td
-                      key={entry.month}
+                      key={monthlyCount.month}
                       textAlign="center"
                     >
-                      {entry.count}
+                      {monthlyCount.count}
                     </Td>
                   ))}
-                  <Td textAlign="center">{categoryData.total}</Td>
+                  <Td textAlign="center">{tableRow.total}</Td>
                 </Tr>
               ))}
             </Tbody>

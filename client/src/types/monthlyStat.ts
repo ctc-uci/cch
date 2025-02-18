@@ -22,3 +22,29 @@ export type MonthlyStat = {
   noCallNoShows: number;
   other: string;
 };
+
+// TODO: create shared types for monthly stats so frontend and backend are in sync
+export type MonthlyCount = {
+	month: string;
+	count: number;
+}
+
+export type TableRow = {
+	categoryName: string;
+	monthlyCounts: MonthlyCount[];
+	total: number;
+}
+
+export interface TableData {
+  [key: string]: TableRow;
+}
+
+export type Table = {
+  tableName: string;
+  tableData: TableData;
+};
+
+export type TabData = {
+  tabName: string;
+  tables: Table[]
+}
