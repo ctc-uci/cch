@@ -383,6 +383,7 @@ clientsRouter.post("/", async (req, res) => {
 //     res.status(400).send(err.message);
 //   }
 // });
+
 clientsRouter.put("/:id", async (req, res) => {
   try {
     const {

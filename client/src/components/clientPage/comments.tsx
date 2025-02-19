@@ -44,7 +44,7 @@ interface Client {
     successfulCompletion: boolean;
     unitId: number;
     comments: string;
-}
+};
 
 const emptyClient: Client = {
     age: 0,
@@ -133,7 +133,7 @@ function Comments() {
         }
         // console.log("hello");
         return snakeCased;
-      }
+    }
       
     const handleSaveChanges = async () => {
         try {
