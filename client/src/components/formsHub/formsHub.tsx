@@ -1,18 +1,23 @@
-// Will have a vstack. First component will be title (of page)
-// Second will be the area that allows for starting a form
-// Third will be the forms table itself, which allows you to change the behavior of the forms inside.
+import { VStack, Flex, Heading, Text, Box } from "@chakra-ui/react";
+import { StartForms } from "./startForm";
+import { FormTable } from "./formsTable";
 
-import { useEffect, useState } from "react";
+export const FormsHub = () => {
+  return (
+    <VStack spacing={8} align="stretch" >
+      <Box>
+        <Heading p={6} as="h1" size="xl" mb={2}>
+          Forms
+        </Heading>
+        </Box>
+        <Text fontWeight="bold" px={6} fontSize="lg" >
+          Start a Form
+        </Text>
 
-import {
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from "@chakra-ui/react";
-
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
+      <StartForms />
+      <Box px={8}>
+      <FormTable />
+      </Box>
+    </VStack>
+  );
+};

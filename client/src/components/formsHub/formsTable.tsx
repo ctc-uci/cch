@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Button,
+  ButtonGroup,
   Flex,
-  IconButton,
   Table,
   TableContainer,
   Tbody,
@@ -13,78 +13,31 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-// import { ArrowUpIcon } from "@chakra-ui/icons";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
-type SuccessStory = {
-  id: number;
-  date: string;
-  client_id: number | null;
-  name: string;
-  cm_id: number;
-  previous_situation: string;
-  cch_impact: string;
-  where_now: string;
-  tell_donors: string;
-  quote: string;
-  consent: boolean;
-};
-
-type RandomSurvey = {
-  id: number;
-  date: string;
-  cch_qos: number;
-  cm_qos: number;
-  courteous: boolean;
-  informative: boolean;
-  prompt_and_helpful: boolean;
-  entry_quality: number;
-  unit_quality: number;
-  clean: number;
-  overall_experience: number;
-  case_meeting_frequency: string;
-  lifeskills: boolean;
-  recommend: boolean;
-  recommend_reasoning: string;
-  make_cch_more_helpful: string;
-  cm_id: number;
-  cm_feedback: string;
-  other_comments?: string;
-};
-
-type ExitSurvey = {
-  id: number;
-  cm_id: number;
-  name: string;
-  client_id: number;
-  site: number;
-  program_date_completion: string;
-  cch_rating: number;
-  cch_like_most: string;
-  life_skills_rating: number;
-  life_skills_helpful_topics: string;
-  life_skills_offer_topics_in_the_future: string;
-  cm_rating: number;
-  cm_change_about: string;
-  cm_most_beneficial: string;
-  cch_could_be_improved: string;
-  experience_takeaway: string;
-  experience_accomplished: string;
-  experience_extra_notes: string;
-};
 
 type FormItem = {
   id: number;
   date: string;
   name: string;
-  title: "Success Story" | "Random Survey" | "Exit Survey";
+  title:
+    | "Initial Screeners"
+    | "Intake Statistics"
+    | "Front Desk Monthly Stats"
+    | "Case Manager Monthly Stats";
 };
+
+type ViewOption =
+  | "All Forms"
+  | "Initial Screeners"
+  | "Front Desk Monthly Statistics"
+  | "Case Manager Monthly Statistics"
+  | "Client Tracking Statistics (Intake Statistics)";
 
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
-  // Zoom state: 1 = 100%, 0.75 = 75%, etc.
   const [zoom, setZoom] = useState(1);
+  const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
 
   const formatDate = (x: string) => {
     const date = new Date(x);
@@ -94,41 +47,58 @@ export const FormTable = () => {
     return `${month}/${day}/${year}`;
   };
 
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5));
+
   useEffect(() => {
     const getData = async () => {
       try {
-        const successStoryResponse = await backend.get(`/successStory`);
-        const randomSurveyResponse = await backend.get(`/randomSurvey`);
-        const exitSurveyResponse = await backend.get(`/exitSurvey`);
+        const screenerResponse = await backend.get(`/initialInterview`);
+        const frontDeskResponse = await backend.get(`/frontDesk`);
+        const caseManagersResponse = await backend.get(`/caseManagers`);
 
-        const successStories: FormItem[] = successStoryResponse.data.map(
-          (item: SuccessStory) => ({
+        // TO BE IMPLEMENTED:
+        // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
+        // Will need to link the routes between each form.
+
+        // const intakeStatisticsResponse = await backend.get(`/undefined`);
+
+
+        const initialScreeners: FormItem[] = screenerResponse.data.map(
+          (item) => ({
             id: item.id,
             date: item.date,
             name: item.name,
-            title: "Success Story",
+            title: "Initial Screeners",
           })
         );
 
-        const randomSurveys: FormItem[] = randomSurveyResponse.data.map(
-          (item: RandomSurvey) => ({
+        const intakeStatistics: FormItem[] = [];
+
+        const frontDeskStats: FormItem[] = frontDeskResponse.data.map(
+          (item) => ({
             id: item.id,
             date: item.date,
-            name: "Not Available",
-            title: "Random Survey",
-          })
-        );
-
-        const exitSurveys: FormItem[] = exitSurveyResponse.data.data.map(
-          (item: ExitSurvey) => ({
-            id: item.id,
-            date: item.program_date_completion,
             name: item.name,
-            title: "Exit Survey",
+            title: "Front Desk Monthly Statistics",
           })
         );
 
-        setItems([...successStories, ...randomSurveys, ...exitSurveys]);
+        const caseManagerStats: FormItem[] = caseManagersResponse.data.map(
+          (item) => ({
+            id: item.id,
+            date: item.date,
+            name: item.name,
+            title: "Case Manager Monthly Statistics",
+          })
+        );
+
+        setItems([
+          ...initialScreeners,
+          ...intakeStatistics,
+          ...frontDeskStats,
+          ...caseManagerStats,
+        ]);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -137,34 +107,93 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
-  // Zoom in/out handlers adjusting the zoom state by 10%
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2)); // max 200%
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5)); // min 50%
-
-  // Adjust internal font size based on a base size (16px)
-  const baseFontSize = 16; // in pixels
+  const baseFontSize = 16;
   const computedFontSize = `${baseFontSize * zoom}px`;
 
-  return (
-    // Outermost container remains fixed with a black background
-    // <Box p="4" bg="black">
-      <Box p="4">
-      {/* Toolbar */}
-      <Flex mb="4" gap="2" alignItems="center">
-        <Button variant="outline" onClick={() => alert("Filter clicked!")}>
-          Filter
-        </Button>
-        <Text>Zoom</Text>
-        <Box border="1px solid" p={1} borderRadius="md">{Math.round(zoom * 100)}%</Box>
-        <Button variant="ghost" onClick={handleZoomOut}>
-          -
-        </Button>
-        <Button variant="ghost" onClick={handleZoomIn}>
-          +
-        </Button>
-      </Flex>
+  const buttonStyle = (view: ViewOption) => {
+    const isActive = currentView === view;
+    return {
+      px: "2rem",
+      fontSize: "14pt",
+      textAlign: "center" as const,
+      cursor: "pointer",
+      color: isActive ? "#3182CE" : "#1A202C",
+      borderBottom: isActive ? "2px solid" : "none",
+      borderColor: isActive ? "blue.500" : "transparent",
+      _hover: { bg: "transparent" },
+      whiteSpace: "nowrap",
+    };
+  };
 
-      {/* Table container that stays within the bounds of the outer Box */}
+  const filteredData = useMemo(() => {
+    if (currentView === "All Forms") return items;
+
+    return items.filter((item) => {
+      if (currentView === "Client Tracking Statistics (Intake Statistics)") {
+        return item.title === "Intake Statistics";
+      }
+
+      return item.title === currentView;
+    });
+  }, [currentView, items]);
+
+  return (
+    <Box p="4">
+      <Text fontSize="13pt" fontWeight="bold">Form History</Text>
+      <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+
+      <Flex marginTop="1.5rem" h="40px" alignItems="center" w='95%' mb="4">
+
+        <Box
+          {...buttonStyle("All Forms")}
+          onClick={() => setCurrentView("All Forms")}
+        >
+          All Forms
+        </Box>
+        <Box
+          {...buttonStyle("Initial Screeners")}
+          onClick={() => setCurrentView("Initial Screeners")}
+        >
+          Initial Screeners
+        </Box>
+        <Box
+          {...buttonStyle("Client Tracking Statistics (Intake Statistics)")}
+          onClick={() =>
+            setCurrentView("Client Tracking Statistics (Intake Statistics)")
+          }
+        >
+          Client Tracking Statistics (Intake Statistics)
+        </Box>
+        <Box
+          {...buttonStyle("Front Desk Monthly Statistics")}
+          onClick={() => setCurrentView("Front Desk Monthly Statistics")}
+        >
+          Front Desk Monthly Statistics
+        </Box>
+        <Box
+          {...buttonStyle("Case Manager Monthly Statistics")}
+          onClick={() => setCurrentView("Case Manager Monthly Statistics")}
+        >
+          Case Manager Monthly Statistics
+        </Box>
+
+          </Flex>
+
+      <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
+        <Flex gap="2" alignItems="center">
+          <Text>Zoom:</Text>
+          <Box border="1px solid" p={1} borderRadius="md">
+            {Math.round(zoom * 100)}%
+          </Box>
+          <Button variant="ghost" onClick={handleZoomOut}>
+            -
+          </Button>
+          <Button variant="ghost" onClick={handleZoomIn}>
+            +
+          </Button>
+        </Flex>
+
+
       <Box maxW="100%" overflow="auto" bg="white" p="4">
         <TableContainer fontSize={computedFontSize}>
           <Table variant="striped" colorScheme="gray">
@@ -180,20 +209,27 @@ export const FormTable = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {items.map((item, index) => (
-                <Tr key={index} _hover={{ bg: "gray.200" }}>
-                  <Td>{index + 1}</Td>
-                  <Td>{formatDate(item.date)}</Td>
-                  <Td>{item.name}</Td>
+              {filteredData.map((item, index) => (
+                <Tr key={item.id} _hover={{ bg: "gray.200" }}>
+                  <Td w="10%">{index + 1}</Td>
+                  <Td w="15%">{formatDate(item.date)}</Td>
+                  <Td w="20%">{item.name}</Td>
                   <Td minW="200px">{item.title}</Td>
                   <Td w="50px" textAlign="right">
-                    {/* <Icon></Icon> */}
                   </Td>
                 </Tr>
               ))}
+              {filteredData.length === 0 && (
+                <Tr>
+                  <Td colSpan={5} textAlign="center" py={6}>
+                    No data found.
+                  </Td>
+                </Tr>
+              )}
             </Tbody>
           </Table>
         </TableContainer>
+      </Box>
       </Box>
     </Box>
   );

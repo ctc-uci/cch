@@ -16,7 +16,7 @@ import { ViewPage } from "./components/clientPage/ViewPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { FormTable } from "./components/formsHub/formsTable";
+import { FormsHub } from "./components/formsHub/formsHub";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
@@ -66,8 +66,8 @@ const App = () => {
                   element={<ClientInterviewScreening />}
                 />
                 <Route
-                  path="/forms-table"
-                  element={<FormTable />}
+                  path="/forms-hub"
+                  element={<FormsHub />}
                 />
                 <Route
                   path="/start-form"
