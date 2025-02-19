@@ -19,7 +19,7 @@ import { useBackendContext } from "./hooks/useBackendContext";
 
 interface AuthContextProps {
   currentUser: User | null;
-  signup: ({ email, password }: EmailPassword) => Promise<UserCredential>;
+  signup: ({ email, password, firstName, lastName, phoneNumber }: SignupInfo) => Promise<UserCredential>;
   login: ({ email, password }: EmailPassword) => Promise<UserCredential>;
   logout: () => Promise<void>;
   resetPassword: ({ email }: Pick<EmailPassword, "email">) => Promise<void>;
@@ -37,13 +37,21 @@ interface EmailPassword {
   password: string;
 }
 
+interface SignupInfo {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { backend } = useBackendContext();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const signup = async ({ email, password }: EmailPassword) => {
+  const signup = async ({ email, password, firstName, lastName, phoneNumber }: SignupInfo) => {
     if (currentUser) {
       signOut(auth);
     }
@@ -57,6 +65,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await backend.post("/users/create", {
       email: email,
       firebaseUid: userCredential.user.uid,
+      firstName: firstName,
+      lastName: lastName,
+      phoneNumber: phoneNumber, 
     });
 
     return userCredential;

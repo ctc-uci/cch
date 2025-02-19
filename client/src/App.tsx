@@ -13,6 +13,10 @@ import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
+import { LandingPage } from "./components/login/LandingPage";
+import { ChooseLogin } from "./components/login/ChooseLogin";
+import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
+import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
@@ -41,12 +45,28 @@ const App = () => {
             <Router>
               <Routes>
                 <Route
-                  path="/login"
+                  path="/landing-page"
+                  element={<LandingPage />}
+                />
+                 <Route
+                  path="/choose-login"
+                  element={<ChooseLogin />}
+                />
+                <Route
+                  path="/login/:userType"
                   element={<Login />}
                 />
                 <Route
-                  path="/signup"
+                  path="/signup/:userType"
                   element={<Signup />}
+                />
+                <Route
+                  path="/forgot-password/:userType"
+                  element={<ForgotPassword />}
+                />
+                 <Route
+                  path="/admin-pin/:userType"
+                  element={<AdminPin />}
                 />
                 <Route
                   path="/exit-survey"
