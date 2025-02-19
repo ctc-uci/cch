@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import {
   Box,
   Button,
@@ -6,12 +7,13 @@ import {
   Table,
   TableContainer,
   Tbody,
-  Text,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
 } from "@chakra-ui/react";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 type FormItem = {
@@ -54,7 +56,9 @@ export const FormTable = () => {
       try {
         const screenerResponse = await backend.get(`/initialInterview`);
         const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
+        const caseManagersMonthlyResponse = await backend.get(
+          `/caseManagerMonthlyStats`
+        );
         const allCaseManagersResponse = await backend.get(`/caseManagers`);
         console.log(screenerResponse);
         console.log(frontDeskResponse);
@@ -87,8 +91,8 @@ export const FormTable = () => {
           })
         );
 
-        const caseManagerStats: FormItem[] = caseManagersMonthlyResponse.data.map(
-          (item) => {
+        const caseManagerStats: FormItem[] =
+          caseManagersMonthlyResponse.data.map((item) => {
             const matchingCM = allCaseManagersResponse.data.find(
               (cm) => cm.id === item.cmId
             );
@@ -98,8 +102,7 @@ export const FormTable = () => {
               name: `${matchingCM.firstName} ${matchingCM.lastName}`,
               title: "Case Manager Monthly Statistics",
             };
-          }
-        );
+          });
 
         setItems([
           ...initialScreeners,
@@ -149,16 +152,25 @@ export const FormTable = () => {
     });
   }, [currentView, items]);
 
-
   // TO DO:
   // Implement routing for the Start Form buttons.
   return (
     <Box p="4">
-      <Text fontSize="13pt" fontWeight="bold">Form History</Text>
+      <Text
+        fontSize="13pt"
+        fontWeight="bold"
+      >
+        Form History
+      </Text>
       <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
 
-      <Flex marginTop="1.5rem" h="40px" alignItems="center" w='95%' mb="4">
-
+      <Flex
+        marginTop="1.5rem"
+        h="40px"
+        alignItems="center"
+        w="95%"
+        mb="4"
+      >
         <Box
           {...buttonStyle("All Forms")}
           onClick={() => setCurrentView("All Forms")}
@@ -191,60 +203,108 @@ export const FormTable = () => {
         >
           Case Manager Monthly Statistics
         </Box>
+      </Flex>
 
-          </Flex>
-
-      <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
-        <Flex gap="2" alignItems="center">
+      <Box
+        borderWidth="2pt"
+        borderColor="#E2E8F0"
+        borderRadius="1rem"
+        p={5}
+      >
+        <Flex
+          gap="2"
+          alignItems="center"
+        >
           <Text px={2}>Zoom </Text>
-          <Box w="5rem" textAlign="center" border="1px solid" p={1} borderRadius="md">
+          <Box
+            w="5rem"
+            textAlign="center"
+            border="1px solid"
+            p={1}
+            borderRadius="md"
+          >
             {Math.round(zoom * 100)}%
           </Box>
-          <Button variant="ghost" onClick={handleZoomOut}>
+          <Button
+            variant="ghost"
+            onClick={handleZoomOut}
+          >
             -
           </Button>
-          <Button variant="ghost" onClick={handleZoomIn}>
+          <Button
+            variant="ghost"
+            onClick={handleZoomIn}
+          >
             +
           </Button>
         </Flex>
 
-
-      <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={computedFontSize}>
-          <Table variant="striped" colorScheme="gray">
-            <Thead>
-              <Tr>
-                <Th>Index</Th>
-                <Th>Date</Th>
-                <Th>Name</Th>
-                <Th minW="200px">Form Title</Th>
-                <Th w="50px" textAlign="right">
-                  Export
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredData.map((item, index) => (
-                <Tr key={item.id} _hover={{ bg: "gray.200" }}>
-                  <Td w="10%">{index + 1}</Td>
-                  <Td w="15%">{formatDate(item.date)}</Td>
-                  <Td w="20%">{item.name}</Td>
-                  <Td minW="200px">{item.title}</Td>
-                  <Td w="50px" textAlign="right">
-                  </Td>
-                </Tr>
-              ))}
-              {filteredData.length === 0 && (
+        <Box
+          maxW="100%"
+          overflow="auto"
+          bg="white"
+          p="4"
+        >
+          <TableContainer fontSize={computedFontSize}>
+            <Table
+              variant="striped"
+              colorScheme="gray"
+            >
+              <Thead>
                 <Tr>
-                  <Td colSpan={5} textAlign="center" py={6}>
-                    No data found.
-                  </Td>
+                  <Th>Index</Th>
+                  <Th>Date</Th>
+                  <Th>Name</Th>
+                  <Th minW="200px">Form Title</Th>
+                  <Th
+                    w="50px"
+                    textAlign="right"
+                  >
+                    Export
+                  </Th>
                 </Tr>
-              )}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </Box>
+              </Thead>
+              <Tbody>
+                {filteredData.map((item, index) => (
+                  <Tr key={`${item.title}-${item.id}`}>
+                    <Td w="10%">{index + 1}</Td>
+                    <Td w="15%">{formatDate(item.date)}</Td>
+                    <Td w="20%">{item.name}</Td>
+                    <Td minW="200px">
+                      <Text
+                        as="button"
+                        onClick={() => {}}
+                        color="#3182CE"
+                        bg="transparent"
+                        _hover={{
+                          textDecoration: "underline",
+                          bg: "transparent",
+                        }}
+                      >
+                        {item.title}
+                      </Text>
+                    </Td>
+                    <Td
+                      w="50px"
+                      textAlign="right"
+                    ></Td>
+                  </Tr>
+                ))}
+                {filteredData.length === 0 && (
+                  <Tr>
+                    <Td
+                      colSpan={5}
+                      textAlign="center"
+                      py={6}
+                    >
+                      No data found.
+                    </Td>
+                  </Tr>
+                )}
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
       </Box>
     </Box>
   );
