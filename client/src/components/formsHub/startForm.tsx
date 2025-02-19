@@ -1,4 +1,3 @@
-import React from "react";
 import { Flex, Box, Text, Link } from "@chakra-ui/react";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -30,21 +29,20 @@ export const StartForms = () => {
         justifyContent={"center"}
         alignItems="center"
         p={4}
-        gap="6rem" // using Chakra's spacing scale (roughly 1rem)
+        gap="6rem"
       >
         {cards.map((card, index) => (
           <Box
             key={index}
-            flex="1"        // each card takes an equal share of the available width
+            flex="1"
             h="90%"
-            minW="150px"        // allows the card to shrink beyond its content's intrinsic size
+            minW="150px"
             display="flex"
             backgroundColor="white"
             borderWidth="1px"
             borderRadius="lg"
-            // minHeight="15rem" // using rem for relative sizing
             flexDirection="column"
-            justifyContent="flex-end" // pushes text to the bottom of the box
+            justifyContent="flex-end"
             p={6}
             textAlign="center"
           >

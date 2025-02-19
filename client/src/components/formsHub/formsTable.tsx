@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Button,
-  ButtonGroup,
   Flex,
   Table,
   TableContainer,
@@ -63,7 +62,6 @@ export const FormTable = () => {
 
         // const intakeStatisticsResponse = await backend.get(`/undefined`);
 
-
         const initialScreeners: FormItem[] = screenerResponse.data.map(
           (item) => ({
             id: item.id,
@@ -107,6 +105,10 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
+  // TO DO:
+  // Need to discuss what zoom really does. Currently it just increases/decreases fontsize but that might not be its
+  // intended purpose.
+
   const baseFontSize = 16;
   const computedFontSize = `${baseFontSize * zoom}px`;
 
@@ -119,7 +121,7 @@ export const FormTable = () => {
       cursor: "pointer",
       color: isActive ? "#3182CE" : "#1A202C",
       borderBottom: isActive ? "2px solid" : "none",
-      borderColor: isActive ? "blue.500" : "transparent",
+      borderColor: isActive ? "#3182CE" : "transparent",
       _hover: { bg: "transparent" },
       whiteSpace: "nowrap",
     };
@@ -137,6 +139,9 @@ export const FormTable = () => {
     });
   }, [currentView, items]);
 
+
+  // TO DO:
+  // Implement routing for the Start Form buttons.
   return (
     <Box p="4">
       <Text fontSize="13pt" fontWeight="bold">Form History</Text>
@@ -181,8 +186,8 @@ export const FormTable = () => {
 
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
         <Flex gap="2" alignItems="center">
-          <Text>Zoom:</Text>
-          <Box border="1px solid" p={1} borderRadius="md">
+          <Text px={2}>Zoom </Text>
+          <Box w="5rem" textAlign="center" border="1px solid" p={1} borderRadius="md">
             {Math.round(zoom * 100)}%
           </Box>
           <Button variant="ghost" onClick={handleZoomOut}>
