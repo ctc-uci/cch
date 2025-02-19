@@ -49,6 +49,35 @@ const page1Columns: string[] = [
     "priorLiving"
   ];
 
+const page2Columns: string[] = [
+    "attendingSchoolUponEntry",
+    "beenConvicted",
+    "chronicallyHomeless",
+    "cityOfLastPermanentResidence",
+    "domesticeViolenceHistory",
+    "employed",
+    "employedUponEntry",
+    "homelessnessLength",
+    "lastEmployment",
+    "lastSlept",
+    "mentalHealth",
+    "mentalHealthUndiagnosed",
+    "photoReleaseSigned",
+    "priorHomelessCity",
+    "priorLivingCity",
+    "shelterInLastFiveYears",
+    "shelterLastFiveYears",
+    "substanceHistory",
+    "supportSystem", // check if this is yes, then check supportSystem
+    "transportation"
+];
+
+const supportSystemColumns: string[] = [ 
+    "childcareAssistance",
+    "foodPurchase",
+    "housing"
+];
+
 export const IntakeStats = () => {
     const navigate = useNavigate();
     const [pageNum, setPageNum] = useState(1);
@@ -57,20 +86,43 @@ export const IntakeStats = () => {
 
     const toast = useToast();
 
+    const checkPage1Cols = () => {
+        for (const item of page1Columns) {
+            if (!formData[item]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const checkPage2Cols = () => {
+        for (const item of page2Columns) {
+            if (!formData[item]) {
+                return false;
+            }
+        }
+        if (formData.supportSystem === "Yes") {
+            for (const item of supportSystemColumns) {
+                if (!formData[item]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
     const handleNext = () => {
         console.log(formData);
         // TODO: Uncomment for missing information toast
-        // for (const item of page1Columns) {
-        //     if (!formData[item]) {
-        //         toast({
-        //             title: 'Missing Information',
-        //             description: "Please fill out all required information before submitting",
-        //             status: 'warning',
-        //             duration: 9000,
-        //             isClosable: true,
-        //         })
-        //         return;
-        //     }
+        // if (!checkPage1Cols()) {
+        //     toast({
+        //         title: 'Missing Information',
+        //         description: "Please fill out all required information before submitting",
+        //         status: 'warning',
+        //         duration: 9000,
+        //         isClosable: true,
+        //     })
+        //     return;
         // }
         setPageNum(2);
     }
@@ -82,7 +134,78 @@ export const IntakeStats = () => {
 
     const handleReview = () => {
         console.log(formData);
+        // TODO: Uncomment for missing information toast
+        // if (!checkPage2Cols()) {
+        //     toast({
+        //         title: 'Missing Information',
+        //         description: "Please fill out all required information before submitting",
+        //         status: 'warning',
+        //         duration: 9000,
+        //         isClosable: true,
+        //     })
+        //     return;
+        // }
         setReview(1);
+    }
+
+    const handlePrepareSubmit = () => { 
+        // TODO: Uncomment for missing information toast
+        // if (!checkPage1Cols() || !checkPage2Cols()) {
+        //     toast({
+        //         title: 'Missing Information',
+        //         description: "Please fill out all required information before submitting",
+        //         status: 'warning',
+        //         duration: 9000,
+        //         isClosable: true,
+        //     })
+        //     return;
+        // }
+        // TODO: Add function for submission of form, to be called by submit button in this toast
+        toast({
+            position: "top-right",
+            isClosable: true,
+            render: ({ onClose }) => (
+                <Box
+                p={4}
+                bg="white"
+                color="black"
+                borderRadius="md"
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                >
+                    <Text fontSize="lg" color="black" fontWeight="bold">Warning!</Text>
+                    <span>You will not be able to view or edit this form after submission.</span>
+                    <HStack>
+                        <Button
+                            ml={4}
+                            size="sm"
+                            backgroundColor='#ffffff'
+                            color='#4398cd'
+                            border="2px solid #4398cd"
+                            onClick={() => {
+                            console.log("Button inside toast clicked");
+                            onClose();
+                            }}
+                        >
+                            Continue Reviewing
+                        </Button>
+                        <Button
+                            ml={4}
+                            size="sm"
+                            backgroundColor='#4398cd'
+                            color='#ffffff'
+                            onClick={() => {
+                            console.log("Button inside toast clicked");
+                            onClose();
+                            }}
+                        >
+                            Submit
+                        </Button>
+                    </HStack>
+                </Box>
+            ),
+        })
     }
 
     return(
@@ -141,7 +264,7 @@ export const IntakeStats = () => {
                     </Box>
                 </Box>
 
-                <Box backgroundColor = "#FFFFFF" margin="0 8% 3% 8%" borderRadius="md" maxHeight="85vh" overflow="auto">
+                <Box backgroundColor = "#FFFFFF" margin="0 8% 1% 8%" borderRadius="md" maxHeight="85vh" overflow="auto">
                     <Box display="flex" justifyContent="center" alignItems="center" pt="6vh">
                         <HStack w="50%" justify="center" align="center" spacing={4}>
                             <Text fontSize="sm" whiteSpace="nowrap">Page 2 of 2</Text>
@@ -156,10 +279,13 @@ export const IntakeStats = () => {
                         </Box>
                     </Box>
                 </Box>
-                <HStack justifyContent="flex-end" width="100%" px={5} mt={2} mb={3}>
-                    <Button backgroundColor='#4398cd' color='#ffffff'>Submit</Button>
-                </HStack>
+                <Box width="100%" pb="20px" display="flex">
+                    <HStack justifyContent="flex-end" width="100%">
+                        <Button backgroundColor='#4398cd' color='#ffffff' mr="5%" onClick={handlePrepareSubmit}>Submit</Button>
+                    </HStack>
+                </Box>
             </>
         }
     </Box>
-)};
+    );
+};
