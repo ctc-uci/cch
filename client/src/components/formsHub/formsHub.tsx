@@ -6,6 +6,8 @@ import { StartForms } from "./startForm";
 export const FormsHub = () => {
   return (
     <VStack
+      overflowX="hidden"
+      w="100vw"
       spacing={8}
       align="stretch"
     >

@@ -165,6 +165,7 @@ export const FormTable = () => {
       <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
 
       <Flex
+        overflowX="auto"
         marginTop="1.5rem"
         h="40px"
         alignItems="center"

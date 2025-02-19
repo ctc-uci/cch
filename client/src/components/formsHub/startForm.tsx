@@ -25,7 +25,7 @@ export const StartForms = () => {
   return (
     <Flex
       h="16rem"
-      w="100%"
+      w="100vw"
       backgroundColor="#EDF2F7"
     >
       <Flex
