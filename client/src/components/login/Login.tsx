@@ -40,7 +40,7 @@ type SigninFormValues = z.infer<typeof signinSchema>;
 export const Login = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  const { userType } = useParams<{ userType: string }>();
+  const { userType = "Admin"} = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Admin" ? "AD" : "CL";
 
   const { login, handleRedirectResult } = useAuthContext();
