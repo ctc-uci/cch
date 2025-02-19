@@ -1,5 +1,6 @@
 interface FormData {
     applicantType: string;
+    name: string;
     firstName: string;
     lastName: string;
     age: string;
@@ -35,16 +36,19 @@ interface FormData {
     monthlyIncome: string;
     sourcesOfIncome: string;
     monthlyBills: string;
+    estimateAmountBills: string;
     currentlyEmployed: string;
     lastEmployer: string;
     lastEmployedDate: string;
     childrenAge: string;
     educationHistory: string;
+    dateOfEducation: string;
     transportation: string;
     legalResident: string;
     medical: string;
     medicalCity: string;
     medicalInsurance: string;
+    medicalConditions: string;
     medications: string;
     domesticViolenceHistory: string;
     socialWorker: string;

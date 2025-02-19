@@ -52,17 +52,19 @@ export const FormProvider = ({ children }: ContextProviderProps) => {
         monthlyIncome: "",
         sourcesOfIncome: "",
         monthlyBills: "",
+        estimateAmountBills: "",
         currentlyEmployed: "",
         lastEmployer: "",
         lastEmployedDate: "",
         childrenAge: "",
-        // Newly added fields from the second half of the screenshot
         educationHistory: "",
+        dateOfEducation: "",    
         transportation: "",
         legalResident: "",
         medical: "",
         medicalCity: "",
         medicalInsurance: "",
+        medicalConditions: "",
         medications: "",
         domesticViolenceHistory: "",
         socialWorker: "",
@@ -94,8 +96,8 @@ export const FormProvider = ({ children }: ContextProviderProps) => {
 
 export const useForm = (): FormContextType => {
     const context = useContext(FormContext);
-    // if (!context) {
-    //     throw new Error('useForm must be used within a FormProvider');
-    // }
+    if (!context) {
+        throw new Error('useForm must be used within a FormProvider');
+    }
     return context;
 }

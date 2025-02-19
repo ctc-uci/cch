@@ -1,12 +1,15 @@
 import { Input, Radio, RadioGroup, Stack, Button } from '@chakra-ui/react';
-import { useState } from 'react';
-import { useForm } from '../contexts/formContext';
-const PersonalInformation: React.FC = () => {
+import { useForm } from '../../contexts/formContext';
+import StepperComponent from './stepperComponent';
+import { useNavigate } from 'react-router-dom';
+const PersonalInformation: React.FC = ({hidden}) => {
   const { formData, setFormData } = useForm();
+  const navigate = useNavigate();
 
   return (
     <>
-      <h1>Personal Information</h1>
+        {!hidden && <StepperComponent step_index={1} />}
+      <h1 style={{fontSize: "28px", color: "#3182CE"}}>Personal Information</h1>
       <div className="personal-information-form">
         {/* Personal Information Fields */}
         <div>
@@ -175,7 +178,7 @@ const PersonalInformation: React.FC = () => {
         </div>
       </div>
 
-      <h1>Family Information</h1>
+      <h1 style={{fontSize: "28px", color: "#3182CE"}}>Family Information</h1>
       <div>
         <div>
           <label>1. What is your father's name?</label>
@@ -225,7 +228,7 @@ const PersonalInformation: React.FC = () => {
           </div>
   
       </div>
-      <Button colorScheme="blue" onClick={() => {console.log(formData)}}>Next</Button>
+      {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/financial")}}>Next</Button>}
     </>
   );
 };

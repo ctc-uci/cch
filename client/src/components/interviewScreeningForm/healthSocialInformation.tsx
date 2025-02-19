@@ -1,25 +1,23 @@
 import { Input } from '@chakra-ui/react'
 import { Radio, RadioGroup, Stack, Button } from '@chakra-ui/react'
-import { AddIcon } from '@chakra-ui/icons'
-import { useState } from 'react'
+import { MdAdd } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
-import { formData } from '../types/screenFormData';
-import { useForm } from '../contexts/formContext';
+import { useForm } from '../../contexts/formContext';
+import StepperComponent from './stepperComponent';
 
+const HealthSocialInformation = ({ hidden }: boolean) => {
+    const { formData, setFormData } = useForm();
+    const navigate = useNavigate();
 
-const healthSocialInformation = () => {
-    const [health, setHealth] = useState('')
-    const [insurance, setInsurance] = useState('')
-    const [violence, setViolence] = useState('')
-    const [applied, setApplied] = useState('')
-    const [been, setBeen] = useState('')
     return (
         <>
-        <h1>Health and Social Information</h1>
+        {!hidden && <StepperComponent step_index={3} />}
+        <h1 style={{fontSize: "28px", color: "#3182CE"}}>Health and Social Information</h1>
         <div className="healthSocial-information-form">
             <div>
                 <label>1. Do you have any medical conditions?</label>
-                <RadioGroup onChange={setHealth} value={health}>
+                <RadioGroup value={formData.medical}
+                onChange={(value) => setFormData({ ...formData, medical: value })}>
                 <Stack direction='row'>
                     <Radio value='yes'>Yes</Radio>
                     <Radio value='no'>No</Radio>
@@ -29,16 +27,19 @@ const healthSocialInformation = () => {
             </div>
             <div>
                 <label>2. List your medical conditions</label>
-                <Input />
-                <Button rightIcon={<AddIcon />} size='md' variant={'solid'}>add row</Button>
+                <Input  value={formData.medicalConditions} 
+            onChange={(e) => setFormData({ ...formData, medicalConditions: e.target.value })}/>
+                <Button rightIcon={<MdAdd />} size='md' variant={'solid'}>add row</Button>
             </div>
             <div>
                 <label>3. Do you take any medications?</label>
-                <Input />
+                <Input  value={formData.medications}
+            onChange={(e) => setFormData({ ...formData, medications: e.target.value })}/>
             </div>
             <div>
                 <label>4. Do you have insurance?</label>
-                <RadioGroup onChange={setInsurance} value={insurance}>
+                <RadioGroup value={formData.medicalInsurance}
+                onChange={(value) => setFormData({ ...formData, medicalInsurance: value })}>
                 <Stack direction='row'>
                     <Radio value='yes'>Yes</Radio>
                     <Radio value='no'>No</Radio>
@@ -48,7 +49,8 @@ const healthSocialInformation = () => {
             </div>
             <div>
                 <label>5. Any history of domestic violence?</label>
-                <RadioGroup onChange={setViolence} value={violence}>
+                <RadioGroup value={formData.domesticViolenceHistory}
+                onChange={(value) => setFormData({ ...formData, domesticViolenceHistory: value })}>
                 <Stack direction='row'>
                     <Radio value='yes'>Yes</Radio>
                     <Radio value='no'>No</Radio>
@@ -58,24 +60,25 @@ const healthSocialInformation = () => {
             </div>
             <div>
                 <label>6. What's your social worker's name?</label>
-                <Input type='tel'/>
+                <Input  value={formData.socialWorker}
+            onChange={(e) => setFormData({ ...formData, socialWorker: e.target.value })}/>
             </div>
             <div>
                 <label>7. Contact information of social worker</label>
-                <Input type='email'/>
+                <Input type='tel'  value={formData.socialWorkerTelephone}
+            onChange={(e) => setFormData({ ...formData, socialWorkerTelephone: e.target.value })}/>
             </div>
             <div>
                 <label>8. Office location of social worker?</label>
-                <Input/>
+                <Input  value={formData.socialWorkerOfficeLocation}
+            onChange={(e) => setFormData({ ...formData, socialWorkerOfficeLocation: e.target.value })}/>
             </div>
         
+            {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/additional")}}>Next</Button>}
+        </div>
 
-        </div>
-        <div>
-            
-        </div>
         </>
     );  
 }
 
-export default healthSocialInformation;
+export default HealthSocialInformation;
