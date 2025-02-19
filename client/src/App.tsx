@@ -27,6 +27,13 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
+import { FormProvider } from "./contexts/formContext";
+import FinancialInformation from "./components/interviewScreeningForm/financialInformation";
+import HealthSocialInformation from "./components/interviewScreeningForm/healthSocialInformation";
+import AdditionalInformation from "./components/interviewScreeningForm/additionalInformation";
+import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
+import Success from "./components/interviewScreeningForm/success";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -38,6 +45,7 @@ const App = () => {
       <BackendProvider>
         <AuthProvider>
           <RoleProvider>
+            <FormProvider>
             <Router>
               <Routes>
                 <Route
@@ -91,7 +99,7 @@ const App = () => {
                   path = "/donations"
                   element = {<Donations />}
                 />
-
+           
                 <Route
                   path="/"
                   element={
@@ -121,9 +129,34 @@ const App = () => {
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
                 />
+                <Route 
+                  path ="/personal"
+                  element ={<PersonalInformation/>}
+                />
+                <Route 
+                  path ="/financial"
+                  element ={<FinancialInformation/>}
+                />
+                <Route 
+                  path ="/health"
+                  element ={<HealthSocialInformation/>}
+                />
+                <Route 
+                  path ="/additional"
+                  element ={<AdditionalInformation/>}
+                />
+                <Route 
+                  path ="/review"
+                  element ={<ReviewInformation/>}
+                />
+                <Route 
+                  path ="/success"
+                  element ={<Success/>}
+                />
 
               </Routes>
             </Router>
+            </FormProvider>
           </RoleProvider>
         </AuthProvider>
       </BackendProvider>
