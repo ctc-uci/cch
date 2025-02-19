@@ -72,6 +72,14 @@ const page2Columns: string[] = [
     "transportation"
 ];
 
+const childColumns: string[] = [
+    "age",
+    "birthday",
+    "ethnicity",
+    "firstName",
+    "lastName"
+];
+
 const supportSystemColumns: string[] = [ 
     "childcareAssistance",
     "foodPurchase",
@@ -90,6 +98,15 @@ export const IntakeStats = () => {
         for (const item of page1Columns) {
             if (!formData[item]) {
                 return false;
+            }
+        }
+        if (formData.children) {
+            for (const child of formData.children) {
+                for (const item of childColumns) {
+                    if (!child[item]) {
+                        return false;
+                    }
+                }
             }
         }
         return true;
