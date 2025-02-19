@@ -415,36 +415,7 @@ const getWomensBirthdaysCelebratedData = async (year: string): Promise<TableData
 		womensBirthdaysCelebratedData[cmId].total += womensBirthdays
 	})
 
-  return womensBirthdaysCelebratedData
-
-// 	const totalMonthlyQuery = `SELECT
-//     m.month,
-//     COALESCE(SUM(s.womens_birthdays), 0) AS womens_birthdays
-// FROM
-//     generate_series(1, 12) AS m(month)
-// LEFT JOIN
-//     cm_monthly_stats s
-//     ON EXTRACT(MONTH FROM s.date) = m.month
-//     AND EXTRACT(YEAR FROM s.date) = $1
-// GROUP BY
-//     m.month
-// ORDER BY
-//     m.month;`
-
-// 	const totalMonthlyData = await db.any(query, [year]);
-// 	let totalMonthlyTotal = 0
-
-// 	formattedData["Total Monthly"] = {
-// 		"entries": totalMonthlyData.map((entry) => {
-// 			totalMonthlyTotal += Number(entry.womens_birthdays)
-
-// 			return {
-// 				"name": getMonthName(entry.month),
-// 				"count": Number(entry.womens_birthdays)
-// 			}
-// 		}),
-// 		"total": totalMonthlyTotal
-// 	}
+  return womensBirthdaysCelebratedData;
 
 }
 
@@ -463,7 +434,7 @@ const getChildrensBirthdaysCelebratedData = async (year: string): Promise<TableD
       FROM cm_monthly_stats
       WHERE EXTRACT(YEAR FROM date) = $1
       GROUP BY cm_id
-      HAVING SUM(childrens_birthdays) > 0 -- Ensure only those with childrens birthdays
+      HAVING SUM(childrens_birthdays) > 0
     ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id

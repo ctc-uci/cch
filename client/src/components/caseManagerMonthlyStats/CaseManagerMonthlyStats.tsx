@@ -18,8 +18,11 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import type { TabData } from "../../types/monthlyStat.ts";
 import { StatsTable } from "./StatsTable.tsx";
+import { useNavigate } from "react-router-dom";
 
 export const CaseManagerMonthlyStats = () => {
+  const navigate = useNavigate();
+
   const { backend } = useBackendContext();
   const startYear = 2025;
   const currentYear = new Date().getFullYear();
@@ -60,8 +63,18 @@ export const CaseManagerMonthlyStats = () => {
 
       <HStack alignSelf="end">
         <ButtonGroup size="sm">
-          <Button {...buttonStyle}>Start Front Desk Form</Button>
-          <Button {...buttonStyle}>Start Case Manager Form</Button>
+        <Button
+            {...buttonStyle}
+            onClick={() => navigate('/frontDesk')}
+          >
+            Start Front Desk Form
+          </Button>
+          <Button
+            {...buttonStyle}
+            onClick={() => navigate('/casemanager')}
+          >
+            Start Case Manager Form
+          </Button>
         </ButtonGroup>
         <Select
           value={selectedYear}

@@ -23,7 +23,6 @@ export type MonthlyStat = {
   other: string;
 };
 
-// TODO: create shared types for monthly stats so frontend and backend are in sync
 export type MonthlyCount = {
 	month: string;
 	count: number;
