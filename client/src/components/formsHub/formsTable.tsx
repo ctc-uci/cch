@@ -54,7 +54,12 @@ export const FormTable = () => {
       try {
         const screenerResponse = await backend.get(`/initialInterview`);
         const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersResponse = await backend.get(`/caseManagers`);
+        const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
+        const allCaseManagersResponse = await backend.get(`/caseManagers`);
+        console.log(screenerResponse);
+        console.log(frontDeskResponse);
+        console.log(caseManagersMonthlyResponse);
+        console.log(allCaseManagersResponse);
 
         // TO BE IMPLEMENTED:
         // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
@@ -77,18 +82,23 @@ export const FormTable = () => {
           (item) => ({
             id: item.id,
             date: item.date,
-            name: item.name,
+            name: "",
             title: "Front Desk Monthly Statistics",
           })
         );
 
-        const caseManagerStats: FormItem[] = caseManagersResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
-            name: item.name,
-            title: "Case Manager Monthly Statistics",
-          })
+        const caseManagerStats: FormItem[] = caseManagersMonthlyResponse.data.map(
+          (item) => {
+            const matchingCM = allCaseManagersResponse.data.find(
+              (cm) => cm.id === item.cmId
+            );
+            return {
+              id: item.id,
+              date: item.date,
+              name: `${matchingCM.firstName} ${matchingCM.lastName}`,
+              title: "Case Manager Monthly Statistics",
+            };
+          }
         );
 
         setItems([
@@ -115,8 +125,8 @@ export const FormTable = () => {
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
     return {
-      px: "2rem",
-      fontSize: "14pt",
+      px: "3vh",
+      fontSize: "13pt",
       textAlign: "center" as const,
       cursor: "pointer",
       color: isActive ? "#3182CE" : "#1A202C",
