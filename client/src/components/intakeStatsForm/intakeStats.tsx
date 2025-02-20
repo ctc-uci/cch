@@ -18,7 +18,8 @@ import {
   useToast,
   VStack,
   Progress,
-  Box
+  Box,
+  Portal
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -92,6 +93,7 @@ export const IntakeStats = () => {
     const [review, setReview] = useState(0);
     const [formData, setFormData] = useState({});
 
+    const { backend } = useBackendContext();
     const toast = useToast();
 
     const checkPage1Cols = () => {
@@ -129,8 +131,6 @@ export const IntakeStats = () => {
     };
 
     const handleNext = () => {
-        console.log(formData);
-        // TODO: Uncomment for missing information toast
         if (!checkPage1Cols()) {
             toast({
                 title: 'Missing Information',
@@ -145,13 +145,10 @@ export const IntakeStats = () => {
     }
 
     const handlePrev = () => {
-        console.log(formData);
         setPageNum(1);
     }
 
     const handleReview = () => {
-        console.log(formData);
-        // TODO: Uncomment for missing information toast
         if (!checkPage2Cols()) {
             toast({
                 title: 'Missing Information',
@@ -166,8 +163,7 @@ export const IntakeStats = () => {
     }
 
     const handlePrepareSubmit = () => { 
-        console.log(formData);
-        // TODO: Uncomment for missing information toast
+        
         if (!checkPage1Cols() || !checkPage2Cols()) {
             toast({
                 title: 'Missing Information',
@@ -178,56 +174,70 @@ export const IntakeStats = () => {
             })
             return;
         }
-        // TODO: Add function for submission of form, to be called by submit button in this toast
-        toast({
-            position: "top-right",
-            isClosable: true,
-            render: ({ onClose }) => (
-                <Box
-                p={4}
-                bg="white"
-                color="black"
-                borderRadius="md"
-                display="flex"
-                flexDirection="column"
-                alignItems="center"
-                >
-                    <Text fontSize="lg" color="black" fontWeight="bold">Warning!</Text>
-                    <span>You will not be able to view or edit this form after submission.</span>
-                    <HStack>
-                        <Button
-                            ml={4}
-                            size="sm"
-                            backgroundColor='#ffffff'
-                            color='#4398cd'
-                            border="2px solid #4398cd"
-                            onClick={() => {
-                            console.log("Button inside toast clicked");
-                            onClose();
-                            }}
+        const toastId = "unique-toast";
+        if (!toast.isActive(toastId)) {
+            toast({
+                id: toastId,
+                isClosable: true,
+                position: "top",
+                containerStyle: {
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }, 
+                render: ({ onClose }) => (
+                    <Portal>
+                        <Box
+                        p={4}
+                        bg="white"
+                        color="black"
+                        borderRadius="md"
+                        top="50%"
+                        left="50%"
+                        transform="translate(-50%, -50%)"
+                        zIndex="9999"
+                        boxShadow="lg"
+                        position = "fixed"
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
                         >
-                            Continue Reviewing
-                        </Button>
-                        <Button
-                            ml={4}
-                            size="sm"
-                            backgroundColor='#4398cd'
-                            color='#ffffff'
-                            onClick={() => {
-                            console.log("Button inside toast clicked");
-                            handleSubmit();
-                            onClose();
-                            }}
-                        >
-                            Submit
-                        </Button>
-                    </HStack>
-                </Box>
-            ),
-        })
+                            <Text fontSize="lg" color="black" fontWeight="bold">Warning!</Text>
+                            <span>You will not be able to view or edit this form after submission.</span>
+                            <HStack>
+                                <Button
+                                    ml={4}
+                                    size="sm"
+                                    backgroundColor='#ffffff'
+                                    color='#4398cd'
+                                    border="2px solid #4398cd"
+                                    onClick={() => {
+                                    onClose();
+                                    }}
+                                >
+                                    Continue Reviewing
+                                </Button>
+                                <Button
+                                    ml={4}
+                                    size="sm"
+                                    backgroundColor='#4398cd'
+                                    color='#ffffff'
+                                    onClick={() => {
+                                    handleSubmit();
+                                    onClose();
+                                    }}
+                                >
+                                    Submit
+                                </Button>
+                            </HStack>
+                        </Box>
+                    </Portal>
+                ),
+            })
+        }
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!checkPage1Cols() || !checkPage2Cols()) {
             toast({
                 title: 'Missing Information',
@@ -237,14 +247,25 @@ export const IntakeStats = () => {
                 isClosable: true,
             })
         }
-        toast({
-            title: 'Successfully submitted form',
-            description: `Intake Statistics Form - ${new Date().toLocaleString()}`,
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-        })
-        return;
+        try {
+            backend.post("/intakeStatsForm", formData);
+            toast({
+                title: 'Successfully submitted form',
+                description: `Intake Statistics Form - ${new Date().toLocaleString()}`,
+                status: 'success',
+                duration: 9000,
+                isClosable: true,
+            });
+        } catch (error) {
+            console.error('Submission error:', error);
+                toast({
+                title: 'Submission failed',
+                description: error.message || 'An unexpected error occurred.',
+                status: 'error',
+                duration: 9000,
+                isClosable: true,
+            });
+        }
     }
 
     return(

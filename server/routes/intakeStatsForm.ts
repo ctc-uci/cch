@@ -121,17 +121,18 @@ intakeStatsFormRouter.post("/", async (req, res) => {
   }
   
   try {
-    const id = req.body.id;
-    const children = req.body.children;
-    const numChildren = req.body.numChildren;
-    for (let i = 0; i < numChildren; i++) {
-      const data = await db.query(
-        `INSERT INTO children (
-          parent_id,
-          first_name,
-          last_name,
-          date_of_birth VALUES ($1, $2, $3, $4)`, [id, ])
-    }
+    // const id = req.body.id;
+    // const children = req.body.children;
+    // const numChildren = req.body.numChildren;
+    // for (let i = 0; i < numChildren; i++) {
+    //   const data = await db.query(
+    //     `INSERT INTO children (
+    //       parent_id,
+    //       first_name,
+    //       last_name,
+    //       date_of_birth VALUES ($1, $2, $3, $4)`, [id, ])
+    // }
+    console.log("Posting children to database");
   } catch (err) {
     res.status(500).send(err.message);
   }
