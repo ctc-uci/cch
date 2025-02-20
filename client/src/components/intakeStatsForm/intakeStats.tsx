@@ -131,16 +131,16 @@ export const IntakeStats = () => {
     const handleNext = () => {
         console.log(formData);
         // TODO: Uncomment for missing information toast
-        // if (!checkPage1Cols()) {
-        //     toast({
-        //         title: 'Missing Information',
-        //         description: "Please fill out all required information before submitting",
-        //         status: 'warning',
-        //         duration: 9000,
-        //         isClosable: true,
-        //     })
-        //     return;
-        // }
+        if (!checkPage1Cols()) {
+            toast({
+                title: 'Missing Information',
+                description: "Please fill out all required information before submitting",
+                status: 'warning',
+                duration: 9000,
+                isClosable: true,
+            })
+            return;
+        }
         setPageNum(2);
     }
 
@@ -152,31 +152,32 @@ export const IntakeStats = () => {
     const handleReview = () => {
         console.log(formData);
         // TODO: Uncomment for missing information toast
-        // if (!checkPage2Cols()) {
-        //     toast({
-        //         title: 'Missing Information',
-        //         description: "Please fill out all required information before submitting",
-        //         status: 'warning',
-        //         duration: 9000,
-        //         isClosable: true,
-        //     })
-        //     return;
-        // }
+        if (!checkPage2Cols()) {
+            toast({
+                title: 'Missing Information',
+                description: "Please fill out all required information before submitting",
+                status: 'warning',
+                duration: 9000,
+                isClosable: true,
+            })
+            return;
+        }
         setReview(1);
     }
 
     const handlePrepareSubmit = () => { 
+        console.log(formData);
         // TODO: Uncomment for missing information toast
-        // if (!checkPage1Cols() || !checkPage2Cols()) {
-        //     toast({
-        //         title: 'Missing Information',
-        //         description: "Please fill out all required information before submitting",
-        //         status: 'warning',
-        //         duration: 9000,
-        //         isClosable: true,
-        //     })
-        //     return;
-        // }
+        if (!checkPage1Cols() || !checkPage2Cols()) {
+            toast({
+                title: 'Missing Information',
+                description: "Please fill out all required information before submitting",
+                status: 'warning',
+                duration: 9000,
+                isClosable: true,
+            })
+            return;
+        }
         // TODO: Add function for submission of form, to be called by submit button in this toast
         toast({
             position: "top-right",
@@ -214,6 +215,7 @@ export const IntakeStats = () => {
                             color='#ffffff'
                             onClick={() => {
                             console.log("Button inside toast clicked");
+                            handleSubmit();
                             onClose();
                             }}
                         >
@@ -223,6 +225,26 @@ export const IntakeStats = () => {
                 </Box>
             ),
         })
+    }
+
+    const handleSubmit = () => {
+        if (!checkPage1Cols() || !checkPage2Cols()) {
+            toast({
+                title: 'Missing Information',
+                description: "Please fill out all required information before submitting",
+                status: 'warning',
+                duration: 9000,
+                isClosable: true,
+            })
+        }
+        toast({
+            title: 'Successfully submitted form',
+            description: `Intake Statistics Form - ${new Date().toLocaleString()}`,
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+        })
+        return;
     }
 
     return(

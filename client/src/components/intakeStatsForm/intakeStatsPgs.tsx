@@ -31,6 +31,23 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 export const IntakeStatsPg1 = ({formData, setFormData}) => {
     const [numChildren, setNumChildren] = useState(formData.numChildren || 0);
 
+    const { backend } = useBackendContext();
+
+    const [cms, setCms] = useState<any[]>([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+        try {
+            const response = await backend.get("/casemanagers");
+            console.log(response);
+            setCms(response.data);
+        } catch (error) {
+            console.error("Error fetching users:", error);
+        }
+        };
+        fetchData();
+    }, [backend]);
+
     const handleChange = (e) => {
         if (e.target) {
             const { name, value, type } = e.target;
@@ -83,14 +100,30 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
     <>
         <VStack>
             <HStack w = "70%" justifyContent="space-between">
-                <FormControl w = "20%">
-                    <FormLabel>Month</FormLabel>
-                    <Input
-                    placeholder='Month'
-                    name = "month"
-                    value = {formData.month || ""}
-                    onChange={handleChange}
-                    />
+                <FormControl w = "24%">
+                    <HStack>
+                        <FormLabel w="30%">Month</FormLabel>
+                        <Select 
+                            placeholder="Select month"
+                            w="100%"
+                            name="month"
+                            value={formData.month || ""}
+                            onChange={handleChange}
+                        >
+                            <option value="january">January</option>
+                            <option value="february">February</option>
+                            <option value="march">March</option>
+                            <option value="april">April</option>
+                            <option value="may">May</option>
+                            <option value="june">June</option>
+                            <option value="july">July</option>
+                            <option value="august">August</option>
+                            <option value="september">September</option>
+                            <option value="october">October</option>
+                            <option value="november">November</option>
+                            <option value="december">December</option>
+                        </Select>
+                    </HStack>
                 </FormControl>
 
                 <FormControl w = "20%">
@@ -101,9 +134,11 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                     value={formData.caseManager || ""}
                     onChange={handleChange}
                     >
-                        <option value='option1'>Option 1</option>
-                        <option value='option2'>Option 2</option>
-                        <option value='option3'>Option 3</option>
+                        {cms.filter(user => user.role === 'case manager').map(user => (
+                            <option key={user.id} value={user.firstName + ' ' + user.lastName}>
+                                {user.firstName + ' ' + user.lastName}
+                            </option>
+                        ))}
                     </Select>
                 </FormControl>
             </HStack>
@@ -140,9 +175,13 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                     value = {formData.ethnicity || ""}
                     onChange={handleChange}
                     >
-                        <option value='option1'>Option 1</option>
-                        <option value='option2'>Option 2</option>
-                        <option value='option3'>Option 3</option>
+                        <option value="caucasian">Caucasian</option>
+                        <option value="hispanic">Hispanic</option>
+                        <option value="african_american">African American</option>
+                        <option value="asian">Asian</option>
+                        <option value="pacific_islander_hawaiian">Pacific Islander/Hawaiian</option>
+                        <option value="native_american">Native American</option>
+                        <option value="multi_other">Multi/Other</option>
                     </Select>
                 </HStack>
             </FormControl>
@@ -237,9 +276,17 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                     value = {formData.priorLiving || ""}
                     onChange={handleChange}
                     >
-                        <option value='option1'>Option 1</option>
-                        <option value='option2'>Option 2</option>
-                        <option value='option3'>Option 3</option>
+                        <option value='couch'>Couch</option>
+                        <option value='dv_shelter'>DV Shelter</option>
+                        <option value='other_shelter'>Other Shelter</option>
+                        <option value='car'>Car</option>
+                        <option value='hotel'>Hotel</option>
+                        <option value='motel'>Motel</option>
+                        <option value='streets'>Streets</option>
+                        <option value='family'>Family</option>
+                        <option value='friends'>Friends</option>
+                        <option value='prison'>Prison/Jail</option>
+                        <option value='treatment_center'>Treatment Center</option>
                     </Select>
                 </HStack>
             </FormControl>
@@ -295,9 +342,11 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                     value = {formData.locationId || ""}
                     onChange={handleChange}
                     >
-                        <option value='option1'>Option 1</option>
-                        <option value='option2'>Option 2</option>
-                        <option value='option3'>Option 3</option>
+                        <option value='cypress'>Cypress</option>
+                        <option value='glencoe'>Glencoe</option>
+                        <option value='dairyview'>Dairyview</option>
+                        <option value='bridge'>Bridge</option>
+                        <option value='placentia38'>Placentia 38</option>
                     </Select>
                 </HStack>
             </FormControl>
@@ -311,9 +360,8 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                     value = {formData.grant || ""}
                     onChange={handleChange}
                     >
-                        <option value='option1'>Option 1</option>
-                        <option value='option2'>Option 2</option>
-                        <option value='option3'>Option 3</option>
+                        <option value='bridge'>Bridge</option>
+                        <option value='non_funded'>Non funded</option>
                     </Select>
                 </HStack>
             </FormControl>
@@ -451,9 +499,13 @@ export const IntakeStatsPg1 = ({formData, setFormData}) => {
                         value={formData.children?.[index]?.ethnicity || ""}
                         onChange={(e) => handleChildChange(index, "ethnicity", e.target.value)}
                         >
-                            <option value='option1'>Option 1</option>
-                            <option value='option2'>Option 2</option>
-                            <option value='option3'>Option 3</option>
+                            <option value="caucasian">Caucasian</option>
+                            <option value="hispanic">Hispanic</option>
+                            <option value="african_american">African American</option>
+                            <option value="asian">Asian</option>
+                            <option value="pacific_islander_hawaiian">Pacific Islander/Hawaiian</option>
+                            <option value="native_american">Native American</option>
+                            <option value="multi_other">Multi/Other</option>
                         </Select>
                     </HStack>
                     </FormControl>
