@@ -173,8 +173,6 @@ function Forms() {
                         type: "Success Stories"
                     };
                     addNewForm(updatedFormSuccess);
-                } else {
-                    console.log("No date available for this item");
                 }
             }
         } catch (err) {
@@ -196,8 +194,6 @@ function Forms() {
                         type: "Initial Interview"
                     };
                     addNewForm(updatedFormInitial);
-                } else {
-                    console.log("No date available for this item");
                 }
             }
         } catch (err) {
