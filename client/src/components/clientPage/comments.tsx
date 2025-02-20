@@ -121,7 +121,6 @@ function Comments() {
     }, []); // Fetch data once when the component mounts
 
     function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
-        // console.log("hello");
         const snakeCased: { [key: string]: any } = {};
     
         for (const [key, value] of Object.entries(obj)) {
@@ -131,7 +130,6 @@ function Comments() {
           );
           snakeCased[snakeKey] = value;
         }
-        // console.log("hello");
         return snakeCased;
     }
       
@@ -142,7 +140,6 @@ function Comments() {
                 return; // Exit early if `client` is undefined
             }
             const clientData = toSnakeCase(client);
-            console.log("Saving client changes...", clientData);
             await backend.put(`/clients/${client.id}`, clientData);
         } catch (error) {
             console.error("Error updating client information:", error.message);

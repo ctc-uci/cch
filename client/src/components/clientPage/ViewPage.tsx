@@ -172,7 +172,6 @@ export const ViewPage = () => {
 */
   // Function to convert camelCase to snake_case
   function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
-    // console.log("hello");
     const snakeCased: { [key: string]: any } = {};
 
     for (const [key, value] of Object.entries(obj)) {
@@ -182,7 +181,6 @@ export const ViewPage = () => {
       );
       snakeCased[snakeKey] = value;
     }
-    // console.log("hello");
     return snakeCased;
   }
 
@@ -195,11 +193,8 @@ export const ViewPage = () => {
 
       // Convert client object from camelCase to snake_case before sending it to the backend
       const clientData = toSnakeCase(client);
-      console.log("Saving client changes...", clientData);
       // Send the updated client data in snake_case format
       await backend.put(`/clients/${client.id}`, clientData);
-
-      console.log("Client information updated successfully!");
       setIsEditing(false); // Hide the form after saving
     } catch (error) {
       console.error("Error updating client information:", error.message);
