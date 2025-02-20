@@ -28,10 +28,7 @@ import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 import { StartForms } from "./components/formsHub/startForm";
-// import { Comments } from "./compoenents/clientPage/Comments"
-
-
-// import { Comments } from "./compoenents/clientPage/Comments"
+// import { Comments } from "./components/clientPage/Comments"
 
 const App = () => {
   return (

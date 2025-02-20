@@ -4,19 +4,19 @@ import { Link as RouterLink } from "react-router-dom";
 export const StartForms = () => {
   const cards = [
     {
-      route: "/",
+      route: "/client-interview-screening",
       label: "Initial Screeners Comment Form",
     },
     {
-      route: "/",
+      route: "/intakeStats",
       label: "Intake Statistics Form",
     },
     {
-      route: "/",
+      route: "/frontDesk",
       label: "Front Desk Monthly Stats Form",
     },
     {
-      route: "/",
+      route: "/casemanager",
       label: "Case Manager Monthly Statistics Form",
     },
   ];

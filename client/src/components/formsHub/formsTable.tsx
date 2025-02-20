@@ -35,7 +35,6 @@ type ViewOption =
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
-  const [zoom, setZoom] = useState(1);
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
 
   const formatDate = (x: string) => {
@@ -45,9 +44,6 @@ export const FormTable = () => {
     const year = date.getFullYear();
     return `${month}/${day}/${year}`;
   };
-
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.1, 2));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.1, 0.5));
 
   useEffect(() => {
     const getData = async () => {
@@ -105,13 +101,6 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
-  // TO DO:
-  // Need to discuss what zoom really does. Currently it just increases/decreases fontsize but that might not be its
-  // intended purpose.
-
-  const baseFontSize = 16;
-  const computedFontSize = `${baseFontSize * zoom}px`;
-
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
     return {
@@ -139,7 +128,7 @@ export const FormTable = () => {
     });
   }, [currentView, items]);
 
-
+  const baseFontSize = 16;
   // TO DO:
   // Implement routing for the Start Form buttons.
   return (
@@ -185,22 +174,9 @@ export const FormTable = () => {
           </Flex>
 
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
-        <Flex gap="2" alignItems="center">
-          <Text px={2}>Zoom </Text>
-          <Box w="5rem" textAlign="center" border="1px solid" p={1} borderRadius="md">
-            {Math.round(zoom * 100)}%
-          </Box>
-          <Button variant="ghost" onClick={handleZoomOut}>
-            -
-          </Button>
-          <Button variant="ghost" onClick={handleZoomIn}>
-            +
-          </Button>
-        </Flex>
-
 
       <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={computedFontSize}>
+        <TableContainer fontSize={baseFontSize}>
           <Table variant="striped" colorScheme="gray">
             <Thead>
               <Tr>
