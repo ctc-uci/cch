@@ -143,6 +143,7 @@ export const FormTable = () => {
 
   // TO DO:
   // Implement routing for the Start Form buttons.
+  const baseFontSize = 16;
   return (
     <Box p="4">
       <Text
@@ -196,22 +197,9 @@ export const FormTable = () => {
       </Flex>
 
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
-        <Flex gap="2" alignItems="center">
-          <Text px={2}>Zoom </Text>
-          <Box w="5rem" textAlign="center" border="1px solid" p={1} borderRadius="md">
-            {Math.round(zoom * 100)}%
-          </Box>
-          <Button variant="ghost" onClick={handleZoomOut}>
-            -
-          </Button>
-          <Button variant="ghost" onClick={handleZoomIn}>
-            +
-          </Button>
-        </Flex>
-
 
       <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={computedFontSize}>
+        <TableContainer fontSize={baseFontSize}>
           <Table variant="striped" colorScheme="gray">
             <Thead>
               <Tr>
