@@ -52,14 +52,8 @@ export const FormTable = () => {
       try {
         const screenerResponse = await backend.get(`/initialInterview`);
         const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersMonthlyResponse = await backend.get(
-          `/caseManagerMonthlyStats`
-        );
+        const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
         const allCaseManagersResponse = await backend.get(`/caseManagers`);
-        console.log(screenerResponse);
-        console.log(frontDeskResponse);
-        console.log(caseManagersMonthlyResponse);
-        console.log(allCaseManagersResponse);
 
         // TO BE IMPLEMENTED:
         // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
@@ -118,7 +112,7 @@ export const FormTable = () => {
     const isActive = currentView === view;
     return {
       px: "3vh",
-      fontSize: "13pt",
+      fontSize: "15pt",
       textAlign: "center" as const,
       cursor: "pointer",
       color: isActive ? "#3182CE" : "#1A202C",
@@ -141,8 +135,6 @@ export const FormTable = () => {
     });
   }, [currentView, items]);
 
-  // TO DO:
-  // Implement routing for the Start Form buttons.
   const baseFontSize = 16;
   return (
     <Box p="4">
