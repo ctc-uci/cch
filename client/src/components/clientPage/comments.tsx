@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Input, Button } from '@chakra-ui/react'
+import { Input, Button } from '@chakra-ui/react';
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
+import {toSnakeCase } from "../../utils/toSnakeCase";
 interface Client {
     age: number;
     attendingSchoolUponEntry: boolean;
@@ -120,18 +120,6 @@ function Comments() {
         fetchData();
     }, []); // Fetch data once when the component mounts
 
-    function toSnakeCase(obj: { [key: string]: any }): { [key: string]: any } {
-        const snakeCased: { [key: string]: any } = {};
-    
-        for (const [key, value] of Object.entries(obj)) {
-          const snakeKey = key.replace(
-            /[A-Z]/g,
-            (letter) => `_${letter.toLowerCase()}`
-          );
-          snakeCased[snakeKey] = value;
-        }
-        return snakeCased;
-    }
       
     const handleSaveChanges = async () => {
         try {
