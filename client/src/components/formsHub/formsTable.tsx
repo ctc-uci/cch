@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import {
   Box,
   Button,
@@ -6,12 +7,13 @@ import {
   Table,
   TableContainer,
   Tbody,
-  Text,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
 } from "@chakra-ui/react";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 type FormItem = {
@@ -50,7 +52,14 @@ export const FormTable = () => {
       try {
         const screenerResponse = await backend.get(`/initialInterview`);
         const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersResponse = await backend.get(`/caseManagers`);
+        const caseManagersMonthlyResponse = await backend.get(
+          `/caseManagerMonthlyStats`
+        );
+        const allCaseManagersResponse = await backend.get(`/caseManagers`);
+        console.log(screenerResponse);
+        console.log(frontDeskResponse);
+        console.log(caseManagersMonthlyResponse);
+        console.log(allCaseManagersResponse);
 
         // TO BE IMPLEMENTED:
         // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
@@ -73,19 +82,23 @@ export const FormTable = () => {
           (item) => ({
             id: item.id,
             date: item.date,
-            name: item.name,
+            name: "",
             title: "Front Desk Monthly Statistics",
           })
         );
 
-        const caseManagerStats: FormItem[] = caseManagersResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
-            name: item.name,
-            title: "Case Manager Monthly Statistics",
-          })
-        );
+        const caseManagerStats: FormItem[] =
+          caseManagersMonthlyResponse.data.map((item) => {
+            const matchingCM = allCaseManagersResponse.data.find(
+              (cm) => cm.id === item.cmId
+            );
+            return {
+              id: item.id,
+              date: item.date,
+              name: `${matchingCM.firstName} ${matchingCM.lastName}`,
+              title: "Case Manager Monthly Statistics",
+            };
+          });
 
         setItems([
           ...initialScreeners,
@@ -104,8 +117,8 @@ export const FormTable = () => {
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
     return {
-      px: "2rem",
-      fontSize: "14pt",
+      px: "3vh",
+      fontSize: "13pt",
       textAlign: "center" as const,
       cursor: "pointer",
       color: isActive ? "#3182CE" : "#1A202C",
@@ -128,16 +141,26 @@ export const FormTable = () => {
     });
   }, [currentView, items]);
 
-  const baseFontSize = 16;
   // TO DO:
   // Implement routing for the Start Form buttons.
   return (
     <Box p="4">
-      <Text fontSize="13pt" fontWeight="bold">Form History</Text>
+      <Text
+        fontSize="13pt"
+        fontWeight="bold"
+      >
+        Form History
+      </Text>
       <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
 
-      <Flex marginTop="1.5rem" h="40px" alignItems="center" w='95%' mb="4">
-
+      <Flex
+        overflowX="auto"
+        marginTop="1.5rem"
+        h="40px"
+        alignItems="center"
+        w="95%"
+        mb="4"
+      >
         <Box
           {...buttonStyle("All Forms")}
           onClick={() => setCurrentView("All Forms")}
@@ -170,13 +193,25 @@ export const FormTable = () => {
         >
           Case Manager Monthly Statistics
         </Box>
-
-          </Flex>
+      </Flex>
 
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
+        <Flex gap="2" alignItems="center">
+          <Text px={2}>Zoom </Text>
+          <Box w="5rem" textAlign="center" border="1px solid" p={1} borderRadius="md">
+            {Math.round(zoom * 100)}%
+          </Box>
+          <Button variant="ghost" onClick={handleZoomOut}>
+            -
+          </Button>
+          <Button variant="ghost" onClick={handleZoomIn}>
+            +
+          </Button>
+        </Flex>
+
 
       <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={baseFontSize}>
+        <TableContainer fontSize={computedFontSize}>
           <Table variant="striped" colorScheme="gray">
             <Thead>
               <Tr>

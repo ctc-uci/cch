@@ -1,4 +1,5 @@
-import { Flex, Box, Text, Link } from "@chakra-ui/react";
+import { Box, Flex, Link, Text } from "@chakra-ui/react";
+
 import { Link as RouterLink } from "react-router-dom";
 
 export const StartForms = () => {
@@ -22,7 +23,11 @@ export const StartForms = () => {
   ];
 
   return (
-    <Flex h="16rem" w="100%" backgroundColor="#EDF2F7">
+    <Flex
+      h="16rem"
+      w="100vw"
+      backgroundColor="#EDF2F7"
+    >
       <Flex
         mx="auto"
         w="70%"
@@ -46,8 +51,15 @@ export const StartForms = () => {
             p={6}
             textAlign="center"
           >
-            <Text fontWeight="bold" fontSize="md">
-              <Link as={RouterLink} to={card.route} color="#3182CE">
+            <Text
+              fontWeight="bold"
+              fontSize="md"
+            >
+              <Link
+                as={RouterLink}
+                to={card.route}
+                color="#3182CE"
+              >
                 Start
               </Link>{" "}
               {card.label}
