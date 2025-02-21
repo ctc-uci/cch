@@ -6,6 +6,7 @@ CREATE TYPE rating_help as ENUM('very helpful', 'helpful', 'not very helpful', '
 CREATE TABLE exit_survey (
     id SERIAL PRIMARY KEY,
     cm_id INT NOT NULL,
+    date DATE NOT NULL,
     name VARCHAR(30) NOT NULL,
     client_id INT NOT NULL,
     site INT NOT NULL,

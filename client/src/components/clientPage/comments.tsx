@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Input, Button } from '@chakra-ui/react';
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import {toSnakeCase } from "../../utils/toSnakeCase";
+import toSnakeCase from "../../utils/snakeCase";
 interface Client {
     age: number;
     attendingSchoolUponEntry: boolean;

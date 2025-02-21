@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import {toSnakeCase} from "../../utils/toSnakeCase";
+import toSnakeCase from "../../utils/snakeCase";
 import {
   Box,
   Button,
