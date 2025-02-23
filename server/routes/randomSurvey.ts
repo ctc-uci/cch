@@ -16,6 +16,16 @@ randomSurveyRouter.get("/", async (req, res) => {
   }
 });
 
+randomSurveyRouter.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await db.query("SELECT * FROM random_survey_table WHERE id = $1", [id]);
+    res.status(200).json(keysToCamel(data)[0]);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Create new randomSurvey
 randomSurveyRouter.post("/", async (req, res) => {
   try {
