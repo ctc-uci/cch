@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useBackendContext } from "../contexts/hooks/useBackendContext";
 
-
 import { Document, Page, Text, View, PDFDownloadLink, StyleSheet } from '@react-pdf/renderer'
 
 const styles = StyleSheet.create({
@@ -35,7 +34,6 @@ const styles = StyleSheet.create({
   
 
 const SuccessStoryForm = ({ successStoryData }) => {
-    // console.log(successStoryData)
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -101,8 +99,7 @@ const SuccessStoryForm = ({ successStoryData }) => {
     );
 };
 
-const randomSurveyForm = ({ randomSurveyData }) => {
-    
+const RandomSurveyForm = ({ randomSurveyData }) => {
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -193,7 +190,6 @@ const randomSurveyForm = ({ randomSurveyData }) => {
 
 //I just have to use snake case here, the routes in exitSurvey.ts don't have the keysToCamel thing so i think its that, but i can't really change it cause other code is already working around it
 const ExitSurvey = ({ exitSurveyData }) => {
-    console.log(exitSurveyData)
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -384,7 +380,6 @@ export default function PrintForm({ formType, formId }) {
     
     useEffect(() => {
     async function printForm() {
-
         if (formType === 'Success Story') {
 
             try {
@@ -397,12 +392,11 @@ export default function PrintForm({ formType, formId }) {
             }
 
         } 
-        //Random survey doesn't have routes for /:id
         else if (formType === 'Random Survey') {
             try {
                 const response = await backend.get(`/randomSurvey/${formId}`);
-                const data = response.data;
-                formData.current = <randomSurveyForm randomSurveyData={data} />
+                const data = [response.data];
+                formData.current = <RandomSurveyForm randomSurveyData={data} />
                 setFormDataTest(data)
             } catch (e) {
                 console.log(`Random survey response was not created: ${e.message}`)
