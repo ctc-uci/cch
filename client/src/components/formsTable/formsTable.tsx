@@ -9,6 +9,7 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
+import PrintForm from '../PrintForm.jsx'
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
@@ -87,7 +88,7 @@ export const FormTable = () => {
 
         const randomSurveyResponse = await backend.get(`/randomSurvey`);
 
-        const exitSurveyResponse = await backend.get(`/exitSurvey`);
+        const exitSurveyResponse = await backend.get(`/exitSurvey`); 
 
         const successStories: FormItem[] = successStoryResponse.data.map(
           (item: SuccessStory) => ({
@@ -143,7 +144,9 @@ export const FormTable = () => {
               <Td>{item.date}</Td>
               <Td>{item.name}</Td>
               <Td>{item.title}</Td>
-
+              <Td>
+                <PrintForm formId={item.id} formType={item.title} />
+              </Td>
             </Tr>
           ))}
         </Tbody>
