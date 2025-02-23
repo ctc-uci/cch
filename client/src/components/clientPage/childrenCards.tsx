@@ -57,7 +57,7 @@ function ChildrenCards({ items }: ChildrenProps) {
                     <CardFooter>
                         <Input 
                             placeholder="Enter comment"
-                            value={comments[item.id] || ""}
+                            value={comments[item.id] || item.comments}
                             onChange={(e) => handleCommentChange(item.id, e.target.value)}
                         />
                         <Button onClick={() => handleSaveChanges(item.id)} value={item.comments}>Save</Button>

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import { Input, Button } from '@chakra-ui/react';
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../utils/snakeCase";
@@ -89,12 +88,16 @@ const emptyClient: Client = {
     comments: "",
 };
 
+interface ClientProps {
+    clientId: number;
+}
+
 //Do all the fetches and updates
-function Comments() {
+function Comments(ClientProps: ClientProps) {
     const { backend } = useBackendContext();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const params = useParams<{ id: string }>();
+    const id = ClientProps.clientId;
     const [client, setClient] = useState<Client>(emptyClient);
 
     //fetches the database for clients
@@ -111,9 +114,8 @@ function Comments() {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            if (params.id) {
-                const intId = parseInt(params.id);
-                await Promise.all([fetchClient(intId)]); 
+            if (id) {
+                await Promise.all([fetchClient(id)]); 
             }
             setLoading(false);
         };

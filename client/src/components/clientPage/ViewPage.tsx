@@ -111,6 +111,7 @@ export interface Children {
   firstName: string;
   lastName: string;
   dateOfBirth: number;
+  comments: string;
 }
 
 export const ViewPage = () => {

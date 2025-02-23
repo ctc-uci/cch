@@ -45,21 +45,20 @@ childRouter.post("/", async (req, res) => {
 childRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, parent_id, date_of_birth, reunified, comments } =
+    const { first_name, last_name, parent_id, date_of_birth, reunified, comment } =
       req.body;
-
     const user = await db.query(
       `UPDATE "children" SET
         first_name = COALESCE($1, first_name),
         last_name = COALESCE($2, last_name),
         parent_id = COALESCE($3, parent_id),
         date_of_birth = COALESCE($4, date_of_birth),
-        reunified = COALESCE($5, reunified)
+        reunified = COALESCE($5, reunified),
         comments = COALESCE($6, comments)
         WHERE id = $7
         RETURNING id;
         `,
-      [first_name, last_name, parent_id, date_of_birth, reunified, comments, id]
+      [first_name, last_name, parent_id, date_of_birth, reunified, comment, id]
     );
 
     res.status(200).json(keysToCamel(user));
