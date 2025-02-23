@@ -31,6 +31,7 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
@@ -145,6 +146,10 @@ const App = () => {
                 <Route 
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
+                />
+                <Route 
+                  path ="/intakeStats"
+                  element ={<IntakeStats/>}
                 />
 
               </Routes>
