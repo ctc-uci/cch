@@ -31,6 +31,7 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
@@ -84,6 +85,10 @@ const App = () => {
                   path="/client-interview-screening"
                   element={<ClientInterviewScreening />}
                 /> 
+                <Route
+                  path="/monthly-statistics"
+                  element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
+                />
                 <Route
                   path="/forms-table"
                   element={<FormTable />}
