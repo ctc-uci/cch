@@ -29,7 +29,6 @@ const page1Columns: string[] = [
     "age",
     "caloptimaFunded",
     "caseManager",
-    // "children", exclude since a valid value can be falsy
     "createdBy",
     "dateOfBirth",
     "disabled",
@@ -45,7 +44,6 @@ const page1Columns: string[] = [
     "locationId",
     "medical",
     "month",
-    // "numChildren", exclude since a valid value can be falsy
     "phoneNumber",
     "priorLiving"
   ];
