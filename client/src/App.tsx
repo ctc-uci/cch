@@ -20,7 +20,7 @@ import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { FormTable } from "./components/formsTable/formsTable";
+import { FormsHub } from "./components/formsHub/formsHub";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
@@ -31,12 +31,9 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { StartForms } from "./components/formsHub/startForm";
 import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
-// import { Comments } from "./compoenents/clientPage/Comments"
-
-
-// import { Comments } from "./compoenents/clientPage/Comments"
 
 const App = () => {
   return (
@@ -85,14 +82,18 @@ const App = () => {
                 <Route
                   path="/client-interview-screening"
                   element={<ClientInterviewScreening />}
-                /> 
+                />
+                <Route
+                  path="/forms-hub"
+                  element={<FormsHub />}
+                />
+                <Route
+                  path="/start-form"
+                  element={<StartForms />}
+                />
                 <Route
                   path="/monthly-statistics"
                   element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
-                />
-                <Route
-                  path="/forms-table"
-                  element={<FormTable />}
                 />
                 <Route
                   path="/admin"
@@ -143,11 +144,11 @@ const App = () => {
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
                 />
-                <Route 
+                <Route
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
                 />
-                <Route 
+                <Route
                   path ="/intakeStats"
                   element ={<IntakeStats/>}
                 />
