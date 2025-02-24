@@ -3,8 +3,8 @@ import {
   Form,
   Navigate,
   Route,
-  BrowserRouter as Router,
   Routes,
+  useLocation,
 } from "react-router-dom";
 
 import { Admin } from "./components/admin/Admin";
@@ -33,127 +33,148 @@ import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
+import { Navbar } from "./components/Navbar";
+import { User } from "./types/user";
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 
 // import { Comments } from "./compoenents/clientPage/Comments"
 
 const App = () => {
+
+  const location = useLocation();
+  const currentRoute = location.pathname.toLowerCase().split("/")[1];
+
+  const shouldShowNavbar = !(
+    currentRoute === 'login' ||
+    currentRoute === 'landing-page' ||
+    currentRoute === 'choose-login' ||
+    currentRoute === 'signup' ||
+    currentRoute === 'forgot-password' ||
+    currentRoute === 'admin-pin'
+  );
+
+  const user : User = {
+    id: 1,
+    email: "poop@uci.edu",
+    role: "user",
+    firebaseUid: "123456789",
+  };
+
   return (
     <CookiesProvider>
       <BackendProvider>
         <AuthProvider>
           <RoleProvider>
-            <Router>
-              <Routes>
+            {shouldShowNavbar && <Navbar user={user} />}
+            <Routes>
+              <Route
+                path="/landing-page"
+                element={<LandingPage />}
+              />
                 <Route
-                  path="/landing-page"
-                  element={<LandingPage />}
-                />
-                 <Route
-                  path="/choose-login"
-                  element={<ChooseLogin />}
-                />
+                path="/choose-login"
+                element={<ChooseLogin />}
+              />
+              <Route
+                path="/login/:userType?"
+                element={<Login />}
+              />
+              <Route
+                path="/signup/:userType?"
+                element={<Signup />}
+              />
+              <Route
+                path="/forgot-password/:userType?"
+                element={<ForgotPassword />}
+              />
                 <Route
-                  path="/login/:userType"
-                  element={<Login />}
-                />
-                <Route
-                  path="/signup/:userType"
-                  element={<Signup />}
-                />
-                <Route
-                  path="/forgot-password/:userType"
-                  element={<ForgotPassword />}
-                />
-                 <Route
-                  path="/admin-pin/:userType"
-                  element={<AdminPin />}
-                />
-                <Route
-                  path="/exit-survey"
-                  element={<ExitSurvey />}
-                />
-                <Route
-                  path="/success-story"
-                  element={<SuccessStory />}
-                />
-                <Route
-                  path="/dashboard"
-                  element={<ProtectedRoute element={<Dashboard />} />}
-                />
-                <Route
-                  path="/client-interview-screening"
-                  element={<ClientInterviewScreening />}
-                /> 
-                <Route
-                  path="/monthly-statistics"
-                  element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
-                />
-                <Route
-                  path="/forms-table"
-                  element={<FormTable />}
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute
-                      element={<Admin />}
-                      allowedRoles={["admin"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/clientlist"
-                  element={<ClientList />}
-                />
+                path="/admin-pin/:userType?"
+                element={<AdminPin />}
+              />
+              <Route
+                path="/exit-survey"
+                element={<ExitSurvey />}
+              />
+              <Route
+                path="/success-story"
+                element={<SuccessStory />}
+              />
+              <Route
+                path="/dashboard"
+                element={<ProtectedRoute element={<Dashboard />} />}
+              />
+              <Route
+                path="/client-interview-screening"
+                element={<ClientInterviewScreening />}
+              />
+              <Route
+                path="/monthly-statistics"
+                element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
+              />
+              <Route
+                path="/forms-table"
+                element={<FormTable />}
+              />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute
+                    element={<Admin />}
+                    allowedRoles={["admin"]}
+                  />
+                }
+              />
+              <Route
+                path="/clientlist"
+                element={<ClientList />}
+              />
 
-                <Route
-                  path="/clientdata"
-                  element={<ClientData />}
-                />
+              <Route
+                path="/clientdata"
+                element={<ClientData />}
+              />
 
-                <Route
-                  path = "/donations"
-                  element = {<Donations />}
-                />
+              <Route
+                path = "/donations"
+                element = {<Donations />}
+              />
 
-                <Route
-                  path="/"
-                  element={
-                    <Navigate
-                      to="/login"
-                      replace
-                    />
-                  }
-                />
-                <Route
-                  path="*"
-                  element={<ProtectedRoute element={<CatchAll />} />}
-                />
-                <Route
-                  path="/ViewClient/:id"
-                  element={<ViewPage />}
-                />
-                <Route
-                  path="/casemanager"
-                  element={<CaseManager />}
-                />
-                <Route
-                  path="/random-client-survey"
-                  element={<RandomClientSurvey />}
-                />
-                <Route 
-                  path ="/frontDesk"
-                  element ={<FrontDeskMonthlyStats/>}
-                />
-                <Route 
-                  path ="/intakeStats"
-                  element ={<IntakeStats/>}
-                />
+              <Route
+                path="/"
+                element={
+                  <Navigate
+                    to="/landing-page"
+                    replace
+                  />
+                }
+              />
+              <Route
+                path="/ViewClient/:id"
+                element={<ViewPage />}
+              />
+              <Route
+                path="/casemanager"
+                element={<CaseManager />}
+              />
+              <Route
+                path="/random-client-survey"
+                element={<RandomClientSurvey />}
+              />
+              <Route
+                path ="/frontDesk"
+                element ={<FrontDeskMonthlyStats/>}
+              />
+              <Route
+                path ="/intakeStats"
+                element ={<IntakeStats/>}
+              />
+              <Route
+                path="*"
+                element={<ProtectedRoute element={<CatchAll />} />}
+              />
+            </Routes>
 
-              </Routes>
-            </Router>
           </RoleProvider>
         </AuthProvider>
       </BackendProvider>

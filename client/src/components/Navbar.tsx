@@ -12,8 +12,12 @@ import { NavLink } from "react-router-dom";
 
 import { User } from "../types/user";
 
-export const Navbar = (role: User["role"]) => {
-  role = "user";
+interface NavbarProps {
+  user: User;
+}
+
+export const Navbar = ({user}: NavbarProps) => {
+  const role = user.role;
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
