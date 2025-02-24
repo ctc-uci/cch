@@ -15,7 +15,6 @@ type ContextProviderProps = {
 
 export const FormProvider = ({ children }: ContextProviderProps) => {
     const [formData, setFormData] = useState<FormData>({
-        //default values
         applicantType: "",
         firstName: "",
         lastName: "",

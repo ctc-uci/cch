@@ -20,7 +20,7 @@ import {
   ]
   
 const StepperComponent = ({ step_index }: number) => {
-  // console.log(step_index);
+
     const { activeStep } = useSteps({
       index: step_index,
       count: steps.length,
