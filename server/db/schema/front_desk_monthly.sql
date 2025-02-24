@@ -14,5 +14,5 @@ CREATE TABLE front_desk_monthly(
     total_visits_placentia_pantry int NOT NULL,
     total_served_placentia_pantry int NOT NULL,
     total_visits_placentia_neighborhood int NOT NULL,
-    total_served_placentia_neighborhood int NOT NULL,
+    total_served_placentia_neighborhood int NOT NULL
 );
