@@ -13,10 +13,14 @@ import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
+import { LandingPage } from "./components/login/LandingPage";
+import { ChooseLogin } from "./components/login/ChooseLogin";
+import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
+import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { FormTable } from "./components/formsTable/formsTable";
+import { FormsHub } from "./components/formsHub/formsHub";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
@@ -27,6 +31,9 @@ import { BackendProvider } from "./contexts/BackendContext";
 import { RoleProvider } from "./contexts/RoleContext";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { StartForms } from "./components/formsHub/startForm";
+import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
+import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
 import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
 import { FormProvider } from "./contexts/formContext";
 import FinancialInformation from "./components/interviewScreeningForm/financialInformation";
@@ -49,12 +56,28 @@ const App = () => {
             <Router>
               <Routes>
                 <Route
-                  path="/login"
+                  path="/landing-page"
+                  element={<LandingPage />}
+                />
+                 <Route
+                  path="/choose-login"
+                  element={<ChooseLogin />}
+                />
+                <Route
+                  path="/login/:userType"
                   element={<Login />}
                 />
                 <Route
-                  path="/signup"
+                  path="/signup/:userType"
                   element={<Signup />}
+                />
+                <Route
+                  path="/forgot-password/:userType"
+                  element={<ForgotPassword />}
+                />
+                 <Route
+                  path="/admin-pin/:userType"
+                  element={<AdminPin />}
                 />
                 <Route
                   path="/exit-survey"
@@ -71,10 +94,18 @@ const App = () => {
                 <Route
                   path="/client-interview-screening"
                   element={<ClientInterviewScreening />}
-                /> 
+                />
                 <Route
-                  path="/forms-table"
-                  element={<FormTable />}
+                  path="/forms-hub"
+                  element={<FormsHub />}
+                />
+                <Route
+                  path="/start-form"
+                  element={<StartForms />}
+                />
+                <Route
+                  path="/monthly-statistics"
+                  element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
                 />
                 <Route
                   path="/admin"
@@ -125,9 +156,13 @@ const App = () => {
                   path="/random-client-survey"
                   element={<RandomClientSurvey />}
                 />
-                <Route 
+                <Route
                   path ="/frontDesk"
                   element ={<FrontDeskMonthlyStats/>}
+                />
+                <Route
+                  path ="/intakeStats"
+                  element ={<IntakeStats/>}
                 />
                 <Route 
                   path ="/personal"

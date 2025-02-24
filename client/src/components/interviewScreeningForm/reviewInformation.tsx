@@ -28,11 +28,12 @@ const ReviewInformation: React.FC = () => {
       
       try{
         const response = await backend.post("/", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-        navigate("/success");
+        if(response.status == 200){
+          navigate("/success");
+        }
+        
       }catch(err){
         alert("Submission failed. Try again.");
       }

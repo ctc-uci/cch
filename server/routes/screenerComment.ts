@@ -2,11 +2,12 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
+
 export const screenerCommentRouter = Router();
 // Get all screener comment forms
 screenerCommentRouter.get("/", async (req, res) => {
   try {
-    const { search, sortBy} = req.query;
+    const { search, sortBy } = req.query;
     let queryStr = `SELECT * FROM screener_comment`;
     const stringSearch = "'%" + String(search) + "%'";
 
@@ -36,7 +37,7 @@ screenerCommentRouter.get("/", async (req, res) => {
           OR additional_comments::TEXT ILIKE ${stringSearch}`
       );
     }
-    console.log(sortBy)
+    console.log(sortBy);
     queryStr += " ORDER BY " + sortBy + " ASC";
 
     const data = await db.query(queryStr);
