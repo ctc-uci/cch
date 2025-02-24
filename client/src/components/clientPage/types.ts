@@ -109,4 +109,48 @@ interface FormsProps {
   forms: FormItems[];
 }
 
-export type { InitialInterview, SuccessStory, ExitSurvey, FormItems, FormsProps };
+
+interface Client {
+  age: number;
+  attendingSchoolUponEntry: boolean;
+  attendingSchoolUponExit: boolean;
+  bedNights: number;
+  bedNightsChildren: number;
+  chronicallyHomeless: boolean;
+  cityOfLastPermanentResidence: string;
+  createdBy: number;
+  dateOfBirth: string;
+  destinationcity: string;
+  disabledChildren: boolean;
+  email: string;
+  emergencyContactName: string;
+  emergencyContactPhoneNumber: string;
+  employmentGained: boolean;
+  entranceDate: string;
+  estimatedExitdate: string;
+  ethnicity: string;
+  exitDate: string;
+  firstName: string;
+  grant: string;
+  homelessnessLength: number;
+  id: number;
+  lastName: string;
+  medical: boolean;
+  phoneNumber: string;
+  pregnantUponEntry: boolean;
+  priorLiving: string;
+  priorLivingCity: string;
+  race: string;
+  reasonForLeaving: string;
+  reunified: boolean;
+  savingsAmount: string;
+  shelterInLastFiveYears: boolean;
+  specificDestination: string;
+  specificReasonForLeaving: string;
+  status: string;
+  successfulCompletion: boolean;
+  unitId: number;
+  comments: string;
+}
+
+export type { InitialInterview, SuccessStory, ExitSurvey, FormItems, FormsProps, Client };
