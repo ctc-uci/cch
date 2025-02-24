@@ -16,6 +16,8 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
+import PrintForm from "../PrintForm";
+
 type FormItem = {
   id: number;
   date: string;
@@ -212,6 +214,7 @@ export const FormTable = () => {
                   <Td w="20%">{item.name}</Td>
                   <Td minW="200px">{item.title}</Td>
                   <Td w="50px" textAlign="right">
+                  <PrintForm formId={item.id} formType={item.title} />
                   </Td>
                 </Tr>
               ))}

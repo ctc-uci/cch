@@ -30,7 +30,9 @@ export const Navbar = (role: User["role"]) => {
       return (
         <>
           {makeNavTabs("Dashboard", "/dashboard")}
-          {makeNavTabs("Forms and Tables", "/forms-and-tables")}
+          {makeNavTabs("Forms", "/forms-and-tables")}
+          {makeNavTabs("Monthly Statistics", "/monthly-statistics")}
+          {makeNavTabs("Donations", "/donations")}
           {makeNavTabs("Settings", "/settings")}
         </>
       );

@@ -33,8 +33,8 @@ childRouter.post("/", async (req, res) => {
     const { first_name, last_name, parent_id, date_of_birth, reunified } =
       req.body;
     const child = await db.query(
-      `INSERT INTO children (first_name, last_name, parent_id, date_of_birth, reunified) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [first_name, last_name, parent_id, date_of_birth, reunified]
+      `INSERT INTO children (first_name, last_name, parent_id, date_of_birth, reunified, comments) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [first_name, last_name, parent_id, date_of_birth, reunified, comments]
     );
     res.status(200).json(keysToCamel(child));
   } catch (err) {
@@ -45,20 +45,20 @@ childRouter.post("/", async (req, res) => {
 childRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, parent_id, date_of_birth, reunified } =
+    const { first_name, last_name, parent_id, date_of_birth, reunified, comment } =
       req.body;
-
     const user = await db.query(
       `UPDATE "children" SET
         first_name = COALESCE($1, first_name),
         last_name = COALESCE($2, last_name),
         parent_id = COALESCE($3, parent_id),
         date_of_birth = COALESCE($4, date_of_birth),
-        reunified = COALESCE($5, reunified)
-        WHERE id = $6
+        reunified = COALESCE($5, reunified),
+        comments = COALESCE($6, comments)
+        WHERE id = $7
         RETURNING id;
         `,
-      [first_name, last_name, parent_id, date_of_birth, reunified, id]
+      [first_name, last_name, parent_id, date_of_birth, reunified, comment, id]
     );
 
     res.status(200).json(keysToCamel(user));

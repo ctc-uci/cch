@@ -22,6 +22,8 @@ import { successRouter } from "../routes/successStory";
 import { unitsRouter } from "../routes/units";
 import { usersRouter } from "../routes/users";
 import { verifyToken } from "./middleware";
+import { intakeStatsFormRouter } from "../routes/intakeStatsForm.js";
+import { calculateMonthlyStats } from "../routes/calculateMonthlyStats";
 
 dotenv.config();
 
@@ -67,6 +69,8 @@ app.use("/admin", adminRouter);
 app.use("/clientData", clientDataRouter);
 app.use("/screenerComment", screenerCommentRouter);
 app.use("/initialInterview", initialInterviewRouter);
+app.use("/intakeStatsForm", intakeStatsFormRouter);
+app.use("/calculateMonthlyStats", calculateMonthlyStats);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
