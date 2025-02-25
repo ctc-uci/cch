@@ -1,17 +1,14 @@
 DROP TABLE IF EXISTS requests;
-DROP TYPE IF EXISTS request_type;
 DROP TYPE IF EXISTS request_status;
 
-CREATE TYPE request_type AS ENUM ('create', 'update', 'delete');
 CREATE TYPE request_status AS ENUM ('active', 'approved', 'rejected');
 
 CREATE TABLE requests (
     id SERIAL PRIMARY KEY,
-    type request_type NOT NULL,
     status request_status NOT NULL DEFAULT 'active',
     created_by INT NOT NULL,
     updated_by INT,
-    comments VARCHAR(1024),
+    comments VARCHAR(1024) NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     client_id INT NOT NULL,
