@@ -37,7 +37,6 @@ const signupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
-  role: z.enum(["user", "admin"]),
 })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {
@@ -77,7 +76,7 @@ export const Signup = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
-        role: userType === "Admin" ? "admin" : "user",
+        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
       });
       const user = await signup({
         email: data.email,
@@ -85,7 +84,7 @@ export const Signup = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
-        role: userType === "Admin" ? "admin" : "user",
+        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
       });
       console.log(user);
       if (user) {
@@ -251,6 +250,7 @@ export const Signup = () => {
 
                 Create Account
               </Button>
+              {Object.keys(errors)}
             </Stack>
           </form>
         </VStack>
