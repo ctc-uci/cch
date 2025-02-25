@@ -4,8 +4,9 @@ import { MdAdd } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
+import { InterviewScreeningFormProps } from './types';
 
-const HealthSocialInformation = ({ hidden }: boolean) => {
+const HealthSocialInformation = ({ hidden }: InterviewScreeningFormProps) => {
     const { formData, setFormData } = useForm();
     const navigate = useNavigate();
 
@@ -27,7 +28,7 @@ const HealthSocialInformation = ({ hidden }: boolean) => {
             </div>
             <div>
                 <label>2. List your medical conditions</label>
-                <Input  value={formData.medicalConditions} 
+                <Input  value={formData.medicalConditions}
             onChange={(e) => setFormData({ ...formData, medicalConditions: e.target.value })}/>
                 <Button rightIcon={<MdAdd />} size='md' variant={'solid'}>add row</Button>
             </div>
@@ -73,12 +74,12 @@ const HealthSocialInformation = ({ hidden }: boolean) => {
                 <Input  value={formData.socialWorkerOfficeLocation}
             onChange={(e) => setFormData({ ...formData, socialWorkerOfficeLocation: e.target.value })}/>
             </div>
-        
+
             {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/additional")}}>Next</Button>}
         </div>
 
         </>
-    );  
+    );
 }
 
 export default HealthSocialInformation;

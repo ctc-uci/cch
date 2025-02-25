@@ -3,10 +3,8 @@ import { useEffect } from "react";
 import {
   Button,
   Center,
-  Link as ChakraLink,
   FormControl,
   FormErrorMessage,
-  FormHelperText,
   Heading,
   Input,
   Stack,
@@ -26,7 +24,7 @@ import cch from "../../../public/cch_logo.png";
 import { MdOutlineArrowBackIos } from "react-icons/md";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -72,14 +70,23 @@ export const Signup = () => {
   const handleSignup = async (data: SignupFormValues) => {
     console.log("submitted");
     try {
+      console.log({
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
+      });
       const user = await signup({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
+        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
       });
-
+      console.log(user);
       if (user) {
         navigate(`/admin-pin/${userType}`);
       }
@@ -115,7 +122,7 @@ export const Signup = () => {
 
       <Center>
         <VStack spacing={8} sx={{ width: 300 }}>
-          <HStack 
+          <HStack
             justifyContent="space-between"
             position="absolute"
             top={0}
@@ -125,7 +132,7 @@ export const Signup = () => {
             height="80px"
           >
             <IconButton
-              icon={<MdOutlineArrowBackIos />} 
+              icon={<MdOutlineArrowBackIos />}
               aria-label="Go Back"
               onClick={() => {navigate(-1)}}
               variant="ghost"
@@ -236,13 +243,14 @@ export const Signup = () => {
                   {errors.phoneNumber?.message?.toString()}
                 </FormErrorMessage>
               </FormControl>
-      
 
-              <Button bg="#3182CE" mt={5} color="white" type="submit" size={"lg"} sx={{ width: "100%" }} 
+
+              <Button bg="#3182CE" mt={5} color="white" type="submit" size={"lg"} sx={{ width: "100%" }}
                 isDisabled={Object.keys(errors).length > 0}>
-                  
+
                 Create Account
               </Button>
+              {Object.keys(errors)}
             </Stack>
           </form>
         </VStack>

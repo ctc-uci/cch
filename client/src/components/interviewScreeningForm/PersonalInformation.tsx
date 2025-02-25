@@ -2,7 +2,8 @@ import { Input, Radio, RadioGroup, Stack, Button } from '@chakra-ui/react';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
 import { useNavigate } from 'react-router-dom';
-const PersonalInformation: React.FC = ({hidden}) => {
+import { InterviewScreeningFormProps } from './types';
+const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: InterviewScreeningFormProps) => {
   const { formData, setFormData } = useForm();
   const navigate = useNavigate();
 
@@ -226,7 +227,7 @@ const PersonalInformation: React.FC = ({hidden}) => {
               onChange={(e) => setFormData({ ...formData, custodyOfChild: e.target.value })}
             />
           </div>
-  
+
       </div>
       {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/financial")}}>Next</Button>}
     </>

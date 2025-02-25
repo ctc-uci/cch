@@ -19,7 +19,8 @@ import { useBackendContext } from "./hooks/useBackendContext";
 
 interface AuthContextProps {
   currentUser: User | null;
-  signup: ({ email, password, firstName, lastName, phoneNumber }: SignupInfo) => Promise<UserCredential>;
+  currentUserRole: string | null;
+  signup: ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => Promise<UserCredential>;
   login: ({ email, password }: EmailPassword) => Promise<UserCredential>;
   logout: () => Promise<void>;
   resetPassword: ({ email }: Pick<EmailPassword, "email">) => Promise<void>;
@@ -43,15 +44,17 @@ interface SignupInfo {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  role: string;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { backend } = useBackendContext();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const signup = async ({ email, password, firstName, lastName, phoneNumber }: SignupInfo) => {
+  const signup = async ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => {
     if (currentUser) {
       signOut(auth);
     }
@@ -67,7 +70,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       firebaseUid: userCredential.user.uid,
       firstName: firstName,
       lastName: lastName,
-      phoneNumber: phoneNumber, 
+      phoneNumber: phoneNumber,
+      role,
     });
 
     return userCredential;
@@ -128,8 +132,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const fetchRole = async (user: User) => {
+      const data = await backend.get(`/users/${user.uid}`);
+      setCurrentUserRole(data.data.role);
+    }
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
+      if(user){
+        fetchRole(user);
+      }
+
       setLoading(false);
     });
 
@@ -140,6 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         currentUser,
+        currentUserRole,
         signup,
         login,
         logout,

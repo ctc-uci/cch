@@ -3,7 +3,6 @@
 import express from "express";
 
 import { keysToCamel } from "../common/utils";
-import { admin } from "../config/firebase";
 import { db } from "../db/db-pgp";
 
 const frontDeskRouter = express.Router();
@@ -32,6 +31,35 @@ frontDeskRouter.get("/:date", async (req, res) => {
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+frontDeskRouter.get('/stats/:year', async (req, res) => {
+  try {
+      const { year } = req.params;
+      const data = await db.query(`
+          SELECT
+              DATE_TRUNC('month', date) AS month,
+              DATE_TRUNC('year', date) AS year,
+              SUM(total_office_visits) AS total_office_visits,
+              SUM(total_calls) AS total_calls,
+              SUM(total_unduplicated_calls) AS total_unduplicated_calls,
+              SUM(total_visits_hb_donations_room) AS total_visits_hb_donations_room,
+              SUM(total_served_hb_donations_room) AS total_served_hb_donations_room,
+              SUM(total_visits_hb_pantry) AS total_visits_hb_pantry,
+              SUM(total_served_hb_pantry) AS total_served_hb_pantry,
+              SUM(total_visits_placentia_pantry) AS total_visits_placentia_pantry,
+              SUM(total_served_placentia_pantry) AS total_served_placentia_pantry,
+              SUM(total_visits_placentia_neighborhood) AS total_visits_placentia_neighborhood,
+              SUM(total_served_placentia_neighborhood) AS total_served_placentia_neighborhood
+          FROM front_desk_monthly
+          WHERE EXTRACT(YEAR FROM date) = $1
+          GROUP BY DATE_TRUNC('month', date), DATE_TRUNC('year', date)
+          ORDER BY month;
+      `,[year]);
+      res.status(200).json(keysToCamel(data));
+  } catch (err) {
+      res.status(500).send(err.message);
   }
 });
 

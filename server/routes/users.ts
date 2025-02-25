@@ -52,16 +52,17 @@ usersRouter.delete("/:firebaseUid", async (req, res) => {
 // Create user
 usersRouter.post("/create", async (req, res) => {
   try {
-    const { email, firebaseUid, firstName, lastName, phoneNumber } = req.body;
-    
+    const { email, firebaseUid, firstName, lastName, phoneNumber, role } = req.body;
+
     const user = await db.query(
-      "INSERT INTO users (email, firebase_uid, first_name, last_name, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [email, firebaseUid, firstName, lastName, phoneNumber]
+      "INSERT INTO users (email, firebase_uid, first_name, last_name, phone_number, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+      [email, firebaseUid, firstName, lastName, phoneNumber, role]
     );
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
     res.status(500).send(err.message);
+    console.log(err);
   }
 });
 

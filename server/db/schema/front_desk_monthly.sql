@@ -6,9 +6,14 @@ CREATE TABLE front_desk_monthly(
     date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     total_office_visits int NOT NULL,
     total_calls int NOT NULL,
-    total_unduplicated_calles int NOT NULL,
-    total_visits_to_pantry_and_donations_room int NOT NULL,
-    total_number_of_people_served_in_pantry int NOT NULL,
-    total_visits_to_placentia_pantry int NOT NULL,
-    total_number_of_people_served_in_placentia_pantry int NOT NULL
+    number_of_people int NOT NULL,
+    total_unduplicated_calls int NOT NULL,
+    total_visits_hb_donations_room int NOT NULL,
+    total_served_hb_donations_room int NOT NULL,
+    total_visits_hb_pantry int NOT NULL,
+    total_served_hb_pantry int NOT NULL,
+    total_visits_placentia_pantry int NOT NULL,
+    total_served_placentia_pantry int NOT NULL,
+    total_visits_placentia_neighborhood int NOT NULL,
+    total_served_placentia_neighborhood int NOT NULL
 );

@@ -18,14 +18,18 @@ import {
     { title: 'Additional' },
     { title: 'Review' },
   ]
-  
-const StepperComponent = ({ step_index }: number) => {
+
+interface StepperComponentProps {
+  step_index: number;
+}
+
+const StepperComponent = ({ step_index }: StepperComponentProps) => {
 
     const { activeStep } = useSteps({
       index: step_index,
       count: steps.length,
     })
-  
+
     return (
       <Stepper index={activeStep}>
         {steps.map((step, index) => (
@@ -37,16 +41,16 @@ const StepperComponent = ({ step_index }: number) => {
                 active={<StepNumber />}
               />
             </StepIndicator>
-  
+
             <Box flexShrink='0'>
               <StepTitle>{step.title}</StepTitle>
             </Box>
-  
+
             <StepSeparator />
           </Step>
         ))}
       </Stepper>
     )
   };
-  
+
 export default StepperComponent;

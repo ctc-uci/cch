@@ -1,20 +1,22 @@
 import { Input } from '@chakra-ui/react'
 import {
-  
+
     Button,
- 
+
     Select,
     Radio,
     RadioGroup,
-    Stack, 
+    Stack,
 
   } from '@chakra-ui/react'
 import { MdAdd } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
+import { InterviewScreeningFormProps } from './types';
 
-const FinancialInformation = ({ hidden }: boolean) => {
+
+const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
 
     const { formData, setFormData } = useForm();
     const navigate = useNavigate();
@@ -46,7 +48,7 @@ const FinancialInformation = ({ hidden }: boolean) => {
             </div>
             <div>
                 <Button rightIcon={<MdAdd />} size='md' variant={'solid'}>add row</Button>
-                
+
             </div>
             <div>
                 <label >4. Are you currently employed?</label>
@@ -86,13 +88,13 @@ const FinancialInformation = ({ hidden }: boolean) => {
                         </Radio>
                     </Stack>
                 </RadioGroup>
-                
+
             </div>
-           
+
             {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/health")}}>Next</Button>}
         </div>
         </>
-    );  
+    );
 }
 
 export default FinancialInformation;

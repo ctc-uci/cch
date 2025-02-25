@@ -268,7 +268,7 @@ export const IntakeStats = () => {
 
     return(
     <Box backgroundColor="#EDF2F7" minHeight="100vh" width="100%">
-        <Navbar />
+        {/*<Navbar />*/}
         <Box justifyContent="flex-start" px={5}>
             <Button onClick={() => navigate("/forms-table")}>
                 <FaArrowLeft color="#4398cd"/>

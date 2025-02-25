@@ -20,48 +20,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import Comments from "./comments";
 import ChildrenCards from "./childrenCards";
 import Forms from "./forms"
-interface Client {
-  age: number;
-  attendingSchoolUponEntry: boolean;
-  attendingSchoolUponExit: boolean;
-  bedNights: number;
-  bedNightsChildren: number;
-  chronicallyHomeless: boolean;
-  cityOfLastPermanentResidence: string;
-  createdBy: number;
-  dateOfBirth: string;
-  destinationcity: string;
-  disabledChildren: boolean;
-  email: string;
-  emergencyContactName: string;
-  emergencyContactPhoneNumber: string;
-  employmentGained: boolean;
-  entranceDate: string;
-  estimatedExitdate: string;
-  ethnicity: string;
-  exitDate: string;
-  firstName: string;
-  grant: string;
-  homelessnessLength: number;
-  id: number;
-  lastName: string;
-  medical: boolean;
-  phoneNumber: string;
-  pregnantUponEntry: boolean;
-  priorLiving: string;
-  priorLivingCity: string;
-  race: string;
-  reasonForLeaving: string;
-  reunified: boolean;
-  savingsAmount: string;
-  shelterInLastFiveYears: boolean;
-  specificDestination: string;
-  specificReasonForLeaving: string;
-  status: string;
-  successfulCompletion: boolean;
-  unitId: number;
-  comments: string;
-}
+import { Client, FormItems } from "./types";
 
 const emptyClient: Client = {
   age: 0,
@@ -121,42 +80,54 @@ export const ViewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams<{ id: string }>();
+  const [formItems, setFormItems] = useState<FormItems[]>([]);
 
   //Toggles visibility
   const [isEditing, setIsEditing] = useState(false);
 
-  //fetches the database for children
-  const fetchChildren = async (id: number) => {
-    try {
-      const response = await backend.get(`/children/${id}`);
-      setChildren(response.data); // Adjust this if the response structure is different
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
-  //fetches the database for clients
-  const fetchClient = async (id: number) => {
-    try {
-      const response = await backend.get(`/clients/${id}`);
-      setClient(response.data[0]);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
   //fetches info from both data
   useEffect(() => {
+      //fetches the database for children
+    const fetchChildren = async (id: number) => {
+      try {
+        const response = await backend.get(`/children/${id}`);
+        setChildren(response.data); // Adjust this if the response structure is different
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    //fetches the database for clients
+    const fetchClient = async (id: number) => {
+      try {
+        const response = await backend.get(`/clients/${id}`);
+        setClient(response.data[0]);
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+
+    const fetchForms = async (id: number) => {
+        try{
+            const response = await backend.get(`/formsCombined/${id}`);
+            setFormItems(response.data);
+        }
+        catch (err) {
+            setError(err.message);
+        }
+    }
     const fetchData = async () => {
       setLoading(true);
       if (params.id) {
         const intId = parseInt(params.id);
-        await Promise.all([fetchChildren(intId), fetchClient(intId)]); // Fetch both routes simultaneously
+        await Promise.all([fetchChildren(intId), fetchClient(intId), fetchForms(intId)]);
       }
       setLoading(false);
     };
     fetchData();
-  }, []); // Fetch data once when the component mounts
+  }, [backend, params.id] );
 
   if (loading) return <Box>Loading...</Box>;
   if (error) return <Box>Error: {error}</Box>;
@@ -205,7 +176,7 @@ export const ViewPage = () => {
             <ChildrenCards items={children} />
           </TabPanel>
           <TabPanel>
-            <Forms/>
+            <Forms forms={[...formItems]}/>
           </TabPanel>
           <TabPanel>
             <Comments clientId={client.id}/>
@@ -583,6 +554,6 @@ export const ViewPage = () => {
         </Box>
       </Box>
     </div>
-    
+
   );
 };

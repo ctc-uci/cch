@@ -3,8 +3,9 @@ import { Button, Textarea } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
+import { InterviewScreeningFormProps } from './types';
 
-const AdditionalInformation = ({hidden}) => {
+const AdditionalInformation =  ({ hidden }: InterviewScreeningFormProps) => {
     const { formData, setFormData } = useForm();
     const navigate = useNavigate();
 
@@ -37,7 +38,7 @@ const AdditionalInformation = ({hidden}) => {
             {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/review")}}>Next</Button>}
         </div>
         </>
-    );  
+    );
 }
 
 export default AdditionalInformation;
