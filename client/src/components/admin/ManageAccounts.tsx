@@ -13,7 +13,7 @@ import {
   Button,
   Heading,
   HStack,
-  VStack, 
+  VStack,
   Textarea
 } from "@chakra-ui/react";
 
@@ -46,7 +46,7 @@ const roles_dict = {
 
 type RoleKey = keyof typeof roles_dict;
 
-export const Admin = () => {
+export const ManageAccounts = () => {
   const { backend } = useBackendContext();
 
   const [data, setData] = useState<Person[]>([]);
@@ -82,7 +82,7 @@ export const Admin = () => {
           </>
         );
       case "cms":
-        
+
         return (
           <>
             <Text>{data.firstName} {data.lastName}</Text>
@@ -96,24 +96,12 @@ export const Admin = () => {
             <Text>Case Manager's Clients</Text>
             <Text>{clientData.length} Clients</Text>
             <>
-              {clientData.length > 0 
+              {clientData.length > 0
                 ? clientData.map((datum, index) => (
                     <Text key={index}>{index + 1}. {datum.firstName} {datum.lastName}</Text>
                   ))
                 : null}
             </>
-          </>
-        );
-      case "clients":
-        return (
-          <>
-            <Text>{data.firstName} {data.lastName}</Text>
-            <Text>{data.email}</Text>
-            <Text>Client</Text>
-            <Text>{data.location}</Text>
-            <br></br>
-            <Text>Notes</Text>
-            <Textarea size="md"/>
           </>
         );
       default:
@@ -128,10 +116,6 @@ export const Admin = () => {
           const response = await backend.get("/admin/admins");
           setData(response.data);
         }
-        else if (view === "clients") {
-          const response = await backend.get("/admin/clients");
-          setData(response.data);
-        }
         else {
           const response = await backend.get("/admin/caseManagers");
           setData(response.data);
@@ -144,7 +128,7 @@ export const Admin = () => {
         console.error("Error fetching client data: ", error);
       }
     };
-    fetchData();  
+    fetchData();
   }, [view, backend, open, selectedData]);
 
   return (
@@ -152,16 +136,15 @@ export const Admin = () => {
       {/* <Navbar/> */}
       <HStack justifyContent="space-between">
         <VStack
-        justifyContent = "flex-start" 
+        justifyContent = "flex-start"
         alignItems = "flex-start"
-        width = "60%" 
+        width = "60%"
         marginLeft="5%"
         >
           <Heading>Manage Acounts</Heading>
           <HStack width = "55%" justifyContent="space-between">
             <Button onClick={() => setView("admin")}>Admins</Button>
             <Button onClick={() => setView("cms")}>Case Managers</Button>
-            <Button onClick={() => setView("clients")}>Clients</Button>
           </HStack>
           <TableContainer
           width = "100%"

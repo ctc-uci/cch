@@ -7,7 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { Admin } from "./components/admin/Admin";
+import { ManageAccounts } from "./components/admin/ManageAccounts";
 import { ClientData } from "./components/admin/clientData";
 import { CaseManager } from "./components/caseManager/CaseManager";
 import { CatchAll } from "./components/CatchAll";
@@ -35,10 +35,7 @@ import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
 import { Navbar } from "./components/Navbar";
 import { User } from "./types/user";
-// import { Comments } from "./compoenents/clientPage/Comments"
-
-
-// import { Comments } from "./compoenents/clientPage/Comments"
+import { AdminClientList } from "./components/admin/AdminClientList";
 
 const App = () => {
 
@@ -117,10 +114,14 @@ const App = () => {
                 element={<FormTable />}
               />
               <Route
-                path="/admin"
+                path="/admin-client-list"
+                element={<AdminClientList />}
+              />
+              <Route
+                path="/accounts"
                 element={
                   <ProtectedRoute
-                    element={<Admin />}
+                    element={<ManageAccounts />}
                     allowedRoles={["admin"]}
                   />
                 }
