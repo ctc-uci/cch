@@ -42,24 +42,24 @@ const ReviewInformation: React.FC = () => {
   
     return (
         
-      <div style={{padding: "20px"}}>
+      <div style={{padding: "20px", backgroundColor: "#E7F0F4"}}>
         <StepperComponent step_index={5} />
         <h2 style={{fontSize: "28px", color: "#3182CE"}}>Review Your Information</h2>
         {/* {Object.entries(formData).map(([key, value]) => (
             <p><strong>{key}:</strong> {value}</p>
         
         ))} */}
-        <div style={{display: "flex", flexDirection:"row", gap:"20px", padding:"20px"}}> 
-            <div style={{outlineWidth: "5px"}}>
+        <div style={{display: "flex", flexDirection:"row", gap:"20px", padding:"20px", overflowX:"auto"}}> 
+            <div style={{outlineWidth: "5px", outlineColor:"black", backgroundColor: "white", padding:"15px", borderRadius:"15px", minWidth:"82vw"}}>
                 <PersonalInformation hidden={true}/>
             </div>
-            <div style={{outlineColor:"black"}}>
+            <div style={{outlineWidth: "5px", outlineColor:"black", backgroundColor: "white", padding:"15px", borderRadius:"15px", minWidth:"82vw"}}>
                 <FinancialInformation hidden={true}/>
             </div>
-            <div>
+            <div style={{outlineWidth: "5px", outlineColor:"black", backgroundColor: "white", padding:"15px", borderRadius:"15px", minWidth:"82vw"}}>
                 <HealthSocialInformation hidden={true}/>
             </div>
-            <div>
+            <div style={{outlineWidth: "5px", outlineColor:"black", backgroundColor: "white", padding:"15px", borderRadius:"15px", minWidth:"82vw"}}>
                 <AdditionalInformation hidden={true}/>
             </div>
           
