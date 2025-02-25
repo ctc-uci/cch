@@ -20,7 +20,7 @@ import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/admin/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { FormTable } from "./components/formsTable/formsTable";
+import { FormsHub } from "./components/formsHub/formsHub";
 import { Login } from "./components/login/Login";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
@@ -36,6 +36,14 @@ import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/Ca
 import { Navbar } from "./components/Navbar";
 import { User } from "./types/user";
 import { AdminClientList } from "./components/admin/AdminClientList";
+import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
+import { FormProvider } from "./contexts/formContext";
+import FinancialInformation from "./components/interviewScreeningForm/financialInformation";
+import HealthSocialInformation from "./components/interviewScreeningForm/healthSocialInformation";
+import AdditionalInformation from "./components/interviewScreeningForm/additionalInformation";
+import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
+import Success from "./components/interviewScreeningForm/success";
+import { StartForms } from "./components/formsHub/startForm";
 
 const App = () => {
 
@@ -63,6 +71,7 @@ const App = () => {
       <BackendProvider>
         <AuthProvider>
           <RoleProvider>
+            <FormProvider>
             {shouldShowNavbar && <Navbar user={user} />}
             <Routes>
               <Route
@@ -110,9 +119,13 @@ const App = () => {
                 element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
               />
               <Route
-                path="/forms-table"
-                element={<FormTable />}
+                path="/forms-hub"
+                element={<FormsHub />}
               />
+              <Route
+                  path="/start-form"
+                  element={<StartForms />}
+                />
               <Route
                 path="/admin-client-list"
                 element={<AdminClientList />}
@@ -136,46 +149,71 @@ const App = () => {
                 element={<ClientData />}
               />
 
-              <Route
-                path = "/donations"
-                element = {<Donations />}
-              />
+                <Route
+                  path = "/donations"
+                  element = {<Donations />}
+                />
 
-              <Route
-                path="/"
-                element={
-                  <Navigate
-                    to="/landing-page"
-                    replace
+                <Route
+                  path="/"
+                  element={
+                    <Navigate
+                      to="/login"
+                      replace
+                    />
+                  }
+                />
+                <Route
+                  path="*"
+                  element={<ProtectedRoute element={<CatchAll />} />}
+                />
+                <Route
+                  path="/ViewClient/:id"
+                  element={<ViewPage />}
+                />
+                <Route
+                  path="/casemanager"
+                  element={<CaseManager />}
+                />
+                <Route
+                  path="/random-client-survey"
+                  element={<RandomClientSurvey />}
+                />
+                <Route
+                  path ="/frontDesk"
+                  element ={<FrontDeskMonthlyStats/>}
+                />
+                <Route
+                  path ="/intakeStats"
+                  element ={<IntakeStats/>}
+                />
+                  <Route
+                    path ="/personal"
+                    element ={<PersonalInformation hidden={false}/>}
                   />
-                }
-              />
-              <Route
-                path="/ViewClient/:id"
-                element={<ViewPage />}
-              />
-              <Route
-                path="/casemanager"
-                element={<CaseManager />}
-              />
-              <Route
-                path="/random-client-survey"
-                element={<RandomClientSurvey />}
-              />
-              <Route
-                path ="/frontDesk"
-                element ={<FrontDeskMonthlyStats/>}
-              />
-              <Route
-                path ="/intakeStats"
-                element ={<IntakeStats/>}
-              />
-              <Route
-                path="*"
-                element={<ProtectedRoute element={<CatchAll />} />}
-              />
-            </Routes>
+                  <Route
+                    path ="/financial"
+                    element ={<FinancialInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/health"
+                    element ={<HealthSocialInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/additional"
+                    element ={<AdditionalInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/review"
+                    element ={<ReviewInformation/>}
+                  />
+                  <Route
+                    path ="/success"
+                    element ={<Success/>}
+                  />
 
+              </Routes>
+            </FormProvider>
           </RoleProvider>
         </AuthProvider>
       </BackendProvider>
