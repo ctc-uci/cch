@@ -1,4 +1,4 @@
-export type UserType = "user" | "admin";
+export type UserType = "user" | "admin" | "client";
 
 export type User = {
   id: number;

@@ -1,6 +1,5 @@
 import { CookiesProvider } from "react-cookie";
 import {
-  Form,
   Navigate,
   Route,
   Routes,
@@ -10,7 +9,6 @@ import {
 import { ManageAccounts } from "./components/admin/ManageAccounts";
 import { ClientData } from "./components/admin/clientData";
 import { CaseManager } from "./components/caseManager/CaseManager";
-import { CatchAll } from "./components/CatchAll";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
 import { LandingPage } from "./components/login/LandingPage";
@@ -158,14 +156,17 @@ const App = () => {
                   path="/"
                   element={
                     <Navigate
-                      to="/login"
+                      to="/landing-page"
                       replace
                     />
                   }
                 />
                 <Route
                   path="*"
-                  element={<ProtectedRoute element={<CatchAll />} />}
+                  element={<Navigate
+                    to="/landing-page"
+                    replace
+                  />}
                 />
                 <Route
                   path="/ViewClient/:id"
