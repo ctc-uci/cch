@@ -33,20 +33,20 @@ export const Navbar = ({user}: NavbarProps) => {
     if (role === "admin") {
       return (
         <>
-          {makeNavTabs("Dashboard", "/dashboard")}
-          {makeNavTabs("Forms", "/forms-and-tables")}
+          {makeNavTabs("Client Statistics", "/admin-client-list")}
+          {makeNavTabs("Client Forms", "/forms-hub")}
           {makeNavTabs("Monthly Statistics", "/monthly-statistics")}
           {makeNavTabs("Donations", "/donations")}
+          {makeNavTabs("Volunteer Tracking", "/volunteers")}
           {makeNavTabs("Settings", "/settings")}
         </>
       );
     } else if (role === "user") {
       return (
         <>
-          {makeNavTabs("Dashboard", "/dashboard")}
-          {makeNavTabs("Clients", "/clients")}
+          {makeNavTabs("Client List", "/clientlist")}
+          {makeNavTabs("Forms", "/forms-hub")}
           {makeNavTabs("Donations", "/donations")}
-          {makeNavTabs("Accounts", "/accounts")}
           {makeNavTabs("Settings", "/settings")}
         </>
       );
