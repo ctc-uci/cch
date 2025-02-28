@@ -16,7 +16,7 @@ import { ChooseLogin } from "./components/login/ChooseLogin";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
 import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
-import { Donations } from "./components/admin/Donations"
+import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { FormsHub } from "./components/formsHub/formsHub";
 import { Login } from "./components/login/Login";
