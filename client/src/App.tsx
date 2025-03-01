@@ -42,6 +42,7 @@ import AdditionalInformation from "./components/interviewScreeningForm/additiona
 import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
 import Success from "./components/interviewScreeningForm/success";
 import { StartForms } from "./components/formsHub/startForm";
+import UserSettings from "./components/userSettings/UserSettings";
 
 const App = () => {
 
@@ -103,6 +104,10 @@ const App = () => {
               <Route
                 path="/success-story"
                 element={<SuccessStory />}
+              />
+              <Route 
+                path="/settings"
+                element={<ProtectedRoute element={<UserSettings />} />}
               />
               <Route
                 path="/dashboard"
