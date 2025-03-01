@@ -4,6 +4,7 @@ import {useAuthContext} from "../../contexts/hooks/useAuthContext";
 import { ManageAccounts } from "../admin/ManageAccounts";
 import {Box, Flex} from "@chakra-ui/react";
 import { useState, useEffect } from "react";
+import EditSettings from "./EditSettings";
 
 const UserSettings = () => {
     const { backend } = useBackendContext();
@@ -44,7 +45,12 @@ const UserSettings = () => {
                 <Box flex="2"> 
                     <ManageAccounts />
                 </Box>
-                }       
+                }  
+                {editing &&
+                <Box flex="2"> 
+                    <EditSettings user={user} />
+                </Box>
+                }     
             </Flex>
         </Box>
     </div>
