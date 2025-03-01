@@ -19,8 +19,10 @@ export const ProtectedRoute = ({
   const isValidRole = getIsValidRole(roles, role);
   return currentUser && isValidRole ? (
     element
-  ) : currentUser ? (
-    <Navigate to={"dashboard"} />
+  ) : currentUser && role === "admin" ? (
+    <Navigate to={"/admin-client-list"} />
+  ) : currentUser && role === "user" ? (
+    <Navigate to={"/clientlist"} />
   ) : (
     <Navigate to={"/"} />
   );

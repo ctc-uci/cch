@@ -37,7 +37,7 @@ export const ForgotPassword = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType } = useParams<{ userType: string }>();
-  const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Admin" ? "AD" : "CL";
+  const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
 
   const { resetPassword, handleRedirectResult } = useAuthContext();
   const { backend } = useBackendContext();

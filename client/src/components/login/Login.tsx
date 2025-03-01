@@ -41,7 +41,7 @@ export const Login = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType = "Admin"} = useParams<{ userType: string }>();
-  const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Admin" ? "AD" : "CL";
+  const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
 
   const { login, handleRedirectResult } = useAuthContext();
   const { backend } = useBackendContext();
@@ -126,7 +126,7 @@ export const Login = () => {
     <Center>
 
       <VStack spacing={8} sx={{ width: 400 }}>
-        <HStack 
+        <HStack
           justifyContent="space-between"
           position="absolute"
           top={0}
@@ -136,7 +136,7 @@ export const Login = () => {
           height="80px"
         >
           <IconButton
-            icon={<MdOutlineArrowBackIos />} 
+            icon={<MdOutlineArrowBackIos />}
             aria-label="Go Back"
             onClick={() => {navigate("/choose-login")}}
             variant="ghost"
@@ -181,7 +181,7 @@ export const Login = () => {
               <ChakraLink as={Link} to={`/forgot-password/${userType}`} display="block" textAlign="center" m="2">
                 <Text as="u" fontSize="sm" fontWeight="light" >Forgot password?</Text>
               </ChakraLink>
-             
+
             </FormControl>
 
             <Button
@@ -203,7 +203,7 @@ export const Login = () => {
                 <Text as="u" display="inline">Create account</Text>
               </ChakraLink>
             </Text>
-            
+
           </Stack>
         </form>
       </VStack>

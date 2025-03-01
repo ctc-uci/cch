@@ -52,7 +52,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export const Signup = () => {
   const { userType = "Admin"} = useParams<{ userType: string }>();
-  const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Admin" ? "AD" : "CL";
+  const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
   const navigate = useNavigate();
   const toast = useToast();
   const { signup, handleRedirectResult } = useAuthContext();
