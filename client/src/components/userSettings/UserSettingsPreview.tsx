@@ -1,4 +1,4 @@
-import { Box, Heading, Text, Stack, Divider, Flex } from "@chakra-ui/react";
+import { Box, Heading, Text, Stack, Divider, Flex, Circle } from "@chakra-ui/react";
 import { EditIcon } from "@chakra-ui/icons";
 import {useState} from "react";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -13,6 +13,13 @@ const UserSettingsPreview = ({user, setEditing }: { user: object, setEditing: Re
 
     return (
         <Box maxW="600px" minW="33%" mx="auto" p={5} borderRadius="md" boxShadow="md" bg="#EBF8FF">
+
+        <Flex justify="center" align="center" height="30vh">
+            <Circle size="200px" bg="#63B3ED" color="black" fontSize="210%" margin={10}>
+                AD
+            </Circle>
+        </Flex>
+        
         {/* About Section */}
         <Heading size="md" mb={4}>About</Heading>
         <Stack spacing={3}>

@@ -48,7 +48,7 @@ const UserSettings = () => {
                 }  
                 {editing &&
                 <Box flex="2"> 
-                    <EditSettings user={user} />
+                    <EditSettings user={user} setUser={setUser} setEditing={setEditing} setRefreshStatus={setRefreshStatus} />
                 </Box>
                 }     
             </Flex>
