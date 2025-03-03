@@ -5,6 +5,56 @@ import { db } from "../db/db-pgp";
 
 export const initialInterviewRouter = Router();
 
+//getting the data needed for the list of initial screeners
+initialInterviewRouter.get("/initial-interview-table-data", async (req, res) => {
+  try {
+    const { search, page, filter } = req.query;
+    const stringSearch = "'%" + String(search) + "%'"; 
+
+    let queryStr = `
+      SELECT 
+        i.name AS client_name, 
+        i.social_worker_office_location, 
+        cm.first_name AS cm_first_name, 
+        cm.last_name AS cm_last_name, 
+        i.phone_number, 
+        i.email, 
+        i.date
+      FROM initial_interview i
+      INNER JOIN screener_comment AS s ON i.id = s.initial_interview_id
+      INNER JOIN case_managers AS cm ON s.cm_id = cm.id
+    `;
+  
+    if (search) {
+      queryStr += ` 
+        AND (
+          i.name::TEXT ILIKE ${stringSearch}
+          OR i.social_worker_office_location::TEXT ILIKE ${stringSearch}
+          OR cm.first_name::TEXT ILIKE ${stringSearch}
+          OR cm.last_name::TEXT ILIKE ${stringSearch}
+          OR i.phone_number::TEXT ILIKE ${stringSearch}
+          OR i.email::TEXT ILIKE ${stringSearch}
+          OR i.date::TEXT ILIKE ${stringSearch}
+        )`;
+    }
+  
+    if (filter) {
+      queryStr += ` AND ${filter}`;
+    }
+  
+    queryStr += " ORDER BY i.id ASC";
+  
+    if (page) {
+      queryStr += ` LIMIT ${page}`;
+    }
+  
+    const data = await db.query(queryStr);
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 initialInterviewRouter.get("/", async (req, res) => {
   try {
     const data = await db.query(`SELECT * FROM initial_interview;`);
@@ -14,6 +64,7 @@ initialInterviewRouter.get("/", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
 
 initialInterviewRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
