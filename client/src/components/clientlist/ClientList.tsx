@@ -22,6 +22,7 @@ import { FiUpload } from "react-icons/fi";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
+import { UpdateClients } from "../admin/UpdateClient";
 
 interface Client {
   id: string;
@@ -110,7 +111,6 @@ export const ClientList = () => {
       try {
         console.log(filterQuery)
         let response;
-
         if (searchKey && filterQuery.length > 1) {
           response = await backend.get(
             `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
@@ -151,6 +151,8 @@ export const ClientList = () => {
         </Heading>
       </HStack>
 
+      <UpdateClients/>
+      
       <VStack></VStack>
       <HStack
         width="100%"
