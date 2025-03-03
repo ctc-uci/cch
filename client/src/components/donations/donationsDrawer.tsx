@@ -37,6 +37,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
       ...prevDonation,
       [name]: name === 'date' ? new Date(value) : value, // Handle date separately
     }));
+    onSubmit(donation);
   };
 
   return (
@@ -140,7 +141,6 @@ function DonationsDrawer() {
   // Handle submit all donations (just log to console)
   const handleSubmitAllDonations = () => {
     console.log('All Donations:', donations);
-    // Log the array of donations to the console
   };
 
   return (
@@ -154,7 +154,6 @@ function DonationsDrawer() {
           <DrawerCloseButton />
           <DrawerHeader>Add Donations</DrawerHeader>
           <DrawerBody>
-            {/* Render a DonationCard for each donation */}
             {donations.map((donation, index) => (
               <DonationCard
                 key={index} // Use index as key
