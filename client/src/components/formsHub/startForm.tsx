@@ -5,7 +5,7 @@ import { Link as RouterLink } from "react-router-dom";
 export const StartForms = () => {
   const cards = [
     {
-      route: "/client-interview-screening",
+      route: "/initial-screener-table",
       label: "Initial Screeners Comment Form",
     },
     {
