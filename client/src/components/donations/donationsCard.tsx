@@ -15,8 +15,8 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
         donor: '',
         date: new Date(),
         category: '',
-        weight: 0,
-        value: 0,
+        weight: -1,
+        value: -1,
       }
     );
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -85,7 +85,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
               name="weight"
               type="number"
               placeholder="XX"
-              value={donation.weight}
+              value={donation.weight === -1 || isNaN(donation.weight) ? "" : donation.weight}
               onChange={handleInputChange}
             />
             <InputRightAddon children="lbs" />
@@ -100,7 +100,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
               name="value"
               type="number"
               placeholder="0.00"
-              value={donation.value}
+              value={donation.value === -1 || isNaN(donation.value) ? "" : donation.value}
               onChange={handleInputChange}
             />
           </InputGroup>

@@ -62,11 +62,11 @@ donationRouter.get("/weightSum", async (req, res) => {
 donationRouter.post("/", async (req, res) => {
   try {
     // Destructure req.body
-    const { id, date, weight, value, category } = req.body;
+    const { date, weight, value, category } = req.body;
     // Do something with request body
     const data = await db.query(
-      `INSERT INTO food_donations (id, date, weight, value, category) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [id, date, weight, value, category]
+      `INSERT INTO food_donations (date, weight, value, category) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [date, weight, value, category]
     );
 
     res.status(200).json(keysToCamel(data[0]["id"]));

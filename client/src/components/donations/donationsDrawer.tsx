@@ -11,6 +11,7 @@ import {
   Button,
 } from '@chakra-ui/react'
 import DonationCard, {Donation} from './donationsCard'
+
 import { useBackendContext } from '../../contexts/hooks/useBackendContext';
 function DonationsDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -26,30 +27,44 @@ function DonationsDrawer() {
         donor: '',
         date: new Date(),
         category: '',
-        weight: 0,
-        value: 0,
+        weight: -1,
+        value: -1,
       },
     ]);
   };
 
   const handleDonationSubmit = (updatedDonation: Donation, index: number) => {
     const updatedDonations = [...donations];
-    updatedDonations[index] = updatedDonation; // Update the donation at the specified index
+    updatedDonations[index] = updatedDonation;
     setDonations(updatedDonations);
   };
 
   const handleSubmitAllDonations = async () => {
-    console.log(donations);
     for (const donation of donations) {
       if (donation.donor === "costco") {
         try {
-          //category or type becomes category
-          //const costcoResponse = await backend.post()
+          const Costco = {
+            date: donation.date.toISOString().split("T")[0], // Convert to string
+            amount: donation.value,
+            category: donation.category
+          };   
+          await backend.post("/costcoDonations", Costco);
         } catch (err) {
-          err.log();
+          console.error(err);
         }
       } else {
-        //fooddonation table
+        try {
+          const Food = {
+            date: donation.date,
+            weight: donation.weight,
+            value: donation.value,
+            category: donation.donor
+          };
+          await backend.post("/foodDonations", Food);
+          console.log(Food);
+        } catch (err) {
+          console.error(err);
+        }
       }
     }
   };
