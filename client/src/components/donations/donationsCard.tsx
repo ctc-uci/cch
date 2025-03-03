@@ -4,39 +4,112 @@ import { Card, CardHeader, CardBody, CardFooter, Text,  Input, InputGroup, Input
 
 export interface Donation {
     donor: string,
-    date: Date,
-    category: string,
+    sub: DonationSub[];
+}
+
+interface DonationSub {
+    date: Date, 
+    category: string, 
     weight: number,
     value: number,
 }
+
+function DonationInputs({ subDonation, index, onChange }: { 
+    subDonation: DonationSub; 
+    index: number; 
+    onChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  }) {
+      return (
+          <CardBody style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
+              <Text>Date Donated</Text>
+              <Input
+                  name="date"
+                  type="date"
+                  value={subDonation.date.toISOString().split('T')[0]} // Format date
+                  onChange={(e) => onChange(index, e)}
+              />
+  
+              <Text>Category</Text>
+              <Select
+                  name="category"
+                  value={subDonation.category}
+                  placeholder="Select Category"
+                  onChange={(e) => onChange(index, e)}
+              >
+                  <option value="food">Food</option>
+                  <option value="client">Client</option>
+              </Select>
+  
+              <Text>Total Weight</Text>
+              <InputGroup>
+                  <Input
+                      name="weight"
+                      type="number"
+                      placeholder="XX"
+                      value={isNaN(subDonation.weight) ? "" : subDonation.weight}
+                      onChange={(e) => onChange(index, e)}
+                  />
+                  <InputRightAddon children="lbs" />
+              </InputGroup>
+  
+              <Text>Value per lbs</Text>
+              <InputGroup>
+                  <InputLeftAddon children="$" />
+                  <Input
+                      name="value"
+                      type="number"
+                      placeholder="0.00"
+                      value={isNaN(subDonation.value) ? "" : subDonation.value}
+                      onChange={(e) => onChange(index, e)}
+                  />
+              </InputGroup>
+          </CardBody>
+      );
+  }
 function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation, onSubmit: (donation: Donation) => void }) {
     const [donation, setDonation] = useState<Donation>(
       donationToEdit || {
         donor: '',
-        date: new Date(),
-        category: '',
-        weight: -1,
-        value: -1,
+        sub: [],
       }
     );
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+      
+        setDonation((prevDonation) => {
+          const updatedDonation = {
+            ...prevDonation,
+            [name]: name === 'date' ? new Date(value) : (name === 'weight' || name === 'value' ? parseFloat(value) : value),
+          };
+      
+          onSubmit(updatedDonation);
+          return updatedDonation;
+        });
+      };
+
+    const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-    
       setDonation((prevDonation) => {
-        const updatedDonation = {
-          ...prevDonation,
-          [name]: name === 'date' ? new Date(value) : (name === 'weight' || name === 'value' ? parseFloat(value) : value),
+        const newSubDonations = [...prevDonation.sub];
+        newSubDonations[index] = {
+            ...newSubDonations[index],
+            [name]: name === 'weight' || name === 'value' ? parseFloat(value) || 0 : value,
         };
-    
+        const updatedDonation = { ...prevDonation, sub: newSubDonations };
         onSubmit(updatedDonation);
         return updatedDonation;
-      });
+    });
     };
-  
+    const handleAddDonation = () => {
+        setDonation((prevDonation) => ({
+            ...prevDonation,
+            sub: [...prevDonation.sub, { date: new Date(), category: '', weight: 0, value: 0 }],
+        }));
+    };
+    
     return (
       <Card>
         <CardHeader>Donation Form</CardHeader>
-  
         <CardBody>
           <Text>Donor</Text>
           <Select
@@ -53,60 +126,16 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
             <option value="pantry">Pantry</option>
             <option value="grand theater">Grand Theater</option>
           </Select>
-        </CardBody>
-  
-        <CardBody>
-          <Text>Date Donated</Text>
-          <Input
-            name="date"
-            type="date"
-            value={donation.date.toISOString().split('T')[0]} // Format the date as YYYY-MM-DD
-            onChange={handleInputChange}
-          />
-        </CardBody>
-  
-        <CardBody>
-          <Text>Category</Text>
-          <Select
-            name="category"
-            value={donation.category}
-            placeholder='Select Category'
-            onChange={handleInputChange}>
-                <option value="food">Food</option>
-                <option value="client">Client</option>
-          </Select>
-
-        </CardBody>
-  
-        <CardBody>
-          <Text>Total Weight</Text>
-          <InputGroup>
-            <Input
-              name="weight"
-              type="number"
-              placeholder="XX"
-              value={donation.weight === -1 || isNaN(donation.weight) ? "" : donation.weight}
-              onChange={handleInputChange}
-            />
-            <InputRightAddon children="lbs" />
-          </InputGroup>
-        </CardBody>
-  
-        <CardBody>
-          <Text>Value per lbs</Text>
-          <InputGroup>
-            <InputLeftAddon children="$" />
-            <Input
-              name="value"
-              type="number"
-              placeholder="0.00"
-              value={donation.value === -1 || isNaN(donation.value) ? "" : donation.value}
-              onChange={handleInputChange}
-            />
-          </InputGroup>
-        </CardBody>
-  
-        <CardFooter color="blue.500" fontWeight="bold">
+          {donation.sub.map((sub, index) => (
+            <DonationInputs
+                key={index}
+                subDonation={sub}
+                index={index}
+                onChange={handleSubDonationChange}
+                />
+            ))}
+          </CardBody>
+        <CardFooter color="blue.500" fontWeight="bold" onClick={handleAddDonation}>
           + Add Donation
         </CardFooter>
       </Card>

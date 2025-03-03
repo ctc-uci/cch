@@ -15,7 +15,11 @@ import DonationCard, {Donation} from './donationsCard'
 import { useBackendContext } from '../../contexts/hooks/useBackendContext';
 function DonationsDrawer() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [donations, setDonations] = useState<Donation[]>([]);
+  const [donations, setDonations] = useState<Donation[]>(
+    [{
+      donor: '',
+      sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],
+    }]);
   const btnRef = React.useRef()
   const { backend } = useBackendContext();
 
@@ -25,12 +29,10 @@ function DonationsDrawer() {
       ...prevDonations,
       {
         donor: '',
-        date: new Date(),
-        category: '',
-        weight: -1,
-        value: -1,
-      },
+        sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],
+    },
     ]);
+    console.log(donations);
   };
 
   const handleDonationSubmit = (updatedDonation: Donation, index: number) => {
@@ -42,29 +44,35 @@ function DonationsDrawer() {
   const handleSubmitAllDonations = async () => {
     for (const donation of donations) {
       if (donation.donor === "costco") {
-        try {
-          const Costco = {
-            date: donation.date.toISOString().split("T")[0], // Convert to string
-            amount: donation.value,
-            category: donation.category
-          };   
-          await backend.post("/costcoDonations", Costco);
-        } catch (err) {
-          console.error(err);
+        for (const sub of donation.sub) {
+          try {
+            const Costco = {
+              date: sub.date.toISOString().split("T")[0], // Convert to string
+              amount: sub.value,
+              category: sub.category
+            };   
+            await backend.post("/costcoDonations", Costco);
+          } catch (err) {
+            console.error(err);
+          }
         }
+        
       } else {
-        try {
-          const Food = {
-            date: donation.date,
-            weight: donation.weight,
-            value: donation.value,
-            category: donation.donor
-          };
-          await backend.post("/foodDonations", Food);
-          console.log(Food);
-        } catch (err) {
-          console.error(err);
+        for (const sub of donation.sub) {
+          try {
+            const Food = {
+              date: sub.date,
+              weight: sub.weight,
+              value: sub.value,
+              category: donation.donor
+            };
+            await backend.post("/foodDonations", Food);
+            console.log(Food);
+          } catch (err) {
+            console.error(err);
         }
+        }
+        
       }
     }
   };
@@ -74,7 +82,7 @@ function DonationsDrawer() {
       <Button ref={btnRef} colorScheme="teal" onClick={onOpen}>
         Add Donation
       </Button>
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+      <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
