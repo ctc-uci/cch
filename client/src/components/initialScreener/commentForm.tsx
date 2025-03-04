@@ -65,7 +65,7 @@ const CommentForm: React.FC = (clientID) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response: caseManager[] =
+        const response =
           await backend.get(`/caseManagers/names`);
         setCaseManagers(response.data);
       } catch (error) {
@@ -73,7 +73,7 @@ const CommentForm: React.FC = (clientID) => {
       }
     };
     fetchData();
-  }, []);
+  }, [backend]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +89,7 @@ const CommentForm: React.FC = (clientID) => {
       }
     };
     fetchData();
-  }, []);
+  }, [backend, id]);
 
   return (
     <Box
@@ -149,9 +149,9 @@ const CommentForm: React.FC = (clientID) => {
       >
         {/* this one isn't right -- im using marital status because single/family doesn't exist in the schema */}
         <FormControl>
-          <HStack justify="flex-start">
-            <FormLabel>Entering as single or family?</FormLabel>
-            <Input placeholder={clientData?.maritalStatus} />
+          <HStack justify="flex-start" spacing={25}>
+            <FormLabel w="40%">Entering as single or family?</FormLabel>
+            <Input placeholder={clientData?.maritalStatus} w="200px" borderRadius="xl"   />
           </HStack>
         </FormControl>
       </VStack>
@@ -170,14 +170,11 @@ const CommentForm: React.FC = (clientID) => {
       >
         {["Willingness", "Employability", "Attitude"].map((label) => (
           <FormControl key={label}>
-            <HStack>
-              <FormLabel>{label}</FormLabel>
-              <Select defaultValue="10">
-                {[...Array(10)].map((_, i) => (
-                  <option
-                    key={i}
-                    value={i + 1}
-                  >
+            <HStack spacing={25}>
+              <FormLabel w="40%">{label}</FormLabel>
+              <Select defaultValue="10" w="200px" borderRadius="xl"  >
+                {Array.from({ length: 10 }, (_, i) => (
+                  <option key={i} value={i + 1}>
                     {i + 1}
                   </option>
                 ))}
@@ -187,21 +184,20 @@ const CommentForm: React.FC = (clientID) => {
         ))}
 
         <FormControl>
-          <HStack>
-            <FormLabel>Length of Sobriety</FormLabel>
-            <Input placeholder="Type Here" />
+          <HStack spacing={25}>
+          <FormLabel w="40%">Length of Sobriety</FormLabel>
+          <Input placeholder="Type Here" w="200px" borderRadius="xl"   />
           </HStack>
         </FormControl>
 
         <FormControl>
-          <HStack>
-            <FormLabel>Completed Tx </FormLabel>
-            <Input placeholder="Type Here" />
+          <HStack spacing={25}>
+          <FormLabel w="40%">Completed Tx</FormLabel>
+          <Input placeholder="Type Here" w="200px" borderRadius="xl"   />
           </HStack>
         </FormControl>
       </VStack>
 
-      {/* Additional Questions */}
       <Heading
         size="md"
         mt={6}
@@ -216,9 +212,9 @@ const CommentForm: React.FC = (clientID) => {
       >
         {[1, 2, 3].map((num) => (
           <FormControl key={num}>
-            <HStack>
-              <FormLabel>{num}</FormLabel>
-              <Input placeholder="Type Here" />
+            <HStack spacing={25}>
+            <FormLabel>{num}</FormLabel>
+            <Input borderRadius="xl" placeholder="Type Here" flex="1" />
             </HStack>
           </FormControl>
         ))}
@@ -227,7 +223,7 @@ const CommentForm: React.FC = (clientID) => {
       <VStack
         spacing={4}
         align="start"
-        mt={6}
+        mt={12}
         width="100%"
       >
         {[
@@ -241,9 +237,9 @@ const CommentForm: React.FC = (clientID) => {
           "Additional comments or concerns?",
         ].map((label) => (
           <FormControl key={label}>
-            <HStack>
-              <FormLabel>{label}</FormLabel>
-              <Input placeholder="Type Here" />
+            <HStack spacing={25}>
+            <FormLabel w="40%">{label}</FormLabel>
+            <Input w="200px" borderRadius="xl"  placeholder="Type Here" />
             </HStack>
           </FormControl>
         ))}
