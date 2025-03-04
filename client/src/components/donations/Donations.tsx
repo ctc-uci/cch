@@ -71,12 +71,14 @@ export const Donations = () => {
   };
 
   const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setStartDate(new Date(event.target.value));
+    const dateValue = event.target.value;
+    setStartDate(dateValue ? new Date(dateValue) : undefined);
     console.log(startDate);
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setEndDate(new Date(event.target.value));
+    const dateValue = event.target.value;
+    setEndDate(dateValue ? new Date(dateValue) : undefined);
     console.log(endDate);
   };
 
@@ -127,81 +129,80 @@ export const Donations = () => {
         console.error("Error fetching users:", error);
       }
 
-      if (donor === "") {
-        try {
-          const foodResponse = await backend.get("/foodDonations");
-          setDonations(foodResponse.data);
-        } catch (error) {
-          console.error("Error fetching users:", error);
-        }
-        try {
-          const costcoResponse = await backend.get("/costcoDonations");
-          setCostcoDonations(costcoResponse.data);
-        } catch (error) {
-          console.error("Error fetching Costco donations:", error);
-        }
+      try {
+        let donationsData = [];
+        let costcoData = [];
+        
+        if (donor === "") {
+          const [foodResponse, costcoResponse] = await Promise.all([
+            backend.get("/foodDonations"),
+            backend.get("/costcoDonations")
+          ]);
 
-        const updatedFood = donations.map(({ id, date, category, weight, value }) => ({
-          id: id,
-          date: date,
-          donor: category,
-          category: "food",
-          weight: weight,
-          value: value
-        }));
-
-        const updatedCostco = costcoDonations.map(({ id, date, amount, category}) => ({
-          id: id,
-          date: date,
-          donor: "costco",
-          category: category,
-          weight: 0,
-          value: amount
-        }));
-
-        setAllDonations([...updatedFood, ...updatedCostco]);
-      } else if (donor === "costco") {
-        try {
-          const costcoDonations = await backend.get("/costcoDonations");
-          const updatedCostco = costcoDonations.data.map(({ id, date, amount, category}) => ({
-            id: id,
-            date: date,
-            donor: "costco",
-            category: category,
-            weight: 0,
-            value: amount
-          }));
-          setAllDonations(updatedCostco);
-        } catch (err) {
-          console.error("Error fetching users:", err);
-        }
-      } else {
-        try {
-          const donations = await backend.get(`/foodDonations/${donor}`);
-          const updatedFood = donations.data.map(({ id, date, category, weight, value }) => ({
-            id: id,
-            date: date,
+          donationsData = foodResponse.data.map(({ id, date, category, weight, value }) => ({
+            id,
+            date,
             donor: category,
             category: "food",
-            weight: weight,
-            value: value
+            weight,
+            value,
           }));
-          setAllDonations(updatedFood);
-        } catch (err) {
-          console.error("Error fetching users:", err);
+  
+          costcoData = costcoResponse.data.map(({ id, date, amount, category }) => ({
+            id,
+            date,
+            donor: "costco",
+            category,
+            weight: 0,
+            value: amount,
+          }));
+        } else if (donor === "costco") {
+          const costcoResponse = await backend.get("/costcoDonations");
+          costcoData = costcoResponse.data.map(({ id, date, amount, category }) => ({
+            id,
+            date,
+            donor: "costco",
+            category,
+            weight: 0,
+            value: amount,
+          }));
+        } else {
+          const foodResponse = await backend.get(`/foodDonations/${donor}`);
+          donationsData = foodResponse.data.map(({ id, date, category, weight, value }) => ({
+            id,
+            date,
+            donor: category,
+            category: "food",
+            weight,
+            value,
+          }));
         }
+        let filteredDonations = ([...donationsData, ...costcoData]);
+        if (startDate) {
+          console.log("start date");
+          console.log(startDate);
+          filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) >= new Date(startDate));
+        }
+        if (endDate) {
+          console.log("end date");
+          console.log(endDate);
+          filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) <= new Date(endDate));
+        }
+        setAllDonations(filteredDonations);
+      } catch (err) {
+        console.error("Error fetching donation data", err);
       }
     };
     fetchData();
-  }, [backend, donations, costcoDonations, donor]);
+  }, [backend, donor, startDate, endDate]);
 
   
 
 //   const navigate = useNavigate();
 
   return (
-    <HStack w="100vw" h="100vh">
-      <VStack w="25vw" h="100%">
+    <HStack w="100%" h="100%">
+      <VStack w="25vw" h="100vh">
         <Heading>Donations</Heading>
         <Text>Last Updated: MM/DD/YYYY HH:MM XX</Text>
         <HStack
@@ -241,7 +242,7 @@ export const Donations = () => {
         </HStack>
       </VStack>
 
-      <VStack w="75vw" h="100%">
+      <VStack w='69vw' h='100vh'>
         <HStack bg='white' w='90%' p={3} spacing={4} align='center'>
           <Select id="donorSelect" placeholder='Select Donor' w='50%' onChange={handleDonorChange}>
             <option value='panera'>panera</option>
@@ -259,7 +260,9 @@ export const Donations = () => {
             <option value='option3'>Option 3</option>
           </Select>
 
+          <Text>From:</Text>
           <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
+          <Text>To:</Text>
           <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
 
           <Button ml='auto' onClick={deleteClick}>Delete</Button>
@@ -270,16 +273,16 @@ export const Donations = () => {
           width = "95%"
           sx={{
             overflowX: "auto",
-            maxWidth: "95%",
+            overflowY: "auto",
+            maxWidth: "100%",
             borderRadius: "10px",
             border: "1px solid gray",
-            overflow: "hidden"
           }}
         >
           <Table variant="striped"
             sx={{
               borderCollapse: "collapse",
-              width: "100%"
+              width: "100%", 
               // borderSpacing: "0", // Prevents border gaps
               // borderColor: "gray.300", // Ensures borders are visible
             }}
