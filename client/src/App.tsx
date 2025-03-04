@@ -43,6 +43,7 @@ import ReviewInformation from "./components/interviewScreeningForm/reviewInforma
 import Success from "./components/interviewScreeningForm/success";
 import { StartForms } from "./components/formsHub/startForm";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
+import CommentForm from "./components/initialScreener/commentForm";
 
 const App = () => {
 
@@ -116,6 +117,10 @@ const App = () => {
                <Route
                 path="/initial-screener-table"
                 element={<InitialScreenerTable />}
+              />
+              <Route
+                path="/comment-form/:id"
+                element={<CommentForm />}
               />
               <Route
                 path="/monthly-statistics"

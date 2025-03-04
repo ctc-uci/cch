@@ -141,10 +141,11 @@ export const InitialScreenerTable = () => {
                 const [firstName, ...lastNameParts] = screener.clientName.split(" ");
                 const lastName = lastNameParts.join(" ");
 
+
                 return (
                     <Tr
-                    key={screener.id}
-                    onClick={() => navigate(``)}
+                    key={screener.clientId}
+                    onClick={() => navigate(`/comment-form/${screener.clientId}`)}
                     style={{ cursor: "pointer" }}
                     >
                     <Td>{firstName}</Td>

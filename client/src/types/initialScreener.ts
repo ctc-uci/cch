@@ -7,4 +7,5 @@ export type InitialScreener = {
     phoneNumber: string;
     email: string;
     date: Date;
+    clientId: number;
 };

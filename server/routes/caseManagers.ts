@@ -16,6 +16,17 @@ caseManagersRouter.get("/", async (req, res) => {
   }
 });
 
+// Get all case manager names
+caseManagersRouter.get("/names", async (req, res) => {
+  try {
+    const data = await db.query(`SELECT first_name, last_name FROM case_managers;`);
+
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Get case manager by id
 caseManagersRouter.get("/:id", async (req, res) => {
   try {
