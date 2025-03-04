@@ -59,6 +59,20 @@ donationRouter.get("/weightSum", async (req, res) => {
   }
 });
 
+donationRouter.get("/:donor", async (req, res) => {
+  try {
+    // Query database
+    const { donor } = req.params as { donor: string};
+    const data = await db.query(
+      `SELECT * FROM food_donations WHERE category = $1`,
+      [donor]
+    );
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 donationRouter.post("/", async (req, res) => {
   try {
     // Destructure req.body

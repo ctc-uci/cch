@@ -28,6 +28,7 @@ import { FaDollarSign } from "react-icons/fa";
 
 // import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { set } from "react-hook-form";
 
 interface Food {
   id: string;
@@ -52,19 +53,35 @@ export const Donations = () => {
 //   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
+  const [donor, setDonor] = useState<string>("");
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
+
+  // const [deletes, setDeletes] = useState<string[]>([]);
+
   const [donations, setDonations] = useState<any[]>([]);
   const [costcoDonations, setCostcoDonations] = useState<any[]>([]);
   const [allDonations, setAllDonations] = useState<any[]>([]);
   const [valueSum, setValueSum] = useState<number | null>(null);
   const [weightSum, setWeightSum] = useState<number | null>(null);
+
+  const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDonor(event.target.value);
+    console.log(donor);
+  };
+
+  const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setStartDate(new Date(event.target.value));
+    console.log(startDate);
+  };
+
+  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setEndDate(new Date(event.target.value));
+    console.log(endDate);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const foodResponse = await backend.get("/foodDonations");
-        setDonations(foodResponse.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
       try {
         const valuesResponse = await backend.get("/foodDonations/valueSum");
         setValueSum(valuesResponse.data[0].sum);
@@ -77,34 +94,66 @@ export const Donations = () => {
       } catch (error) {
         console.error("Error fetching users:", error);
       }
-      try {
-        const costcoResponse = await backend.get("/costcoDonations");
-        setCostcoDonations(costcoResponse.data);
-      } catch (error) {
-        console.error("Error fetching Costco donations:", error);
+
+      if (donor === "") {
+        try {
+          const foodResponse = await backend.get("/foodDonations");
+          setDonations(foodResponse.data);
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        }
+        try {
+          const costcoResponse = await backend.get("/costcoDonations");
+          setCostcoDonations(costcoResponse.data);
+        } catch (error) {
+          console.error("Error fetching Costco donations:", error);
+        }
+
+        const updatedFood = donations.map(({ id, date, category, weight, value }) => ({
+          id: id,
+          date: date,
+          donor: category,
+          category: "food",
+          weight: weight,
+          value: value
+        }));
+
+        const updatedCostco = costcoDonations.map(({ id, date, amount, category}) => ({
+          id: id,
+          date: date,
+          donor: "costco",
+          category: category,
+          weight: 0,
+          value: amount
+        }));
+
+        setAllDonations([...updatedFood, ...updatedCostco]);
+      } else if (donor === "costco") {
+        try {
+          const allDonations = await backend.get("/costcoDonations");
+          setAllDonations(allDonations.data);
+        } catch (err) {
+          console.error("Error fetching users:", err);
+        }
+      } else {
+        try {
+          const donations = await backend.get(`/foodDonations/${donor}`);
+          const updatedFood = donations.data.map(({ id, date, category, weight, value }) => ({
+            id: id,
+            date: date,
+            donor: category,
+            category: "food",
+            weight: weight,
+            value: value
+          }));
+          setAllDonations(updatedFood);
+        } catch (err) {
+          console.error("Error fetching users:", err);
+        }
       }
-      const updatedFood = donations.map(({ id, date, category, weight, value }) => ({
-        id: id,
-        date: date,
-        donor: category,
-        category: "food",
-        weight: weight,
-        value: value
-      }));
-
-      const updatedCostco = costcoDonations.map(({ id, date, amount, category}) => ({
-        id: id,
-        date: date,
-        donor: "costco",
-        category: category,
-        weight: 0,
-        value: amount
-      }));
-
-      setAllDonations([...updatedFood, ...updatedCostco]);
     };
     fetchData();
-  }, [backend, donations, costcoDonations]);
+  }, [backend, donations, costcoDonations, donor]);
 
   
 
@@ -154,13 +203,13 @@ export const Donations = () => {
 
       <VStack w="75vw" h="100%">
         <HStack bg='white' w='90%' p={3} spacing={4} align='center'>
-          <Select placeholder='Select Donor' w='50%'>
+          <Select id="donorSelect" placeholder='Select Donor' w='50%' onChange={handleDonorChange}>
             <option value='panera'>panera</option>
             <option value='sprouts'>sprouts</option>
             <option value='copia'>copia</option>
             <option value='mcdonalds'>mcdonalds</option>
             <option value='pantry'>pantry</option>
-            <option value='grand_theater'>grand theater</option>
+            <option value='grand theater'>grand theater</option>
             <option value='costco'>costco</option>
           </Select>
 
@@ -170,8 +219,8 @@ export const Donations = () => {
             <option value='option3'>Option 3</option>
           </Select>
 
-          <Input type="date" name="startDate" w='40%'/> {/*value={startDate} onChange={handleDateChange}*/}
-          <Input type="date" name="endDate" w='40%'/> {/*value={startDate} onChange={handleDateChange}*/}
+          <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
+          <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
 
           <Button ml='auto'>Delete</Button>
           <DonationsDrawer/>
