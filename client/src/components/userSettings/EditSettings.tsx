@@ -4,10 +4,14 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { updatePassword } from "firebase/auth";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { getCurrentUser } from "../../utils/auth/firebase";
+import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth"; 
+import { get } from "react-hook-form";
 
 const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
 
-    const { currentUser } = useAuthContext();
+    const auth = getAuth();
+
+    const { currentUser, resetPassword } = useAuthContext();
 
     const [formData, setFormData] = useState({
         firstName: user.firstName,
@@ -29,13 +33,27 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     const { backend } = useBackendContext();
 
     const handlePasswordChange = async () => {
+        if (!auth.currentUser) {
+            console.error("No authenticated user found.");
+            return;
+          }
+
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             alert("New password and confirmation do not match");
             return;
         }
+        try{
+            const credential = EmailAuthProvider.credential(user.email, passwordData.currentPassword);
+            await reauthenticateWithCredential(auth.currentUser, credential);
+        
+    
+        } catch (error){
+            alert("Current password did not match");
+            return;
+        }
 
         try {
-            const userCredential = await updatePassword(currentUser, passwordData.newPassword);
+            await updatePassword(auth.currentUser, passwordData.newPassword);
             alert("Password updated successfully");
         } catch (error) {
             console.error("Error updating password:", error);
@@ -46,6 +64,9 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     const handleSaveChanges = async () => {
         if (passwordData.newPassword && passwordData.newPassword === passwordData.confirmPassword) {
             await handlePasswordChange(); // Update password if new passwords match
+        } else {
+            alert("Missing a field");
+            return;
         }
 
         try {
