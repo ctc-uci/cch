@@ -39,7 +39,10 @@ const UserSettings = () => {
         <Box w="100vw" p={8} mt={10}>
             <Flex justify="space-between" w="100%" gap={8}>
                 <Box flex="1"> 
-                    <UserSettingsPreview user={user} setEditing={setEditing} />
+                    {editing && 
+                    <UserSettingsPreview user={user} setEditing={setEditing}  editing={editing}/>}
+                    {!editing && 
+                    <UserSettingsPreview user={user} setEditing={setEditing} editing={editing}/>}
                 </Box>
                 {!editing && 
                 <Box flex="2"> 

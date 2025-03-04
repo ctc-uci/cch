@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Box, Stack, Input, Flex, Text, Button } from "@chakra-ui/react";
+import { Box, Stack, Input, Flex, Text, Button, useToast  } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { updatePassword } from "firebase/auth";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { getCurrentUser } from "../../utils/auth/firebase";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth"; 
@@ -10,7 +9,7 @@ import { get } from "react-hook-form";
 const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
 
     const auth = getAuth();
-
+    const toast = useToast();
     const { currentUser, resetPassword } = useAuthContext();
 
     const [formData, setFormData] = useState({
@@ -32,6 +31,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
 
     const { backend } = useBackendContext();
 
+
     const handlePasswordChange = async () => {
         if (!auth.currentUser) {
             console.error("No authenticated user found.");
@@ -39,7 +39,14 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
           }
 
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert("New password and confirmation do not match");
+            toast({
+                title: "Password mismatch",
+                description: "New password and confirmation do not match.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom-right",
+            });
             return;
         }
         try{
@@ -48,27 +55,38 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
         
     
         } catch (error){
-            alert("Current password did not match");
+            toast({
+                title: "Password update failed",
+                description: "Failed to update password. Please try again.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom-right",
+            });
             return;
         }
 
         try {
             await updatePassword(auth.currentUser, passwordData.newPassword);
-            alert("Password updated successfully");
+            
         } catch (error) {
             console.error("Error updating password:", error);
-            alert("Failed to update password. Please try again.");
+            toast({
+                title: "Password update failed",
+                description: "Failed to update password. Please try again.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom-right",
+            });
         }
     };
 
     const handleSaveChanges = async () => {
+     
         if (passwordData.newPassword && passwordData.newPassword === passwordData.confirmPassword) {
             await handlePasswordChange(); // Update password if new passwords match
-        } else {
-            alert("Missing a field");
-            return;
-        }
-
+        } 
         try {
             console.log("Sending request: ", formData);
             const response = await backend.put("/users/update", {
@@ -80,11 +98,27 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
             setUser(updatedUser);
             setRefreshStatus(true);
             setEditing(false);
+            toast({
+                position: 'bottom-right',
+                title: 'Successfully Saved Changes.',
+                description: Date().toLocaleString(),
+                status: 'success',
+                duration: 9000,
+                isClosable: true,
+            });
 
         } catch (error) {
             console.error(error);
-            alert("Error updating user");
+            toast({
+                title: "Error updating user",
+                description: "An error occurred while saving your changes.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "bottom-right",
+            });
         }
+       
     };
 
     return (
@@ -97,11 +131,11 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                         <Text fontSize="md" fontWeight="bold" color="gray.500">NAME</Text>
                         <Stack>
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">First Name</Text>
-                            <Input name="firstName" placeholder="First Name" defaultValue={user.firstName} isDisabled/>
+                            <Input name="firstName" placeholder="First Name" defaultValue={user.firstName} onChange={handleChange}/>
                         </Stack>
                         <Stack>
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Last Name</Text>
-                            <Input name="lastName" placeholder="Last Name" defaultValue={user.lastName} isDisabled />
+                            <Input name="lastName" placeholder="Last Name" defaultValue={user.lastName} onChange={handleChange} />
                         </Stack>
                         </Flex>
                     </Stack>

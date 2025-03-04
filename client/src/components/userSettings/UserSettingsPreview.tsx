@@ -2,12 +2,12 @@ import { Box, Heading, Text, Stack, Divider, Flex, Circle } from "@chakra-ui/rea
 import { EditIcon } from "@chakra-ui/icons";
 import {useState} from "react";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
-const UserSettingsPreview = ({user, setEditing }: { user: object, setEditing: React.Dispatch<React.SetStateAction<boolean>> }) => {
+const UserSettingsPreview = ({user, setEditing, editing }: { user: object, setEditing: React.Dispatch<React.SetStateAction<boolean>> }) => {
  
     const { currentUser } = useAuthContext();
-    const [editProfile, setEditProfile] = useState(false);
+
     const hideEditProfile =()=>{
-        setEditProfile(true);
+
         setEditing(true);
     }
 
@@ -59,7 +59,7 @@ const UserSettingsPreview = ({user, setEditing }: { user: object, setEditing: Re
             <Text>*************</Text>
             </Flex>
         </Stack>
-        { !editProfile &&
+        { !editing &&
         <Stack>
             
             <a onClick={hideEditProfile} style={{cursor: "pointer"}}>
