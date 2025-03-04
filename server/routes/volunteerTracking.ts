@@ -6,7 +6,7 @@ import { db } from "../db/db-pgp";
 const volunteerRouter = express.Router();
 volunteerRouter.use(express.json());
 
-// Get all users
+// GET route to get all volunteers
 volunteerRouter.get("/", async (req, res) => {
   try {
     const users = await db.query(`SELECT * FROM volunteers ORDER BY id ASC`);
@@ -15,13 +15,13 @@ volunteerRouter.get("/", async (req, res) => {
     res.status(400).send(err.message);
   }
 });
-// Get all users given an event parameter
-volunteerRouter.get("/:event", async (req, res) => {
+// GET route to get all volunteers from a specific event type
+volunteerRouter.get("/:event_type", async (req, res) => {
   try {
-    const { event } = req.params;
+    const { event_type } = req.params;
     const users = await db.query(
       `SELECT * FROM volunteers WHERE event_type = $1 ORDER BY id ASC`,
-      [event]
+      [event_type]
     );
     res.status(200).json(keysToCamel(users));
   } catch (err) {
@@ -29,7 +29,7 @@ volunteerRouter.get("/:event", async (req, res) => {
   }
 });
 
-// Total number of hours
+// GET route to get total number of hours from all volunteers
 volunteerRouter.get("/total-hours", async (req, res) => {
   try {
     const data = await db.query(
@@ -41,7 +41,7 @@ volunteerRouter.get("/total-hours", async (req, res) => {
   }
 });
 
-//Total volunteers
+//GET route to get total number of unique volunteers
 volunteerRouter.get("/total-volunteers", async (req, res) => {
   try {
     const data = await db.query(
@@ -71,7 +71,8 @@ volunteerRouter.post("/", async (req, res) => {
 // PUT route to update volunteers
 volunteerRouter.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { firstName, lastName, email, eventType, date, hours, value } = req.body;
+  const { firstName, lastName, email, eventType, date, hours, value } =
+    req.body;
 
   try {
     const updatedVolunteer = await db.query(
