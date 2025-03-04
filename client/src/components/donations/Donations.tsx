@@ -57,7 +57,7 @@ export const Donations = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
-  // const [deletes, setDeletes] = useState<string[]>([]);
+  const [deletes, setDeletes] = useState<[string, string][]>([]);
 
   const [donations, setDonations] = useState<any[]>([]);
   const [costcoDonations, setCostcoDonations] = useState<any[]>([]);
@@ -78,6 +78,38 @@ export const Donations = () => {
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEndDate(new Date(event.target.value));
     console.log(endDate);
+  };
+
+  const handleCheckboxChange = (id: string, donor: string) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const checked = event.target.checked;
+    if (checked) {
+      setDeletes([...deletes, [id, donor]]);
+    } else {
+      setDeletes(deletes.filter((deleteId) => deleteId[0] !== id && deleteId[1] !== donor));
+    }
+  };
+
+  const deleteClick = async () => {
+    try {
+      const costco_dels = [];
+      const food_dels = [];
+      for (const del of deletes) {
+        if (del[1] === "costco") {
+          costco_dels.push(del[0]);
+        } else {
+          food_dels.push(del[0]);
+        }
+      }
+      if (costco_dels.length > 0) {
+        await backend.delete("/costcoDonations", { data: { ids: costco_dels } });
+      }
+      if (food_dels.length > 0) {
+        await backend.delete("/foodDonations", { data: { ids: food_dels } });
+      }
+    } catch (error) {
+      console.error("Error deleting users:", error);
+    }
   };
 
   useEffect(() => {
@@ -222,7 +254,7 @@ export const Donations = () => {
           <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
           <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
 
-          <Button ml='auto'>Delete</Button>
+          <Button ml='auto' onClick={deleteClick}>Delete</Button>
           <DonationsDrawer/>
         </HStack>
 
@@ -260,7 +292,7 @@ export const Donations = () => {
                   //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
                     <Tr key={index}>
                       <Td>
-                        <Checkbox>{donation.id}</Checkbox>
+                        <Checkbox onChange={handleCheckboxChange(donation.id, donation.donor)}>{donation.id}</Checkbox>
                       </Td>
                       <Td>{donation.date}</Td>
                       <Td>{donation.donor}</Td>

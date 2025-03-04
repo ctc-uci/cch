@@ -50,13 +50,15 @@ costcoRouter.put("/:id", async (req, res) => {
     }
 });
 
-costcoRouter.delete("/:id", async (req, res) => {
+costcoRouter.delete("/", async (req, res) => {
     try {
-        const {id} = req.params;
-        const data = await db.query(
-            `DELETE FROM costco_donations WHERE id = $1`,
-            [id]
-        );
+        const { ids } = req.body;
+
+        const placeholders = ids.map((_, index) => `$${index + 1}`).join(", ");
+
+        const query = `DELETE FROM costco_donations WHERE id IN (${placeholders})`;
+        const data = await db.query(query, ids);
+
         res.status(200).json(keysToCamel(data));
     } catch (err) {
         res.status(500).send(err.message);
