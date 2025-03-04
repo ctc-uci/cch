@@ -162,8 +162,16 @@ export const Donations = () => {
         setAllDonations([...updatedFood, ...updatedCostco]);
       } else if (donor === "costco") {
         try {
-          const allDonations = await backend.get("/costcoDonations");
-          setAllDonations(allDonations.data);
+          const costcoDonations = await backend.get("/costcoDonations");
+          const updatedCostco = costcoDonations.data.map(({ id, date, amount, category}) => ({
+            id: id,
+            date: date,
+            donor: "costco",
+            category: category,
+            weight: 0,
+            value: amount
+          }));
+          setAllDonations(updatedCostco);
         } catch (err) {
           console.error("Error fetching users:", err);
         }
