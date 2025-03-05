@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
@@ -9,17 +10,14 @@ import {
   Heading,
   HStack,
   Input,
-  NumberInput,
-  NumberInputField,
   Select,
   useToast,
   VStack,
 } from "@chakra-ui/react";
 
-import { useParams } from "react-router-dom";
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { application } from "express";
+import { useNavigate, useParams } from "react-router-dom";
 
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 interface caseManager {
   firstName: string;
@@ -55,6 +53,7 @@ const CommentForm: React.FC = () => {
   const { id } = useParams();
 
   const toast = useToast();
+  const navigate = useNavigate();
 
   const fields = [
     ["Disabling Condition?", dCondition, setDCondition],
@@ -85,9 +84,6 @@ const CommentForm: React.FC = () => {
         const response = await backend.get(
           `/initialInterview/commentForm/${id}`
         );
-        console.log(response.data[0]);
-
-        // setClientData(response.data[0]);
         setClientFN(response.data[0].clientName.split(" ")[0]);
         setClientLN(response.data[0].clientName.split(" ")[1]);
         setClientCM(
@@ -111,7 +107,7 @@ const CommentForm: React.FC = () => {
         setAccept(response.data[0].decision);
         setComments(response.data[0].additionalComments);
         setFormID(response.data[0].id);
-        setInitialID(response.data[0].initialid)
+        setInitialID(response.data[0].initialid);
       } catch (error) {
         console.error("Error fetching client data:", error);
       }
@@ -123,7 +119,6 @@ const CommentForm: React.FC = () => {
     const caseManagerMap = new Map<string, number>(
       caseManagers.map((cm) => [`${cm.firstName} ${cm.lastName}`, cm.id])
     );
-
 
     const cm_id: number = caseManagerMap.get(clientCM);
 
@@ -150,34 +145,37 @@ const CommentForm: React.FC = () => {
 
       const initialInterviewData = {
         applicant_type: appType,
-      }
+      };
 
       const response = await backend.patch(
         `/screenerComment/${formID}`,
         screenerData
       );
 
-      const response2 = await backend.patch(`/initialInterview/app-status/${initialID}`, initialInterviewData)
+      const response2 = await backend.patch(
+        `/initialInterview/app-status/${initialID}`,
+        initialInterviewData
+      );
 
       if (response && response2) {
         toast({
-          title: 'Comment Form Updated!',
-          description: "The comment form has now been updated with the newly inputted information!",
-          status: 'success',
+          title: "Comment Form Updated!",
+          description:
+            "The comment form has now been updated with the newly inputted information!",
+          status: "success",
           duration: 3000,
           isClosable: true,
-      })
+        });
       }
-
     } catch (error) {
       console.error("Error submitting data:", error);
       toast({
-        title: 'Error!',
+        title: "Error!",
         description: error,
-        status: 'error',
+        status: "error",
         duration: 3000,
         isClosable: true,
-    })
+      });
     }
   };
 
@@ -194,6 +192,24 @@ const CommentForm: React.FC = () => {
       >
         Initial Screener Comment Form
       </Heading>
+
+      <Flex
+        flexBasis={"row"}
+        justifyContent={"flex-start"}
+        paddingBottom={"40px"}
+      >
+        <ArrowBackIcon
+          onClick={() => navigate(`/initial-screener-table`)}
+          color="blue.500"
+          cursor="pointer"
+          _hover={{
+            bg: "gray.700",
+            borderRadius: "md",
+            color: "white"
+          }}
+          boxSize={6}
+        />
+      </Flex>
 
       <HStack
         spacing={8}
@@ -242,7 +258,6 @@ const CommentForm: React.FC = () => {
         mt={6}
         width="100%"
       >
-        {/* this one isn't right -- im using marital status because single/family doesn't exist in the schema */}
         <FormControl>
           <HStack
             justify="flex-start"
@@ -398,7 +413,7 @@ const CommentForm: React.FC = () => {
 
         <FormControl>
           <HStack spacing={25}>
-            <FormLabel>2</FormLabel>
+            <FormLabel>3</FormLabel>
             <Input
               value={h3}
               onChange={(e) => seth3(String(e.target.value))}
@@ -423,8 +438,8 @@ const CommentForm: React.FC = () => {
                 w="200px"
                 borderRadius="xl"
                 placeholder="Type Here"
-                value={value} // Set value from state
-                onChange={(e) => setter(e.target.value)} // Update state
+                value={value} 
+                onChange={(e) => setter(e.target.value)}
               />
             </HStack>
           </FormControl>
@@ -436,10 +451,10 @@ const CommentForm: React.FC = () => {
         mt={6}
         justify="flex-end"
       >
-        {/* do the onclick --> navigate back to the inital forms page */}
         <Button
           type="submit"
           variant="outline"
+          onClick={() => navigate(`/initial-screener-table`)}
         >
           Cancel
         </Button>

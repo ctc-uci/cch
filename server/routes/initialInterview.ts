@@ -125,7 +125,7 @@ initialInterviewRouter.get("/:id", async (req, res) => {
 initialInterviewRouter.patch("/app-status/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body; // JSON object where keys are columns and values are new values
+    const updates = req.body;
 
     const query = `UPDATE initial_interview SET applicant_type = '${updates.applicant_type}' WHERE id = ${id} RETURNING *;`;
     const result = await db.query(query);
