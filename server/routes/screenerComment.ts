@@ -4,6 +4,7 @@ import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 export const screenerCommentRouter = Router();
+
 // Get all screener comment forms
 screenerCommentRouter.get("/", async (req, res) => {
   try {
@@ -52,7 +53,7 @@ screenerCommentRouter.get("/", async (req, res) => {
 screenerCommentRouter.patch("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body; // JSON object where keys are columns and values are new values
+    const updates = req.body;
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "No fields to update" });

@@ -101,7 +101,7 @@ export const InitialScreenerTable = () => {
             {isInputVisible ? (
                 <Input
                 fontSize="12px"
-                width="150px"  // Adjust width as needed
+                width="150px"
                 height="30px"
                 placeholder="Search"
                 value={searchKey}
