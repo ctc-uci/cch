@@ -32,13 +32,12 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
 import { eventTypes } from "../../types/volunteer";
-import VolunteerAddDrawer from "./VolunteerAddDrawer";
-import VolunteerEditDrawer from "./VolunteerEditDrawer";
+import VolunteerDrawer from "./VolunteerDrawer";
 
 const VolunteersTable = () => {
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
-  const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]); // For managing selected volunteers by id
+  const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -78,7 +77,7 @@ const VolunteersTable = () => {
     );
   }, []);
 
-  const handleSuccessfulAdd = () => {
+  const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
   };
 
@@ -236,10 +235,16 @@ const VolunteersTable = () => {
           >
             Delete
           </Button>
-
-          <VolunteerAddDrawer
-            onFormSubmitSuccess={handleSuccessfulAdd}
+          <Button
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Add
+          </Button>
+          <VolunteerDrawer
+            onFormSubmitSuccess={refreshPage}
             onClose={onClose}
+            isOpen={isOpen}
           />
         </HStack>
       </HStack>
@@ -303,25 +308,10 @@ const VolunteersTable = () => {
           </Tbody>
         </Table>
       </TableContainer>
-      {/* {currentlySelectedVolunteer && (<VolunteerAddDrawer
-        volunteer={currentlySelectedVolunteer}
-        onFormSubmitSuccess={() => {
-          setToggleRefresh(!toggleRefresh);
-          onClose();
-        }}
-        isOpen={isOpen}
-        onClose={() => {
-          setCurrentlySelectedVolunteer(null);
-          onClose();
-        }}
-      />)} */}
       {currentlySelectedVolunteer && (
-        <VolunteerEditDrawer
+        <VolunteerDrawer
           volunteer={currentlySelectedVolunteer}
-          onEditSuccess={() => {
-            setToggleRefresh(!toggleRefresh);
-            onClose();
-          }}
+          onFormSubmitSuccess={refreshPage}
           isOpen={isOpen}
           onClose={() => {
             setCurrentlySelectedVolunteer(null);
