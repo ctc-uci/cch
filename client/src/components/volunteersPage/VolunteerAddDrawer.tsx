@@ -128,7 +128,7 @@ const VolunteerAddDrawer = ({
                 spacing={4}
                 align="stretch"
               >
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Date Volunteered</FormLabel>
                   <Input
                     type="date"
@@ -143,7 +143,7 @@ const VolunteerAddDrawer = ({
                   />
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Email</FormLabel>
                   <Input
                     type="email"
@@ -158,7 +158,7 @@ const VolunteerAddDrawer = ({
                   />
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>First Name</FormLabel>
                   <Input
                     type="text"
@@ -173,7 +173,7 @@ const VolunteerAddDrawer = ({
                   />
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Last Name</FormLabel>
                   <Input
                     type="text"
@@ -188,7 +188,7 @@ const VolunteerAddDrawer = ({
                   />
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Event Type</FormLabel>
                   <Select
                     name="eventType"
@@ -212,7 +212,7 @@ const VolunteerAddDrawer = ({
                   </Select>
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Hours</FormLabel>
                   <Input
                     type="number"
@@ -227,7 +227,7 @@ const VolunteerAddDrawer = ({
                   />
                 </FormControl>
 
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel>Value Per Hour</FormLabel>
                   <Input
                     type="number"

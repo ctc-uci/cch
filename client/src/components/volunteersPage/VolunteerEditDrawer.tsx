@@ -45,6 +45,7 @@ const VolunteerEditDrawer = ({ volunteer, onEditSuccess, isOpen, onClose }) => {
       isOpen={isOpen}
       placement="right"
       onClose={onClose}
+      size="md"
     >
       <DrawerOverlay />
       <DrawerContent>
