@@ -1,125 +1,263 @@
+import { useEffect, useRef, useState } from "react";
+
 import {
   Button,
-  Box,
-  Input,
-  Text,
   Drawer,
   DrawerBody,
+  DrawerCloseButton,
+  DrawerContent,
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-  useDisclosure
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  useDisclosure,
+  useToast,
+  VStack,
 } from "@chakra-ui/react";
-import { useState } from "react";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import React from "react";
+import { eventTypes } from "../../types/volunteer";
+import type { Volunteer, VolunteerForm } from "../../types/volunteer";
+import { formatDateForInput } from "../../utils/dateUtils";
 
-// import type { Volunteer } from "../../types/volunteer"
-
-interface OnVolunteerAddForm {
+interface VolunteerAddDrawerProps {
   onFormSubmitSuccess: () => void;
+  volunteer?: Volunteer;
+  // isOpen: boolean;
+  // onClose: () => void;
 }
 
-const VolunteerAddDrawer = ({ onFormSubmitSuccess }: OnVolunteerAddForm) => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const btnRef = React.useRef();
+const VolunteerAddDrawer = ({
+  onFormSubmitSuccess,
+  volunteer,
+  // isOpen,
+  // onClose,
+}: VolunteerAddDrawerProps) => {
+  const toast = useToast();
   const { backend } = useBackendContext();
-  const [error, setError] = useState<string | null>(null);
-  const [addData, setData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    eventType: "Easter",
-    date: "",
-    hours: "",
-    value: ""
-  });
-
-  const fields = [
-    { name: "firstName", label: "First Name", type: "text" },
-    { name: "lastName", label: "Last Name", type: "text" },
-    { name: "email", label: "Email", type: "email" },
-    { name: "event_type", label: "Event Type", type: "text" },
-    { name: "date", label: "Date Volunteered", type: "date" },
-    { name: "hours", label: "Hours", type: "number" },
-    { name: "value", label: "Value Per Hour", type: "number" },
-  ];
-
-  const handleChange = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setData((prevState) => ({ ...prevState, [name]: value }));
+  const initialForm: VolunteerForm = {
+    firstName: volunteer?.firstName || "",
+    lastName: volunteer?.lastName || "",
+    email: volunteer?.email || "",
+    eventType: volunteer?.eventType || "",
+    date: volunteer?.date ? formatDateForInput(volunteer.date) : "",
+    hours: volunteer?.hours.toString() || "",
+    value: volunteer?.value.toString() || "",
   };
+  const [formData, setFormData] = useState<VolunteerForm>(initialForm);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const newVolunteerData = {
-        ...addData,
-        hours: parseInt(addData.hours || "0", 10),
-        value: parseInt(addData.value || "0", 10),
-      };
-
-      await backend.post("/volunteers", newVolunteerData);
-      setData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        eventType: "",
-        date: "",
-        hours: "",
-        value: ""
+      const currentTime = new Date().toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+        month: "numeric",
+        day: "numeric",
+        year: "numeric",
+        hour12: true,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       });
 
-      setError(null);
-      onFormSubmitSuccess(); // Notify parent component of success
+      const volunteerData = {
+        ...formData,
+        hours: Number(formData.hours),
+        value: Number(formData.value),
+      };
+
+      if (volunteer) {
+        await backend.put(`/volunteers/${volunteer.id}`, volunteerData);
+      } else {
+        await backend.post("/volunteers", volunteerData);
+      }
+      setFormData(initialForm);
+      onFormSubmitSuccess();
+      onClose();
+
+      toast({
+        title: volunteer ? "Volunteer Updated" : "Volunteer Added",
+        description: `The volunteer has successfully been ${volunteer ? "updated" : "added"} in the database at ${currentTime}.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
     } catch (error) {
-      console.error("Error submitting form:", error);
-      setError("Failed to submit form. Please try again.");
-    } finally {
-      onClose(); // Close the drawer after form submission
+      toast({
+        title: volunteer ? "Update Failed" : "Addition Failed",
+        description: `Something wrong has occurred and the volunteer was not ${volunteer ? "updated" : "added"}.`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      console.error(error);
     }
   };
 
   return (
     <>
-      <Button ref={btnRef} width="40%" colorScheme="blue" onClick={onOpen}>
+      <Button
+        colorScheme="blue"
+        onClick={onOpen}
+      >
         Add
       </Button>
       <Drawer
         isOpen={isOpen}
         placement="right"
         onClose={onClose}
-        finalFocusRef={btnRef}
+        size="md"
       >
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Add Volunteer</DrawerHeader>
+          <DrawerHeader borderBottomWidth="1px">
+            {volunteer ? "Edit" : "Add"} Volunteer
+          </DrawerHeader>
 
           <DrawerBody>
-            {fields.map(({ name, label, type }) => (
-              <Box key={name} display="flex" flexDirection="row" gap="20px" p={2}>
-                <Text width="50%">{label}</Text>
-                <Input
-                  type={type}
-                  width="100%"
-                  height="30px"
-                  name={name}
-                  value={addData[name] || ""}
-                  onChange={handleChange}
-                />
-              </Box>
-            ))}
+            <form
+              key={volunteer?.id || "new"}
+              id="add-volunteer-form"
+              onSubmit={handleSubmit}
+            >
+              <VStack
+                spacing={4}
+                align="stretch"
+              >
+                <FormControl>
+                  <FormLabel>Date Volunteered</FormLabel>
+                  <Input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        date: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Email</FormLabel>
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>First Name</FormLabel>
+                  <Input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        firstName: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Last Name</FormLabel>
+                  <Input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        lastName: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Event Type</FormLabel>
+                  <Select
+                    name="eventType"
+                    value={formData.eventType}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        eventType: e.target.value,
+                      }))
+                    }
+                    placeholder="Select event type"
+                  >
+                    {eventTypes.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Hours</FormLabel>
+                  <Input
+                    type="number"
+                    name="hours"
+                    value={formData.hours}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        hours: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+
+                <FormControl>
+                  <FormLabel>Value Per Hour</FormLabel>
+                  <Input
+                    type="number"
+                    name="value"
+                    value={formData.value}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        value: e.target.value,
+                      }))
+                    }
+                  />
+                </FormControl>
+              </VStack>
+            </form>
           </DrawerBody>
 
-          <DrawerFooter>
-            <Button variant="outline" mr={3} onClick={onClose}>
+          <DrawerFooter borderTopWidth="1px">
+            <Button
+              variant="outline"
+              mr={3}
+              onClick={onClose}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSubmit} type="submit" colorScheme="blue">
+            <Button
+              colorScheme="blue"
+              type="submit"
+              form="add-volunteer-form"
+            >
               Submit
             </Button>
           </DrawerFooter>

@@ -16,6 +16,7 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
 } from "@chakra-ui/react";
 
 import {
@@ -30,9 +31,9 @@ import { FiUpload } from "react-icons/fi";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
+import { eventTypes } from "../../types/volunteer";
 import VolunteerAddDrawer from "./VolunteerAddDrawer";
 import VolunteerEditDrawer from "./VolunteerEditDrawer";
-
 
 const VolunteersTable = () => {
   const { backend } = useBackendContext();
@@ -42,11 +43,17 @@ const VolunteersTable = () => {
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [toggleRefresh, setToggleRefresh] = useState(false);
+  const [currentlySelectedVolunteer, setCurrentlySelectedVolunteer] =
+    useState<Volunteer | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [eventTypeFilter, setEventTypeFilter] = useState("");
 
   useEffect(() => {
     const fetchVolunteers = async () => {
       try {
-        const response = await backend.get("/volunteers");
+        const response = await backend.get("/volunteers", {
+          params: eventTypeFilter ? { eventType: eventTypeFilter } : undefined,
+        });
         setVolunteers(response.data);
       } catch (err) {
         setError(err.message);
@@ -56,9 +63,14 @@ const VolunteersTable = () => {
     };
 
     fetchVolunteers();
-  }, [toggleRefresh, backend]);
+  }, [toggleRefresh, backend, eventTypeFilter]);
+
+  const handleResetDropdowns = () => {
+    setEventTypeFilter("");
+  };
 
   const handleCheckboxChange = useCallback((volunteerId: number) => {
+    onClose();
     setSelectedVolunteers((prevSelected) =>
       prevSelected.includes(volunteerId)
         ? prevSelected.filter((id) => id !== volunteerId)
@@ -68,6 +80,11 @@ const VolunteersTable = () => {
 
   const handleSuccessfulAdd = () => {
     setToggleRefresh(!toggleRefresh);
+  };
+
+  const handleRowClick = (volunteer: Volunteer) => {
+    setCurrentlySelectedVolunteer(volunteer);
+    onOpen();
   };
 
   const handleDelete = async () => {
@@ -152,16 +169,6 @@ const VolunteersTable = () => {
         accessorKey: "total",
         header: "Total ($)",
       },
-      {
-        accessorKey: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <VolunteerEditDrawer
-            volunteer={row.original}
-            onEditSuccess={() => setToggleRefresh(!toggleRefresh)}
-          />
-        ),
-      },
     ],
     [selectedVolunteers, volunteers, handleCheckboxChange]
   );
@@ -187,11 +194,25 @@ const VolunteersTable = () => {
         justify="space-between"
         paddingX="20px"
       >
-        <HStack width="60%" justify="space-between">
-          <Select placeholder="Select Event Type">
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            <option value="option3">Option 3</option>
+        <HStack
+          width="60%"
+          justify="space-between"
+        >
+          <Select
+            placeholder="Select Event Type"
+            value={eventTypeFilter}
+            onChange={(e) => {
+              setEventTypeFilter(e.target.value);
+            }}
+          >
+            {eventTypes.map((eventType) => (
+              <option
+                key={eventType}
+                value={eventType}
+              >
+                {eventType}
+              </option>
+            ))}
           </Select>
           <Select placeholder="Select Frequency">
             <option value="option1">Option 1</option>
@@ -204,7 +225,10 @@ const VolunteersTable = () => {
             <option value="option3">Option 3</option>
           </Select>
         </HStack>
-        <HStack justify="space-between" paddingX="12px">
+        <HStack
+          justify="space-between"
+          paddingX="12px"
+        >
           <Button
             colorScheme="red"
             onClick={handleDelete}
@@ -212,17 +236,23 @@ const VolunteersTable = () => {
           >
             Delete
           </Button>
-          <VolunteerAddDrawer onFormSubmitSuccess={handleSuccessfulAdd} />
+
+          <VolunteerAddDrawer
+            onFormSubmitSuccess={handleSuccessfulAdd}
+            onClose={onClose}
+          />
         </HStack>
       </HStack>
-      <Text>Reset All Dropdowns</Text>
+      <Button
+        onClick={handleResetDropdowns}
+        size="sm"
+        variant="outline"
+        ml={4}
+      >
+        Reset All Filters
+      </Button>
       <TableContainer>
-        <IconButton
-          aria-label="Download CSV"
-          // onClick={() =>
-          //   onPressCSVButton()
-          // }
-        >
+        <IconButton aria-label="Download CSV">
           <FiUpload />
         </IconButton>
         <Table variant="striped">
@@ -258,7 +288,11 @@ const VolunteersTable = () => {
           </Thead>
           <Tbody>
             {table.getRowModel().rows.map((row) => (
-              <Tr key={row.id}>
+              <Tr
+                key={row.id}
+                onClick={() => handleRowClick(row.original)}
+                cursor="pointer"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <Td key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -269,6 +303,32 @@ const VolunteersTable = () => {
           </Tbody>
         </Table>
       </TableContainer>
+      {/* {currentlySelectedVolunteer && (<VolunteerAddDrawer
+        volunteer={currentlySelectedVolunteer}
+        onFormSubmitSuccess={() => {
+          setToggleRefresh(!toggleRefresh);
+          onClose();
+        }}
+        isOpen={isOpen}
+        onClose={() => {
+          setCurrentlySelectedVolunteer(null);
+          onClose();
+        }}
+      />)} */}
+      {currentlySelectedVolunteer && (
+        <VolunteerEditDrawer
+          volunteer={currentlySelectedVolunteer}
+          onEditSuccess={() => {
+            setToggleRefresh(!toggleRefresh);
+            onClose();
+          }}
+          isOpen={isOpen}
+          onClose={() => {
+            setCurrentlySelectedVolunteer(null);
+            onClose();
+          }}
+        />
+      )}
     </Box>
   );
 };

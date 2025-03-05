@@ -1,3 +1,12 @@
+export const eventTypes = [
+  "Easter",
+  "Thanksgiving",
+  "Gala",
+  "Christmas",
+  "Office",
+  "Other",
+];
+
 export type Volunteer = {
   id: number;
   firstName: string;
@@ -8,4 +17,14 @@ export type Volunteer = {
   hours: number;
   value: number;
   total: number;
-}
+};
+
+export type VolunteerForm = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  eventType: string;
+  date: string;
+  hours: string;
+  value: string;
+};

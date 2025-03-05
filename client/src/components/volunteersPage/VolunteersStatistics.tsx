@@ -1,6 +1,12 @@
-import { Box, Text } from '@chakra-ui/react';
+import { Box, Text } from "@chakra-ui/react";
 
-const VolunteersStatistics = ({totalVolunteers, totalHours}: {totalVolunteers: number, totalHours: number}) => {
+const VolunteersStatistics = ({
+  totalVolunteers,
+  totalHours,
+}: {
+  totalVolunteers: number;
+  totalHours: number;
+}) => {
   return (
     <>
       <Box
@@ -11,8 +17,18 @@ const VolunteersStatistics = ({totalVolunteers, totalHours}: {totalVolunteers: n
         textAlign="center"
         width="100%"
       >
-        <Text fontSize="lg" fontWeight="bold">Total Volunteers</Text>
-        <Text fontSize="2xl" color="blue.500">{totalVolunteers}</Text>
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+        >
+          Total Volunteers
+        </Text>
+        <Text
+          fontSize="2xl"
+          color="blue.500"
+        >
+          {totalVolunteers}
+        </Text>
       </Box>
       <Box
         borderWidth="1px"
@@ -22,8 +38,18 @@ const VolunteersStatistics = ({totalVolunteers, totalHours}: {totalVolunteers: n
         textAlign="center"
         width="100%"
       >
-        <Text fontSize="lg" fontWeight="bold">Total Hours</Text>
-        <Text fontSize="2xl" color="blue.500">{totalHours}</Text>
+        <Text
+          fontSize="lg"
+          fontWeight="bold"
+        >
+          Total Hours
+        </Text>
+        <Text
+          fontSize="2xl"
+          color="blue.500"
+        >
+          {totalHours}
+        </Text>
       </Box>
     </>
   );
