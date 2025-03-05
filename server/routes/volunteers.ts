@@ -1,13 +1,12 @@
-import express from "express";
+import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
-const volunteerRouter = express.Router();
-volunteerRouter.use(express.json());
+export const volunteersRouter = Router();
 
 // GET route to get all volunteers
-volunteerRouter.get("/", async (req, res) => {
+volunteersRouter.get("/", async (req, res) => {
   try {
     const users = await db.query(`SELECT * FROM volunteers ORDER BY id ASC`);
     res.status(200).json(keysToCamel(users));
@@ -16,7 +15,7 @@ volunteerRouter.get("/", async (req, res) => {
   }
 });
 // GET route to get all volunteers from a specific event type
-volunteerRouter.get("/:event_type", async (req, res) => {
+volunteersRouter.get("/:event_type", async (req, res) => {
   try {
     const { event_type } = req.params;
     const users = await db.query(
@@ -30,7 +29,7 @@ volunteerRouter.get("/:event_type", async (req, res) => {
 });
 
 // GET route to get total number of hours from all volunteers
-volunteerRouter.get("/total-hours", async (req, res) => {
+volunteersRouter.get("/total-hours", async (req, res) => {
   try {
     const data = await db.query(
       `SELECT SUM(hours) AS total_hours FROM volunteers`
@@ -42,7 +41,7 @@ volunteerRouter.get("/total-hours", async (req, res) => {
 });
 
 //GET route to get total number of unique volunteers
-volunteerRouter.get("/total-volunteers", async (req, res) => {
+volunteersRouter.get("/total-volunteers", async (req, res) => {
   try {
     const data = await db.query(
       `SELECT COUNT(DISTINCT first_name, last_name, email) AS total_volunteers FROM volunteers`
@@ -54,7 +53,7 @@ volunteerRouter.get("/total-volunteers", async (req, res) => {
 });
 
 // POST route to create volunteers
-volunteerRouter.post("/", async (req, res) => {
+volunteersRouter.post("/", async (req, res) => {
   try {
     const { firstName, lastName, email, eventType, hours, date, value } =
       req.body;
@@ -69,7 +68,7 @@ volunteerRouter.post("/", async (req, res) => {
 });
 
 // PUT route to update volunteers
-volunteerRouter.put("/:id", async (req, res) => {
+volunteersRouter.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { firstName, lastName, email, eventType, date, hours, value } =
     req.body;
@@ -100,7 +99,7 @@ volunteerRouter.put("/:id", async (req, res) => {
 });
 
 // DELETE route to delete volunteers
-volunteerRouter.delete("/", async (req, res) => {
+volunteersRouter.delete("/", async (req, res) => {
   const { ids } = req.body;
 
   if (!Array.isArray(ids) || ids.length === 0) {
@@ -120,4 +119,4 @@ volunteerRouter.delete("/", async (req, res) => {
   }
 });
 
-export default volunteerRouter;
+export default volunteersRouter;
