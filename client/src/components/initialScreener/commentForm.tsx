@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-
 import {
   Box,
   Button,
@@ -16,8 +15,9 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useParams } from "react-router-dom";
+
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 interface ClientData {
   name: string;
@@ -56,17 +56,44 @@ const CommentForm: React.FC = (clientID) => {
   const { backend } = useBackendContext();
   const [caseManagers, setCaseManagers] = useState<caseManager[]>([]);
   const [clientData, setClientData] = useState<ClientData>();
-  const [clientFN, setClientFN] = useState<string>("")
-  const [clientLN, setClientLN] = useState<string>("")
-  const [clientCM, setClientCM] = useState<string>("")
+  const [clientFN, setClientFN] = useState<string>("");
+  const [clientLN, setClientLN] = useState<string>("");
+  const [clientCM, setClientCM] = useState<string>("");
+  const [maritalStatus, setMaritalStatus] = useState<string>("");
+  const [willingness, setWillingness] = useState<number>(0);
+  const [attitude, setAttitude] = useState<number>(0);
+  const [employability, setEmployability] = useState<number>(0);
+  const [length, setLength] = useState<number>(0);
+  const [tx, setTx] = useState<boolean>(true);
+  const [h1, seth1] = useState<string>("");
+  const [h2, seth2] = useState<string>("");
+  const [h3, seth3] = useState<string>("");
+  const [dCondition, setDCondition] = useState<string>("");
+  const [employed, setEmployed] = useState<boolean>(true);
+  const [dLicense, setDLicense] = useState<boolean>(true);
+  const [numChildren, setNumChildren] = useState<number>(0);
+  const [numCustody, setNumCustody] = useState<number>(0);
+  const [lastCity, setLastCity] = useState<string>("");
+  const [accept, setAccept] = useState<boolean>(true);
+  const [comments, setComments] = useState<string>("");
 
   const { id } = useParams();
+
+  const fields = [
+    ["Disabling Condition?", dCondition, setDCondition],
+    ["Employment?", employed, setEmployed],
+    ["Driver's License?", dLicense, setDLicense],
+    ["Total # of children?", numChildren, setNumChildren],
+    ["Total # of children in custody?", numCustody, setNumCustody],
+    ["Last City of Permanent Residence?", lastCity, setLastCity],
+    ["Would you accept this client into CCH?", accept, setAccept],
+    ["Additional comments or concerns?", comments, setComments],
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response =
-          await backend.get(`/caseManagers/names`);
+        const response = await backend.get(`/caseManagers/names`);
         setCaseManagers(response.data);
       } catch (error) {
         console.error("Error fetching names:", error);
@@ -78,19 +105,40 @@ const CommentForm: React.FC = (clientID) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await backend.get(`/initialInterview/commentForm/${id}`);
+        const response = await backend.get(
+          `/initialInterview/commentForm/${id}`
+        );
+        console.log(response.data[0]);
+
         setClientData(response.data[0]);
         setClientFN(response.data[0].clientName.split(" ")[0]);
         setClientLN(response.data[0].clientName.split(" ")[1]);
-        setClientCM(response.data[0].cmFirstName + " " + response.data[0].cmLastName);
-
+        setClientCM(
+          response.data[0].cmFirstName + " " + response.data[0].cmLastName
+        );
+        setMaritalStatus(response.data[0].maritalStatus);
+        setWillingness(response.data[0].willingness);
+        setAttitude(response.data[0].attitude);
+        setEmployability(response.data[0].employability);
+        setLength(response.data[0].lengthOfSobriety);
+        setTx(response.data[0].completedTx);
+        seth1(response.data[0].homelessEpisodeOne);
+        seth2(response.data[0].homelessEpisodeTwo);
+        seth3(response.data[0].homelessEpisodeThree);
+        setDCondition(response.data[0].disablingCondition);
+        setEmployed(response.data[0].employed);
+        setDLicense(response.data[0].driversLicense);
+        setNumChildren(response.data[0].numOfChildren);
+        setNumCustody(response.data[0].childrenInCustody);
+        setLastCity(response.data[0].lastCityPermResidence);
+        setAccept(response.data[0].decision);
+        setComments(response.data[0].additionalComments);
       } catch (error) {
         console.error("Error fetching client data:", error);
       }
     };
     fetchData();
   }, [backend, id]);
-
   return (
     <Box
       maxW="800px"
@@ -126,17 +174,24 @@ const CommentForm: React.FC = (clientID) => {
         </FormControl>
 
         {/* make a route that's just list of case managers */}
+
         <FormControl>
           <FormLabel>Case Manager</FormLabel>
-          <Select defaultValue={clientCM}>
-            {[...caseManagers].map((_, i) => (
-              <option
-                key={i}
-                value={i + 1}
-              >
-                {caseManagers[i]?.firstName + " " + caseManagers[i]?.lastName}
-              </option>
-            ))}
+          <Select
+            value={clientCM}
+            onChange={(e) => setClientCM(e.target.value)}
+          >
+            {caseManagers.map((cm, i) => {
+              const fullName = `${cm.firstName} ${cm.lastName}`;
+              return (
+                <option
+                  key={i}
+                  value={fullName}
+                >
+                  {fullName}
+                </option>
+              );
+            })}
           </Select>
         </FormControl>
       </HStack>
@@ -149,9 +204,17 @@ const CommentForm: React.FC = (clientID) => {
       >
         {/* this one isn't right -- im using marital status because single/family doesn't exist in the schema */}
         <FormControl>
-          <HStack justify="flex-start" spacing={25}>
+          <HStack
+            justify="flex-start"
+            spacing={25}
+          >
             <FormLabel w="40%">Entering as single or family?</FormLabel>
-            <Input placeholder={clientData?.maritalStatus} w="200px" borderRadius="xl"   />
+            <Input
+              value={maritalStatus}
+              onChange={(e) => setMaritalStatus(String(e.target.value))}
+              w="200px"
+              borderRadius="xl"
+            />
           </HStack>
         </FormControl>
       </VStack>
@@ -168,32 +231,91 @@ const CommentForm: React.FC = (clientID) => {
         mt={2}
         width="100%"
       >
-        {["Willingness", "Employability", "Attitude"].map((label) => (
-          <FormControl key={label}>
-            <HStack spacing={25}>
-              <FormLabel w="40%">{label}</FormLabel>
-              <Select defaultValue="10" w="200px" borderRadius="xl"  >
-                {Array.from({ length: 10 }, (_, i) => (
-                  <option key={i} value={i + 1}>
-                    {i + 1}
-                  </option>
-                ))}
-              </Select>
-            </HStack>
-          </FormControl>
-        ))}
-
         <FormControl>
           <HStack spacing={25}>
-          <FormLabel w="40%">Length of Sobriety</FormLabel>
-          <Input placeholder="Type Here" w="200px" borderRadius="xl"   />
+            <FormLabel w="40%"> Willingness </FormLabel>
+            <Select
+              value={willingness}
+              onChange={(e) => setWillingness(Number(e.target.value))}
+              w="200px"
+              borderRadius="xl"
+            >
+              {Array.from({ length: 10 }, (_, i) => (
+                <option
+                  key={i}
+                  value={i + 1}
+                >
+                  {i + 1}
+                </option>
+              ))}
+            </Select>
           </HStack>
         </FormControl>
 
         <FormControl>
           <HStack spacing={25}>
-          <FormLabel w="40%">Completed Tx</FormLabel>
-          <Input placeholder="Type Here" w="200px" borderRadius="xl"   />
+            <FormLabel w="40%"> Employability </FormLabel>
+            <Select
+              value={employability}
+              onChange={(e) => setEmployability(Number(e.target.value))}
+              w="200px"
+              borderRadius="xl"
+            >
+              {Array.from({ length: 10 }, (_, i) => (
+                <option
+                  key={i}
+                  value={i + 1}
+                >
+                  {i + 1}
+                </option>
+              ))}
+            </Select>
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%"> Attitude </FormLabel>
+            <Select
+              value={attitude}
+              onChange={(e) => setAttitude(Number(e.target.value))}
+              w="200px"
+              borderRadius="xl"
+            >
+              {Array.from({ length: 10 }, (_, i) => (
+                <option
+                  key={i}
+                  value={i + 1}
+                >
+                  {i + 1}
+                </option>
+              ))}
+            </Select>
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Length of Sobriety</FormLabel>
+            <Input
+              value={length}
+              onChange={(e) => setLength(Number(e.target.value))}
+              w="200px"
+              borderRadius="xl"
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Completed Tx</FormLabel>
+            <Input
+              value={String(tx)}
+              onChange={(e) => setTx(Boolean(e.target.value))}
+              placeholder="Type Here"
+              w="200px"
+              borderRadius="xl"
+            />
           </HStack>
         </FormControl>
       </VStack>
@@ -210,14 +332,41 @@ const CommentForm: React.FC = (clientID) => {
         mt={2}
         width="100%"
       >
-        {[1, 2, 3].map((num) => (
-          <FormControl key={num}>
-            <HStack spacing={25}>
-            <FormLabel>{num}</FormLabel>
-            <Input borderRadius="xl" placeholder="Type Here" flex="1" />
-            </HStack>
-          </FormControl>
-        ))}
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel>1</FormLabel>
+            <Input
+              value={h1}
+              onChange={(e) => seth1(String(e.target.value))}
+              borderRadius="xl"
+              flex="1"
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel>2</FormLabel>
+            <Input
+              value={h2}
+              onChange={(e) => seth2(String(e.target.value))}
+              borderRadius="xl"
+              flex="1"
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel>2</FormLabel>
+            <Input
+              value={h3}
+              onChange={(e) => seth3(String(e.target.value))}
+              borderRadius="xl"
+              flex="1"
+            />
+          </HStack>
+        </FormControl>
       </VStack>
 
       <VStack
@@ -226,23 +375,20 @@ const CommentForm: React.FC = (clientID) => {
         mt={12}
         width="100%"
       >
-        {[
-          "Disabling Condition?",
-          "Employment?",
-          "Driver's License?",
-          "Total # of children?",
-          "Total # of children in custody?",
-          "Last City of Permanent Residence?",
-          "Would you accept this client into CCH?",
-          "Additional comments or concerns?",
-        ].map((label) => (
-          <FormControl key={label}>
-            <HStack spacing={25}>
+      {fields.map(([label, value, setter], i) => (
+        <FormControl key={i}>
+          <HStack spacing={25}>
             <FormLabel w="40%">{label}</FormLabel>
-            <Input w="200px" borderRadius="xl"  placeholder="Type Here" />
-            </HStack>
-          </FormControl>
-        ))}
+            <Input
+              w="200px"
+              borderRadius="xl"
+              placeholder="Type Here"
+              value={value} // Set value from state
+              onChange={(e) => setter(e.target.value)} // Update state
+            />
+          </HStack>
+        </FormControl>
+      ))}
       </VStack>
 
       <HStack
@@ -250,7 +396,12 @@ const CommentForm: React.FC = (clientID) => {
         mt={6}
         justify="flex-end"
       >
-        <Button variant="outline">Cancel</Button>
+        <Button
+          type="submit"
+          variant="outline"
+        >
+          Cancel
+        </Button>
         <Button colorScheme="blue">Submit</Button>
       </HStack>
     </Box>
@@ -258,4 +409,3 @@ const CommentForm: React.FC = (clientID) => {
 };
 
 export default CommentForm;
-
