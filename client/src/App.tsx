@@ -42,6 +42,7 @@ import AdditionalInformation from "./components/interviewScreeningForm/additiona
 import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
 import Success from "./components/interviewScreeningForm/success";
 import { StartForms } from "./components/formsHub/startForm";
+import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 
 const App = () => {
 
@@ -115,6 +116,10 @@ const App = () => {
               <Route
                 path="/monthly-statistics"
                 element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
+              />
+              <Route
+                path="/volunteer-tracking"
+                element={<ProtectedRoute element={<VolunteersPage />} />}
               />
               <Route
                 path="/forms-hub"
