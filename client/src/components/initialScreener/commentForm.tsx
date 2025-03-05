@@ -19,29 +19,29 @@ import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-interface ClientData {
-  name: string;
-  cmFirstName: string;
-  cmLastName: string;
-  maritalStatus: string;
-  willingness: number;
-  employability: number;
-  attitude: number;
-  lengthOfSobriety?: number;
-  completedTx?: boolean;
-  drugTestResults?: string;
-  homelessOne: string;
-  homelessTwo: string;
-  homelessThree: string;
-  disablingCondition?: string;
-  employment?: boolean;
-  driversLicense?: string;
-  totalChildren?: number;
-  childrenInCustody?: number;
-  lastCity?: string;
-  acceptCcrh?: boolean;
-  additionalComments?: string;
-}
+// interface ClientData {
+//   name: string;
+//   cmFirstName: string;
+//   cmLastName: string;
+//   maritalStatus: string;
+//   willingness: number;
+//   employability: number;
+//   attitude: number;
+//   lengthOfSobriety?: number;
+//   completedTx?: boolean;
+//   drugTestResults?: string;
+//   homelessOne: string;
+//   homelessTwo: string;
+//   homelessThree: string;
+//   disablingCondition?: string;
+//   employment?: boolean;
+//   driversLicense?: string;
+//   totalChildren?: number;
+//   childrenInCustody?: number;
+//   lastCity?: string;
+//   acceptCcrh?: boolean;
+//   additionalComments?: string;
+// }
 
 interface clientID {
   id: number;
@@ -55,11 +55,11 @@ interface caseManager {
 const CommentForm: React.FC = (clientID) => {
   const { backend } = useBackendContext();
   const [caseManagers, setCaseManagers] = useState<caseManager[]>([]);
-  const [clientData, setClientData] = useState<ClientData>();
+  // const [clientData, setClientData] = useState<ClientData>();
   const [clientFN, setClientFN] = useState<string>("");
   const [clientLN, setClientLN] = useState<string>("");
   const [clientCM, setClientCM] = useState<string>("");
-  const [maritalStatus, setMaritalStatus] = useState<string>("");
+  const [appType, setAppType] = useState<string>("");
   const [willingness, setWillingness] = useState<number>(0);
   const [attitude, setAttitude] = useState<number>(0);
   const [employability, setEmployability] = useState<number>(0);
@@ -76,7 +76,6 @@ const CommentForm: React.FC = (clientID) => {
   const [lastCity, setLastCity] = useState<string>("");
   const [accept, setAccept] = useState<boolean>(true);
   const [comments, setComments] = useState<string>("");
-
   const { id } = useParams();
 
   const fields = [
@@ -110,19 +109,19 @@ const CommentForm: React.FC = (clientID) => {
         );
         console.log(response.data[0]);
 
-        setClientData(response.data[0]);
+        // setClientData(response.data[0]);
         setClientFN(response.data[0].clientName.split(" ")[0]);
         setClientLN(response.data[0].clientName.split(" ")[1]);
         setClientCM(
           response.data[0].cmFirstName + " " + response.data[0].cmLastName
         );
-        setMaritalStatus(response.data[0].maritalStatus);
+        setAppType(response.data[0].applicantType);
         setWillingness(response.data[0].willingness);
         setAttitude(response.data[0].attitude);
         setEmployability(response.data[0].employability);
         setLength(response.data[0].lengthOfSobriety);
         setTx(response.data[0].completedTx);
-        seth1(response.data[0].homelessEpisodeOne);
+        seth1(response.data[0].homelessEpisodeOne); 
         seth2(response.data[0].homelessEpisodeTwo);
         seth3(response.data[0].homelessEpisodeThree);
         setDCondition(response.data[0].disablingCondition);
@@ -138,7 +137,27 @@ const CommentForm: React.FC = (clientID) => {
       }
     };
     fetchData();
-  }, [backend, id]);
+  }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        "willingness": willingness
+      };
+
+      const response = await backend.patch(
+        `/screenerComment/${1}`,
+        data
+      );
+      console.log('Success:', response.data);
+
+      // Handle successful response
+    } catch (error) {
+      // Handle error
+      console.error("Error submitting data:", error);
+    }
+  };
+
   return (
     <Box
       maxW="800px"
@@ -172,8 +191,6 @@ const CommentForm: React.FC = (clientID) => {
             isReadOnly
           />
         </FormControl>
-
-        {/* make a route that's just list of case managers */}
 
         <FormControl>
           <FormLabel>Case Manager</FormLabel>
@@ -210,8 +227,8 @@ const CommentForm: React.FC = (clientID) => {
           >
             <FormLabel w="40%">Entering as single or family?</FormLabel>
             <Input
-              value={maritalStatus}
-              onChange={(e) => setMaritalStatus(String(e.target.value))}
+              value={appType}
+              onChange={(e) => setAppType(String(e.target.value))}
               w="200px"
               borderRadius="xl"
             />
@@ -375,20 +392,20 @@ const CommentForm: React.FC = (clientID) => {
         mt={12}
         width="100%"
       >
-      {fields.map(([label, value, setter], i) => (
-        <FormControl key={i}>
-          <HStack spacing={25}>
-            <FormLabel w="40%">{label}</FormLabel>
-            <Input
-              w="200px"
-              borderRadius="xl"
-              placeholder="Type Here"
-              value={value} // Set value from state
-              onChange={(e) => setter(e.target.value)} // Update state
-            />
-          </HStack>
-        </FormControl>
-      ))}
+        {fields.map(([label, value, setter], i) => (
+          <FormControl key={i}>
+            <HStack spacing={25}>
+              <FormLabel w="40%">{label}</FormLabel>
+              <Input
+                w="200px"
+                borderRadius="xl"
+                placeholder="Type Here"
+                value={value} // Set value from state
+                onChange={(e) => setter(e.target.value)} // Update state
+              />
+            </HStack>
+          </FormControl>
+        ))}
       </VStack>
 
       <HStack
@@ -402,7 +419,12 @@ const CommentForm: React.FC = (clientID) => {
         >
           Cancel
         </Button>
-        <Button colorScheme="blue">Submit</Button>
+        <Button
+          onClick={handleSubmit}
+          colorScheme="blue"
+        >
+          Submit
+        </Button>
       </HStack>
     </Box>
   );

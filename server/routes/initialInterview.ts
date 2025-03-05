@@ -78,7 +78,7 @@ initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
         i.name AS client_name,  
         cm.first_name AS cm_first_name, 
         cm.last_name AS cm_last_name,
-        i.marital_status, 
+        i.applicant_type, 
         s.willingness,
         s.employability, 
         s.attitude, 
@@ -95,7 +95,8 @@ initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
         s.children_in_custody,
         s.last_city_perm_residence,
         s.decision,
-        s.additional_comments
+        s.additional_comments,
+        s.id AS commentFormId
       FROM initial_interview i
       INNER JOIN screener_comment AS s ON i.id = s.initial_interview_id
       INNER JOIN case_managers AS cm ON s.cm_id = cm.id
