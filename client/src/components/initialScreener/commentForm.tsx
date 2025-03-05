@@ -18,6 +18,7 @@ import {
 import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { application } from "express";
 
 // interface ClientData {
 //   name: string;
@@ -50,6 +51,7 @@ interface clientID {
 interface caseManager {
   firstName: string;
   lastName: string;
+  id: number;
 }
 
 const CommentForm: React.FC = (clientID) => {
@@ -76,6 +78,8 @@ const CommentForm: React.FC = (clientID) => {
   const [lastCity, setLastCity] = useState<string>("");
   const [accept, setAccept] = useState<boolean>(true);
   const [comments, setComments] = useState<string>("");
+  const [formID, setFormID] = useState<number>(0);
+  const [initialID, setInitialID] = useState<number>(0);
   const { id } = useParams();
 
   const fields = [
@@ -99,7 +103,7 @@ const CommentForm: React.FC = (clientID) => {
       }
     };
     fetchData();
-  }, [backend]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -121,7 +125,7 @@ const CommentForm: React.FC = (clientID) => {
         setEmployability(response.data[0].employability);
         setLength(response.data[0].lengthOfSobriety);
         setTx(response.data[0].completedTx);
-        seth1(response.data[0].homelessEpisodeOne); 
+        seth1(response.data[0].homelessEpisodeOne);
         seth2(response.data[0].homelessEpisodeTwo);
         seth3(response.data[0].homelessEpisodeThree);
         setDCondition(response.data[0].disablingCondition);
@@ -132,6 +136,8 @@ const CommentForm: React.FC = (clientID) => {
         setLastCity(response.data[0].lastCityPermResidence);
         setAccept(response.data[0].decision);
         setComments(response.data[0].additionalComments);
+        setFormID(response.data[0].id);
+        setInitialID(response.data[0].initialid)
       } catch (error) {
         console.error("Error fetching client data:", error);
       }
@@ -140,20 +146,46 @@ const CommentForm: React.FC = (clientID) => {
   }, []);
 
   const handleSubmit = async () => {
+    const caseManagerMap = new Map<string, number>(
+      caseManagers.map((cm) => [`${cm.firstName} ${cm.lastName}`, cm.id])
+    );
+
+    const cm_id: number = caseManagerMap.get(clientCM);
+
     try {
-      const data = {
-        "willingness": willingness
+      const screenerData = {
+        cm_id: cm_id,
+        willingness: willingness,
+        employability: employability,
+        attitude: attitude,
+        length_of_sobriety: length,
+        completed_tx: tx,
+        homeless_episode_one: h1,
+        homeless_episode_two: h2,
+        homeless_episode_three: h3,
+        disabling_condition: dCondition,
+        employed: employed,
+        driver_license: dLicense,
+        num_of_children: numChildren,
+        children_in_custody: numCustody,
+        last_city_perm_residence: lastCity,
+        decision: accept,
+        additional_comments: comments,
       };
 
-      const response = await backend.patch(
-        `/screenerComment/${1}`,
-        data
-      );
-      console.log('Success:', response.data);
+      const initialInterviewData = {
+        applicant_type: appType,
+      }
 
-      // Handle successful response
+      const response = await backend.patch(
+        `/screenerComment/${formID}`,
+        screenerData
+      );
+
+      const response2 = await backend.patch(`/initialInterview/app-status/${initialID}`, initialInterviewData)
+
+
     } catch (error) {
-      // Handle error
       console.error("Error submitting data:", error);
     }
   };
@@ -413,6 +445,7 @@ const CommentForm: React.FC = (clientID) => {
         mt={6}
         justify="flex-end"
       >
+        {/* do the onclick --> navigate back to the inital forms page */}
         <Button
           type="submit"
           variant="outline"

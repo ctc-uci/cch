@@ -19,7 +19,7 @@ caseManagersRouter.get("/", async (req, res) => {
 // Get all case manager names
 caseManagersRouter.get("/names", async (req, res) => {
   try {
-    const data = await db.query(`SELECT DISTINCT first_name, last_name FROM case_managers;`);
+    const data = await db.query(`SELECT DISTINCT first_name, last_name, id FROM case_managers;`);
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {

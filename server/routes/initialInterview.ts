@@ -78,6 +78,7 @@ initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
         i.name AS client_name,  
         cm.first_name AS cm_first_name, 
         cm.last_name AS cm_last_name,
+        i.id AS initialId,
         i.applicant_type, 
         s.willingness,
         s.employability, 
@@ -96,7 +97,7 @@ initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
         s.last_city_perm_residence,
         s.decision,
         s.additional_comments,
-        s.id AS commentFormId
+        s.id
       FROM initial_interview i
       INNER JOIN screener_comment AS s ON i.id = s.initial_interview_id
       INNER JOIN case_managers AS cm ON s.cm_id = cm.id
@@ -118,6 +119,25 @@ initialInterviewRouter.get("/:id", async (req, res) => {
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+initialInterviewRouter.patch("/app-status/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body; // JSON object where keys are columns and values are new values
+
+    const query = `UPDATE initial_interview SET applicant_type = '${updates.applicant_type}' WHERE id = ${id} RETURNING *;`;
+    const result = await db.query(query);
+
+    res.status(200).json({
+      message: "Client updated successfully",
+      result: result,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 

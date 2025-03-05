@@ -50,29 +50,30 @@ screenerCommentRouter.get("/", async (req, res) => {
 });
 
 screenerCommentRouter.patch("/:id", async (req, res) => {
-  const { id } = req.params;
-  const updates = req.body;
-
-  const queryText = `
-    UPDATE screener_comment
-    SET willingness = ${updates.willingness}
-    WHERE id = ${id}
-    RETURNING *;
-  `;
-
   try {
-    // Execute the query
-    const result = await db.query(queryText);
+    const { id } = req.params;
+    const updates = req.body; // JSON object where keys are columns and values are new values
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const setClause = Object.keys(updates)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(", ");
+
+    const values = Object.values(updates);
+
+    const query = `UPDATE screener_comment SET ${setClause} WHERE id = $${values.length + 1} RETURNING *;`;
+    const result = await db.query(query, [...values, id]);
 
     res.status(200).json({
       message: "Client updated successfully",
-      result: result
+      result: result,
     });
 
-  } catch (err) {
-    console.error("Error updating client:", err);
-    res.status(500).json({ message: "Error updating client", error: err.message });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
