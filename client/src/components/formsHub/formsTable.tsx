@@ -9,6 +9,7 @@ import {
   Tbody,
   Td,
   Text,
+  Checkbox,
   Th,
   Thead,
   Tr,
@@ -17,6 +18,8 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 import PrintForm from "../PrintForm";
+// Print Form does not yet work for forms Data
+import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 type FormItem = {
   id: number;
@@ -36,10 +39,28 @@ type ViewOption =
   | "Case Manager Monthly Statistics"
   | "Client Tracking Statistics (Intake Statistics)";
 
+  const tableMapping: Record<FormItem["title"], number> = {
+    "Initial Screeners": 1,
+    "Intake Statistics": 2,
+    "Front Desk Monthly Stats": 3,
+    "Case Manager Monthly Stats": 4,
+  };
+
+// I know you said to also include the formTable but I wanted to be able to treat all forms
+// with an INT id so I just pushed the ids to the right and put a marker at the front
+// For example if a row came from initial screeners and had id 2 it would become 12.
+const createHashedId = (id: number, title: FormItem["title"]) => {
+  const tableNumber = tableMapping[title];
+  return (id << 2) | tableNumber;
+};
+
+
+
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
+  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
 
   const formatDate = (x: string) => {
     const date = new Date(x);
@@ -47,6 +68,35 @@ export const FormTable = () => {
     const day = String(date.getDate()).padStart(2, "0");
     const year = date.getFullYear();
     return `${month}/${day}/${year}`;
+  };
+
+  const handleSelectAllCheckboxClick = () => {
+    if (selectedRowIds.length === 0) {
+      setSelectedRowIds(items.map((item) => createHashedId(item.id, item.title)));
+    } else {
+      setSelectedRowIds([]);
+    }
+  };
+
+
+
+  const handleRowSelect = (hashedId: number, isChecked: boolean) => {
+
+    if (isChecked) {
+      setSelectedRowIds((prev) => [...prev, hashedId]);
+    } else {
+      setSelectedRowIds((prev) => prev.filter((id) => id !== hashedId));
+    }
+    console.log(selectedRowIds);
+  };
+
+  const handleExport = async () => {
+    // handleExport is not yet functional with formsTable... unsure if that's my job.
+    try {
+      ;
+    } catch (error) {
+      console.error("Error exporting", error);
+    }
   };
 
   useEffect(() => {
@@ -109,6 +159,7 @@ export const FormTable = () => {
 
     getData();
   }, [backend]);
+
 
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
@@ -193,11 +244,23 @@ export const FormTable = () => {
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
 
       <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={baseFontSize}>
+        <TableContainer fontSize={baseFontSize} sx={{
+            overflowX: "auto",
+            maxHeight: "600px",
+            overflowY: "auto",
+            maxWidth: "100%"
+          }}>
           <Table variant="striped" colorScheme="gray">
-            <Thead>
+            <Thead zIndex={1} backgroundColor="white" position="sticky" top={0}>
               <Tr>
-                <Th>Index</Th>
+              <Th textAlign={"center"}>
+                  <Checkbox
+                    justifySelf="center"
+                    colorScheme="cyan"
+                    isChecked={selectedRowIds.length > 0}
+                    onChange={handleSelectAllCheckboxClick}
+                  />
+                </Th>
                 <Th>Date</Th>
                 <Th>Name</Th>
                 <Th minW="200px">Form Title</Th>
@@ -209,7 +272,15 @@ export const FormTable = () => {
             <Tbody>
               {filteredData.map((item, index) => (
                 <Tr key={item.id} _hover={{ bg: "gray.200" }}>
-                  <Td w="10%">{index + 1}</Td>
+                  <Td w="10%" onClick={(e) => e.stopPropagation()}
+                          >
+                          <HoverCheckbox
+  clientId={createHashedId(item.id, item.title)}
+  index={index}
+  isSelected={selectedRowIds.includes(createHashedId(item.id, item.title))}
+  onSelectionChange={handleRowSelect}
+/>
+</Td>
                   <Td w="15%">{formatDate(item.date)}</Td>
                   <Td w="20%">{item.name}</Td>
                   <Td minW="200px">{item.title}</Td>

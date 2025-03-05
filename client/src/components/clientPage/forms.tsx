@@ -13,9 +13,15 @@ import { FormsProps } from "./types";
 function Forms({ forms }: FormsProps) {
 
     return (
-        <TableContainer>
+        <TableContainer
+        sx={{
+            overflowX: "auto",
+            overflowY: "auto",
+            maxWidth: "100%",
+            border: "1px solid gray",
+          }}>
             <Table variant="simple">
-                <Thead>
+                <Thead backgroundColor="white" position="sticky" top={0}>
                 <Tr>
                     <Th>Date</Th>
                     <Th>Type</Th>
