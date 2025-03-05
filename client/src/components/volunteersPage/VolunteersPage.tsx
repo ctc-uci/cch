@@ -9,8 +9,9 @@ import {
   Button,
   HStack,
 } from '@chakra-ui/react';
-import { useBackendContext } from '../../contexts/hooks/useBackendContext';
+// import { useBackendContext } from '../../contexts/hooks/useBackendContext';
 import VolunteersStatistics from './VolunteersStatistics';
+
 const VolunteersPage = () => {
   // const { backend } = useBackendContext();
   // const [volunteers, setVolunteers] = useState([]);
@@ -41,7 +42,7 @@ const VolunteersPage = () => {
       <VStack width="30%">
         <Heading fontSize="24px">Volunteer Tracking</Heading>
         <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
-        <VolunteersStatistics/>
+        <VolunteersStatistics totalVolunteers={10} totalHours={100}/>
       </VStack>
       <VolunteersTable/>
     </HStack>

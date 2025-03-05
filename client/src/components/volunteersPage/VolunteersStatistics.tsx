@@ -1,11 +1,11 @@
 import { Box, Text } from '@chakra-ui/react';
 
-const VolunteersStatistics = () => {
+const VolunteersStatistics = ({totalVolunteers, totalHours}: {totalVolunteers: number, totalHours: number}) => {
   return (
     <>
       <Box textAlign="left" width="100%">
         <Text fontSize="lg" fontWeight="bold">Total Volunteers</Text>
-        <Text fontSize="2xl" color="blue.500">{5}</Text>
+        <Text fontSize="2xl" color="blue.500">{totalVolunteers}</Text>
       </Box>
       <Box
         borderWidth="1px"
@@ -16,7 +16,7 @@ const VolunteersStatistics = () => {
         width="100%"
       >
         <Text fontSize="lg" fontWeight="bold">Total Hours</Text>
-        <Text fontSize="2xl" color="blue.500">{10}</Text>
+        <Text fontSize="2xl" color="blue.500">{totalHours}</Text>
       </Box>
     </>
   );
