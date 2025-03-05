@@ -32,13 +32,10 @@ const VolunteersPage = () => {
   return (
     <HStack
       align="start"
-      spacing="24px"
-      paddingTop="24px"
-      paddingLeft="24px"
-      width="100%"
     >
       <VStack
       width="20%"
+      padding="24px"
       flexShrink={0}>
         <Heading fontSize="24px">Volunteer Tracking</Heading>
         <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
