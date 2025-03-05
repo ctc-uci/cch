@@ -12,41 +12,14 @@ import {
   NumberInput,
   NumberInputField,
   Select,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 
 import { useParams } from "react-router-dom";
-
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { application } from "express";
 
-// interface ClientData {
-//   name: string;
-//   cmFirstName: string;
-//   cmLastName: string;
-//   maritalStatus: string;
-//   willingness: number;
-//   employability: number;
-//   attitude: number;
-//   lengthOfSobriety?: number;
-//   completedTx?: boolean;
-//   drugTestResults?: string;
-//   homelessOne: string;
-//   homelessTwo: string;
-//   homelessThree: string;
-//   disablingCondition?: string;
-//   employment?: boolean;
-//   driversLicense?: string;
-//   totalChildren?: number;
-//   childrenInCustody?: number;
-//   lastCity?: string;
-//   acceptCcrh?: boolean;
-//   additionalComments?: string;
-// }
-
-interface clientID {
-  id: number;
-}
 
 interface caseManager {
   firstName: string;
@@ -54,10 +27,9 @@ interface caseManager {
   id: number;
 }
 
-const CommentForm: React.FC = (clientID) => {
+const CommentForm: React.FC = () => {
   const { backend } = useBackendContext();
   const [caseManagers, setCaseManagers] = useState<caseManager[]>([]);
-  // const [clientData, setClientData] = useState<ClientData>();
   const [clientFN, setClientFN] = useState<string>("");
   const [clientLN, setClientLN] = useState<string>("");
   const [clientCM, setClientCM] = useState<string>("");
@@ -81,6 +53,8 @@ const CommentForm: React.FC = (clientID) => {
   const [formID, setFormID] = useState<number>(0);
   const [initialID, setInitialID] = useState<number>(0);
   const { id } = useParams();
+
+  const toast = useToast();
 
   const fields = [
     ["Disabling Condition?", dCondition, setDCondition],
@@ -150,6 +124,7 @@ const CommentForm: React.FC = (clientID) => {
       caseManagers.map((cm) => [`${cm.firstName} ${cm.lastName}`, cm.id])
     );
 
+
     const cm_id: number = caseManagerMap.get(clientCM);
 
     try {
@@ -184,9 +159,25 @@ const CommentForm: React.FC = (clientID) => {
 
       const response2 = await backend.patch(`/initialInterview/app-status/${initialID}`, initialInterviewData)
 
+      if (response && response2) {
+        toast({
+          title: 'Comment Form Updated!',
+          description: "The comment form has now been updated with the newly inputted information!",
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+      })
+      }
 
     } catch (error) {
       console.error("Error submitting data:", error);
+      toast({
+        title: 'Error!',
+        description: error,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+    })
     }
   };
 
