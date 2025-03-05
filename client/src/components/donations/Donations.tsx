@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 // import { useNavigate } from "react-router-dom";
 import DonationsDrawer from "./donationsDrawer";
 
@@ -59,8 +59,6 @@ export const Donations = () => {
 
   const [deletes, setDeletes] = useState<[string, string][]>([]);
 
-  const [donations, setDonations] = useState<any[]>([]);
-  const [costcoDonations, setCostcoDonations] = useState<any[]>([]);
   const [allDonations, setAllDonations] = useState<any[]>([]);
   const [valueSum, setValueSum] = useState<number | null>(null);
   const [weightSum, setWeightSum] = useState<number | null>(null);
@@ -88,7 +86,7 @@ export const Donations = () => {
     if (checked) {
       setDeletes([...deletes, [id, donor]]);
     } else {
-      setDeletes(deletes.filter((deleteId) => deleteId[0] !== id && deleteId[1] !== donor));
+      setDeletes(deletes.filter((deleteId) => !(deleteId[0] === id && deleteId[1] === donor)));
     }
   };
 
@@ -112,6 +110,7 @@ export const Donations = () => {
     } catch (error) {
       console.error("Error deleting users:", error);
     }
+    setDeletes([]);
   };
 
   useEffect(() => {
@@ -194,7 +193,7 @@ export const Donations = () => {
       }
     };
     fetchData();
-  }, [backend, donor, startDate, endDate]);
+  }, [backend, donor, startDate, endDate, allDonations]);
 
   
 
@@ -303,7 +302,10 @@ export const Donations = () => {
                   //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
                     <Tr key={index}>
                       <Td>
-                        <Checkbox onChange={handleCheckboxChange(donation.id, donation.donor)}>{donation.id}</Checkbox>
+                        <Checkbox 
+                        onChange={handleCheckboxChange(donation.id, donation.donor)}
+                        isChecked={deletes.some(del => del[0] === donation.id && del[1] === donation.donor)}
+                        >{donation.id}</Checkbox>
                       </Td>
                       <Td>{donation.date}</Td>
                       <Td>{donation.donor}</Td>
