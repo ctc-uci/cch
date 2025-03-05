@@ -196,6 +196,7 @@ const VolunteersTable = () => {
         <HStack
           width="60%"
           justify="space-between"
+          spacing="10px"
         >
           <Select
             placeholder="Select Event Type"
@@ -256,58 +257,78 @@ const VolunteersTable = () => {
       >
         Reset All Filters
       </Button>
-      <TableContainer>
-        <IconButton aria-label="Download CSV">
-          <FiUpload />
-        </IconButton>
-        <Table variant="striped">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th
-                    key={header.id}
-                    cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {header.column.getCanSort() && (
-                      <Box
-                        display="inline-block"
-                        ml={1}
+      <HStack
+        width="100%"
+        justify="space-between"
+        paddingLeft="16px"
+        paddingTop="8px"
+        paddingRight="16px"
+        paddingBottom="8px"
+      >
+        <Box
+          borderWidth="1px"
+          borderRadius="12px"
+          width="100%"
+        >
+          <TableContainer>
+            <IconButton aria-label="Download CSV">
+              <FiUpload />
+            </IconButton>
+            <Table variant="striped">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {header.column.getIsSorted() === "asc" ? (
-                          <TriangleUpIcon />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <TriangleDownIcon />
-                        ) : null}
-                      </Box>
-                    )}
-                  </Th>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row) => (
-              <Tr
-                key={row.id}
-                onClick={() => handleRowClick(row.original)}
-                cursor="pointer"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <Td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => handleRowClick(row.original)}
+                    cursor="pointer"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </HStack>
       {currentlySelectedVolunteer && (
         <VolunteerDrawer
           volunteer={currentlySelectedVolunteer}

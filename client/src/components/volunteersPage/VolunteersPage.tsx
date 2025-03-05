@@ -35,8 +35,11 @@ const VolunteersPage = () => {
       spacing="24px"
       paddingTop="24px"
       paddingLeft="24px"
+      width="100%"
     >
-      <VStack>
+      <VStack
+      width="20%"
+      flexShrink={0}>
         <Heading fontSize="24px">Volunteer Tracking</Heading>
         <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
         <VolunteersStatistics
