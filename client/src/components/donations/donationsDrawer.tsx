@@ -79,7 +79,7 @@ function DonationsDrawer() {
 
   return (
     <>
-      <Button ref={btnRef} colorScheme="teal" onClick={onOpen}>
+      <Button ref={btnRef} colorScheme="teal" onClick={onOpen} sx={{ width: "250px", padding: "12px 24px" }}>
         Add Donation
       </Button>
       <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
@@ -97,7 +97,7 @@ function DonationsDrawer() {
                 }
               />
             ))}
-            <Button colorScheme="blue" onClick={handleAddDonor}>
+            <Button size="sm" colorScheme="blue" onClick={handleAddDonor}>
               Add Donor
             </Button>
           </DrawerBody>

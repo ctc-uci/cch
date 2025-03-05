@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
+import { useDisclosure } from "@chakra-ui/hooks";
 // import { useNavigate } from "react-router-dom";
 import DonationsDrawer from "./donationsDrawer";
+import EditDrawer from "./editDonationDrawer";
 
 import {
   Heading,
@@ -48,6 +50,14 @@ interface Costco {
     type: string;
   }
 
+interface Donation {
+    id: number,
+    donor: string,
+    date: Date,
+    category: string,
+    weight: number,
+    value: number,
+}
 
 export const Donations = () => {
 //   const { currentUser } = useAuthContext();
@@ -63,21 +73,60 @@ export const Donations = () => {
   const [valueSum, setValueSum] = useState<number | null>(null);
   const [weightSum, setWeightSum] = useState<number | null>(null);
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  
+  const handleRowClick = (donation: Donation) => {
+    setSelectedDonation(donation);
+    onOpen();
+  };
+
+  const handleUpdateDonation = (updatedDonation: Donation) => {
+    try {
+      if (updatedDonation.donor === "costco") {
+        const costcoDonate = {
+          id: updatedDonation.id,
+          date: updatedDonation.date,
+          amount: updatedDonation.value,
+          category: updatedDonation.category
+        };
+        backend.put(`/costcoDonations/${costcoDonate.id}`, costcoDonate);
+      }
+      else {
+        const foodDonate = {
+          id: updatedDonation.id,
+          date: updatedDonation.date,
+          category: updatedDonation.donor,
+          weight: updatedDonation.weight,
+          value: updatedDonation.value
+        };
+        backend.put(`/foodDonations/${updatedDonation.id}`, foodDonate);
+      }
+      setAllDonations(allDonations.map((donation) => {
+        if (donation.id === updatedDonation.id) {
+          return updatedDonation;
+        }
+        return donation;
+      }
+      ));
+    }
+    catch (error) {
+      console.error("Error updating donation:", error);
+    }
+  };
+
   const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDonor(event.target.value);
-    console.log(donor);
   };
 
   const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const dateValue = event.target.value;
     setStartDate(dateValue ? new Date(dateValue) : undefined);
-    console.log(startDate);
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const dateValue = event.target.value;
     setEndDate(dateValue ? new Date(dateValue) : undefined);
-    console.log(endDate);
   };
 
   const handleCheckboxChange = (id: string, donor: string) =>
@@ -178,13 +227,9 @@ export const Donations = () => {
         }
         let filteredDonations = ([...donationsData, ...costcoData]);
         if (startDate) {
-          console.log("start date");
-          console.log(startDate);
           filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) >= new Date(startDate));
         }
         if (endDate) {
-          console.log("end date");
-          console.log(endDate);
           filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) <= new Date(endDate));
         }
         setAllDonations(filteredDonations);
@@ -194,10 +239,6 @@ export const Donations = () => {
     };
     fetchData();
   }, [backend, donor, startDate, endDate, allDonations]);
-
-  
-
-//   const navigate = useNavigate();
 
   return (
     <HStack w="100%" h="100%">
@@ -241,16 +282,16 @@ export const Donations = () => {
         </HStack>
       </VStack>
 
-      <VStack w='69vw' h='100vh'>
-        <HStack bg='white' w='90%' p={3} spacing={4} align='center'>
+      <VStack w='69vw' h='95vh'>
+        <HStack w='90%' spacing={4} align='center'>
           <Select id="donorSelect" placeholder='Select Donor' w='50%' onChange={handleDonorChange}>
-            <option value='panera'>panera</option>
-            <option value='sprouts'>sprouts</option>
-            <option value='copia'>copia</option>
-            <option value='mcdonalds'>mcdonalds</option>
-            <option value='pantry'>pantry</option>
-            <option value='grand theater'>grand theater</option>
-            <option value='costco'>costco</option>
+            <option value='panera'>Panera</option>
+            <option value='sprouts'>Sprouts</option>
+            <option value='copia'>Copia</option>
+            <option value='mcdonalds'>Mcdonalds</option>
+            <option value='pantry'>Pantry</option>
+            <option value='grand theater'>Grand Theater</option>
+            <option value='costco'>Costco</option>
           </Select>
 
           <Select placeholder='Select Frequency' w='50%'>
@@ -269,19 +310,19 @@ export const Donations = () => {
         </HStack>
 
         <TableContainer
-          width = "95%"
+          width = "100%"
+          maxHeight="75%"
           sx={{
             overflowX: "auto",
             overflowY: "auto",
             maxWidth: "100%",
-            borderRadius: "10px",
-            border: "1px solid gray",
           }}
         >
           <Table variant="striped"
             sx={{
               borderCollapse: "collapse",
-              width: "100%", 
+              border: "1px solid gray",
+              width: "100%",
               // borderSpacing: "0", // Prevents border gaps
               // borderColor: "gray.300", // Ensures borders are visible
             }}
@@ -294,15 +335,16 @@ export const Donations = () => {
                 <Th>Category</Th>
                 <Th>Weight (lb)</Th>
                 <Th>Value ($)</Th>
+                <Th>Total</Th>
               </Tr>
             </Thead>
             <Tbody>
               {allDonations
                 ? allDonations.map((donation, index) => (
                   //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
-                    <Tr key={index}>
+                    <Tr key={index} onClick={() => handleRowClick(donation)}>
                       <Td>
-                        <Checkbox 
+                        <Checkbox
                         onChange={handleCheckboxChange(donation.id, donation.donor)}
                         isChecked={deletes.some(del => del[0] === donation.id && del[1] === donation.donor)}
                         >{donation.id}</Checkbox>
@@ -312,56 +354,23 @@ export const Donations = () => {
                       <Td>{donation.category}</Td>
                       <Td>{donation.weight}</Td>
                       <Td>{donation.value}</Td>
+                      <Td>{donation.weight * donation.value}</Td>
                     </Tr>
                   ))
                 : null}
             </Tbody>
           </Table>
+          <EditDrawer
+            isOpen={isOpen}
+            onClose={onClose}
+            existingDonation={selectedDonation}
+            onSubmit={handleUpdateDonation}
+          />
         </TableContainer>
 
       </VStack>
 
     </HStack>
 
-    // <VStack
-    //   spacing = {2}
-    //   align = "start"
-    //   sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
-    // >
-    //   <Heading paddingBottom = "10px">Donations</Heading>
-    //   <Heading size = "md" paddingBottom="40px">Last Updated: {}</Heading>
-    //   <TableContainer
-    //     width = "100%"
-    //     sx={{
-    //       overflowX: "auto",
-    //       maxWidth: "100%",
-    //       border: "1px solid gray"
-    //     }}
-    //   >
-    //     <Table variant="striped">
-    //       <Thead>
-    //         <Tr>
-    //           <Th>Date</Th>
-    //           <Th>Category</Th>
-    //           <Th>Weight (lb)</Th>
-    //           <Th>Value ($)</Th>
-    //         </Tr>
-    //       </Thead>
-    //       <Tbody>
-    //         {donations
-    //           ? donations.map((donation) => (
-    //             //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
-    //               <Tr key={donation.id}>
-    //                 <Td>{donation.date}</Td>
-    //                 <Td>{donation.category}</Td>
-    //                 <Td>{donation.weight}</Td>
-    //                 <Td>{donation.value}</Td>
-    //               </Tr>
-    //             ))
-    //           : null}
-    //       </Tbody>
-    //     </Table>
-    //   </TableContainer>
-    // </VStack>
   );
 };

@@ -44,7 +44,7 @@ costcoRouter.put("/:id", async (req, res) => {
             WHERE id = $4 RETURNING id`,
             [date, amount, category, id]
         );
-        res.status(200).json(keysToCamel(data));
+        res.status(200).json(keysToCamel(data[0]));
     } catch (err) {
         res.status(500).send(err.message);
     }

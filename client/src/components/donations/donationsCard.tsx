@@ -20,7 +20,8 @@ function DonationInputs({ subDonation, index, onChange }: {
     onChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   }) {
       return (
-          <CardBody style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
+          <CardBody display="flex" >
+            <CardBody>
               <Text>Date Donated</Text>
               <Input
                   name="date"
@@ -28,7 +29,9 @@ function DonationInputs({ subDonation, index, onChange }: {
                   value={subDonation.date.toISOString().split('T')[0]} // Format date
                   onChange={(e) => onChange(index, e)}
               />
-  
+            </CardBody>
+              
+            <CardBody>
               <Text>Category</Text>
               <Select
                   name="category"
@@ -39,7 +42,8 @@ function DonationInputs({ subDonation, index, onChange }: {
                   <option value="food">Food</option>
                   <option value="client">Client</option>
               </Select>
-  
+            </CardBody>
+            <CardBody>
               <Text>Total Weight</Text>
               <InputGroup>
                   <Input
@@ -51,7 +55,8 @@ function DonationInputs({ subDonation, index, onChange }: {
                   />
                   <InputRightAddon children="lbs" />
               </InputGroup>
-  
+            </CardBody>
+            <CardBody>
               <Text>Value per lbs</Text>
               <InputGroup>
                   <InputLeftAddon children="$" />
@@ -63,6 +68,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                       onChange={(e) => onChange(index, e)}
                   />
               </InputGroup>
+              </CardBody>
           </CardBody>
       );
   }
@@ -131,8 +137,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
                 key={index}
                 subDonation={sub}
                 index={index}
-                onChange={handleSubDonationChange}
-                />
+                onChange={handleSubDonationChange}/>
             ))}
           </CardBody>
         <CardFooter color="blue.500" fontWeight="bold" onClick={handleAddDonation}>
