@@ -5,23 +5,26 @@ import { db } from "../db/db-pgp";
 
 export const volunteersRouter = Router();
 
-// GET route to get all volunteers
+// GET route to get volunteers
 volunteersRouter.get("/", async (req, res) => {
   try {
-    const users = await db.query(`SELECT * FROM volunteers ORDER BY id ASC`);
-    res.status(200).json(keysToCamel(users));
-  } catch (err) {
-    res.status(400).send(err.message);
-  }
-});
-// GET route to get all volunteers from a specific event type
-volunteersRouter.get("/:event_type", async (req, res) => {
-  try {
-    const { event_type } = req.params;
-    const users = await db.query(
-      `SELECT * FROM volunteers WHERE event_type = $1 ORDER BY id ASC`,
-      [event_type]
-    );
+    const { eventType } = req.query;
+    const query = eventType
+      ? `
+          SELECT *,
+          ROUND(CAST(hours * value AS DECIMAL), 2) as total
+          FROM volunteers
+          WHERE event_type = $1
+          ORDER BY id ASC
+        `
+      : `
+          SELECT *,
+          ROUND(CAST(hours * value AS DECIMAL), 2) as total
+          FROM volunteers
+          ORDER BY id ASC
+        `;
+
+    const users = await db.query(query, eventType ? [eventType] : []);
     res.status(200).json(keysToCamel(users));
   } catch (err) {
     res.status(400).send(err.message);
@@ -44,7 +47,7 @@ volunteersRouter.get("/total-hours", async (req, res) => {
 volunteersRouter.get("/total-volunteers", async (req, res) => {
   try {
     const data = await db.query(
-      `SELECT COUNT(DISTINCT first_name, last_name, email) AS total_volunteers FROM volunteers`
+      `SELECT COUNT(DISTINCT (first_name, last_name, email)) AS total_volunteers FROM volunteers`
     );
     res.status(200).json(keysToCamel(data[0]));
   } catch (err) {
