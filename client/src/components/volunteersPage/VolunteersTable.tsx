@@ -31,6 +31,8 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
 import VolunteerAddDrawer from "./VolunteerAddDrawer";
+import VolunteerEditDrawer from "./VolunteerEditDrawer";
+
 
 const VolunteersTable = () => {
   const { backend } = useBackendContext();
@@ -149,6 +151,16 @@ const VolunteersTable = () => {
       {
         accessorKey: "total",
         header: "Total ($)",
+      },
+      {
+        accessorKey: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <VolunteerEditDrawer
+            volunteer={row.original}
+            onEditSuccess={() => setToggleRefresh(!toggleRefresh)}
+          />
+        ),
       },
     ],
     [selectedVolunteers, volunteers, handleCheckboxChange]
