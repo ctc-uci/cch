@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Flex, VStack } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import VolunteersStatistics from "./VolunteersStatistics";
@@ -29,19 +29,17 @@ const VolunteersPage = () => {
   }, [backend]);
 
   return (
-    <HStack align="start">
-      <VStack
-        width="25%"
-        padding="24px"
-        flexShrink={0}
-      >
+    <Flex align="start">
+      <VStack width="25%" padding="24px">
         <VolunteersStatistics
           totalVolunteers={totalVolunteers}
           totalHours={totalHours}
         />
       </VStack>
-      <VolunteersTable />
-    </HStack>
+      <VStack width="74%" paddingTop="60px" spacing="14px">
+        <VolunteersTable />
+      </VStack>
+    </Flex>
   );
 };
 

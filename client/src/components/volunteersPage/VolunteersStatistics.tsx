@@ -22,6 +22,7 @@ const VolunteersStatistics = ({
     <VStack
       gap="24px"
       w="100%"
+      align="left"
     >
       <VStack align="left" spacing="4px">
         <Text
@@ -30,7 +31,7 @@ const VolunteersStatistics = ({
         >
           Volunteer Tracking
         </Text>
-        <Text size="med">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text fontSize="16px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
       </VStack>
       <Stat
         border="1px solid #E2E8F0"

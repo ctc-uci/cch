@@ -202,11 +202,7 @@ const VolunteersTable = () => {
   if (error) return <Text>Error: {error}</Text>;
 
   return (
-    <VStack
-      width="73%"
-      paddingTop="60px"
-      spacing="14px"
-    >
+    <>
       <HStack
         width="100%"
         justify="space-between"
@@ -293,7 +289,10 @@ const VolunteersTable = () => {
         padding="12px"
       >
         <TableContainer>
-          <HStack width="100%" justify="space-between">
+          <HStack
+            width="100%"
+            justify="space-between"
+          >
             <HStack spacing="0px">
               <Box
                 display="flex"
@@ -399,19 +398,19 @@ const VolunteersTable = () => {
             </Table>
           </Box>
         </TableContainer>
+        {currentlySelectedVolunteer && (
+          <VolunteerDrawer
+            volunteer={currentlySelectedVolunteer}
+            onFormSubmitSuccess={refreshPage}
+            isOpen={isOpen}
+            onClose={() => {
+              setCurrentlySelectedVolunteer(null);
+              onClose();
+            }}
+          />
+        )}
       </Box>
-      {currentlySelectedVolunteer && (
-        <VolunteerDrawer
-          volunteer={currentlySelectedVolunteer}
-          onFormSubmitSuccess={refreshPage}
-          isOpen={isOpen}
-          onClose={() => {
-            setCurrentlySelectedVolunteer(null);
-            onClose();
-          }}
-        />
-      )}
-    </VStack>
+    </>
   );
 };
 
