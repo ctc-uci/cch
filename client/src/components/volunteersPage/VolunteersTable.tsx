@@ -29,6 +29,12 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+import {
+  MdFileUpload,
+  MdImportExport,
+  MdOutlineFilterAlt,
+  MdOutlineManageSearch,
+} from "react-icons/md";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
@@ -142,17 +148,25 @@ const VolunteersTable = () => {
         },
       },
       {
-        accessorKey: "firstName",
-        header: "First Name",
+        accessorKey: "volunteerName",
+        header: "Volunteer Name",
+        cell: ({ row }) => {
+          const firstName = row.original.firstName;
+          const lastName = row.original.lastName;
+          return `${firstName} ${lastName}`;
+        },
+        sortingFn: (rowA, rowB) => {
+          const nameA =
+            `${rowA.original.firstName} ${rowA.original.lastName}`.toLowerCase();
+          const nameB =
+            `${rowB.original.firstName} ${rowB.original.lastName}`.toLowerCase();
+          return nameA.localeCompare(nameB);
+        },
       },
-      {
-        accessorKey: "lastName",
-        header: "Last Name",
-      },
-      {
-        accessorKey: "email",
-        header: "Email",
-      },
+      // {
+      //   accessorKey: "email",
+      //   header: "Email",
+      // },
       {
         accessorKey: "eventType",
         header: "Event Type",
@@ -279,9 +293,47 @@ const VolunteersTable = () => {
         padding="12px"
       >
         <TableContainer>
-          <IconButton aria-label="Download CSV">
-            <FiUpload />
-          </IconButton>
+          <HStack width="100%" justify="space-between">
+            <HStack spacing="0px">
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdOutlineFilterAlt size="16px" />
+                <Text ml="8px">Filter</Text>
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdImportExport size="16px" />
+                <Text ml="8px">Sort</Text>
+              </Box>
+            </HStack>
+            <HStack spacing="0px">
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdOutlineManageSearch size="24px" />
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdFileUpload size="16px" />
+                <Text ml="8px">Export</Text>
+              </Box>
+            </HStack>
+          </HStack>
           <Box
             borderWidth="1px"
             borderRadius="12px"
@@ -330,8 +382,11 @@ const VolunteersTable = () => {
                     cursor="pointer"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <Td key={cell.id}>
-
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
