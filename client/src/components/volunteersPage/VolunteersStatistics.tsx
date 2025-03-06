@@ -1,4 +1,14 @@
-import { Box, Text } from "@chakra-ui/react";
+import {
+  Box,
+  HStack,
+  Stat,
+  StatLabel,
+  StatNumber,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+
+import { MdOutlineAccessAlarm, MdOutlineEmojiPeople } from "react-icons/md";
 
 const VolunteersStatistics = ({
   totalVolunteers,
@@ -8,50 +18,58 @@ const VolunteersStatistics = ({
   totalHours: number;
 }) => {
   return (
-    <>
-      <Box
-        borderWidth="1px"
-        borderRadius="12px"
-        padding="16px"
-        boxShadow="md"
-        textAlign="center"
-        width="100%"
+    <VStack
+      gap="24px"
+      w="100%"
+    >
+      <Stat
+        border="1px solid #E2E8F0"
+        borderRadius="8px"
+        p={4}
+        w="100%"
+        gap="16px"
       >
-        <Text
-          fontSize="lg"
+        <StatNumber
+          fontSize={"3xl"}
           fontWeight="bold"
-        >
-          Total Volunteers
-        </Text>
-        <Text
-          fontSize="2xl"
-          color="blue.500"
         >
           {totalVolunteers}
-        </Text>
-      </Box>
-      <Box
-        borderWidth="1px"
+        </StatNumber>
+        <StatLabel>
+          <HStack spacing={1}>
+            <MdOutlineEmojiPeople
+              color="#4397CD"
+              size="20px"
+            />
+            <Text fontWeight="normal">Total Volunteers</Text>
+          </HStack>
+        </StatLabel>
+      </Stat>
+
+      <Stat
+        border="2px solid #CBD5E0"
         borderRadius="12px"
-        padding="16px"
-        boxShadow="md"
-        textAlign="center"
-        width="100%"
+        p={4}
+        w="100%"
+        gap="16px"
       >
-        <Text
-          fontSize="lg"
+        <StatNumber
+          fontSize={"3xl"}
           fontWeight="bold"
         >
-          Total Hours
-        </Text>
-        <Text
-          fontSize="2xl"
-          color="blue.500"
-        >
           {totalHours}
-        </Text>
-      </Box>
-    </>
+        </StatNumber>
+        <StatLabel>
+          <HStack spacing={1}>
+            <MdOutlineAccessAlarm
+              color="#4397CD"
+              size="20px"
+            />
+            <Text fontWeight="normal">Total Hours</Text>
+          </HStack>
+        </StatLabel>
+      </Stat>
+    </VStack>
   );
 };
 
