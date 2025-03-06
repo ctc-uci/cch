@@ -17,6 +17,7 @@ import {
   Thead,
   Tr,
   useDisclosure,
+  VStack,
 } from "@chakra-ui/react";
 
 import {
@@ -187,19 +188,24 @@ const VolunteersTable = () => {
   if (error) return <Text>Error: {error}</Text>;
 
   return (
-    <Box padding="24px">
+    <VStack
+      width="73%"
+      paddingTop="60px"
+      spacing="14px"
+    >
       <HStack
-        width="80%"
+        width="100%"
         justify="space-between"
-        padding="24px"
+        align="left"
       >
-        <HStack spacing="10px">
+        <HStack spacing="12px">
           <Select
             placeholder="Select Event Type"
             value={eventTypeFilter}
             onChange={(e) => {
               setEventTypeFilter(e.target.value);
             }}
+            width="auto"
           >
             {eventTypes.map((eventType) => (
               <option
@@ -210,12 +216,18 @@ const VolunteersTable = () => {
               </option>
             ))}
           </Select>
-          <Select placeholder="Select Frequency">
+          <Select
+            placeholder="Select Frequency"
+            width="auto"
+          >
             <option value="option1">Option 1</option>
             <option value="option2">Option 2</option>
             <option value="option3">Option 3</option>
           </Select>
-          <Select placeholder="Select Date Range">
+          <Select
+            placeholder="Select Date Range"
+            width="auto"
+          >
             <option value="option1">Option 1</option>
             <option value="option2">Option 2</option>
             <option value="option3">Option 3</option>
@@ -245,75 +257,92 @@ const VolunteersTable = () => {
           />
         </HStack>
       </HStack>
-      <Button
-        onClick={handleResetDropdowns}
-        size="sm"
-        variant="outline"
-        ml={4}
+      <HStack
+        width="100%"
+        justify="flex-start"
       >
-        Reset All Filters
-      </Button>
+        <Text
+          onClick={handleResetDropdowns}
+          size="med"
+          color="#3182CE"
+          variant="outline"
+          textDecoration="underline"
+        >
+          Reset All Dropdowns
+        </Text>
+      </HStack>
       <Box
         borderWidth="1px"
         borderRadius="12px"
-        width="80%"
+        width="100%"
+        borderColor="#E2E8F0"
+        padding="12px"
       >
         <TableContainer>
           <IconButton aria-label="Download CSV">
             <FiUpload />
           </IconButton>
-          <Table variant="striped">
-            <Thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {table.getRowModel().rows.map((row) => (
-                <Tr
-                  key={row.id}
-                  onClick={() => handleRowClick(row.original)}
-                  cursor="pointer"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+          <Box
+            borderWidth="1px"
+            borderRadius="12px"
+            width="100%"
+            borderColor="#E2E8F0"
+            overflow="auto"
+          >
+            <Table variant="striped">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => handleRowClick(row.original)}
+                    cursor="pointer"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td key={cell.id}>
+
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
         </TableContainer>
       </Box>
       {currentlySelectedVolunteer && (
@@ -327,7 +356,7 @@ const VolunteersTable = () => {
           }}
         />
       )}
-    </Box>
+    </VStack>
   );
 };
 

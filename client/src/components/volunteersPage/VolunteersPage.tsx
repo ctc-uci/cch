@@ -23,22 +23,18 @@ const VolunteersPage = () => {
       } catch (err) {
         console.error(err);
       }
-    }
+    };
 
     fetchData();
   }, [backend]);
 
-
   return (
-    <HStack
-      align="start"
-    >
+    <HStack align="start">
       <VStack
-      width="20%"
-      padding="24px"
-      flexShrink={0}>
-        <Heading fontSize="24px">Volunteer Tracking</Heading>
-        <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        width="25%"
+        padding="24px"
+        flexShrink={0}
+      >
         <VolunteersStatistics
           totalVolunteers={totalVolunteers}
           totalHours={totalHours}
