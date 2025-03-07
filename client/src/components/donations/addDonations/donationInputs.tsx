@@ -1,6 +1,6 @@
-import React, {useState} from 'react'
+import React from 'react'
 import { Select } from '@chakra-ui/react'
-import { Card, CardHeader, CardBody, CardFooter, Text,  Input, InputGroup, InputRightAddon, InputLeftAddon} from '@chakra-ui/react'
+import { CardBody, Text,  Input, InputGroup, InputRightAddon, InputLeftAddon} from '@chakra-ui/react'
 
 
 export interface DonationSub {
@@ -46,7 +46,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                       name="weight"
                       type="number"
                       placeholder="XX"
-                      value={isNaN(subDonation.weight) ? "" : subDonation.weight}
+                      value={isNaN(subDonation.weight) || subDonation.weight === -1 ? "" : subDonation.weight}
                       onChange={(e) => onChange(index, e)}
                   />
                   <InputRightAddon children="lbs" />
@@ -60,7 +60,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                       name="value"
                       type="number"
                       placeholder="0.00"
-                      value={isNaN(subDonation.value) ? "" : subDonation.value}
+                      value={isNaN(subDonation.value) || subDonation.value === -1 ? "" : subDonation.value}
                       onChange={(e) => onChange(index, e)}
                   />
               </InputGroup>

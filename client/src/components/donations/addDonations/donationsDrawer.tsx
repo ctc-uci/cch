@@ -27,7 +27,7 @@ function DonationsDrawer() {
   const [donations, setDonations] = useState<Donation[]>(
     [{
       donor: '',
-      sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],
+      sub: [{ date: new Date(), category: '', weight: -1, value: -1 }],
     }]);
   const btnRef = React.useRef()
   const { backend } = useBackendContext();
@@ -39,7 +39,7 @@ function DonationsDrawer() {
       ...prevDonations,
       {
         donor: '',
-        sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],
+        sub: [{ date: new Date(), category: '', weight: -1, value: -1 }],
     },
     ]);
   };
@@ -60,8 +60,44 @@ function DonationsDrawer() {
               amount: sub.value,
               category: sub.category
             };   
-            await backend.post("/costcoDonations", Costco);
+            if (Costco.amount === - 1 || Costco.category === "") {
+              toast({
+                title: "Missing Information",
+                description: "There was missing information.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+              });
+            } else {
+              await backend.post("/costcoDonations", Costco);
+              const currentTime = new Date();
+              let hours = currentTime.getHours();
+              let minutes = currentTime.getMinutes();
+              const ampm = hours >= 12 ? 'PM' : 'AM';
+
+              hours = hours % 12;
+              hours = hours ? hours : 12;
+              minutes = minutes < 10 ? '0' + minutes : minutes;
+              const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split('T')[0]}`;
+              toast({
+                title: "Donation Added",
+                description: `The donation has been successfully added into the database at ${formattedTime}.`,
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+              });
+              closeDrawer();
+            }
+            
           } catch (err) {
+            toast({
+              title: "Donation Not Added",
+              description: "There was something wrong that happened and the donation was not added.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            closeDrawer();
             console.error(err);
           }
         }
@@ -75,8 +111,45 @@ function DonationsDrawer() {
               value: sub.value,
               category: donation.donor
             };
-            await backend.post("/foodDonations", Food);
+            if (Food.weight === - 1 || Food.value === -1 || Food.category === "") {
+              toast({
+                title: "Missing Information",
+                description: "There was missing information.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+              });
+            } else {
+              await backend.post("/foodDonations", Food);
+              const currentTime = new Date();
+              let hours = currentTime.getHours();
+              let minutes = currentTime.getMinutes();
+              const ampm = hours >= 12 ? 'PM' : 'AM';
+
+              hours = hours % 12;
+              hours = hours ? hours : 12;
+              minutes = minutes < 10 ? '0' + minutes : minutes;
+              const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split('T')[0]}`;
+
+              toast({
+                title: "Donation Added",
+                description: `The donation has been successfully added into the database at ${formattedTime}.`,
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+              });
+              closeDrawer();
+            }
+    
           } catch (err) {
+            toast({
+              title: "Donation Not Added",
+              description: "There was something wrong that happened and the donation was not added.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            closeDrawer();
             console.error(err);
         }
         }
@@ -84,16 +157,17 @@ function DonationsDrawer() {
       }
     }
   };
-
+  const resetData = () => {
+    setDonations([{donor: '', sub: [{ date: new Date(), category: '', weight: -1, value: -1 }],}])
+  }
   return (
     <>
-      <Button ref={btnRef} colorScheme="teal" onClick={openDrawer} sx={{ width: "250px", padding: "12px 24px" }}>
+      <Button ref={btnRef} colorScheme="blue" onClick={openDrawer} sx={{ width: "250px", padding: "12px 24px" }}>
         Add Donation
       </Button>
-      <Drawer isOpen={isDrawerOpen} placement="right" size="lg" onClose={closeDrawer} closeOnOverlayClick={false}>
+      <Drawer isOpen={isDrawerOpen} placement="right" onClose={closeDrawer} closeOnOverlayClick={false} size="xl">
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton />
           <DrawerHeader>Add Donations</DrawerHeader>
           <DrawerBody>
             {donations.map((donation, index) => (
@@ -113,7 +187,7 @@ function DonationsDrawer() {
             <Button variant="outline" mr={3} onClick={() => {openModal();}}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={() => { handleSubmitAllDonations(); closeDrawer(); }}>
+            <Button colorScheme="blue" onClick={() => { handleSubmitAllDonations(); resetData();}}>
               Submit
             </Button>
           </DrawerFooter>
@@ -131,7 +205,7 @@ function DonationsDrawer() {
             <Button variant="outline" mr={3} onClick={closeModal}>
               Cancel
             </Button>
-            <Button colorScheme="blue" mr={3} onClick={() => {setDonations([{donor: '', sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],}]); closeModal(); closeDrawer();}}>
+            <Button colorScheme="blue" mr={3} onClick={() => {resetData(); closeModal(); closeDrawer();}}>
               Yes
             </Button>
           </ModalFooter>

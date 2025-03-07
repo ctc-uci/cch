@@ -35,7 +35,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
         const newSubDonations = [...prevDonation.sub];
         newSubDonations[index] = {
             ...newSubDonations[index],
-            [name]: name === 'weight' || name === 'value' ? parseFloat(value) || 0 : value,
+            [name]: name === 'weight' || name === 'value' ? parseFloat(value) || -1 : value,
         };
         const updatedDonation = { ...prevDonation, sub: newSubDonations };
         onSubmit(updatedDonation);
@@ -45,7 +45,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
     const handleAddDonation = () => {
         setDonation((prevDonation) => ({
             ...prevDonation,
-            sub: [...prevDonation.sub, { date: new Date(), category: '', weight: 0, value: 0 }],
+            sub: [...prevDonation.sub, { date: new Date(), category: '', weight: -1, value: -1 }],
         }));
     };
     
@@ -76,7 +76,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
                 onChange={handleSubDonationChange}/>
             ))}
           </CardBody>
-        <CardFooter color="blue.500" fontWeight="bold" onClick={handleAddDonation}>
+        <CardFooter color="blue.500" fontWeight="bold" onClick={handleAddDonation} width="200px">
           + Add Donation
         </CardFooter>
       </Card>
