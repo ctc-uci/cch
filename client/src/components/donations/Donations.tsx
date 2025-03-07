@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDisclosure } from "@chakra-ui/hooks";
 // import { useNavigate } from "react-router-dom";
-import DonationsDrawer from "./donationsDrawer";
+import DonationsDrawer from "./addDonations/donationsDrawer";
 import EditDrawer from "./editDonationDrawer";
 
 import {

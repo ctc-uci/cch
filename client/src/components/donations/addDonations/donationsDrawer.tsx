@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import { useDisclosure } from '@chakra-ui/hooks'
+import { useDisclosure } from '@chakra-ui/hooks';
 import {
   Drawer,
   DrawerBody,
@@ -9,12 +9,21 @@ import {
   DrawerContent,
   DrawerCloseButton,
   Button,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalHeader,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
 } from '@chakra-ui/react'
 import DonationCard, {Donation} from './donationsCard'
 
-import { useBackendContext } from '../../contexts/hooks/useBackendContext';
+import { useBackendContext } from '../../../contexts/hooks/useBackendContext';
 function DonationsDrawer() {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isDrawerOpen, onOpen: openDrawer, onClose: closeDrawer } = useDisclosure();
+  const { isOpen: isModalOpen, onOpen: openModal, onClose: closeModal } = useDisclosure();
+  //const { isOpen, onOpen, onClose } = useDisclosure();
   const [donations, setDonations] = useState<Donation[]>(
     [{
       donor: '',
@@ -22,6 +31,7 @@ function DonationsDrawer() {
     }]);
   const btnRef = React.useRef()
   const { backend } = useBackendContext();
+  const toast = useToast();
 
 
   const handleAddDonor = () => {
@@ -32,7 +42,6 @@ function DonationsDrawer() {
         sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],
     },
     ]);
-    console.log(donations);
   };
 
   const handleDonationSubmit = (updatedDonation: Donation, index: number) => {
@@ -67,7 +76,6 @@ function DonationsDrawer() {
               category: donation.donor
             };
             await backend.post("/foodDonations", Food);
-            console.log(Food);
           } catch (err) {
             console.error(err);
         }
@@ -79,10 +87,10 @@ function DonationsDrawer() {
 
   return (
     <>
-      <Button ref={btnRef} colorScheme="teal" onClick={onOpen} sx={{ width: "250px", padding: "12px 24px" }}>
+      <Button ref={btnRef} colorScheme="teal" onClick={openDrawer} sx={{ width: "250px", padding: "12px 24px" }}>
         Add Donation
       </Button>
-      <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
+      <Drawer isOpen={isDrawerOpen} placement="right" size="lg" onClose={closeDrawer} closeOnOverlayClick={false}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
@@ -102,15 +110,33 @@ function DonationsDrawer() {
             </Button>
           </DrawerBody>
           <DrawerFooter>
-            <Button variant="outline" mr={3} onClick={onClose}>
+            <Button variant="outline" mr={3} onClick={() => {openModal();}}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmitAllDonations, onClose}>
+            <Button colorScheme="blue" onClick={() => { handleSubmitAllDonations(); closeDrawer(); }}>
               Submit
             </Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
+
+      <Modal isOpen={isModalOpen} onClose={closeModal}>
+        <ModalOverlay/>
+        <ModalContent>
+          <ModalHeader>Cancel Adding Donations</ModalHeader>
+          <ModalBody>
+            Are you sure? You can't undo this action afterwards.
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" mr={3} onClick={closeModal}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" mr={3} onClick={() => {setDonations([{donor: '', sub: [{ date: new Date(), category: '', weight: 0, value: 0 }],}]); closeModal(); closeDrawer();}}>
+              Yes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </>
   );
 }
