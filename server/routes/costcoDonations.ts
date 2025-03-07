@@ -22,6 +22,17 @@ costcoRouter.get("/", async (req, res) => {
     }
 });
 
+costcoRouter.get("/valueSum", async (req, res) => {
+  try {
+    // Query database 
+    const data = await db.query(
+        `SELECT SUM(amount) FROM costco_donations`,
+    );
+    res.status(200).send(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
 costcoRouter.post("/", async (req, res) => {
     try {
       const {date, amount, category} = req.body;

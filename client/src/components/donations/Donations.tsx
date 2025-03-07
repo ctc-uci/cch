@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useDisclosure } from "@chakra-ui/hooks";
 // import { useNavigate } from "react-router-dom";
 import DonationsDrawer from "./donationsDrawer";
@@ -165,8 +165,10 @@ export const Donations = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesResponse = await backend.get("/foodDonations/valueSum");
-        setValueSum(valuesResponse.data[0].sum);
+        const valuesFoodResponse = await backend.get("/foodDonations/valueSum");
+        const valuesCostcoResponse = await backend.get("/costcoDonations/valueSum");
+        const valuesResponse = Number(valuesFoodResponse.data[0].sum) + Number(valuesCostcoResponse.data[0].sum);
+        setValueSum(valuesResponse);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -271,11 +273,11 @@ export const Donations = () => {
         justify="center"
         >
           <Stat>
-              <StatNumber fontSize={"3xl"} fontWeight="bold">${weightSum}</StatNumber>
+              <StatNumber fontSize={"3xl"} fontWeight="bold">{weightSum}</StatNumber>
               <StatLabel>
                 <HStack spacing={1}>
                   <FaBalanceScale color="#4397CD"/>
-                  <span>Total Value</span>
+                  <span>Total Weight (lbs)</span>
                 </HStack>
               </StatLabel>
           </Stat>
@@ -323,8 +325,6 @@ export const Donations = () => {
               borderCollapse: "collapse",
               border: "1px solid gray",
               width: "100%",
-              // borderSpacing: "0", // Prevents border gaps
-              // borderColor: "gray.300", // Ensures borders are visible
             }}
           >
             <Thead>
@@ -341,20 +341,21 @@ export const Donations = () => {
             <Tbody>
               {allDonations
                 ? allDonations.map((donation, index) => (
-                  //   <Tr key={client.id} onClick={() => navigate(``)} style={{ cursor: "pointer" }}>
-                    <Tr key={index} onClick={() => handleRowClick(donation)}>
+                    <Tr key={index}>
                       <Td>
                         <Checkbox
-                        onChange={handleCheckboxChange(donation.id, donation.donor)}
+                        onChange={
+                          handleCheckboxChange(donation.id, donation.donor)
+                        }
                         isChecked={deletes.some(del => del[0] === donation.id && del[1] === donation.donor)}
                         >{donation.id}</Checkbox>
                       </Td>
-                      <Td>{donation.date}</Td>
-                      <Td>{donation.donor}</Td>
-                      <Td>{donation.category}</Td>
-                      <Td>{donation.weight}</Td>
-                      <Td>{donation.value}</Td>
-                      <Td>{donation.weight * donation.value}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.date}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.category}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.weight * donation.value}</Td>
                     </Tr>
                   ))
                 : null}

@@ -105,7 +105,7 @@ function DonationsDrawer() {
             <Button variant="outline" mr={3} onClick={onClose}>
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSubmitAllDonations}>
+            <Button colorScheme="blue" onClick={handleSubmitAllDonations, onClose}>
               Submit
             </Button>
           </DrawerFooter>

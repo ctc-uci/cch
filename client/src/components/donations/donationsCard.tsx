@@ -26,7 +26,7 @@ function DonationInputs({ subDonation, index, onChange }: {
               <Input
                   name="date"
                   type="date"
-                  value={subDonation.date.toISOString().split('T')[0]} // Format date
+                  value={subDonation.date instanceof Date ? subDonation.date.toISOString().split('T')[0] : ''}
                   onChange={(e) => onChange(index, e)}
               />
             </CardBody>

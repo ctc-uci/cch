@@ -17,7 +17,9 @@ import {
   VStack,
   Text,
   Select,
-  Input
+  Input,
+  Grid,
+  Divider,
 } from '@chakra-ui/react';
 
 interface Donation {
@@ -68,51 +70,61 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
           <DrawerBody>
             <Card>
                 <CardBody>
-                    <HStack>
-                        <VStack>
-                            <Text>Donor</Text>
-                            <Select
+                <VStack spacing={4} align="stretch">
+                    <Grid templateColumns="40% 55%" gap={6} alignItems="center">
+                        <Text textAlign="left" fontWeight="bold">Donor</Text>
+                        <Select
                             id="donorSelect"
                             name="donor"
-                            placeholder='Select Donor'
+                            placeholder="Select Donor"
                             onChange={handleChange}
-                            value={donation ? donation.donor : ''}
-                            >
-                                <option value='panera'>Panera</option>
-                                <option value='sprouts'>Sprouts</option>
-                                <option value='copia'>Copia</option>
-                                <option value='mcdonalds'>Mcdonalds</option>
-                                <option value='pantry'>Pantry</option>
-                                <option value='grand theater'>Grand Theater</option>
-                                <option value='costco'>Costco</option>
-                            </Select>
-                        </VStack>
-                    </HStack>
-                    <HStack>
-                        <VStack>
-                            <Text>Date Donated</Text>
-                            <Input type="date" name="date" onChange={handleChange} value={donation && donation.date instanceof Date ? donation.date.toISOString().split('T')[0] : ''}/>
-                        </VStack>
-                        <VStack w="full">
-                            <Text>Type</Text>
-                            <Select
-                                name="type"
-                                onChange={handleChange}
-                                value={donation ? donation.category : ''}
-                            >
-                                <option value='food'>Food</option>
-                                <option value='client'>Client</option>
-                            </Select>
-                        </VStack>
-                        <VStack>
-                            <Text>Weight</Text>
-                            <Input type="number" name="weight" onChange={handleChange} value={donation ? donation.weight : ''}/>
-                        </VStack>
-                        <VStack>
-                            <Text>Value</Text>
-                            <Input type="number" name="value" onChange={handleChange} value={donation ? donation.value : ''}/>
-                        </VStack>
-                    </HStack>
+                            value={donation ? donation.donor : ""}
+                        >
+                            <option value="panera">Panera</option>
+                            <option value="sprouts">Sprouts</option>
+                            <option value="copia">Copia</option>
+                            <option value="mcdonalds">McDonald's</option>
+                            <option value="pantry">Pantry</option>
+                            <option value="grand theater">Grand Theater</option>
+                            <option value="costco">Costco</option>
+                        </Select>
+
+                        <Text textAlign="left" fontWeight="bold">Date Donated</Text>
+                        <Input 
+                            type="date" 
+                            name="date" 
+                            onChange={handleChange} 
+                            value={donation && donation.date instanceof Date ? donation.date.toISOString().split("T")[0] : ""} 
+                        />
+
+                        <Text textAlign="left" fontWeight="bold">Type</Text>
+                        <Select
+                            name="type"
+                            onChange={handleChange}
+                            value={donation ? donation.category : ""}
+                        >
+                            <option value="food">Food</option>
+                            <option value="client">Client</option>
+                        </Select>
+
+                        <Text textAlign="left" fontWeight="bold">Weight</Text>
+                        <Input 
+                            type="number" 
+                            name="weight" 
+                            onChange={handleChange} 
+                            value={donation ? donation.weight : ""}
+                        />
+
+                        <Text textAlign="left" fontWeight="bold">Value</Text>
+                        <Input 
+                            type="number" 
+                            name="value" 
+                            onChange={handleChange} 
+                            value={donation ? donation.value : ""}
+                        />
+                        <Divider/>
+                    </Grid>
+                </VStack>
                 </CardBody>
             </Card>
           </DrawerBody>
