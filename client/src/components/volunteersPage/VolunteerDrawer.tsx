@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
+  Box,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerCloseButton,
@@ -11,8 +13,13 @@ import {
   DrawerOverlay,
   FormControl,
   FormLabel,
+  HStack,
   Input,
+  InputGroup,
+  InputLeftAddon,
   Select,
+  Text,
+  useDisclosure,
   useToast,
   VStack,
 } from "@chakra-ui/react";
@@ -21,6 +28,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { eventTypes } from "../../types/volunteer";
 import type { Volunteer, VolunteerForm } from "../../types/volunteer";
 import { formatDateForInput } from "../../utils/dateUtils";
+import ConfirmCancelModal from "./ConfirmCancelModal";
 
 interface VolunteerDrawerProps {
   onFormSubmitSuccess: () => void;
@@ -28,6 +36,25 @@ interface VolunteerDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+interface FormFieldProps {
+  label: string;
+  isRequired?: boolean;
+  children: React.ReactNode;
+}
+
+const FormField = ({ label, isRequired, children }: FormFieldProps) => (
+  <FormControl isRequired={isRequired}>
+    <HStack
+      justify="space-between"
+      align="center"
+      width="100%"
+    >
+      <FormLabel margin="0">{label}</FormLabel>
+      {children}
+    </HStack>
+  </FormControl>
+);
 
 const VolunteerDrawer = ({
   onFormSubmitSuccess,
@@ -47,6 +74,26 @@ const VolunteerDrawer = ({
     value: volunteer?.value.toString() || "",
   };
   const [formData, setFormData] = useState<VolunteerForm>(initialForm);
+  const [totalValue, setTotalValue] = useState(0);
+  const {
+    isOpen: isConfirmOpen,
+    onOpen: onConfirmOpen,
+    onClose: onConfirmClose,
+  } = useDisclosure();
+  const isEditMode = volunteer ? true : false;
+
+  useEffect(() => {
+    const hours = Number(formData.hours) || 0;
+    const value = Number(formData.value) || 0;
+    setTotalValue(hours * value);
+  }, [formData.hours, formData.value]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async () => {
     try {
@@ -76,16 +123,16 @@ const VolunteerDrawer = ({
       onClose();
 
       toast({
-        title: volunteer ? "Volunteer Updated" : "Volunteer Added",
-        description: `The volunteer has successfully been ${volunteer ? "updated" : "added"} in the database at ${currentTime}.`,
+        title: isEditMode ? "Volunteer Updated" : "Volunteer Added",
+        description: `The volunteer has successfully been ${isEditMode ? "updated" : "added"} in the database at ${currentTime}.`,
         status: "success",
         duration: 3000,
         isClosable: true,
       });
     } catch (err) {
       toast({
-        title: volunteer ? "Volunteer Not Updated" : "Volunteer Not Added",
-        description: `Something wrong has occurred and the volunteer was not ${volunteer ? "updated" : "added"}.`,
+        title: isEditMode ? "Volunteer Not Updated" : "Volunteer Not Added",
+        description: `Something wrong has occurred and the volunteer was not ${isEditMode ? "updated" : "added"}.`,
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -100,144 +147,161 @@ const VolunteerDrawer = ({
         isOpen={isOpen}
         placement="right"
         onClose={onClose}
-        size="md"
+        size="lg"
       >
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader borderBottomWidth="1px">
-            {volunteer ? "Edit" : "Add"} Volunteer
+            {isEditMode ? "Edit" : "Add"} Volunteer
           </DrawerHeader>
 
           <DrawerBody>
-            <VStack
-              spacing={4}
-              align="stretch"
+            <Box
+              borderWidth="1px"
+              borderRadius="lg"
+              bg="white"
+              boxShadow="sm"
             >
-              <FormControl isRequired>
-                <FormLabel>Date Volunteered</FormLabel>
-                <Input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      date: e.target.value,
-                    }))
-                  }
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>Email</FormLabel>
-                <Input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
-                  }
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>First Name</FormLabel>
-                <Input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      firstName: e.target.value,
-                    }))
-                  }
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>Last Name</FormLabel>
-                <Input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      lastName: e.target.value,
-                    }))
-                  }
-                />
-              </FormControl>
-
-              <FormControl isRequired>
-                <FormLabel>Event Type</FormLabel>
-                <Select
-                  name="eventType"
-                  value={formData.eventType}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      eventType: e.target.value,
-                    }))
-                  }
-                  placeholder="Select event type"
+              <VStack
+                spacing={4}
+                width="100%"
+                paddingX="48px"
+                paddingY="24px"
+              >
+                <FormField
+                  label="Date Volunteered"
+                  isRequired
                 >
-                  {eventTypes.map((option) => (
-                    <option
-                      key={option}
-                      value={option}
-                    >
-                      {option}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+                  <Input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    width="60%"
+                    onChange={handleInputChange}
+                  />
+                </FormField>
 
-              <FormControl isRequired>
-                <FormLabel>Hours</FormLabel>
-                <Input
-                  type="number"
-                  name="hours"
-                  value={formData.hours}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      hours: e.target.value,
-                    }))
-                  }
-                />
-              </FormControl>
+                <FormField
+                  label="Email"
+                  isRequired
+                >
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    width="60%"
+                    onChange={handleInputChange}
+                  />
+                </FormField>
 
-              <FormControl isRequired>
-                <FormLabel>Value Per Hour</FormLabel>
-                <Input
-                  type="number"
-                  name="value"
-                  value={formData.value}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      value: e.target.value,
-                    }))
-                  }
+                <FormField
+                  label="First Name"
+                  isRequired
+                >
+                  <Input
+                    name="firstName"
+                    value={formData.firstName}
+                    width="60%"
+                    onChange={handleInputChange}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Last Name"
+                  isRequired
+                >
+                  <Input
+                    name="lastName"
+                    value={formData.lastName}
+                    width="60%"
+                    onChange={handleInputChange}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Event Type"
+                  isRequired
+                >
+                  <Select
+                    name="eventType"
+                    value={formData.eventType}
+                    width="60%"
+                    onChange={handleInputChange}
+                    placeholder="Select Event Type"
+                  >
+                    {eventTypes.map((option) => (
+                      <option
+                        key={option}
+                        value={option}
+                      >
+                        {option}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+
+                <FormField
+                  label="Hours"
+                  isRequired
+                >
+                  <Input
+                    type="number"
+                    name="hours"
+                    value={formData.hours}
+                    width="60%"
+                    onChange={handleInputChange}
+                  />
+                </FormField>
+
+                <FormField
+                  label="Value Per Hour"
+                  isRequired
+                >
+                  <InputGroup width="60%">
+                    <InputLeftAddon>$</InputLeftAddon>
+                    <Input
+                      type="number"
+                      name="value"
+                      value={formData.value}
+                      onChange={handleInputChange}
+                    />
+                  </InputGroup>
+                </FormField>
+                <Divider
+                  border="1px"
+                  color="#CBD5E0"
+                  marginBottom="24px"
                 />
-              </FormControl>
-            </VStack>
+                <FormField label="Total Value">
+                  <Text
+                    width="60%"
+                    textAlign="right"
+                    size="md"
+                    fontWeight="semibold"
+                    color={totalValue === 0 ? "#718096" : "inherit"}
+                  >
+                    ${totalValue.toFixed(2)}
+                  </Text>
+                </FormField>
+              </VStack>
+            </Box>
           </DrawerBody>
 
           <DrawerFooter borderTopWidth="1px">
             <Button
               variant="outline"
               mr={3}
-              onClick={onClose}
+              onClick={() => onConfirmOpen()}
             >
               Cancel
             </Button>
+            <ConfirmCancelModal
+              isEditMode={isEditMode}
+              isConfirmOpen={isConfirmOpen}
+              onConfirmClose={onConfirmClose}
+              onDrawerClose={onClose}
+            />
             <Button
               colorScheme="blue"
               onClick={handleSubmit}

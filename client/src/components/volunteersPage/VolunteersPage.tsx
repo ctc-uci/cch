@@ -31,14 +31,24 @@ const VolunteersPage = () => {
 
   return (
     <Flex align="start">
-      <VStack width="25%" padding="24px">
+      <VStack
+        width="25%"
+        padding="24px"
+      >
         <VolunteersStatistics
           totalVolunteers={totalVolunteers}
           totalHours={totalHours}
         />
       </VStack>
-      <VStack width="74%" paddingTop="60px" spacing="14px">
-        <VolunteersTable toggleRefresh={toggleRefresh} setToggleRefresh={setToggleRefresh}/>
+      <VStack
+        width="74%"
+        paddingTop="60px"
+        spacing="14px"
+      >
+        <VolunteersTable
+          toggleRefresh={toggleRefresh}
+          setToggleRefresh={setToggleRefresh}
+        />
       </VStack>
     </Flex>
   );

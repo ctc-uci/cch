@@ -6,7 +6,6 @@ import {
   Button,
   Checkbox,
   HStack,
-  IconButton,
   Select,
   Table,
   TableContainer,
@@ -17,7 +16,6 @@ import {
   Thead,
   Tr,
   useDisclosure,
-  VStack,
 } from "@chakra-ui/react";
 
 import {
@@ -28,7 +26,6 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
 import {
   MdFileUpload,
   MdImportExport,
@@ -46,7 +43,10 @@ interface VolunteersTableProps {
   setToggleRefresh: (value: boolean) => void;
 }
 
-const VolunteersTable: React.FC<VolunteersTableProps> = ({ toggleRefresh, setToggleRefresh }) => {
+const VolunteersTable = ({
+  toggleRefresh,
+  setToggleRefresh,
+}: VolunteersTableProps) => {
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]);
@@ -105,7 +105,7 @@ const VolunteersTable: React.FC<VolunteersTableProps> = ({ toggleRefresh, setTog
         data: { ids: selectedVolunteers },
       });
       setSelectedVolunteers([]);
-      setToggleRefresh(!toggleRefresh);
+      refreshPage();
     } catch (err) {
       setError(err.message);
     }
@@ -116,6 +116,7 @@ const VolunteersTable: React.FC<VolunteersTableProps> = ({ toggleRefresh, setTog
       {
         id: "select",
         header: ({ table }) => (
+
           <Checkbox
             isChecked={selectedVolunteers.length === volunteers.length}
             onChange={() => {

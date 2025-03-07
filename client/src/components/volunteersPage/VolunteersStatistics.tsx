@@ -1,6 +1,4 @@
 import {
-  Box,
-  Heading,
   HStack,
   Stat,
   StatLabel,
@@ -11,20 +9,25 @@ import {
 
 import { MdOutlineAccessAlarm, MdOutlineEmojiPeople } from "react-icons/md";
 
+interface VolunteersStatisticsProps {
+  totalVolunteers: number;
+  totalHours: number;
+}
+
 const VolunteersStatistics = ({
   totalVolunteers,
   totalHours,
-}: {
-  totalVolunteers: number;
-  totalHours: number;
-}) => {
+}: VolunteersStatisticsProps) => {
   return (
     <VStack
       gap="24px"
       w="100%"
       align="left"
     >
-      <VStack align="left" spacing="4px">
+      <VStack
+        align="left"
+        spacing="4px"
+      >
         <Text
           fontSize="30px"
           fontWeight="semibold"
