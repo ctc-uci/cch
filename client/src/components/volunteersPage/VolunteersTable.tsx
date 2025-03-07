@@ -41,7 +41,12 @@ import type { Volunteer } from "../../types/volunteer";
 import { eventTypes } from "../../types/volunteer";
 import VolunteerDrawer from "./VolunteerDrawer";
 
-const VolunteersTable = ({toggleRefresh, setToggleRefresh}) => {
+interface VolunteersTableProps {
+  toggleRefresh: boolean;
+  setToggleRefresh: (value: boolean) => void;
+}
+
+const VolunteersTable: React.FC<VolunteersTableProps> = ({ toggleRefresh, setToggleRefresh }) => {
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]);
