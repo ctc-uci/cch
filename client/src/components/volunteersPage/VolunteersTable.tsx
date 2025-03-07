@@ -41,14 +41,13 @@ import type { Volunteer } from "../../types/volunteer";
 import { eventTypes } from "../../types/volunteer";
 import VolunteerDrawer from "./VolunteerDrawer";
 
-const VolunteersTable = () => {
+const VolunteersTable = ({toggleRefresh, setToggleRefresh}) => {
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [toggleRefresh, setToggleRefresh] = useState(false);
   const [currentlySelectedVolunteer, setCurrentlySelectedVolunteer] =
     useState<Volunteer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();

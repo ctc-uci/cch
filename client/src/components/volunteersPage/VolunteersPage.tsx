@@ -10,6 +10,7 @@ const VolunteersPage = () => {
   const { backend } = useBackendContext();
   const [totalVolunteers, setTotalVolunteers] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
+  const [toggleRefresh, setToggleRefresh] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +27,7 @@ const VolunteersPage = () => {
     };
 
     fetchData();
-  }, [backend]);
+  }, [backend, toggleRefresh]);
 
   return (
     <Flex align="start">
@@ -37,7 +38,7 @@ const VolunteersPage = () => {
         />
       </VStack>
       <VStack width="74%" paddingTop="60px" spacing="14px">
-        <VolunteersTable />
+        <VolunteersTable toggleRefresh={toggleRefresh} setToggleRefresh={setToggleRefresh}/>
       </VStack>
     </Flex>
   );
