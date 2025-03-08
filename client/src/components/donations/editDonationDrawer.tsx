@@ -1,6 +1,4 @@
 import React, {useState, useEffect} from 'react';
-import { useDisclosure } from '@chakra-ui/hooks';
-import { CloseIcon } from "@chakra-ui/icons";
 import {
   Drawer,
   DrawerBody,
@@ -11,9 +9,7 @@ import {
   DrawerCloseButton,
   Button,
   Card,
-  CardHeader,
   CardBody,
-  CardFooter,
   HStack,
   VStack,
   Text,
@@ -21,8 +17,6 @@ import {
   Input,
   Grid,
   Divider,
-  Box,
-  IconButton,
   useToast
 } from '@chakra-ui/react';
 
@@ -46,34 +40,21 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
     const [donation, setDonation] = useState<Donation | null>(existingDonation);
 
     useEffect(() => {
-        if (existingDonation) {
-            setDonation({
-                ...existingDonation,
-                date: existingDonation.date instanceof Date ? existingDonation.date : new Date(existingDonation.date),
-            });
-        }
-    }, [existingDonation]);
+        setDonation(existingDonation);
+      }, [existingDonation]);
     
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-    
-        setDonation((prev) => {
-            if (!prev) return null;
-    
-            return {
-                ...prev,
-                [name]: name === "date" ? new Date(value) : value, // Convert date string to Date object
-            };
-        });
-    };
+        if (donation) {
+            setDonation({
+                ...donation,
+                [e.target.name]: e.target.value,
+            });
+        }
+      };
 
     const handleEditDonation = () => {
         if (donation) {
-            console.log(donation);
-            onSubmit({
-                ...donation,
-                date: donation.date instanceof Date ? donation.date : new Date(donation.date), // Ensure date is a Date object
-            });
+            onSubmit(donation);
             onClose();
         }
     };
@@ -202,7 +183,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                             type="date" 
                             name="date" 
                             onChange={handleChange} 
-                            value={donation?.date ? donation.date.toISOString().split("T")[0] : ""} 
+                            value={donation && donation.date instanceof Date ? donation.date.toISOString().split("T")[0] : ""} 
                         />
 
                         <Text textAlign="left" fontWeight="bold">Type</Text>
