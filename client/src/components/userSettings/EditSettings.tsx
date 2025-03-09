@@ -138,35 +138,35 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
             <Box p={5} borderRadius="md" boxShadow="md" bg="white" borderColor="gray.100" borderWidth="1px" >
             <Text fontSize="sm" fontWeight="bold" >Edit Information - About</Text>
                 <Stack padding={"5rem"}>
-                    <Stack>
+                    <Stack width="50vw">
                         <Flex alignItems={"center"} gap={"2rem"}>
                         <Text fontSize="md" fontWeight="bold" color="gray.500">NAME</Text>
-                        <Stack>
+                        <Stack width="50%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">First Name</Text>
                             <Input name="firstName" placeholder="First Name" defaultValue={user.firstName} onChange={handleChange}/>
                         </Stack>
-                        <Stack>
+                        <Stack width="50%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Last Name</Text>
-                            <Input name="lastName" placeholder="Last Name" defaultValue={user.lastName} onChange={handleChange} />
+                            <Input name="lastName" placeholder="Last Name" defaultValue={user.lastName} onChange={handleChange}/>
                         </Stack>
                         </Flex>
                     </Stack>
-                    <Stack>
+                    <Stack width="50vw">
                         <Flex alignItems={"center"} gap={"2rem"}>
                         <Text fontSize="md" fontWeight="bold" color="gray.500">EMAIL</Text>
                  
-                        <Stack>
+                        <Stack width="100%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Email</Text>
                             <Input name="email" type="email" placeholder="Email" defaultValue={user.email} onChange={handleChange} />
                         </Stack>
                         </Flex>
                     </Stack>
                     
-                    <Stack>
+                    <Stack width="50vw">
                         <Flex alignItems={"center"} gap={"2rem"}>
                         <Text fontSize="md" fontWeight="bold" color="gray.500">PHONE</Text>
                  
-                        <Stack>
+                        <Stack width="100%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Phone Number</Text>
                             <Input name="phoneNumber" type='tel' placeholder="Phone Number" defaultValue={user.phoneNumber} onChange={handleChange} />
                         </Stack>
@@ -183,7 +183,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                         <Flex alignItems={"center"} gap={"2rem"}>
                         <Text fontSize="md" fontWeight="bold" color="gray.500">USERNAME</Text>
                  
-                        <Stack>
+                        <Stack width="100%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Username</Text>
                             <Input placeholder="Email" defaultValue={user.email} isDisabled/>
                         </Stack>
@@ -193,7 +193,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                     <Stack>
                         <Flex alignItems={"center"} gap={"2rem"}>
                         <Text fontSize="md" fontWeight="bold" color="gray.500">PASSWORD</Text>
-                        <Stack>
+                        <Stack width="100%">
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Current Password</Text>
                             <Input type="password" name="currentPassword" value={passwordData.currentPassword} onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})} />
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">New Password</Text>
