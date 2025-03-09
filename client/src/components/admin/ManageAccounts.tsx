@@ -14,7 +14,8 @@ import {
   Heading,
   HStack,
   VStack,
-  Textarea
+  Textarea,
+  Spacer
 } from "@chakra-ui/react";
 
 import {
@@ -26,9 +27,17 @@ import {
   DrawerContent,
   DrawerCloseButton,
 } from "@chakra-ui/react"
-
+import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+} from '@chakra-ui/react'
 interface Person {
   id: string;
   firstName: string;
@@ -134,6 +143,7 @@ export const ManageAccounts = () => {
   return (
     <>
       {/* <Navbar/> */}
+      
       <HStack justifyContent="space-between">
         <VStack
         justifyContent = "flex-start"
@@ -142,9 +152,19 @@ export const ManageAccounts = () => {
         marginLeft="5%"
         >
           <Heading>Manage Acounts</Heading>
-          <HStack width = "55%" justifyContent="space-between">
-            <Button onClick={() => setView("admin")}>Admins</Button>
-            <Button onClick={() => setView("cms")}>Case Managers</Button>
+          <HStack width="100%">
+            <HStack width = "55%" justifyContent="space-between">
+              <Tabs>
+                <TabList>
+                  <Tab onClick={() => setView("admin")}>Admins</Tab>
+                  <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
+                </TabList>
+              </Tabs>
+            </HStack>
+            <Spacer/>
+            <Button >Delete</Button>
+            <Button colorScheme="blue">Add</Button>
+          
           </HStack>
           <TableContainer
           width = "100%"
@@ -175,8 +195,24 @@ export const ManageAccounts = () => {
             </Tbody>
           </Table>
         </TableContainer>
-        <Button>+ Add New {roles_dict[view]}</Button>
-        <Drawer
+        <Modal isOpen={open} onClose={() => setOpen(!open)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Create your account</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              {selectedData ? outputDrawerData(selectedData, view) : null}
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="outline" mr={3} onClick={() => setOpen(!open)}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue">Save</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+
+        {/* <Drawer
           isOpen={open}
           placement="right"
           onClose={() => setOpen(!open)}
@@ -195,7 +231,7 @@ export const ManageAccounts = () => {
               <Button colorScheme="brand">Save</Button>
             </DrawerFooter>
           </DrawerContent>
-        </Drawer>
+        </Drawer> */}
         </VStack>
       </HStack>
     </>

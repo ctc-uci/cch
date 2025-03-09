@@ -69,11 +69,14 @@ usersRouter.post("/create", async (req, res) => {
 // Update a user by ID
 usersRouter.put("/update", async (req, res) => {
   try {
-    const { email, firebaseUid } = req.body;
+    const { email, firebaseUid, firstName, lastName, phoneNumber } = req.body;
 
     const user = await db.query(
-      "UPDATE users SET email = $1 WHERE firebase_uid = $2 RETURNING *",
-      [email, firebaseUid]
+      `UPDATE users 
+       SET email = $1, first_name = $2, last_name = $3, phone_number = $4 
+       WHERE firebase_uid = $5 
+       RETURNING *`,
+      [email, firstName, lastName, phoneNumber, firebaseUid]
     );
 
     res.status(200).json(keysToCamel(user));
