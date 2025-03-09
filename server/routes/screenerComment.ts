@@ -4,6 +4,7 @@ import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 export const screenerCommentRouter = Router();
+
 // Get all screener comment forms
 screenerCommentRouter.get("/", async (req, res) => {
   try {
@@ -37,13 +38,43 @@ screenerCommentRouter.get("/", async (req, res) => {
           OR additional_comments::TEXT ILIKE ${stringSearch}`
       );
     }
-    console.log(sortBy);
-    queryStr += " ORDER BY " + sortBy + " ASC";
+    if (sortBy) {
+      queryStr += " ORDER BY " + sortBy + " ASC";
+    }
 
     const data = await db.query(queryStr);
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+screenerCommentRouter.patch("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const setClause = Object.keys(updates)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(", ");
+
+    const values = Object.values(updates);
+
+    const query = `UPDATE screener_comment SET ${setClause} WHERE id = $${values.length + 1} RETURNING *;`;
+    const result = await db.query(query, [...values, id]);
+
+    res.status(200).json({
+      message: "Client updated successfully",
+      result: result,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
