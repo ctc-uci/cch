@@ -85,7 +85,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     const handleSaveChanges = async () => {
      
         if (passwordData.newPassword && passwordData.newPassword === passwordData.confirmPassword) {
-            await handlePasswordChange(); // Update password if new passwords match
+            await handlePasswordChange(); 
         } 
         try {
             console.log("Sending request: ", formData);
@@ -122,8 +122,9 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     };
 
     return (
-        <div style={{gap:"5 rem"}}>
-            <Box p={5} borderRadius="md" boxShadow="md" bg="white" >
+        <div >
+            <Flex direction="column" gap="2rem">
+            <Box p={5} borderRadius="md" boxShadow="md" bg="white" borderColor="gray.100" borderWidth="1px" >
             <Text fontSize="sm" fontWeight="bold" >Edit Information - About</Text>
                 <Stack padding={"5rem"}>
                     <Stack>
@@ -163,7 +164,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                    
                 </Stack>
             </Box>
-            <Box p={5} borderRadius="md" boxShadow="md" bg="white" >
+            <Box p={5} borderRadius="md" boxShadow="md" bg="white"  borderColor="gray.100" borderWidth="1px" >
             <Text fontSize="sm" fontWeight="bold" >Edit Information - Account</Text>
                 <Stack padding={"5rem"}>
             
@@ -194,6 +195,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                    
                 </Stack>
             </Box>
+            </Flex>
             <Button colorScheme="blue" style={{marginTop: "2rem"}} onClick={handleSaveChanges}>Save Changes</Button>
             <Button colorScheme="blue" style={{marginTop: "2rem", marginLeft: "2rem"}} onClick={() => setEditing(false)}>Cancel</Button>
         </div>
