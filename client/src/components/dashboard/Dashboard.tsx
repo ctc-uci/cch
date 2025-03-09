@@ -28,7 +28,7 @@ export const Dashboard = () => {
   const { logout, currentUser } = useAuthContext();
   const { backend } = useBackendContext();
   const { role } = useRoleContext();
-
+  
   const [users, setUsers] = useState<User[] | undefined>();
 
   useEffect(() => {
