@@ -11,9 +11,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
-  FormControl,
-  FormLabel,
-  HStack,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -23,6 +20,8 @@ import {
   useToast,
   VStack,
 } from "@chakra-ui/react";
+
+import { FormField } from "../../components/formField/FormField";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { eventTypes } from "../../types/volunteer";
@@ -36,25 +35,6 @@ interface VolunteerDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-interface FormFieldProps {
-  label: string;
-  isRequired?: boolean;
-  children: React.ReactNode;
-}
-
-const FormField = ({ label, isRequired, children }: FormFieldProps) => (
-  <FormControl isRequired={isRequired}>
-    <HStack
-      justify="space-between"
-      align="center"
-      width="100%"
-    >
-      <FormLabel margin="0">{label}</FormLabel>
-      {children}
-    </HStack>
-  </FormControl>
-);
 
 const VolunteerDrawer = ({
   onFormSubmitSuccess,
