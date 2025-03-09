@@ -9,14 +9,19 @@ import {
   Tbody,
   Td,
   Text,
+  Checkbox,
   Th,
   Thead,
+  IconButton,
   Tr,
 } from "@chakra-ui/react";
 
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { FiUpload } from "react-icons/fi";
 
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { downloadCSV } from "../../utils/downloadCSV";
 import PrintForm from "../PrintForm";
+import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 type FormItem = {
   id: number;
@@ -36,10 +41,28 @@ type ViewOption =
   | "Case Manager Monthly Statistics"
   | "Client Tracking Statistics (Intake Statistics)";
 
+  const tableMapping: Record<FormItem["title"], number> = {
+    "Initial Screeners": 1,
+    "Intake Statistics": 2,
+    "Front Desk Monthly Stats": 3,
+    "Case Manager Monthly Stats": 4,
+  };
+
+// I know you said to also include the formTable but I wanted to be able to treat all forms
+// with an INT id so I just pushed the ids to the right and put a marker at the front
+// For example if a row came from initial screeners and had id 2 it would become 12.
+const createHashedId = (id: number, title: FormItem["title"]) => {
+  const tableNumber = tableMapping[title];
+  return (id << 2) | tableNumber;
+};
+
+
+
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
+  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
 
   const formatDate = (x: string) => {
     const date = new Date(x);
@@ -49,6 +72,40 @@ export const FormTable = () => {
     return `${month}/${day}/${year}`;
   };
 
+  const handleSelectAllCheckboxClick = () => {
+    if (selectedRowIds.length === 0) {
+      setSelectedRowIds(items.map((item) => createHashedId(item.id, item.title)));
+    } else {
+      setSelectedRowIds([]);
+    }
+  };
+
+
+
+  const handleRowSelect = (hashedId: number, isChecked: boolean) => {
+
+    if (isChecked) {
+      setSelectedRowIds((prev) => [...prev, hashedId]);
+    } else {
+      setSelectedRowIds((prev) => prev.filter((id) => id !== hashedId));
+    }
+  };
+
+
+
+  const handleExport = () => {
+    const selectedItems = items.filter(item =>
+      selectedRowIds.includes(createHashedId(item.id, item.title))
+    );
+    const headers = ["Date", "Name", "Form Title"];
+    const data = selectedItems.map(item => ({
+      "Date": formatDate(item.date),
+      "Name": item.name,
+      "Form Title": item.title,
+    }));
+    downloadCSV(headers, data, "forms.csv");
+  };
+
   useEffect(() => {
     const getData = async () => {
       try {
@@ -56,12 +113,6 @@ export const FormTable = () => {
         const frontDeskResponse = await backend.get(`/frontDesk`);
         const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
         const allCaseManagersResponse = await backend.get(`/caseManagers`);
-
-        // TO BE IMPLEMENTED:
-        // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
-        // Will need to link the routes between each form.
-
-        // const intakeStatisticsResponse = await backend.get(`/undefined`);
 
         const initialScreeners: FormItem[] = screenerResponse.data.map(
           (item) => ({
@@ -109,6 +160,7 @@ export const FormTable = () => {
 
     getData();
   }, [backend]);
+
 
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
@@ -193,23 +245,50 @@ export const FormTable = () => {
       <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
 
       <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={baseFontSize}>
+        <TableContainer fontSize={baseFontSize} sx={{
+            overflowX: "auto",
+            maxHeight: "600px",
+            overflowY: "auto",
+            maxWidth: "100%"
+          }}>
           <Table variant="striped" colorScheme="gray">
-            <Thead>
+            <Thead zIndex={1} backgroundColor="white" position="sticky" top={0}>
               <Tr>
-                <Th>Index</Th>
+              <Th textAlign={"center"}>
+                  <Checkbox
+                    justifySelf="center"
+                    colorScheme="cyan"
+                    isChecked={selectedRowIds.length > 0}
+                    onChange={handleSelectAllCheckboxClick}
+                  />
+                </Th>
                 <Th>Date</Th>
                 <Th>Name</Th>
                 <Th minW="200px">Form Title</Th>
                 <Th w="50px" textAlign="right">
-                  Export
+                <IconButton
+              aria-label="Download CSV"
+              onClick={() =>
+                handleExport()
+              }
+            >
+              <FiUpload />
+            </IconButton>
                 </Th>
               </Tr>
             </Thead>
             <Tbody>
               {filteredData.map((item, index) => (
                 <Tr key={item.id} _hover={{ bg: "gray.200" }}>
-                  <Td w="10%">{index + 1}</Td>
+                  <Td w="10%" onClick={(e) => e.stopPropagation()}
+                          >
+                          <HoverCheckbox
+  clientId={createHashedId(item.id, item.title)}
+  index={index}
+  isSelected={selectedRowIds.includes(createHashedId(item.id, item.title))}
+  onSelectionChange={handleRowSelect}
+/>
+</Td>
                   <Td w="15%">{formatDate(item.date)}</Td>
                   <Td w="20%">{item.name}</Td>
                   <Td minW="200px">{item.title}</Td>
