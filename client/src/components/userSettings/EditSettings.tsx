@@ -1,17 +1,28 @@
 import { useState } from "react";
-import { Box, Stack, Input, Flex, Text, Button, useToast  } from "@chakra-ui/react";
+import { Box, Stack, Input, Flex, Text, Button, useToast, useDisclosure  } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { getCurrentUser } from "../../utils/auth/firebase";
 import { getAuth, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "firebase/auth"; 
 import { get } from "react-hook-form";
+import {
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,
+    AlertDialogCloseButton,
+  } from '@chakra-ui/react' 
+import React from "react";
 
 const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
 
     const auth = getAuth();
     const toast = useToast();
     const { currentUser, resetPassword } = useAuthContext();
-
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const cancelRef = React.useRef()
     const [formData, setFormData] = useState({
         firstName: user.firstName,
         lastName: user.lastName,
@@ -146,7 +157,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                  
                         <Stack>
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Email</Text>
-                            <Input name="email" placeholder="Email" defaultValue={user.email} onChange={handleChange} />
+                            <Input name="email" type="email" placeholder="Email" defaultValue={user.email} onChange={handleChange} />
                         </Stack>
                         </Flex>
                     </Stack>
@@ -157,7 +168,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                  
                         <Stack>
                             <Text fontSize="sm" fontWeight="bold" color="gray.600">Phone Number</Text>
-                            <Input name="phoneNumber" placeholder="Phone Number" defaultValue={user.phoneNumber} onChange={handleChange} />
+                            <Input name="phoneNumber" type='tel' placeholder="Phone Number" defaultValue={user.phoneNumber} onChange={handleChange} />
                         </Stack>
                         </Flex>
                     </Stack>
@@ -196,7 +207,67 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                 </Stack>
             </Box>
             </Flex>
-            <Button colorScheme="blue" style={{marginTop: "2rem"}} onClick={handleSaveChanges}>Save Changes</Button>
+            <Button colorScheme="blue" style={{marginTop: "2rem"}} onClick={onOpen}>Save Changes</Button>
+            <AlertDialog
+                isOpen={isOpen}
+                leastDestructiveRef={cancelRef}
+                onClose={onClose}
+            >
+                <AlertDialogOverlay>
+                <AlertDialogContent>
+                    <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+                    Confirm Changes
+                    </AlertDialogHeader>
+
+                    <AlertDialogBody>
+                        {user.firstName !== formData.firstName &&
+                        <Stack>
+                            <Flex alignItems={"center"} gap={"2rem"}>
+                            <Text fontSize="md" fontWeight="bold" color="gray.500">FIRST NAME</Text>
+                            <Text fontSize="sm" color="gray.600">{formData.firstName}</Text>
+                            </Flex>
+                        </Stack>
+                        }
+                        {user.lastName !== formData.lastName &&
+                        <Stack>
+                            <Flex alignItems={"center"} gap={"2rem"}>
+                            <Text fontSize="md" fontWeight="bold" color="gray.500">LAST NAME</Text>
+                            <Text fontSize="sm" color="gray.600">{formData.lastName}</Text>
+                            </Flex>
+                        </Stack>
+                        }
+                        {user.email !== formData.email &&
+                        <Stack>
+                            <Flex alignItems={"center"} gap={"2rem"}>
+                            <Text fontSize="md" fontWeight="bold" color="gray.500">EMAIL</Text>
+                            <Text fontSize="sm" color="gray.600">{formData.email}</Text>
+                            </Flex>
+                        </Stack>
+                        }
+                        {user.phoneNumber !== formData.phoneNumber &&
+                        <Stack>
+                            <Flex alignItems={"center"} gap={"2rem"}>
+                            <Text fontSize="md" fontWeight="bold" color="gray.500">PHONE</Text>
+                            <Text fontSize="sm" color="gray.600">{formData.phoneNumber}</Text>
+                            </Flex>
+                        </Stack>
+                        }
+                        {user.phoneNumber === formData.phoneNumber && user.email === formData.email && user.firstName === formData.firstName && user.lastName === formData.lastName && 
+                        <Text fontSize="sm" color="gray.600">No changes detected.</Text>
+                        }
+                    </AlertDialogBody>
+
+                    <AlertDialogFooter>
+                        <Button ref={cancelRef} onClick={onClose}>
+                            Back
+                        </Button>
+                        <Button colorScheme='blue' onClick={() => { onClose(); handleSaveChanges(); }} ml={3}>
+                            Submit
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+                </AlertDialogOverlay>
+            </AlertDialog>
             <Button colorScheme="blue" style={{marginTop: "2rem", marginLeft: "2rem"}} onClick={() => setEditing(false)}>Cancel</Button>
         </div>
     );

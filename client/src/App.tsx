@@ -1,59 +1,69 @@
 import { CookiesProvider } from "react-cookie";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 
-import { AdminClientList } from "./components/admin/AdminClientList";
-import { ClientData } from "./components/admin/clientData";
 import { ManageAccounts } from "./components/admin/ManageAccounts";
-import { AdminPin } from "./components/authentification/AdminPin";
+import { ClientData } from "./components/admin/clientData";
 import { CaseManager } from "./components/caseManager/CaseManager";
-import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
-import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
+import { LandingPage } from "./components/login/LandingPage";
+import { ChooseLogin } from "./components/login/ChooseLogin";
+import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
+import { AdminPin } from "./components/authentification/AdminPin";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
-import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
 import { FormsHub } from "./components/formsHub/formsHub";
-import { StartForms } from "./components/formsHub/startForm";
-import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats";
-import { IntakeStats } from "./components/intakeStatsForm/intakeStats";
-import AdditionalInformation from "./components/interviewScreeningForm/additionalInformation";
-import FinancialInformation from "./components/interviewScreeningForm/financialInformation";
-import HealthSocialInformation from "./components/interviewScreeningForm/healthSocialInformation";
-import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
-import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
-import Success from "./components/interviewScreeningForm/success";
-import { ChooseLogin } from "./components/login/ChooseLogin";
-import { LandingPage } from "./components/login/LandingPage";
 import { Login } from "./components/login/Login";
-import { Navbar } from "./components/Navbar.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RandomClientSurvey } from "./components/randomClientSurvey/RandomClientSurvey";
 import { Signup } from "./components/signup/Signup";
 import { SuccessStory } from "./components/success_story/SuccessStory";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
-import { FormProvider } from "./contexts/formContext";
 import { RoleProvider } from "./contexts/RoleContext";
-import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
-import CommentForm from "./components/initialScreener/commentForm";
-import VolunteersPage from "./components/volunteersPage/VolunteersPage";
+import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats"
+import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
+import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
+import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
+import { Navbar } from "./components/Navbar";
+import { User } from "./types/user";
+import { AdminClientList } from "./components/admin/AdminClientList";
+import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
+import { FormProvider } from "./contexts/formContext";
+import FinancialInformation from "./components/interviewScreeningForm/financialInformation";
+import HealthSocialInformation from "./components/interviewScreeningForm/healthSocialInformation";
+import AdditionalInformation from "./components/interviewScreeningForm/additionalInformation";
+import ReviewInformation from "./components/interviewScreeningForm/reviewInformation";
+import Success from "./components/interviewScreeningForm/success";
+import { StartForms } from "./components/formsHub/startForm";
 import UserSettings from "./components/userSettings/UserSettings";
 
 const App = () => {
-  //const { role } = useRoleContext();
+
   const location = useLocation();
   const currentRoute = location.pathname.toLowerCase().split("/")[1];
 
   const shouldShowNavbar = !(
-    currentRoute === "login" ||
-    currentRoute === "landing-page" ||
-    currentRoute === "choose-login" ||
-    currentRoute === "signup" ||
-    currentRoute === "forgot-password" ||
-    currentRoute === "admin-pin"
+    currentRoute === 'login' ||
+    currentRoute === 'landing-page' ||
+    currentRoute === 'choose-login' ||
+    currentRoute === 'signup' ||
+    currentRoute === 'forgot-password' ||
+    currentRoute === 'admin-pin'
   );
+
+  const user : User = {
+    id: 1,
+    email: "poop@uci.edu",
+    role: "user",
+    firebaseUid: "123456789",
+  };
 
   return (
     <CookiesProvider>
@@ -61,28 +71,28 @@ const App = () => {
         <AuthProvider>
           <RoleProvider>
             <FormProvider>
-              {shouldShowNavbar && <Navbar />}
-              <Routes>
+            {shouldShowNavbar && <Navbar user={user} />}
+            <Routes>
+              <Route
+                path="/landing-page"
+                element={<LandingPage />}
+              />
                 <Route
-                  path="/landing-page"
-                  element={<LandingPage />}
-                />
-                <Route
-                  path="/choose-login"
-                  element={<ChooseLogin />}
-                />
-                <Route
-                  path="/login/:userType?"
-                  element={<Login />}
-                />
-                <Route
-                  path="/signup/:userType?"
-                  element={<Signup />}
-                />
-                <Route
-                  path="/forgot-password/:userType?"
-                  element={<ForgotPassword />}
-                />
+                path="/choose-login"
+                element={<ChooseLogin />}
+              />
+              <Route
+                path="/login/:userType?"
+                element={<Login />}
+              />
+              <Route
+                path="/signup/:userType?"
+                element={<Signup />}
+              />
+              <Route
+                path="/forgot-password/:userType?"
+                element={<ForgotPassword />}
+              />
                 <Route
                 path="/admin-pin/:userType?"
                 element={<AdminPin />}
@@ -94,6 +104,10 @@ const App = () => {
               <Route
                 path="/success-story"
                 element={<SuccessStory />}
+              />
+              <Route 
+                path="/settings"
+                element={<ProtectedRoute element={<UserSettings />} />}
               />
               <Route
                 path="/dashboard"
@@ -108,76 +122,39 @@ const App = () => {
                 element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
               />
               <Route
-                path="/comment-form/:id"
-                element={<CommentForm />}
+                path="/forms-hub"
+                element={<FormsHub />}
               />
               <Route
-                  path="/monthly-statistics"
-                  element={
-                    <ProtectedRoute
-                      element={<CaseManagerMonthlyStats />}
-                      allowedRoles={["admin"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/forms-hub"
-                  element={
-                    <ProtectedRoute
-                      element={<FormsHub />}
-                      allowedRoles={["user"]}
-                    />
-                  }
-                />
-                <Route
                   path="/start-form"
-                  element={
-                    <ProtectedRoute
-                      element={<StartForms />}
-                      allowedRoles={["user"]}
-                    />
-                  }
+                  element={<StartForms />}
                 />
-                <Route
-                  path="/admin-client-list"
-                  element={
-                    <ProtectedRoute
-                      element={<AdminClientList />}
-                      allowedRoles={["admin"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/accounts"
-                  element={
-                    <ProtectedRoute
-                      element={<ManageAccounts />}
-                      allowedRoles={["admin"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/clientlist"
-                  element={
-                    <ProtectedRoute
-                      element={<ClientList />}
-                      allowedRoles={["user"]}
-                    />
-                  }
-                />
-                <Route
-                  path="/clientdata"
-                  element={
-                    <ProtectedRoute
-                      element={<ClientData />}
-                      allowedRoles={["admin"]}
-                    />
-                  }
-                />
+              <Route
+                path="/admin-client-list"
+                element={<AdminClientList />}
+              />
+              <Route
+                path="/accounts"
+                element={
+                  <ProtectedRoute
+                    element={<ManageAccounts />}
+                    allowedRoles={["admin"]}
+                  />
+                }
+              />
+              <Route
+                path="/clientlist"
+                element={<ClientList />}
+              />
+
+              <Route
+                path="/clientdata"
+                element={<ClientData />}
+              />
 
                 <Route
-                  path="/donations"
-                  element={<ProtectedRoute element={<Donations />} />}
+                  path = "/donations"
+                  element = {<Donations />}
                 />
 
                 <Route
@@ -191,21 +168,14 @@ const App = () => {
                 />
                 <Route
                   path="*"
-                  element={
-                    <Navigate
-                      to="/landing-page"
-                      replace
-                    />
-                  }
+                  element={<Navigate
+                    to="/landing-page"
+                    replace
+                  />}
                 />
                 <Route
                   path="/ViewClient/:id"
-                  element={
-                    <ProtectedRoute
-                      element={<ViewPage />}
-                      allowedRoles={["user"]}
-                    />
-                  }
+                  element={<ViewPage />}
                 />
                 <Route
                   path="/casemanager"
@@ -216,37 +186,38 @@ const App = () => {
                   element={<RandomClientSurvey />}
                 />
                 <Route
-                  path="/frontDesk"
-                  element={<FrontDeskMonthlyStats />}
+                  path ="/frontDesk"
+                  element ={<FrontDeskMonthlyStats/>}
                 />
                 <Route
-                  path="/intakeStats"
-                  element={<IntakeStats />}
+                  path ="/intakeStats"
+                  element ={<IntakeStats/>}
                 />
-                <Route
-                  path="/personal"
-                  element={<PersonalInformation hidden={false} />}
-                />
-                <Route
-                  path="/financial"
-                  element={<FinancialInformation hidden={false} />}
-                />
-                <Route
-                  path="/health"
-                  element={<HealthSocialInformation hidden={false} />}
-                />
-                <Route
-                  path="/additional"
-                  element={<AdditionalInformation hidden={false} />}
-                />
-                <Route
-                  path="/review"
-                  element={<ReviewInformation />}
-                />
-                <Route
-                  path="/success"
-                  element={<Success />}
-                />
+                  <Route
+                    path ="/personal"
+                    element ={<PersonalInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/financial"
+                    element ={<FinancialInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/health"
+                    element ={<HealthSocialInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/additional"
+                    element ={<AdditionalInformation hidden={false}/>}
+                  />
+                  <Route
+                    path ="/review"
+                    element ={<ReviewInformation/>}
+                  />
+                  <Route
+                    path ="/success"
+                    element ={<Success/>}
+                  />
+
               </Routes>
             </FormProvider>
           </RoleProvider>
