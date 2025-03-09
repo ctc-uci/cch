@@ -26,6 +26,7 @@ import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { UpdateClients } from "../admin/UpdateClient";
 
 interface Client {
   id: number;
@@ -145,7 +146,6 @@ export const ClientList = () => {
     const fetchData = async () => {
       try {
         let response;
-
         if (searchKey && filterQuery.length > 1) {
           response = await backend.get(
             `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
@@ -189,6 +189,8 @@ export const ClientList = () => {
           Last Updated: {}
         </Heading>
       </HStack>
+
+      <UpdateClients/>
 
       <VStack></VStack>
       <HStack

@@ -1,23 +1,19 @@
-import {
-  Avatar,
-  Box,
-  Flex,
-  HStack,
-  Link,
-  Text,
-  useColorModeValue,
-} from "@chakra-ui/react";
+import { Avatar, Box, Flex, HStack, Link, Text, Button } from "@chakra-ui/react";
 
 import { NavLink } from "react-router-dom";
 
+import { useAuthContext } from "../contexts/hooks/useAuthContext";
+import { useRoleContext } from "../contexts/hooks/useRoleContext";
 import { User } from "../types/user";
 
 interface NavbarProps {
   user: User;
 }
 
-export const Navbar = ({user}: NavbarProps) => {
-  const role = user.role;
+export const Navbar = () => {
+  const { role } = useRoleContext();
+  const { logout } = useAuthContext();
+
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
@@ -54,16 +50,23 @@ export const Navbar = ({user}: NavbarProps) => {
   };
 
   return (
-    <Flex>
-      <Box bg={useColorModeValue("gray.100", "gray.900")}>
-        <Flex>
-          <HStack>
-            <Avatar src={"/vite.svg"} />
-            <Box>Colette's Children's Home</Box>
-            <HStack spacing={5}>{createTabs(role)}</HStack>
-          </HStack>
-        </Flex>
-      </Box>
-    </Flex>
+    <Box>
+      <HStack
+        width="100%"
+        justify="space-between"
+        paddingRight="54px"
+        paddingLeft="54px"
+        paddingTop="25px"
+      >
+        <HStack>
+          <Avatar src={"/vite.svg"} />
+          <Box>Colette's Children's Home</Box>
+        </HStack>
+        <HStack spacing={5}>
+          {createTabs(role)}
+          <Button onClick={logout}>Sign Out</Button>
+        </HStack>
+      </HStack>
+    </Box>
   );
 };
