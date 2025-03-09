@@ -42,7 +42,16 @@ requestRouter.put('/:id', async (req, res) => {
   try{
     const { id } = req.params;
     const { status, admin } = req.body;
-    const request = await db.query(`UPDATE requests SET status = $1, updated_by = $2, updated_at = NOW() WHERE id = $3 RETURNING *`, [status, admin.uid, id]);
+
+    const userQuery = await db.query(`SELECT id FROM users WHERE firebase_uid = $1`, [admin.uid]);
+
+    if (userQuery.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const internalUserId = userQuery[0].id;
+
+    const request = await db.query(`UPDATE requests SET status = $1, updated_by = $2, updated_at = NOW() WHERE id = $3 RETURNING *`, [status, internalUserId, id]);
     res.status(200).json(request);
   }catch(err){
     res.status(500).json(err.message);

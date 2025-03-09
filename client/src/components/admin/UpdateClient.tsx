@@ -6,7 +6,6 @@ import {
     Button,
     Box,
     Collapse,
-    Heading,
     Table,
     TableContainer,
     Tbody,
@@ -14,19 +13,16 @@ import {
     Th,
     Thead,
     Tr,
-    VStack,
   } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 
 export const UpdateClients = () => {
-//   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
   const [updateRequests, setUpdateRequests] = useState<any[]>([]);
   const { currentUser } = useAuthContext();
   const { isOpen, onToggle } =    useDisclosure()
-//   const { isOpen, onToggle } = useState<boolean>(false);
 
 
   useEffect(() => {
@@ -38,18 +34,16 @@ export const UpdateClients = () => {
       }
     };
     fetchData();
-  }, [backend]); //update later
+  }, [backend]);
 
   const fillTable = async () => {
     const requests = await backend.get("/request/activeRequests");
     setUpdateRequests(requests.data);
-    console.log(requests.data);
   }
 
   const handleClick = async (status, request_id) => {
     try{
-        
-        const res = await backend.put(`/request/${request_id}`, {status, currentUser});
+        const res = await backend.put(`/request/${request_id}`, {status, admin: { uid: currentUser.uid }});
         fillTable();
     }catch(e){
         console.log(e);
