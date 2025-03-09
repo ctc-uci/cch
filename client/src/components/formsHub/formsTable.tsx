@@ -12,13 +12,15 @@ import {
   Checkbox,
   Th,
   Thead,
+  IconButton,
   Tr,
 } from "@chakra-ui/react";
 
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { FiUpload } from "react-icons/fi";
 
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { downloadCSV } from "../../utils/downloadCSV";
 import PrintForm from "../PrintForm";
-// Print Form does not yet work for forms Data
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 type FormItem = {
@@ -87,16 +89,21 @@ export const FormTable = () => {
     } else {
       setSelectedRowIds((prev) => prev.filter((id) => id !== hashedId));
     }
-    console.log(selectedRowIds);
   };
 
-  const handleExport = async () => {
-    // handleExport is not yet functional with formsTable... unsure if that's my job.
-    try {
-      ;
-    } catch (error) {
-      console.error("Error exporting", error);
-    }
+
+
+  const handleExport = () => {
+    const selectedItems = items.filter(item =>
+      selectedRowIds.includes(createHashedId(item.id, item.title))
+    );
+    const headers = ["Date", "Name", "Form Title"];
+    const data = selectedItems.map(item => ({
+      "Date": formatDate(item.date),
+      "Name": item.name,
+      "Form Title": item.title,
+    }));
+    downloadCSV(headers, data, "forms.csv");
   };
 
   useEffect(() => {
@@ -106,12 +113,6 @@ export const FormTable = () => {
         const frontDeskResponse = await backend.get(`/frontDesk`);
         const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
         const allCaseManagersResponse = await backend.get(`/caseManagers`);
-
-        // TO BE IMPLEMENTED:
-        // Not sure if intake statistics are implemented yet. Will need to fetch data once the table exists.
-        // Will need to link the routes between each form.
-
-        // const intakeStatisticsResponse = await backend.get(`/undefined`);
 
         const initialScreeners: FormItem[] = screenerResponse.data.map(
           (item) => ({
@@ -265,7 +266,14 @@ export const FormTable = () => {
                 <Th>Name</Th>
                 <Th minW="200px">Form Title</Th>
                 <Th w="50px" textAlign="right">
-                  Export
+                <IconButton
+              aria-label="Download CSV"
+              onClick={() =>
+                handleExport()
+              }
+            >
+              <FiUpload />
+            </IconButton>
                 </Th>
               </Tr>
             </Thead>

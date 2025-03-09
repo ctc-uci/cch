@@ -20,14 +20,6 @@ import {
 } from "@chakra-ui/react";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 
-// Add isChecked attribute to each data row to tell if its selected or not
-// The main checkbox has a function that either selects all or deselects all (depending on if any is selcted or not)
-//      count == 0 => select all, update count
-//      count > 9 => deselect all, count = 0
-// Keep track of # of selected via some variable thats just increased whenever something is selected (+1 - 1)
-// also do the hover thing
-// also make it so that we know which ones are selected perhaps via a map
-
 import { FiUpload } from "react-icons/fi";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -103,16 +95,19 @@ export const ClientList = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
 
   const onPressCSVButton = () => {
-    const data =
-      clients.map(client => {return {
-        "Client First Name": client.firstName,
-        "Client Last Name": client.lastName,
-        "Phone Number": client.phoneNumber,
-        "E-mail": client.email,
-        "Entrance Date": client.entranceDate,
-        "Exit Date": client.exitDate,
-        "Birthday": client.dateOfBirth
-      }});
+    const selectedClients = clients.filter(client =>
+      selectedRowIds.includes(client.id)
+    );
+
+    const data = selectedClients.map(client => ({
+    "Client First Name": client.firstName,
+    "Client Last Name": client.lastName,
+    "Phone Number": client.phoneNumber,
+    "E-mail": client.email,
+    "Entrance Date": client.entranceDate,
+    "Exit Date": client.exitDate,
+    "Birthday": client.dateOfBirth,
+  }));
 
       downloadCSV(headers, data, `clients.csv`)
   }
@@ -124,8 +119,6 @@ export const ClientList = () => {
       setSelectedRowIds([]);
     }
   };
-
-  console.log(selectedRowIds);
 
   const handleRowSelect = (id: number, isChecked: boolean) => {
     if (isChecked) {
