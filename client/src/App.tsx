@@ -40,6 +40,7 @@ import { RoleProvider } from "./contexts/RoleContext";
 import { User } from "./types/user";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
+import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 
 const App = () => {
   //const { role } = useRoleContext();
@@ -108,6 +109,10 @@ const App = () => {
                 element={<InitialScreenerTable />}
               />
               <Route
+                path="/volunteer-tracking"
+                element={<ProtectedRoute element={<VolunteersPage />} />}
+              />
+              <Route
                 path="/comment-form/:id"
                 element={<CommentForm />}
               />
@@ -165,7 +170,6 @@ const App = () => {
                     />
                   }
                 />
-
                 <Route
                   path="/clientdata"
                   element={
