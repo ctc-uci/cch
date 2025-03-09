@@ -8,7 +8,6 @@ import { ManageAccounts } from "./components/admin/ManageAccounts";
 import { AdminPin } from "./components/authentification/AdminPin";
 import { CaseManager } from "./components/caseManager/CaseManager";
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
-import { CatchAll } from "./components/CatchAll";
 import { ClientInterviewScreening } from "./components/clientInterviewScreening/ClientInterviewScreening";
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
@@ -17,7 +16,6 @@ import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
 import { FormsHub } from "./components/formsHub/formsHub";
 import { StartForms } from "./components/formsHub/startForm";
-import { FormTable } from "./components/formsTable/formsTable";
 import { FrontDeskMonthlyStats } from "./components/front_desk/monthlyStats";
 import { IntakeStats } from "./components/intakeStatsForm/intakeStats";
 import AdditionalInformation from "./components/interviewScreeningForm/additionalInformation";
@@ -40,6 +38,8 @@ import { FormProvider } from "./contexts/formContext";
 import { useRoleContext } from "./contexts/hooks/useRoleContext.ts";
 import { RoleProvider } from "./contexts/RoleContext";
 import { User } from "./types/user";
+import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
+import CommentForm from "./components/initialScreener/commentForm";
 
 const App = () => {
   //const { role } = useRoleContext();
@@ -103,7 +103,15 @@ const App = () => {
                   path="/client-interview-screening"
                   element={<ClientInterviewScreening />}
                 />
-                <Route
+                 <Route
+                path="/initial-screener-table"
+                element={<InitialScreenerTable />}
+              />
+              <Route
+                path="/comment-form/:id"
+                element={<CommentForm />}
+              />
+              <Route
                   path="/monthly-statistics"
                   element={
                     <ProtectedRoute
