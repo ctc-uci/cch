@@ -35,14 +35,52 @@ donationRouter.get("/date", async (req, res) => {
   }
 });
 
+donationRouter.get("/valueSum", async (req, res) => {
+  try {
+    // Query database 
+    const data = await db.query(
+        `SELECT SUM(value) FROM food_donations`,
+    );
+    res.status(200).send(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+donationRouter.get("/weightSum", async (req, res) => {
+  try {
+    // Query database 
+    const data = await db.query(
+        `SELECT SUM(weight) FROM food_donations`,
+    );
+    res.status(200).send(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+donationRouter.get("/:donor", async (req, res) => {
+  try {
+    // Query database
+    const { donor } = req.params as { donor: string};
+    const data = await db.query(
+      `SELECT * FROM food_donations WHERE category = $1`,
+      [donor]
+    );
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 donationRouter.post("/", async (req, res) => {
   try {
     // Destructure req.body
-    const { id, date, weight, value, category } = req.body;
+    const { date, weight, value, category } = req.body;
     // Do something with request body
     const data = await db.query(
-      `INSERT INTO food_donations (id, date, weight, value, category) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [id, date, weight, value, category]
+      `INSERT INTO food_donations (date, weight, value, category) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [date, weight, value, category]
     );
 
     res.status(200).json(keysToCamel(data[0]["id"]));
@@ -68,15 +106,16 @@ donationRouter.put("/:id", async (req, res) => {
   }
 });
 
-donationRouter.delete("/:id", async (req, res) => {
+donationRouter.delete("/", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { ids } = req.body;
 
-    const user = await db.query("DELETE FROM food_donations WHERE id = $1", [
-      id,
-    ]);
+    const placeholders = ids.map((_, index) => `$${index + 1}`).join(",");
+    
+    const query = `DELETE FROM food_donations WHERE id IN (${placeholders})`;
+    await db.query(query, ids);
 
-    res.status(200).json(keysToCamel(user));
+    res.status(200).json();
   } catch (err) {
     res.status(400).send(err.message);
   }

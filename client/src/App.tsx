@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { AdminClientList } from "./components/admin/AdminClientList";
 import { ClientData } from "./components/admin/clientData";
-import { Donations } from "./components/admin/Donations";
 import { ManageAccounts } from "./components/admin/ManageAccounts";
 import { AdminPin } from "./components/authentification/AdminPin";
 import { CaseManager } from "./components/caseManager/CaseManager";
@@ -12,6 +11,7 @@ import { ClientInterviewScreening } from "./components/clientInterviewScreening/
 import { ClientList } from "./components/clientlist/ClientList";
 import { ViewPage } from "./components/clientPage/ViewPage";
 import { Dashboard } from "./components/dashboard/Dashboard";
+import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
 import { FormsHub } from "./components/formsHub/formsHub";
@@ -35,9 +35,7 @@ import { SuccessStory } from "./components/success_story/SuccessStory";
 import { AuthProvider } from "./contexts/AuthContext";
 import { BackendProvider } from "./contexts/BackendContext";
 import { FormProvider } from "./contexts/formContext";
-import { useRoleContext } from "./contexts/hooks/useRoleContext.ts";
 import { RoleProvider } from "./contexts/RoleContext";
-import { User } from "./types/user";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
