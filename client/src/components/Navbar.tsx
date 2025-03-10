@@ -1,14 +1,10 @@
-import { Avatar, Box, Flex, HStack, Link, Text, Button } from "@chakra-ui/react";
+import { Avatar, Box, HStack, Link, Text, Button } from "@chakra-ui/react";
 
 import { NavLink } from "react-router-dom";
 
 import { useAuthContext } from "../contexts/hooks/useAuthContext";
 import { useRoleContext } from "../contexts/hooks/useRoleContext";
 import { User } from "../types/user";
-
-interface NavbarProps {
-  user: User;
-}
 
 export const Navbar = () => {
   const { role } = useRoleContext();
@@ -30,10 +26,10 @@ export const Navbar = () => {
       return (
         <>
           {makeNavTabs("Client Statistics", "/admin-client-list")}
-          {makeNavTabs("Client Forms", "/forms-hub")}
+          {makeNavTabs("Client Forms", "/admin-client-forms")}
           {makeNavTabs("Monthly Statistics", "/monthly-statistics")}
           {makeNavTabs("Donations", "/donations")}
-          {makeNavTabs("Volunteer Tracking", "/volunteers")}
+          {makeNavTabs("Volunteer Tracking", "/volunteer-tracking")}
           {makeNavTabs("Settings", "/settings")}
         </>
       );
@@ -63,7 +59,7 @@ export const Navbar = () => {
           <Box>Colette's Children's Home</Box>
         </HStack>
         <HStack spacing={5}>
-          {createTabs(role)}
+          {createTabs(role ?? "user")}
           <Button onClick={logout}>Sign Out</Button>
         </HStack>
       </HStack>

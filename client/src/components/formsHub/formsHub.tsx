@@ -3,7 +3,11 @@ import { Box, Heading, Text, VStack } from "@chakra-ui/react";
 import { FormTable } from "./formsTable";
 import { StartForms } from "./startForm";
 
-export const FormsHub = () => {
+interface FormsHubProps {
+  admin?: boolean;
+}
+
+export const FormsHub = ({admin}: FormsHubProps) => {
   return (
 
     <VStack
@@ -22,15 +26,18 @@ export const FormsHub = () => {
           Forms
         </Heading>
       </Box>
-      <Text
-        fontWeight="bold"
-        px={6}
-        fontSize="lg"
-      >
-        Start a Form
-      </Text>
-
-      <StartForms />
+      {admin || (
+        <>
+          <Text
+            fontWeight="bold"
+            px={6}
+            fontSize="lg"
+          >
+            Start a Form
+          </Text>
+          <StartForms />
+        </>
+      )}
       <Box px={8}>
         <FormTable />
       </Box>
