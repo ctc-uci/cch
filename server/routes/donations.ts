@@ -39,15 +39,17 @@ donationRouter.get("/valueSum", async (req, res) => {
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
+    const queryParams = [];
     if (donor) {
-      query += ` donor = '${donor}'`;
+      queryParams.push(` donor = '${donor}'`);
     }
     if (startDate) {
-      query += ` date >= '${startDate}'`;
+      queryParams.push(` date >= '${startDate}'`);
     }
     if (endDate) {
-      query += ` date <= '${endDate}'`;
+      queryParams.push(` date <= '${endDate}'`);
     }
+    query += queryParams.join(" AND");
     const data = await db.query(
         query
     );
@@ -64,15 +66,17 @@ donationRouter.get("/weightSum", async (req, res) => {
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
+    const queryParams = [];
     if (donor) {
-      query += ` donor = '${donor}'`;
+      queryParams.push(` donor = '${donor}'`);
     }
     if (startDate) {
-      query += ` date >= '${startDate}'`;
+      queryParams.push(` date >= '${startDate}'`);
     }
     if (endDate) {
-      query += ` date <= '${endDate}'`;
+      queryParams.push(` date <= '${endDate}'`);
     }
+    query += queryParams.join(" AND");
     const data = await db.query(
         query
     );
@@ -86,19 +90,21 @@ donationRouter.get("/filter/", async (req, res) => {
   try {
     // Query database
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT * FROM donations`;
+    let query = `SELECT *, ROUND(CAST(weight * value AS DECIMAL), 2) as total FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
+    const queryParams = [];
     if (donor) {
-      query += ` donor = '${donor}'`;
+      queryParams.push(` donor = '${donor}'`);
     }
     if (startDate) {
-      query += ` date >= '${startDate}'`;
+      queryParams.push(` date >= '${startDate}'`);
     }
     if (endDate) {
-      query += ` date <= '${endDate}'`;
+      queryParams.push(` date <= '${endDate}'`);
     }
+    query += queryParams.join(" AND");
     query += ` ORDER BY date DESC`;
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
@@ -131,7 +137,6 @@ donationRouter.put("/:id", async (req, res) => {
     donor = COALESCE($4, donor), category = COALESCE($5, category) WHERE id = $6 RETURNING id`,
       [date, weight, value, donor, category, id]
     );
-    // console.log(data[0]);
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
     res.status(400).send(err.message);

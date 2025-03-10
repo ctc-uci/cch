@@ -31,7 +31,7 @@ import { FaDollarSign } from "react-icons/fa";
 // import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-import { Donation, DonationBody } from "./types";
+import { Donation } from "./types";
 
 
 export const Donations = () => {
@@ -57,28 +57,6 @@ export const Donations = () => {
     setSelectedDonation(donation);
     onOpen();
   };
-
-  // const handleUpdateDonation = (updatedDonation: Donation) => {
-  //   try {
-  //     const donationBody: DonationBody = {
-  //       donor: updatedDonation.donor,
-  //       date: updatedDonation.date,
-  //       weight: updatedDonation.weight,
-  //       category: updatedDonation.category,
-  //       value: updatedDonation.value,
-  //     };
-  //     if(!updatedDonation.id) {
-  //       backend.post('/donations', donationBody);
-  //     } else {
-  //      backend.put('/donations/' + updatedDonation.id, donationBody);
-  //     }
-  //     refreshPage();
-  //     setSelectedDonation(null);
-  //   }
-  //   catch (error) {
-  //     console.error("Error updating donation:", error);
-  //   }
-  // };
 
   const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDonor(event.target.value);
@@ -125,27 +103,27 @@ export const Donations = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString() : ""}&endDate=${endDate ? endDate.toLocaleDateString() : ""}`)).data[0].sum;
+        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`)).data[0].sum;
         setValueSum(valuesResponse);
       } catch (error) {
         console.error("Error fetching value sum:", error);
       }
       try {
-        const weightResponse = await backend.get(`/donations/weightSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString() : ""}&endDate=${endDate ? endDate.toLocaleDateString() : ""}`);
+        const weightResponse = await backend.get(`/donations/weightSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
         setWeightSum(weightResponse.data[0].sum);
       } catch (error) {
         console.error("Error fetching weight sum:", error);
       }
 
       try {
-        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString() : ""}&endDate=${endDate ? endDate.toLocaleDateString() : ""}`);
+        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
         setAllDonations(response.data);
       } catch (err) {
         console.error("Error fetching donation data", err);
       }
     };
     fetchData();
-  }, [backend, donor, startDate, endDate, allDonations, toggleRefresh]);
+  }, [donor, startDate, endDate, toggleRefresh]);
 
   return (
     <HStack w="100%" h="100%">
@@ -270,7 +248,7 @@ export const Donations = () => {
                       <Td onClick={() => handleRowClick(donation)}>{donation.category}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.weight * donation.value}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.total}</Td>
                     </Tr>
                   );})
                 : null}

@@ -19,14 +19,7 @@ interface Donation {
   category: Category;
   weight: number;
   value: number;
-}
-
-interface DonationBody{
-  donor: Donor,
-  date: string,
-  category: Category,
-  weight: number,
-  value: number,
+  total: number;
 }
 
 interface DonationForm {
@@ -38,5 +31,5 @@ interface DonationForm {
     value: number;
 }
 
-export type { Donation, DonationBody, DonationForm};
+export type { Donation, DonationForm};
 export { Category, Donor };

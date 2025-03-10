@@ -8,23 +8,26 @@ export const volunteersRouter = Router();
 // GET route to get volunteers
 volunteersRouter.get("/", async (req, res) => {
   try {
-    const { eventType } = req.query;
-    const query = eventType
-      ? `
-          SELECT *,
+    const { eventType, startDate, endDate } = req.query;
+    let query = `SELECT *,
           ROUND(CAST(hours * value AS DECIMAL), 2) as total
-          FROM volunteers
-          WHERE event_type = $1
-          ORDER BY id ASC
-        `
-      : `
-          SELECT *,
-          ROUND(CAST(hours * value AS DECIMAL), 2) as total
-          FROM volunteers
-          ORDER BY id ASC
-        `;
-
-    const users = await db.query(query, eventType ? [eventType] : []);
+          FROM volunteers`;
+    if (eventType || startDate || endDate) {
+      query += " WHERE";
+    }
+    const queryParams = [];
+    if( eventType) {
+      queryParams.push(` event_type = '${eventType}'`);
+    }
+    if (startDate) {
+      queryParams.push(` date >= '${startDate}'`);
+    }
+    if (endDate) {
+      queryParams.push(` date <= '${endDate}'`);
+    }
+    query += queryParams.join(" AND");
+    query += ` ORDER BY date DESC;`;
+    const users = await db.query(query);
     res.status(200).json(keysToCamel(users));
   } catch (err) {
     res.status(400).send(err.message);
@@ -34,8 +37,25 @@ volunteersRouter.get("/", async (req, res) => {
 // GET route to get total number of hours from all volunteers
 volunteersRouter.get("/total-hours", async (req, res) => {
   try {
+    const { eventType, startDate, endDate } = req.query;
+    let query = `SELECT SUM(hours) AS total_hours FROM volunteers`;
+    if (eventType || startDate || endDate) {
+      query += " WHERE";
+    }
+    const queryParams = [];
+    if( eventType) {
+      queryParams.push(` event_type = '${eventType}'`);
+    }
+    if (startDate) {
+      queryParams.push(` date >= '${startDate}'`);
+    }
+    if (endDate) {
+      queryParams.push(` date <= '${endDate}'`);
+    }
+    query += queryParams.join(" AND");
+    query += `;`;
     const data = await db.query(
-      `SELECT SUM(hours) AS total_hours FROM volunteers`
+      query
     );
     res.status(200).json(keysToCamel(data[0]));
   } catch (err) {
@@ -46,8 +66,25 @@ volunteersRouter.get("/total-hours", async (req, res) => {
 //GET route to get total number of unique volunteers
 volunteersRouter.get("/total-volunteers", async (req, res) => {
   try {
+    const { eventType, startDate, endDate } = req.query;
+    let query = `SELECT COUNT(DISTINCT (first_name, last_name, email)) AS total_volunteers FROM volunteers`;
+    if (eventType || startDate || endDate) {
+      query += " WHERE";
+    }
+    const queryParams = [];
+    if( eventType) {
+      queryParams.push(` event_type = '${eventType}'`);
+    }
+    if (startDate) {
+      queryParams.push(` date >= '${startDate}'`);
+    }
+    if (endDate) {
+      queryParams.push(` date <= '${endDate}'`);
+    }
+    query += queryParams.join(" AND");
+    query += `;`;
     const data = await db.query(
-      `SELECT COUNT(DISTINCT (first_name, last_name, email)) AS total_volunteers FROM volunteers`
+      query
     );
     res.status(200).json(keysToCamel(data[0]));
   } catch (err) {

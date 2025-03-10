@@ -6,6 +6,7 @@ import {
   Button,
   Checkbox,
   HStack,
+  Input,
   Select,
   Table,
   TableContainer,
@@ -41,11 +42,15 @@ import VolunteerDrawer from "./VolunteerDrawer";
 interface VolunteersTableProps {
   toggleRefresh: boolean;
   setToggleRefresh: (value: boolean) => void;
+  setTotalVolunteers: (value: number) => void;
+  setTotalHours: (value: number) => void;
 }
 
 const VolunteersTable = ({
   toggleRefresh,
   setToggleRefresh,
+  setTotalVolunteers,
+  setTotalHours,
 }: VolunteersTableProps) => {
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
@@ -53,6 +58,8 @@ const VolunteersTable = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [startDate, setStartDate] = useState<Date>();
+  const [endDate, setEndDate] = useState<Date>();
   const [currentlySelectedVolunteer, setCurrentlySelectedVolunteer] =
     useState<Volunteer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -61,10 +68,20 @@ const VolunteersTable = ({
   useEffect(() => {
     const fetchVolunteers = async () => {
       try {
-        const response = await backend.get("/volunteers", {
-          params: eventTypeFilter ? { eventType: eventTypeFilter } : undefined,
+        const params = {startDate: startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "", endDate: endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "", eventType: eventTypeFilter ? eventTypeFilter : ""};
+        const response = backend.get("/volunteers", {
+          params,
         });
-        setVolunteers(response.data);
+        const totalVolunteers = backend.get("/volunteers/total-volunteers", {
+          params,
+        });
+        const totalHours = backend.get("/volunteers/total-hours", {
+          params,
+        });
+        const [responseData, totalVolunteersData, totalHoursData] = await Promise.all([response, totalVolunteers, totalHours]);
+        setVolunteers(responseData.data);
+        setTotalVolunteers(totalVolunteersData.data.totalVolunteers);
+        setTotalHours(totalHoursData.data.totalHours);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -73,10 +90,22 @@ const VolunteersTable = ({
     };
 
     fetchVolunteers();
-  }, [toggleRefresh, backend, eventTypeFilter]);
+  }, [toggleRefresh, backend, eventTypeFilter, startDate, endDate]);
 
   const handleResetDropdowns = () => {
     setEventTypeFilter("");
+    setStartDate(undefined);
+    setEndDate(undefined);
+  };
+
+  const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = event.target.value;
+    setStartDate(dateValue ? new Date(dateValue) : undefined);
+  };
+
+  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = event.target.value;
+    setEndDate(dateValue ? new Date(dateValue) : undefined);
   };
 
   const handleCheckboxChange = useCallback((volunteerId: number) => {
@@ -239,14 +268,10 @@ const VolunteersTable = ({
             <option value="option2">Option 2</option>
             <option value="option3">Option 3</option>
           </Select>
-          <Select
-            placeholder="Select Date Range"
-            width="auto"
-          >
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            <option value="option3">Option 3</option>
-          </Select>
+          <Text>From:</Text>
+          <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
+          <Text>To:</Text>
+          <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
         </HStack>
         <HStack
           justify="space-between"

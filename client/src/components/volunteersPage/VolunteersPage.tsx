@@ -13,21 +13,7 @@ const VolunteersPage = () => {
   const [toggleRefresh, setToggleRefresh] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const totalHoursResponse = await backend.get("/volunteers/total-hours");
-        const totalVolunteersResponse = await backend.get(
-          "/volunteers/total-volunteers"
-        );
-        setTotalHours(totalHoursResponse.data.totalHours);
-        setTotalVolunteers(totalVolunteersResponse.data.totalVolunteers);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    fetchData();
-  }, [backend, toggleRefresh]);
+  }, [backend, toggleRefresh, totalVolunteers, totalHours]);
 
   return (
     <Flex align="start">
@@ -48,6 +34,8 @@ const VolunteersPage = () => {
         <VolunteersTable
           toggleRefresh={toggleRefresh}
           setToggleRefresh={setToggleRefresh}
+          setTotalVolunteers={setTotalVolunteers}
+          setTotalHours={setTotalHours}
         />
       </VStack>
     </Flex>
