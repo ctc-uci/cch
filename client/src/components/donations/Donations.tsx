@@ -30,34 +30,9 @@ import { FaDollarSign } from "react-icons/fa";
 
 // import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { set } from "react-hook-form";
 
-interface Food {
-  id: string;
-  firstName: string;
-  lastName: string;
-  phoneNumber: string;
-  email: string;
-  entranceDate: string;
-  exitDate: string;
-  dateOfBirth: string;
-}
+import { Donation } from "./types";
 
-interface Costco {
-    id: string;
-    locationId: string;
-    name: string;
-    type: string;
-  }
-
-interface Donation {
-    id: number,
-    donor: string,
-    date: Date,
-    category: string,
-    weight: number,
-    value: number,
-}
 
 export const Donations = () => {
 //   const { currentUser } = useAuthContext();
@@ -67,52 +42,20 @@ export const Donations = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
-  const [deletes, setDeletes] = useState<[string, string][]>([]);
+  const [deletes, setDeletes] = useState<number[]>([]);
 
-  const [allDonations, setAllDonations] = useState<any[]>([]);
+  const [allDonations, setAllDonations] = useState<Donation[]>([]);
   const [valueSum, setValueSum] = useState<number | null>(null);
   const [weightSum, setWeightSum] = useState<number | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
-  
+
+  const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
     onOpen();
-  };
-
-  const handleUpdateDonation = (updatedDonation: Donation) => {
-    try {
-      if (updatedDonation.donor === "costco") {
-        const costcoDonate = {
-          id: updatedDonation.id,
-          date: updatedDonation.date,
-          amount: updatedDonation.value,
-          category: updatedDonation.category
-        };
-        backend.put(`/costcoDonations/${costcoDonate.id}`, costcoDonate);
-      }
-      else {
-        const foodDonate = {
-          id: updatedDonation.id,
-          date: updatedDonation.date,
-          category: updatedDonation.donor,
-          weight: updatedDonation.weight,
-          value: updatedDonation.value
-        };
-        backend.put(`/foodDonations/${updatedDonation.id}`, foodDonate);
-      }
-      setAllDonations(allDonations.map((donation) => {
-        if (donation.id === updatedDonation.id) {
-          return updatedDonation;
-        }
-        return donation;
-      }
-      ));
-    }
-    catch (error) {
-      console.error("Error updating donation:", error);
-    }
   };
 
   const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -129,118 +72,58 @@ export const Donations = () => {
     setEndDate(dateValue ? new Date(dateValue) : undefined);
   };
 
-  const handleCheckboxChange = (id: string, donor: string) =>
+  const handleCheckboxChange = (id: number) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const checked = event.target.checked;
     if (checked) {
-      setDeletes([...deletes, [id, donor]]);
+      setDeletes([...deletes, id]);
     } else {
-      setDeletes(deletes.filter((deleteId) => !(deleteId[0] === id && deleteId[1] === donor)));
+      setDeletes(deletes.filter((deleteId) => !(deleteId === id)));
     }
   };
 
   const deleteClick = async () => {
     try {
-      const costco_dels = [];
-      const food_dels = [];
-      for (const del of deletes) {
-        if (del[1] === "costco") {
-          costco_dels.push(del[0]);
-        } else {
-          food_dels.push(del[0]);
-        }
-      }
-      if (costco_dels.length > 0) {
-        await backend.delete("/costcoDonations", { data: { ids: costco_dels } });
-      }
-      if (food_dels.length > 0) {
-        await backend.delete("/foodDonations", { data: { ids: food_dels } });
-      }
+      await backend.delete("/donations", {
+        data: {
+          ids: deletes,
+        },
+      });
+      refreshPage();
     } catch (error) {
       console.error("Error deleting users:", error);
     }
     setDeletes([]);
   };
 
+  const refreshPage = () => {
+    setToggleRefresh(!toggleRefresh);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesFoodResponse = await backend.get("/foodDonations/valueSum");
-        const valuesCostcoResponse = await backend.get("/costcoDonations/valueSum");
-        const valuesResponse = Number(valuesFoodResponse.data[0].sum) + Number(valuesCostcoResponse.data[0].sum);
+        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`)).data[0].sum;
         setValueSum(valuesResponse);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching value sum:", error);
       }
       try {
-        const weightResponse = await backend.get("/foodDonations/weightSum");
+        const weightResponse = await backend.get(`/donations/weightSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
         setWeightSum(weightResponse.data[0].sum);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching weight sum:", error);
       }
 
       try {
-        let donationsData = [];
-        let costcoData = [];
-        
-        if (donor === "") {
-          const [foodResponse, costcoResponse] = await Promise.all([
-            backend.get("/foodDonations"),
-            backend.get("/costcoDonations")
-          ]);
-
-          donationsData = foodResponse.data.map(({ id, date, category, weight, value }) => ({
-            id,
-            date,
-            donor: category,
-            category: "food",
-            weight,
-            value,
-          }));
-  
-          costcoData = costcoResponse.data.map(({ id, date, amount, category }) => ({
-            id,
-            date,
-            donor: "costco",
-            category,
-            weight: 0,
-            value: amount,
-          }));
-        } else if (donor === "costco") {
-          const costcoResponse = await backend.get("/costcoDonations");
-          costcoData = costcoResponse.data.map(({ id, date, amount, category }) => ({
-            id,
-            date,
-            donor: "costco",
-            category,
-            weight: 0,
-            value: amount,
-          }));
-        } else {
-          const foodResponse = await backend.get(`/foodDonations/${donor}`);
-          donationsData = foodResponse.data.map(({ id, date, category, weight, value }) => ({
-            id,
-            date,
-            donor: category,
-            category: "food",
-            weight,
-            value,
-          }));
-        }
-        let filteredDonations = ([...donationsData, ...costcoData]);
-        if (startDate) {
-          filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) >= new Date(startDate));
-        }
-        if (endDate) {
-          filteredDonations = filteredDonations.filter((donation) => new Date(donation.date) <= new Date(endDate));
-        }
-        setAllDonations(filteredDonations);
+        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
+        setAllDonations(response.data);
       } catch (err) {
         console.error("Error fetching donation data", err);
       }
     };
     fetchData();
-  }, [backend, donor, startDate, endDate, allDonations]);
+  }, [donor, startDate, endDate, toggleRefresh]);
 
   return (
     <HStack w="100%" h="100%">
@@ -308,7 +191,15 @@ export const Donations = () => {
           <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
 
           <Button ml='auto' onClick={deleteClick}>Delete</Button>
-          <DonationsDrawer/>
+          <Button ml='auto' onClick={() => {setSelectedDonation(null); onOpen();}}>Add</Button>
+          <EditDrawer
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setSelectedDonation(null);
+            }}
+            onFormSubmitSuccess={refreshPage}
+          />
         </HStack>
 
         <TableContainer
@@ -340,33 +231,41 @@ export const Donations = () => {
             </Thead>
             <Tbody>
               {allDonations
-                ? allDonations.map((donation, index) => (
+                ? allDonations.map((donation, index) => {
+                  const dateString = new Date(donation.date).toLocaleDateString();
+                  return (
                     <Tr key={index}>
                       <Td>
                         <Checkbox
                         onChange={
-                          handleCheckboxChange(donation.id, donation.donor)
+                          handleCheckboxChange(donation.id)
                         }
-                        isChecked={deletes.some(del => del[0] === donation.id && del[1] === donation.donor)}
+                        isChecked={deletes.some(del => del === donation.id)}
                         >{donation.id}</Checkbox>
                       </Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.date}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{dateString}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.category}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.weight * donation.value}</Td>
+                      <Td onClick={() => handleRowClick(donation)}>{donation.total}</Td>
                     </Tr>
-                  ))
+                  );})
                 : null}
             </Tbody>
           </Table>
-          <EditDrawer
-            isOpen={isOpen}
-            onClose={onClose}
-            existingDonation={selectedDonation}
-            onSubmit={handleUpdateDonation}
-          />
+          {selectedDonation && (
+            <EditDrawer
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setSelectedDonation(null);
+                refreshPage();
+              }}
+              existingDonation={selectedDonation}
+              onFormSubmitSuccess={refreshPage}
+            />
+          )}
         </TableContainer>
 
       </VStack>

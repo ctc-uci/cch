@@ -59,7 +59,7 @@ function DonationsDrawer() {
               date: sub.date.toISOString().split("T")[0], // Convert to string
               amount: sub.value,
               category: sub.category
-            };   
+            };
             if (Costco.amount === - 1 || Costco.category === "") {
               toast({
                 title: "Missing Information",
@@ -77,7 +77,7 @@ function DonationsDrawer() {
 
               hours = hours % 12;
               hours = hours ? hours : 12;
-              minutes = minutes < 10 ? '0' + minutes : minutes;
+              minutes = minutes < 10 ? 0 + minutes : minutes;
               const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split('T')[0]}`;
               toast({
                 title: "Donation Added",
@@ -88,7 +88,7 @@ function DonationsDrawer() {
               });
               closeDrawer();
             }
-            
+
           } catch (err) {
             toast({
               title: "Donation Not Added",
@@ -101,7 +101,7 @@ function DonationsDrawer() {
             console.error(err);
           }
         }
-        
+
       } else {
         for (const sub of donation.sub) {
           try {
@@ -128,7 +128,7 @@ function DonationsDrawer() {
 
               hours = hours % 12;
               hours = hours ? hours : 12;
-              minutes = minutes < 10 ? '0' + minutes : minutes;
+              minutes = minutes < 10 ?  + minutes : minutes;
               const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split('T')[0]}`;
 
               toast({
@@ -140,7 +140,7 @@ function DonationsDrawer() {
               });
               closeDrawer();
             }
-    
+
           } catch (err) {
             toast({
               title: "Donation Not Added",
@@ -153,7 +153,7 @@ function DonationsDrawer() {
             console.error(err);
         }
         }
-        
+
       }
     }
   };

@@ -10,10 +10,8 @@ import { caseManagersRouter } from "../routes/caseManagers";
 import { childRouter } from "../routes/children";
 import { clientDataRouter } from "../routes/clientData";
 import { clientsRouter } from "../routes/clients";
-import { exitSurveyRouter } from "../routes/exitSurvey"; // TODO: delete sample router
-
-import { costcoRouter } from "../routes/costcoDonations";
-import { donationRouter } from "../routes/foodDonations";
+import { exitSurveyRouter } from "../routes/exitSurvey";
+import { donationRouter } from "../routes/donations";
 import { frontDeskRouter } from "../routes/frontDesk";
 import { initialInterviewRouter } from "../routes/initialInterview";
 import { locationsRouter } from "../routes/locations";
@@ -65,8 +63,7 @@ app.use("/caseManagers", caseManagersRouter);
 app.use("/locations", locationsRouter);
 app.use("/units", unitsRouter);
 app.use("/randomSurvey", randomSurveyRouter);
-app.use("/costcoDonations", costcoRouter);
-app.use("/foodDonations", donationRouter);
+app.use("/donations", donationRouter);
 app.use("/frontDesk", frontDeskRouter);
 app.use("/clients", clientsRouter);
 app.use("/caseManagerMonthlyStats", caseManagerMonthlyStatsRouter);

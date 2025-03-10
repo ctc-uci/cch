@@ -17,84 +17,94 @@ import {
   Input,
   Grid,
   Divider,
-  useToast
+  useToast,
+  IconButton,
+  Box
 } from '@chakra-ui/react';
 
-interface Donation {
-    id: number,
-    donor: string,
-    date: Date,
-    category: string,
-    weight: number,
-    value: number,
-}
+import { FormField } from '../formField/FormField';
+import { Donation, Donor, DonationForm } from './types';
+import { CloseIcon } from '@chakra-ui/icons';
+import { useBackendContext } from '../../contexts/hooks/useBackendContext';
+
+import { formatDateForInput } from "../../utils/dateUtils";
 
 interface EditDrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    existingDonation: Donation | null;
-    onSubmit: (updatedDonation: Donation) => void;
+    existingDonation?: Donation;
+    onFormSubmitSuccess: () => void;
 }
 
-const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonation, onSubmit}) => {
-    const [donation, setDonation] = useState<Donation | null>(existingDonation);
-
+const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonation, onFormSubmitSuccess }) => {
+    const initialDonation: DonationForm = {
+        donor: existingDonation?.donor || "",
+        category: existingDonation?.category || "",
+        id: existingDonation?.id || null,
+        date: existingDonation?.date ? formatDateForInput(existingDonation.date) : "",
+        weight: existingDonation?.weight || 0,
+        value: existingDonation?.value || 0,
+    }
+    const { backend } = useBackendContext();
+    const [donation, setDonation] = useState<DonationForm>(initialDonation);
+    const [totalValue, setTotalValue] = useState<number>(0);
     useEffect(() => {
-        setDonation(existingDonation);
-      }, [existingDonation]);
-    
+        const weight = donation?.weight || 0;
+        const value = donation?.value || 0;
+        setTotalValue(weight * value);
+      }, [donation]);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        if (donation) {
-            setDonation({
-                ...donation,
-                [e.target.name]: e.target.value,
-            });
-        }
+        const { name, value } = e.target;
+        setDonation((prev) => {
+            return {
+                ...prev,
+                [name]: value,
+            };
+        });
       };
 
-    const handleEditDonation = () => {
-        if (donation) {
-            onSubmit(donation);
-            onClose();
-        }
+      const toast = useToast();
+
+    const handleEditDonation = async () => {
+      try{
+          if (donation.id) {
+              await backend.put(`/donations/${donation.id}`, donation);
+          }
+          else{
+              await backend.post('/donations', donation);
+          }
+          toast({
+            title: donation.id ? "Donation Edited": "Donation Added",
+            description: donation.id ? "Donation has been edited.": "Donation has been added.",
+            status: "success",
+            duration: 9000,
+            isClosable: true,
+        });
+        setDonation(initialDonation);
+        onFormSubmitSuccess();
+        onClose();
+      }
+      catch (error) {
+        toast({
+            title: "Error",
+            description: donation.id ? "Error editing donation." : "Error adding donation.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+        });
+      }
     };
 
-    function checkForNullValues() {
-        if (donation) {
-            if (donation.donor === "" || isNaN(donation.date.getTime()) || donation.category === "" || donation.weight === 0 || donation.value === 0) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    const toast = useToast();
 
     function submitEdit() {
-        if (checkForNullValues()) {
-            toast({
-                title: "Missing Information",
-                description: "There may be missing or incorrect information",
-                status: "warning",
-                duration: 9000,
-                isClosable: true,
-            });
-        }
-        else {
-            handleEditDonation();
-            toast({
-                title: "Donation Edited",
-                description: "Donation has been edited.",
-                status: "success",
-                duration: 9000,
-                isClosable: true,
-            });
-        }
+        handleEditDonation();
     }
 
     function cancelEdit() {
         const toastId = toast({
-            render: () => 
+            render: () =>
                 <Box
                     bg="white"
                     p={5}
@@ -155,66 +165,80 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Edit Donations</DrawerHeader>
+          <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>
                 <CardBody>
                 <VStack spacing={4} align="stretch">
                     <Grid templateColumns="40% 55%" gap={6} alignItems="center">
-                        <Text textAlign="left" fontWeight="bold">Donor</Text>
-                        <Select
-                            id="donorSelect"
-                            name="donor"
-                            placeholder="Select Donor"
-                            onChange={handleChange}
-                            value={donation ? donation.donor : ""}
-                        >
-                            <option value="panera">Panera</option>
-                            <option value="sprouts">Sprouts</option>
-                            <option value="copia">Copia</option>
-                            <option value="mcdonalds">McDonald's</option>
-                            <option value="pantry">Pantry</option>
-                            <option value="grand theater">Grand Theater</option>
-                            <option value="costco">Costco</option>
-                        </Select>
+                        <FormField isRequired label='Donor'>
+                          <Select
+                              id="donorSelect"
+                              name="donor"
+                              placeholder="Select Donor"
+                              onChange={handleChange}
+                              value={donation.donor}
+                          >
+                              {Object.keys(Donor).map(key => {
+                                const value = Donor[key as keyof typeof Donor];
+                                return (
+                                  <option key={value} value={value}>
+                                    {value}
+                                  </option>
+                                );
+                              })}
+                          </Select>
+                        </FormField>
+                        <FormField isRequired label='Date Donated'>
+                          <Input
+                              type="date"
+                              name="date"
+                              onChange={handleChange}
+                              value={donation.date}
+                          />
+                        </FormField>
+                        <FormField isRequired label='Type'>
+                          <Select
+                              name="category"
+                              onChange={handleChange}
+                              value={donation.category}
+                          >
+                              <option value="">Select Type</option>
+                              <option value="food">Food</option>
+                              <option value="client">Client</option>
+                          </Select>
+                        </FormField>
 
-                        <Text textAlign="left" fontWeight="bold">Date Donated</Text>
-                        <Input 
-                            type="date" 
-                            name="date" 
-                            onChange={handleChange} 
-                            value={donation && donation.date instanceof Date ? donation.date.toISOString().split("T")[0] : ""} 
-                        />
+                        <FormField isRequired label='Weight'>
+                          <Input
+                              type="number"
+                              name="weight"
+                              onChange={handleChange}
+                              value={donation.weight}
+                          />
+                        </FormField>
 
-                        <Text textAlign="left" fontWeight="bold">Type</Text>
-                        <Select
-                            name="type"
-                            onChange={handleChange}
-                            value={donation ? donation.category : ""}
-                        >
-                            <option value="food">Food</option>
-                            <option value="client">Client</option>
-                        </Select>
-
-                        <Text textAlign="left" fontWeight="bold">Weight</Text>
-                        <Input 
-                            type="number" 
-                            name="weight" 
-                            onChange={handleChange} 
-                            value={donation ? donation.weight : ""}
-                        />
-
-                        <Text textAlign="left" fontWeight="bold">Value</Text>
-                        <Input 
-                            type="number" 
-                            name="value" 
-                            onChange={handleChange} 
-                            value={donation ? donation.value : ""}
-                        />
+                        <FormField isRequired label='Value'>
+                          <Input
+                              type="number"
+                              name="value"
+                              onChange={handleChange}
+                              value={donation.value}
+                          />
+                        </FormField>
                         <Divider w='125%'></Divider>
                         <Divider></Divider>
-                        <Text textAlign="left" fontWeight="bold">Total</Text>
-                        <Text textAlign="left" fontWeight="bold">$ {donation ? donation.weight * donation.value : 0}</Text>
+                        <FormField label="Total Value">
+                          <Text
+                            width="60%"
+                            textAlign="right"
+                            size="md"
+                            fontWeight="semibold"
+                            color={totalValue === 0 ? "#718096" : "inherit"}
+                          >
+                            ${totalValue.toFixed(2)}
+                          </Text>
+                        </FormField>
                     </Grid>
                 </VStack>
                 </CardBody>
