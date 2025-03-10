@@ -34,8 +34,22 @@ donationRouter.get("/date", async (req, res) => {
 
 donationRouter.get("/valueSum", async (req, res) => {
   try {
+    const { donor, startDate, endDate } = req.query;
+    let query = `SELECT SUM(value) FROM donations`;
+    if (donor || startDate || endDate) {
+      query += " WHERE";
+    }
+    if (donor) {
+      query += ` donor = '${donor}'`;
+    }
+    if (startDate) {
+      query += ` date >= '${startDate}'`;
+    }
+    if (endDate) {
+      query += ` date <= '${endDate}'`;
+    }
     const data = await db.query(
-        `SELECT SUM(value) FROM donations`,
+        query
     );
     res.status(200).send(keysToCamel(data));
   } catch (err) {
@@ -45,8 +59,22 @@ donationRouter.get("/valueSum", async (req, res) => {
 
 donationRouter.get("/weightSum", async (req, res) => {
   try {
+    const { donor, startDate, endDate } = req.query;
+    let query = `SELECT SUM(weight) FROM donations`;
+    if (donor || startDate || endDate) {
+      query += " WHERE";
+    }
+    if (donor) {
+      query += ` donor = '${donor}'`;
+    }
+    if (startDate) {
+      query += ` date >= '${startDate}'`;
+    }
+    if (endDate) {
+      query += ` date <= '${endDate}'`;
+    }
     const data = await db.query(
-        `SELECT SUM(weight) FROM donations`,
+        query
     );
     res.status(200).send(keysToCamel(data));
   } catch (err) {
@@ -71,6 +99,7 @@ donationRouter.get("/filter/", async (req, res) => {
     if (endDate) {
       query += ` date <= '${endDate}'`;
     }
+    query += ` ORDER BY date DESC`;
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
@@ -80,10 +109,10 @@ donationRouter.get("/filter/", async (req, res) => {
 
 donationRouter.post("/", async (req, res) => {
   try {
-    const { date, weight, value, donor } = req.body;
+    const { date, weight, value, donor, category } = req.body;
     const data = await db.query(
-      `INSERT INTO donations (date, weight, value, donor) VALUES ($1, $2, $3, $4) RETURNING id`,
-      [date, weight, value, donor]
+      `INSERT INTO donations (date, weight, value, donor, category) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [date, weight, value, donor, category]
     );
 
     res.status(200).json(keysToCamel(data[0]["id"]));
@@ -94,13 +123,13 @@ donationRouter.post("/", async (req, res) => {
 
 donationRouter.put("/:id", async (req, res) => {
   try {
-    const { date, weight, value, donor } = req.body;
+    const { date, weight, value, donor, category } = req.body;
     const { id } = req.params;
 
     const data = await db.query(
       `UPDATE donations SET date = COALESCE($1, date),weight = COALESCE($2, weight),value = COALESCE($3, value),
-    category = COALESCE($4, donor) WHERE id = $5 RETURNING id`,
-      [date, weight, value, donor, id]
+    donor = COALESCE($4, donor), category = COALESCE($5, category) WHERE id = $6 RETURNING id`,
+      [date, weight, value, donor, category, id]
     );
     // console.log(data[0]);
     res.status(200).json(keysToCamel(data[0]["id"]));

@@ -30,12 +30,13 @@ interface DonationBody{
 }
 
 interface DonationForm {
-  date: string;
-  donor: string;
-  category: string;
-  weight: string;
-  value: string;
+    donor: string;
+    category: string;
+    id: number | null;
+    date: string;
+    weight: number;
+    value: number;
 }
 
-export type { Donation, DonationBody};
+export type { Donation, DonationBody, DonationForm};
 export { Category, Donor };

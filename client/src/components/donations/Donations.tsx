@@ -58,23 +58,27 @@ export const Donations = () => {
     onOpen();
   };
 
-  const handleUpdateDonation = (updatedDonation: Donation) => {
-    try {
-      const donationBody: DonationBody = {
-        donor: updatedDonation.donor,
-        date: updatedDonation.date,
-        weight: updatedDonation.weight,
-        category: updatedDonation.category,
-        value: updatedDonation.value,
-      };
-      backend.put('/donations/' + updatedDonation.id, donationBody);
-      refreshPage();
-      setSelectedDonation(null);
-    }
-    catch (error) {
-      console.error("Error updating donation:", error);
-    }
-  };
+  // const handleUpdateDonation = (updatedDonation: Donation) => {
+  //   try {
+  //     const donationBody: DonationBody = {
+  //       donor: updatedDonation.donor,
+  //       date: updatedDonation.date,
+  //       weight: updatedDonation.weight,
+  //       category: updatedDonation.category,
+  //       value: updatedDonation.value,
+  //     };
+  //     if(!updatedDonation.id) {
+  //       backend.post('/donations', donationBody);
+  //     } else {
+  //      backend.put('/donations/' + updatedDonation.id, donationBody);
+  //     }
+  //     refreshPage();
+  //     setSelectedDonation(null);
+  //   }
+  //   catch (error) {
+  //     console.error("Error updating donation:", error);
+  //   }
+  // };
 
   const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setDonor(event.target.value);
@@ -121,13 +125,13 @@ export const Donations = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesResponse = (await backend.get("/donations/valueSum")).data[0].sum;
+        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString() : ""}&endDate=${endDate ? endDate.toLocaleDateString() : ""}`)).data[0].sum;
         setValueSum(valuesResponse);
       } catch (error) {
         console.error("Error fetching value sum:", error);
       }
       try {
-        const weightResponse = await backend.get("/donations/weightSum");
+        const weightResponse = await backend.get(`/donations/weightSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString() : ""}&endDate=${endDate ? endDate.toLocaleDateString() : ""}`);
         setWeightSum(weightResponse.data[0].sum);
       } catch (error) {
         console.error("Error fetching weight sum:", error);
@@ -209,7 +213,15 @@ export const Donations = () => {
           <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
 
           <Button ml='auto' onClick={deleteClick}>Delete</Button>
-          <DonationsDrawer/>
+          <Button ml='auto' onClick={() => {setSelectedDonation(null); onOpen();}}>Add</Button>
+          <EditDrawer
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setSelectedDonation(null);
+            }}
+            onFormSubmitSuccess={refreshPage}
+          />
         </HStack>
 
         <TableContainer
@@ -264,12 +276,18 @@ export const Donations = () => {
                 : null}
             </Tbody>
           </Table>
-          <EditDrawer
-            isOpen={isOpen}
-            onClose={onClose}
-            existingDonation={selectedDonation}
-            onSubmit={handleUpdateDonation}
-          />
+          {selectedDonation && (
+            <EditDrawer
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setSelectedDonation(null);
+                refreshPage();
+              }}
+              existingDonation={selectedDonation}
+              onFormSubmitSuccess={refreshPage}
+            />
+          )}
         </TableContainer>
 
       </VStack>

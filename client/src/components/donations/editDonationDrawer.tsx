@@ -23,37 +23,57 @@ import {
 } from '@chakra-ui/react';
 
 import { FormField } from '../formField/FormField';
-import { Donation, Category, Donor } from './types';
+import { Donation, Donor, DonationForm } from './types';
 import { CloseIcon } from '@chakra-ui/icons';
+import { useBackendContext } from '../../contexts/hooks/useBackendContext';
+
+import { formatDateForInput } from "../../utils/dateUtils";
 
 interface EditDrawerProps {
     isOpen: boolean;
     onClose: () => void;
-    existingDonation: Donation | null;
-    onSubmit: (updatedDonation: Donation) => void;
+    existingDonation?: Donation;
+    onFormSubmitSuccess: () => void;
 }
 
-const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonation, onSubmit}) => {
-    const [donation, setDonation] = useState<Donation | null>(existingDonation);
-
+const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonation, onFormSubmitSuccess }) => {
+    const initialDonation: DonationForm = {
+        donor: existingDonation?.donor || "",
+        category: existingDonation?.category || "",
+        id: existingDonation?.id || null,
+        date: existingDonation?.date ? formatDateForInput(existingDonation.date) : "",
+        weight: existingDonation?.weight || 0,
+        value: existingDonation?.value || 0,
+    }
+    const { backend } = useBackendContext();
+    const [donation, setDonation] = useState<DonationForm>(initialDonation);
+    const [totalValue, setTotalValue] = useState<number>(0);
     useEffect(() => {
-        setDonation(existingDonation);
-      }, [existingDonation]);
+        const weight = donation?.weight || 0;
+        const value = donation?.value || 0;
+        setTotalValue(weight * value);
+      }, [donation]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        if (donation) {
-            setDonation({
-                ...donation,
-                [e.target.name]: e.target.value,
-            });
-        }
+        const { name, value } = e.target;
+        setDonation((prev) => {
+            return {
+                ...prev,
+                [name]: value,
+            };
+        });
       };
 
     const handleEditDonation = () => {
-        if (donation) {
-            onSubmit(donation);
-            onClose();
+        if (donation.id) {
+            backend.put(`/donations/${donation.id}`, donation);
         }
+        else{
+            backend.post('/donations', donation);
+        }
+        setDonation(initialDonation);
+        onFormSubmitSuccess();
+        onClose();
     };
 
     const toast = useToast();
@@ -132,7 +152,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>Edit Donations</DrawerHeader>
+          <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>
                 <CardBody>
@@ -144,10 +164,10 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                               name="donor"
                               placeholder="Select Donor"
                               onChange={handleChange}
-                              value={donation ? donation.donor : ""}
+                              value={donation.donor}
                           >
-                              {Object.keys(Category).map(key => {
-                                const value = Category[key as keyof typeof Category];
+                              {Object.keys(Donor).map(key => {
+                                const value = Donor[key as keyof typeof Donor];
                                 return (
                                   <option key={value} value={value}>
                                     {value}
@@ -161,15 +181,16 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                               type="date"
                               name="date"
                               onChange={handleChange}
-                              value={donation ? donation.date : ""}
+                              value={donation.date}
                           />
                         </FormField>
                         <FormField isRequired label='Type'>
                           <Select
-                              name="type"
+                              name="category"
                               onChange={handleChange}
-                              value={donation ? donation.category : ""}
+                              value={donation.category}
                           >
+                              <option value="">Select Type</option>
                               <option value="food">Food</option>
                               <option value="client">Client</option>
                           </Select>
@@ -180,7 +201,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                               type="number"
                               name="weight"
                               onChange={handleChange}
-                              value={donation ? donation.weight : ""}
+                              value={donation.weight}
                           />
                         </FormField>
 
@@ -189,7 +210,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                               type="number"
                               name="value"
                               onChange={handleChange}
-                              value={donation ? donation.value : ""}
+                              value={donation.value}
                           />
                         </FormField>
                         <Divider w='125%'></Divider>
