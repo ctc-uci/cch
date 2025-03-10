@@ -64,29 +64,42 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         });
       };
 
-    const handleEditDonation = () => {
-        if (donation.id) {
-            backend.put(`/donations/${donation.id}`, donation);
-        }
-        else{
-            backend.post('/donations', donation);
-        }
-        setDonation(initialDonation);
-        onFormSubmitSuccess();
-        onClose();
-    };
+      const toast = useToast();
 
-    const toast = useToast();
-
-    function submitEdit() {
-        handleEditDonation();
-        toast({
-            title: "Donation Edited",
-            description: "Donation has been edited.",
+    const handleEditDonation = async () => {
+      try{
+          if (donation.id) {
+              await backend.put(`/donations/${donation.id}`, donation);
+          }
+          else{
+              await backend.post('/donations', donation);
+          }
+          toast({
+            title: donation.id ? "Donation Edited": "Donation Added",
+            description: donation.id ? "Donation has been edited.": "Donation has been added.",
             status: "success",
             duration: 9000,
             isClosable: true,
         });
+        setDonation(initialDonation);
+        onFormSubmitSuccess();
+        onClose();
+      }
+      catch (error) {
+        toast({
+            title: "Error",
+            description: donation.id ? "Error editing donation." : "Error adding donation.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+        });
+      }
+    };
+
+
+
+    function submitEdit() {
+        handleEditDonation();
     }
 
     function cancelEdit() {
