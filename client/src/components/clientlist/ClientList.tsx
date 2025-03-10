@@ -73,8 +73,11 @@ interface Client {
 
 import { downloadCSV } from "../../utils/downloadCSV";
 
+interface ClientListProps {
+  admin?: boolean;
+}
 
-export const ClientList = () => {
+export const ClientList = ({admin}: ClientListProps) => {
   const headers = [
     "Client First Name",
     "Client Last Name",
@@ -189,9 +192,9 @@ export const ClientList = () => {
           Last Updated: {}
         </Heading>
       </HStack>
-
-      <UpdateClients/>
-
+      {admin && (
+        <UpdateClients/>
+      )}
       <VStack></VStack>
       <HStack
         width="100%"

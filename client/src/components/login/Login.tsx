@@ -73,8 +73,8 @@ export const Login = () => {
         email: data.email,
         password: data.password,
       });
-
-      navigate("/dashboard");
+      if (userType === "Case Manager") navigate("/clientlist");
+      else if (userType === "Admin") navigate("/admin-client-list");
     } catch (err) {
       const errorCode = err.code;
       const firebaseErrorMsg = err.message;

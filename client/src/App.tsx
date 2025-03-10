@@ -32,7 +32,6 @@ import { ClientInterviewScreening } from "./components/clientInterviewScreening/
 import { IntakeStats } from "./components/intakeStatsForm/intakeStats"
 import { CaseManagerMonthlyStats } from "./components/caseManagerMonthlyStats/CaseManagerMonthlyStats";
 import { Navbar } from "./components/Navbar";
-import { User } from "./types/user";
 import { AdminClientList } from "./components/admin/AdminClientList";
 import PersonalInformation from "./components/interviewScreeningForm/PersonalInformation";
 import { FormProvider } from "./contexts/formContext";
@@ -43,6 +42,9 @@ import ReviewInformation from "./components/interviewScreeningForm/reviewInforma
 import Success from "./components/interviewScreeningForm/success";
 import { StartForms } from "./components/formsHub/startForm";
 import UserSettings from "./components/userSettings/UserSettings";
+import VolunteersPage from "./components/volunteersPage/VolunteersPage";
+import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
+import CommentForm from "./components/initialScreener/commentForm";
 
 const App = () => {
 
@@ -58,20 +60,13 @@ const App = () => {
     currentRoute === 'admin-pin'
   );
 
-  const user : User = {
-    id: 1,
-    email: "poop@uci.edu",
-    role: "user",
-    firebaseUid: "123456789",
-  };
-
   return (
     <CookiesProvider>
       <BackendProvider>
         <AuthProvider>
           <RoleProvider>
             <FormProvider>
-            {shouldShowNavbar && <Navbar user={user} />}
+            {shouldShowNavbar && <Navbar />}
             <Routes>
               <Route
                 path="/landing-page"
@@ -105,7 +100,7 @@ const App = () => {
                 path="/success-story"
                 element={<SuccessStory />}
               />
-              <Route 
+              <Route
                 path="/settings"
                 element={<ProtectedRoute element={<UserSettings />} />}
               />
@@ -156,22 +151,13 @@ const App = () => {
                   path = "/donations"
                   element = {<Donations />}
                 />
-
                 <Route
-                  path="/"
-                  element={
-                    <Navigate
-                      to="/landing-page"
-                      replace
-                    />
-                  }
+                  path = "/volunteer-tracking"
+                  element = {<ProtectedRoute element={<VolunteersPage />} allowedRoles={["admin"]}/>}
                 />
                 <Route
-                  path="*"
-                  element={<Navigate
-                    to="/landing-page"
-                    replace
-                  />}
+                  path = "/admin-client-forms"
+                  element = {<ProtectedRoute element={<FormsHub admin />} allowedRoles={["admin"]}/>}
                 />
                 <Route
                   path="/ViewClient/:id"
@@ -217,6 +203,30 @@ const App = () => {
                     path ="/success"
                     element ={<Success/>}
                   />
+                  <Route
+                    path = "/initial-screener-table"
+                    element = {<ProtectedRoute element={<InitialScreenerTable />} allowedRoles={["user"]}/>}
+                  />
+                  <Route
+                    path = "/comment-form/:id"
+                    element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
+                  />
+                <Route
+                  path="/"
+                  element={
+                    <Navigate
+                      to="/landing-page"
+                      replace
+                    />
+                  }
+                />
+                <Route
+                  path="*"
+                  element={<Navigate
+                    to="/landing-page"
+                    replace
+                  />}
+                />
 
               </Routes>
             </FormProvider>
