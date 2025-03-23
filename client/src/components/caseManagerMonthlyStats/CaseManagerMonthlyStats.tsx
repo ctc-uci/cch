@@ -28,6 +28,7 @@ export const CaseManagerMonthlyStats = () => {
   const currentYear = new Date().getFullYear();
   const [allTabData, setAllTabData] = useState<TabData[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   useEffect(() => {
     const getData = async () => {
@@ -42,6 +43,36 @@ export const CaseManagerMonthlyStats = () => {
     };
     getData();
   }, [backend, selectedYear]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const frontDeskResponse = await backend.get(`/lastUpdated/front_desk_monthly`);
+        const cmResponse = await backend.get(`/lastUpdated/cm_monthly_stats`);
+
+        const frontDesk = new Date(frontDeskResponse.data[0].lastUpdatedAt);
+        const cmMonthly = new Date(cmResponse.data[0].lastUpdatedAt);
+
+        const mostRecent = new Date(Math.max(
+          frontDesk ? frontDesk.getTime() : 0,
+          cmMonthly ? cmMonthly.getTime() : 0
+        ));
+
+        if (mostRecent.getTime() === 0){
+          setLastUpdated("");
+        }
+        else{
+          const formattedDate = mostRecent.toLocaleString();
+          setLastUpdated(formattedDate);
+        }
+
+      } catch (error) {
+        console.error("Error fetching last updated:", error);
+      }
+    };
+
+    fetchData();
+  }, [backend]);
 
   const buttonStyle = {
     variant: "outline",
@@ -58,7 +89,7 @@ export const CaseManagerMonthlyStats = () => {
         gap="10px"
       >
         <Heading>Monthly Statistics</Heading>
-        <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text fontSize="14px">Last Updated: {lastUpdated}</Text>
       </VStack>
 
       <HStack alignSelf="end">

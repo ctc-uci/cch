@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS last_updated;
 
 CREATE TABLE last_updated(
-	table_name VARCHAR(16) NOT NULL PRIMARY KEY,
+	table_name VARCHAR(64) NOT NULL PRIMARY KEY,
     last_updated_at TIMESTAMP NOT NULL,
 );
 

@@ -64,9 +64,10 @@ export const FormTable = () => {
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [initialScreenerDate, setInitialScreenerDate] = useState<string>("");
-  const [frontDeskDate, setFrontDeskDate] = useState<string>("");
-  const [, ] = useState<string>("");
+  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(null);
+  const [frontDeskDate, setFrontDeskDate] = useState<Date | null>(null);
+  const [cmMonthlyDate, setCMMonthlyDate] = useState<Date | null>(null);
+  const [mostRecentDate, setMostRecentDate] = useState<Date | null>(null);
 
   const formatDate = (x: string) => {
     const date = new Date(x);
@@ -172,22 +173,48 @@ export const FormTable = () => {
         const frontDeskMonthlyStatsResponse = await backend.get(`/lastUpdated/front_desk_monthly`);
         const cmMonthlyStatsResponse = await backend.get(`/lastUpdated/cm_monthly_stats`);
         
-        const initialScreenerDate = new Date(initialScreenerResponse.data[0].lastUpdatedAt);
-        const frontDeskDate = new Date(frontDeskMonthlyStatsResponse.data[0].lastUpdatedAt);
-        const cmMonthlyDate = new Date(cmMonthlyStatsResponse.data[0].lastUpdatedAt);
+        const getDate = (date) => {
+          if (date && date[0] && date[0].lastUpdatedAt){
+            return new Date(date[0].lastUpdatedAt);
+          }
+          return null;
+        }
 
+        const initialScreener = getDate(initialScreenerResponse.data);
+        const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
+        const cmMonthly = getDate(cmMonthlyStatsResponse.data);
         
-
-        // const formattedDate = date.toLocaleString();
-        setLastUpdated(formattedDate);
-
+        setInitialScreenerDate(initialScreener);
+        setFrontDeskDate(frontDesk);
+        setCMMonthlyDate(cmMonthly);
+  
+        const mostRecent = new Date(Math.max(
+          initialScreener ? initialScreener.getTime() : 0,
+          frontDesk ? frontDesk.getTime() : 0,
+          cmMonthly ? cmMonthly.getTime() : 0
+        ));
+        setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
       } catch (error) {
         console.error("Error fetching last updated:", error);
       }
     };
-
+  
     fetchData();
-  }, [lastUpdated, backend]);
+  }, [backend]);
+
+  useEffect(() => {
+    if (currentView === "All Forms" && mostRecentDate) {
+      setLastUpdated(mostRecentDate.toLocaleString());
+    } else if (currentView === "Initial Screeners" && initialScreenerDate) {
+      setLastUpdated(initialScreenerDate.toLocaleString());
+    } else if (currentView === "Front Desk Monthly Statistics" && frontDeskDate) {
+      setLastUpdated(frontDeskDate.toLocaleString());
+    } else if (currentView === "Case Manager Monthly Statistics" && cmMonthlyDate) {
+      setLastUpdated(cmMonthlyDate.toLocaleString());
+    } else {
+      setLastUpdated("");
+    }
+  }, [currentView, initialScreenerDate, frontDeskDate, cmMonthlyDate, mostRecentDate])
 
 
   const buttonStyle = (view: ViewOption) => {
