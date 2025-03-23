@@ -63,6 +63,10 @@ export const FormTable = () => {
   const [items, setItems] = useState<FormItem[]>([]);
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [initialScreenerDate, setInitialScreenerDate] = useState<string>("");
+  const [frontDeskDate, setFrontDeskDate] = useState<string>("");
+  const [, ] = useState<string>("");
 
   const formatDate = (x: string) => {
     const date = new Date(x);
@@ -161,6 +165,30 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const initialScreenerResponse = await backend.get(`/lastUpdated/initial_interview`);
+        const frontDeskMonthlyStatsResponse = await backend.get(`/lastUpdated/front_desk_monthly`);
+        const cmMonthlyStatsResponse = await backend.get(`/lastUpdated/cm_monthly_stats`);
+        
+        const initialScreenerDate = new Date(initialScreenerResponse.data[0].lastUpdatedAt);
+        const frontDeskDate = new Date(frontDeskMonthlyStatsResponse.data[0].lastUpdatedAt);
+        const cmMonthlyDate = new Date(cmMonthlyStatsResponse.data[0].lastUpdatedAt);
+
+        
+
+        // const formattedDate = date.toLocaleString();
+        setLastUpdated(formattedDate);
+
+      } catch (error) {
+        console.error("Error fetching last updated:", error);
+      }
+    };
+
+    fetchData();
+  }, [lastUpdated, backend]);
+
 
   const buttonStyle = (view: ViewOption) => {
     const isActive = currentView === view;
@@ -198,7 +226,8 @@ export const FormTable = () => {
       >
         Form History
       </Text>
-      <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+      {/* <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text> */}
+      <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
 
       <Flex
         overflowX="auto"

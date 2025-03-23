@@ -52,6 +52,7 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
@@ -99,6 +100,21 @@ export const Donations = () => {
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
   };
+  useEffect(() => {
+      const fetchData = async () => {
+        try {
+          const response = await backend.get(`/lastUpdated/donations`);
+          const date = new Date(response.data[0].lastUpdatedAt);
+          const formattedDate = date.toLocaleString();
+          setLastUpdated(formattedDate);
+  
+        } catch (error) {
+          console.error("Error fetching last updated:", error);
+        }
+      };
+  
+      fetchData();
+    }, [lastUpdated, backend]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,7 +145,7 @@ export const Donations = () => {
     <HStack w="100%" h="100%">
       <VStack w="25vw" h="100vh">
         <Heading>Donations</Heading>
-        <Text>Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text>Last Updated: {lastUpdated}</Text>
         <HStack
         border="2px solid #CBD5E0"
         borderRadius="12px"

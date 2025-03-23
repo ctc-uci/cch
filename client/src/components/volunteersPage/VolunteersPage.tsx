@@ -11,9 +11,26 @@ const VolunteersPage = () => {
   const [totalVolunteers, setTotalVolunteers] = useState(0);
   const [totalHours, setTotalHours] = useState(0);
   const [toggleRefresh, setToggleRefresh] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState("");
 
   useEffect(() => {
   }, [backend, toggleRefresh, totalVolunteers, totalHours]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await backend.get(`/lastUpdated/volunteers`);
+        const date = new Date(response.data[0].lastUpdatedAt);
+        const formattedDate = date.toLocaleString();
+        setLastUpdated(formattedDate);
+
+      } catch (error) {
+        console.error("Error fetching last updated:", error);
+      }
+    };
+
+    fetchData();
+  }, [lastUpdated, backend]);
 
   return (
     <Flex align="start">
@@ -24,6 +41,7 @@ const VolunteersPage = () => {
         <VolunteersStatistics
           totalVolunteers={totalVolunteers}
           totalHours={totalHours}
+          lastUpdated={lastUpdated}
         />
       </VStack>
       <VStack

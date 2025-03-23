@@ -92,6 +92,8 @@ const VolunteersTable = ({
     fetchVolunteers();
   }, [toggleRefresh, backend, eventTypeFilter, startDate, endDate]);
 
+
+
   const handleResetDropdowns = () => {
     setEventTypeFilter("");
     setStartDate(undefined);

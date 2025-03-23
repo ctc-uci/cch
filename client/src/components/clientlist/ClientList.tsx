@@ -95,6 +95,7 @@ export const ClientList = ({admin}: ClientListProps) => {
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
 
+  const [lastUpdated, setLastUpdated] = useState<string>("");
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
 
@@ -148,6 +149,22 @@ export const ClientList = ({admin}: ClientListProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const response = await backend.get(`/lastUpdated/clients`);
+        const date = new Date(response.data[0].lastUpdatedAt);
+        const formattedDate = date.toLocaleString();
+        setLastUpdated(formattedDate);
+
+      } catch (error) {
+        console.error("Error fetching last updated:", error);
+      }
+    };
+
+    fetchData();
+  }, [lastUpdated, backend]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
         let response;
         if (searchKey && filterQuery.length > 1) {
           response = await backend.get(
@@ -189,7 +206,7 @@ export const ClientList = ({admin}: ClientListProps) => {
           size="sm"
           paddingLeft="10%"
         >
-          Last Updated: {}
+          Last Updated: {lastUpdated}
         </Heading>
       </HStack>
       {admin && (
