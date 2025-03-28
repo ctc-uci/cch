@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDisclosure } from "@chakra-ui/hooks";
 // import { useNavigate } from "react-router-dom";
 import DonationsDrawer from "./addDonations/donationsDrawer";
@@ -22,7 +22,8 @@ import {
   StatNumber,
   Input,
   Checkbox,
-  Button
+  Button,
+  Box
 } from "@chakra-ui/react";
 
 import { FaBalanceScale } from "react-icons/fa";
@@ -32,6 +33,9 @@ import { FaDollarSign } from "react-icons/fa";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 import { Donation } from "./types";
+import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, SortingState, useReactTable } from "@tanstack/react-table";
+import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 
 
 export const Donations = () => {
@@ -42,7 +46,7 @@ export const Donations = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
 
-  const [deletes, setDeletes] = useState<number[]>([]);
+  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
 
   const [allDonations, setAllDonations] = useState<Donation[]>([]);
   const [valueSum, setValueSum] = useState<number | null>(null);
@@ -50,6 +54,7 @@ export const Donations = () => {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
 
@@ -72,33 +77,103 @@ export const Donations = () => {
     setEndDate(dateValue ? new Date(dateValue) : undefined);
   };
 
-  const handleCheckboxChange = (id: number) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const checked = event.target.checked;
-    if (checked) {
-      setDeletes([...deletes, id]);
-    } else {
-      setDeletes(deletes.filter((deleteId) => !(deleteId === id)));
-    }
-  };
-
   const deleteClick = async () => {
     try {
       await backend.delete("/donations", {
         data: {
-          ids: deletes,
+          ids: selectedRowIds,
         },
       });
       refreshPage();
     } catch (error) {
       console.error("Error deleting users:", error);
     }
-    setDeletes([]);
+    setSelectedRowIds([]);
   };
 
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
   };
+
+  const columns = useMemo<ColumnDef<Donation>[]>(
+    () => [
+      {
+        id: "id",
+        accessorKey: "id",
+        header: ({ table }) => {
+          return (
+            <Checkbox
+              isChecked={selectedRowIds.length > 0}
+              isIndeterminate={table.getIsSomeRowsSelected()}
+              onChange={handleSelectAllCheckboxClick}
+            />
+          );
+        },
+      },
+      {
+        header: "Date",
+        accessorFn: (row) =>
+          `${row.date}`,
+        cell: ({ getValue }) => {
+          const date = getValue() as string;
+          return new Date(date).toLocaleDateString("en-US", {
+            month: "2-digit",
+            day: "2-digit",
+            year: "numeric",
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Uses browser's timezone
+          });
+        },
+      },
+      {
+        accessorKey: "donor",
+        header: "Donor",
+      },
+      {
+        accessorKey: "category",
+        header: "Category",
+      },
+      {
+        accessorKey: "weight",
+        header: "Weight (LB)",
+      },
+      {
+        accessorKey: "value",
+        header: "Value ($)",
+      },
+      {
+        accessorKey: "total",
+        header: "Total",
+      },
+      ],
+      [selectedRowIds, allDonations]
+    );
+
+    const table = useReactTable({
+      data: allDonations,
+      columns,
+      state: {
+        sorting,
+      },
+      onSortingChange: setSorting,
+      getCoreRowModel: getCoreRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+    });
+
+    const handleSelectAllCheckboxClick = () => {
+      if (selectedRowIds.length === 0) {
+        setSelectedRowIds(allDonations.map((donation) => donation.id));
+      } else {
+        setSelectedRowIds([]);
+      }
+    };
+
+    const handleRowSelect = (id: number, isChecked: boolean) => {
+      if (isChecked) {
+        setSelectedRowIds((prev) => [...prev, id]);
+      } else {
+        setSelectedRowIds((prev) => prev.filter((rowId) => rowId !== id));
+      }
+    };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -123,7 +198,7 @@ export const Donations = () => {
       }
     };
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh]);
+  }, [donor, startDate, endDate, toggleRefresh, backend]);
 
   return (
     <HStack w="100%" h="100%">
@@ -219,40 +294,72 @@ export const Donations = () => {
             }}
           >
             <Thead>
-              <Tr>
-                <Th>Id</Th>
-                <Th>Date</Th>
-                <Th>Donor</Th>
-                <Th>Category</Th>
-                <Th>Weight (lb)</Th>
-                <Th>Value ($)</Th>
-                <Th>Total</Th>
-              </Tr>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Th
+                      key={header.id}
+                      cursor={header.column.getCanSort() ? "pointer" : "default"}
+                      onClick={
+                        header.id === "id"
+                          ? handleSelectAllCheckboxClick
+                          : header.column.getToggleSortingHandler()
+                      }
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getCanSort() && (
+                        <Box
+                          display="inline-block"
+                          ml={1}
+                        >
+                          {header.column.getIsSorted() === "asc" ? (
+                            <TriangleUpIcon />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <TriangleDownIcon />
+                          ) : null}
+                        </Box>
+                      )}
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
             </Thead>
             <Tbody>
-              {allDonations
-                ? allDonations.map((donation, index) => {
-                  const dateString = new Date(donation.date).toLocaleDateString();
-                  return (
-                    <Tr key={index}>
-                      <Td>
-                        <Checkbox
-                        onChange={
-                          handleCheckboxChange(donation.id)
-                        }
-                        isChecked={deletes.some(del => del === donation.id)}
-                        >{donation.id}</Checkbox>
-                      </Td>
-                      <Td onClick={() => handleRowClick(donation)}>{dateString}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.category}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
-                      <Td onClick={() => handleRowClick(donation)}>{donation.total}</Td>
-                    </Tr>
-                  );})
-                : null}
-            </Tbody>
+            {table.getRowModel().rows.map((row, index) => (
+              <Tr
+                key={row.id}
+                onClick={() => handleRowClick(row.original)}
+                cursor="pointer"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <Td
+                  key={cell.id}
+                  fontSize="14px"
+                  fontWeight="500px"
+                  onClick={(e) => {
+                    if (cell.column.id === "id") {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {cell.column.id === "id" ? (
+                    <HoverCheckbox
+                      clientId={row.original.id}
+                      isSelected={selectedRowIds.includes(row.original.id)}
+                      onSelectionChange={handleRowSelect}
+                      index={index}
+                    />
+                  ) : (
+                    flexRender(cell.column.columnDef.cell, cell.getContext())
+                  )}
+                </Td>
+                ))}
+              </Tr>
+            ))}
+          </Tbody>
           </Table>
           {selectedDonation && (
             <EditDrawer

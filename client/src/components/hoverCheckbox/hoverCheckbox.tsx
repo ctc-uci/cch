@@ -3,13 +3,14 @@ import { Checkbox, Flex, Text } from "@chakra-ui/react";
 
 interface HoverCheckboxProps {
   clientId: number;
-  // index: number;
+  index: number;
   isSelected: boolean;
   onSelectionChange: (id: number, checked: boolean) => void;
 }
 
 export const HoverCheckbox = ({
   clientId,
+  index,
   isSelected,
   onSelectionChange,
 }: HoverCheckboxProps) => {
@@ -25,12 +26,11 @@ export const HoverCheckbox = ({
     >
       {(isHovered || isSelected) ? (
         <Checkbox
-          colorScheme="cyan"
           isChecked={isSelected}
           onChange={(e) => onSelectionChange(clientId, e.target.checked)}
         />
       ) : (
-        <Text>{clientId}</Text>
+        <Text>{index + 1}</Text>
       )}
     </Flex>
   );

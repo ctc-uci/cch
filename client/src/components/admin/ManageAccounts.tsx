@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 // import { Navbar } from "../Navbar";
 
 import {
@@ -15,19 +15,10 @@ import {
   HStack,
   VStack,
   Textarea,
-  Spacer
+  Spacer,
+  Box
 } from "@chakra-ui/react";
-
-import {
-  Drawer,
-  DrawerBody,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-} from "@chakra-ui/react"
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
+import { Tabs, TabList, Tab } from '@chakra-ui/react'
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {
   Modal,
@@ -38,6 +29,16 @@ import {
   ModalBody,
   ModalCloseButton,
 } from '@chakra-ui/react'
+
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 interface Person {
   id: string;
   firstName: string;
@@ -70,6 +71,48 @@ export const ManageAccounts = () => {
     email: "",
   });
   const [clientData, setClientData] = useState<Person[]>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+
+  const columns = useMemo<ColumnDef<Person>[]>(
+    () => [
+      {
+        header: "Name",
+        accessorFn: (row) =>
+          `${row.firstName} ${row.lastName}`,
+        cell: ({ row }) => {
+          const firstName = row.original.firstName;
+          const lastName = row.original.lastName;
+          return `${firstName} ${lastName}`;
+        },
+        sortingFn: (a, b) => {
+          const aValue = `${a.original.firstName} ${a.original.lastName}`;
+          const bValue = `${b.original.firstName} ${b.original.lastName}`;
+          return aValue.localeCompare(bValue);
+        },
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "location",
+        header: "Location",
+      },
+      ],
+      []
+    );
+
+    const table = useReactTable({
+      data: data,
+      columns,
+      state: {
+        sorting,
+      },
+      onSortingChange: setSorting,
+      getCoreRowModel: getCoreRowModel(),
+      getSortedRowModel: getSortedRowModel(),
+    });
 
   const handleRowClick = (datum : Person) => {
     setSelectedData(datum);
@@ -141,9 +184,7 @@ export const ManageAccounts = () => {
   }, [view, backend, open, selectedData]);
 
   return (
-    <>
-      {/* <Navbar/> */}
-      
+
       <HStack justifyContent="space-between">
         <VStack
         justifyContent = "flex-start"
@@ -164,7 +205,7 @@ export const ManageAccounts = () => {
             <Spacer/>
             <Button >Delete</Button>
             <Button colorScheme="blue">Add</Button>
-          
+
           </HStack>
           <TableContainer
           width = "100%"
@@ -176,22 +217,58 @@ export const ManageAccounts = () => {
         >
           <Table variant="striped">
             <Thead>
-              <Tr>
-                <Th>Name</Th>
-                <Th>Email</Th>
-                <Th>Location</Th>
-              </Tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Th
+                      key={header.id}
+                      cursor={header.column.getCanSort() ? "pointer" : "default"}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getCanSort() && (
+                        <Box
+                          display="inline-block"
+                          ml={1}
+                        >
+                          {header.column.getIsSorted() === "asc" ? (
+                            <TriangleUpIcon />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <TriangleDownIcon />
+                          ) : null}
+                        </Box>
+                      )}
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
             </Thead>
             <Tbody>
-              {data
-                ? data.map((datum, index) => (
-                    <Tr key={index} onClick={() => handleRowClick(datum)}>
-                      <Td>{datum.firstName} {datum.lastName}</Td>
-                      <Td>{datum.email}</Td>
-                      <Td>{datum.location}</Td>
-                    </Tr>
-                  ))
-                : null}
+              {table.getRowModel().rows.map((row) => (
+                <Tr
+                  key={row.id}
+                  onClick={() => handleRowClick(row.original)}
+                  cursor="pointer"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <Td
+                      key={cell.id}
+                      fontSize="14px"
+                      fontWeight="500px"
+                      onClick={(e) => {
+                        if (cell.column.id === "id") {
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </Td>
+                  ))}
+                </Tr>
+              ))}
             </Tbody>
           </Table>
         </TableContainer>
@@ -211,29 +288,7 @@ export const ManageAccounts = () => {
             </ModalFooter>
           </ModalContent>
         </Modal>
-
-        {/* <Drawer
-          isOpen={open}
-          placement="right"
-          onClose={() => setOpen(!open)}
-        >
-          <DrawerOverlay />
-          <DrawerContent>
-            <DrawerCloseButton />
-            <DrawerHeader>Create your account</DrawerHeader>
-            <DrawerBody>
-              {selectedData ? outputDrawerData(selectedData, view): null}
-            </DrawerBody>
-            <DrawerFooter>
-              <Button variant="outline" mr={3} onClick={() => setOpen(!open)}>
-                Cancel
-              </Button>
-              <Button colorScheme="brand">Save</Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer> */}
         </VStack>
       </HStack>
-    </>
   );
 };

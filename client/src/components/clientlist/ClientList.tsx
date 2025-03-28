@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
@@ -72,13 +73,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {
         id: "id",
         accessorKey: "id",
-        header: "ID",
-        cell: ({ row }) => {
+        header: ({ table }) => {
           return (
-            <HoverCheckbox
-              clientId={row.original.id}
-              isSelected={selectedRowIds.includes(row.original.id)}
-              onSelectionChange={handleRowSelect}
+            <Checkbox
+              isChecked={selectedRowIds.length > 0}
+              isIndeterminate={table.getIsSomeRowsSelected()}
+              onChange={handleSelectAllCheckboxClick}
             />
           );
         },
@@ -93,10 +93,17 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         header: "Case Manager",
+        accessorFn: (row) =>
+          `${row.caseManagerFirstName} ${row.caseManagerLastName}`,
         cell: ({ row }) => {
           const firstName = row.original.caseManagerFirstName;
           const lastName = row.original.caseManagerLastName;
           return `${firstName} ${lastName}`;
+        },
+        sortingFn: (a, b) => {
+          const aValue = `${a.original.caseManagerFirstName} ${a.original.caseManagerLastName}`;
+          const bValue = `${b.original.caseManagerFirstName} ${b.original.caseManagerLastName}`;
+          return aValue.localeCompare(bValue);
         },
       },
       {
@@ -133,7 +140,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "phoneNumber",
-        header: "Phone NUmber",
+        header: "Phone Number",
       },
       {
         accessorKey: "email",
@@ -173,7 +180,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "cityOfLastPermanentResidence",
-        header: "City of last Permanent Residence",
+        header: "City of Last Permanent Residence",
       },
       {
         accessorKey: "priorLiving",
@@ -236,7 +243,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         header: "Destination City",
       },
     ],
-    [selectedRowIds]
+    [selectedRowIds, clients]
   );
 
   const table = useReactTable({
@@ -249,6 +256,14 @@ export const ClientList = ({ admin }: ClientListProps) => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleSelectAllCheckboxClick = () => {
+    if (selectedRowIds.length === 0) {
+      setSelectedRowIds(clients.map((client) => client.id));
+    } else {
+      setSelectedRowIds([]);
+    }
+  };
 
   const onPressCSVButton = () => {
     const selectedClients = clients.filter((client) =>
@@ -266,15 +281,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
     }));
 
     downloadCSV(headers, data, `clients.csv`);
-  };
-
-  //TODO: use this
-  const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(clients.map((client) => client.id));
-    } else {
-      setSelectedRowIds([]);
-    }
   };
 
   const handleRowSelect = (id: number, isChecked: boolean) => {
@@ -409,7 +415,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
                   <Th
                     key={header.id}
                     cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={header.column.getToggleSortingHandler()}
+                    onClick={
+                      header.id === "id"
+                        ? handleSelectAllCheckboxClick
+                        : header.column.getToggleSortingHandler()
+                    }
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -433,139 +443,37 @@ export const ClientList = ({ admin }: ClientListProps) => {
             ))}
           </Thead>
           <Tbody>
-            {table.getRowModel().rows.map((row) => (
+            {table.getRowModel().rows.map((row, index) => (
               <Tr
                 key={row.id}
-                // onClick={() => handleRowClick(row.original)}
                 cursor="pointer"
               >
                 {row.getVisibleCells().map((cell) => (
                   <Td
-                    key={cell.id}
-                    fontSize="14px"
-                    fontWeight="500px"
-                    onClick={(e) => {
-                      if (cell.column.id === "id") {
-                        e.stopPropagation();
-                      }
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </Td>
+                  key={cell.id}
+                  fontSize="14px"
+                  fontWeight="500px"
+                  onClick={(e) => {
+                    if (cell.column.id === "id") {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {cell.column.id === "id" ? (
+                    <HoverCheckbox
+                      clientId={row.original.id}
+                      isSelected={selectedRowIds.includes(row.original.id)}
+                      onSelectionChange={handleRowSelect}
+                      index={index}
+                    />
+                  ) : (
+                    flexRender(cell.column.columnDef.cell, cell.getContext())
+                  )}
+                </Td>
                 ))}
               </Tr>
             ))}
           </Tbody>
-          {/* <Thead
-            backgroundColor="white"
-            position="sticky"
-            top={0}
-          >
-            <Tr>
-              <Th>
-                <Checkbox
-                  colorScheme="cyan"
-                  isChecked={selectedRowIds.length > 0}
-                  onChange={handleSelectAllCheckboxClick}
-                />
-              </Th>
-              <Th>Client First Name</Th>
-              <Th>Client Last Name</Th>
-              <Th>Case Manager</Th>
-              <Th>Site</Th>
-              <Th>Grant</Th>
-              <Th>Birthday</Th>
-              <Th>Age</Th>
-              <Th>Entry Date</Th>
-              <Th>Exit Date</Th>
-              <Th>Bed Nights</Th>
-              <Th>Total Bed Nights w/ Children</Th>
-              <Th>Phone Number</Th>
-              <Th>Email</Th>
-              <Th>Emergency Contact Name</Th>
-              <Th>Emergency Contact Phone</Th>
-              <Th>Medical</Th>
-              <Th>Estimated Exit Date</Th>
-              <Th>Pregnant Upon Entry</Th>
-              <Th>Disabled Children</Th>
-              <Th>Ethnicity</Th>
-              <Th>Race</Th>
-              <Th>City of last Permanent Residence</Th>
-              <Th>Prior Living</Th>
-              <Th>Prior Living City</Th>
-              <Th>Shelter in Last Five Years</Th>
-              <Th>Homelessness Length</Th>
-              <Th>Chronically Homelessness</Th>
-              <Th>Attending School Upon Entry</Th>
-              <Th>Employment Gained</Th>
-              <Th>Reason For Leaving</Th>
-              <Th>Specific Reason for Leaving</Th>
-              <Th>Specific Destination</Th>
-              <Th>Savings Amount</Th>
-              <Th>Attending School Upon Exit</Th>
-              <Th>Reunified</Th>
-              <Th>Successful Completion</Th>
-              <Th>Destination City</Th>
-            </Tr>
-          </Thead> */}
-          {/* <Tbody>
-            {clients
-              ? clients.map((client, index) => (
-                  <Tr
-                    key={client.id}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Td onClick={(e) => e.stopPropagation()}>
-                      <HoverCheckbox
-                        clientId={client.id}
-                        index={index}
-                        isSelected={selectedRowIds.includes(client.id)}
-                        onSelectionChange={handleRowSelect}
-                      />
-                    </Td>
-                    <Td>{client.firstName}</Td>
-                    <Td>{client.lastName}</Td>
-                    <Td>
-                      {client.caseManagerFirstName} {client.caseManagerLastName}
-                    </Td>
-                    <Td>{client.locationName}</Td>
-                    <Td>{client.grant}</Td>
-                    <Td>{client.dateOfBirth}</Td>
-                    <Td>{client.age}</Td>
-                    <Td>{client.entranceDate}</Td>
-                    <Td>{client.exitDate}</Td>
-                    <Td>{client.bedNights}</Td>
-                    <Td>{client.bedNightsChildren}</Td>
-                    <Td>{client.phoneNumber}</Td>
-                    <Td>{client.email}</Td>
-                    <Td>{client.emergencyContactName}</Td>
-                    <Td>{client.emergencyContactPhoneNumber}</Td>
-                    <Td>{client.medical ? "Yes" : "No"}</Td>
-                    <Td>{client.estimatedExitDate}</Td>
-                    <Td>{client.pregnantUponEntry ? "Yes" : "No"}</Td>
-                    <Td>{client.disabledChildren ? "Yes" : "No"}</Td>
-                    <Td>{client.ethnicity}</Td>
-                    <Td>{client.race}</Td>
-                    <Td>{client.cityOfLastPermanentResidence}</Td>
-                    <Td>{client.priorLiving}</Td>
-                    <Td>{client.priorLivingCity}</Td>
-                    <Td>{client.shelterInLastFiveYears ? "Yes" : "No"}</Td>
-                    <Td>{client.homelessnessLength}</Td>
-                    <Td>{client.chronicallyHomeless ? "Yes" : "No"}</Td>
-                    <Td>{client.attendingSchoolUponEntry ? "Yes" : "No"}</Td>
-                    <Td>{client.employementGained ? "Yes" : "No"}</Td>
-                    <Td>{client.reasonForLeaving}</Td>
-                    <Td>{client.specificReasonForLeaving}</Td>
-                    <Td>{client.specificDestination}</Td>
-                    <Td>{client.savingsAmount}</Td>
-                    <Td>{client.attendingSchoolUponExit ? "Yes" : "No"}</Td>
-                    <Td>{client.reunified ? "Yes" : "No"}</Td>
-                    <Td>{client.successfulCompletion ? "Yes" : "No"}</Td>
-                    <Td>{client.destinationCity}</Td>
-                  </Tr>
-                ))
-              : null}
-          </Tbody> */}
         </Table>
       </TableContainer>
       <DeleteRowModal
