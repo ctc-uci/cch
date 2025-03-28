@@ -72,9 +72,9 @@ usersRouter.put("/update", async (req, res) => {
     const { email, firebaseUid, firstName, lastName, phoneNumber } = req.body;
 
     const user = await db.query(
-      `UPDATE users 
-       SET email = $1, first_name = $2, last_name = $3, phone_number = $4 
-       WHERE firebase_uid = $5 
+      `UPDATE users
+       SET email = $1, first_name = $2, last_name = $3, phone_number = $4
+       WHERE firebase_uid = $5
        RETURNING *`,
       [email, firstName, lastName, phoneNumber, firebaseUid]
     );
