@@ -29,7 +29,7 @@ import { undefined } from "zod";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { LocationData } from "../../types/location.ts";
 
-const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
+const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) => {
   const auth = getAuth();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -37,9 +37,8 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
   const [userLocation, setUserLocation] = useState<LocationData>({
     caloptima_funded: false,
     cm_id: 0,
-    date: undefined,
-    id: 0,
-    name: " ",
+    date: "",
+    name: ""
   });
 
   const [formData, setFormData] = useState({
@@ -48,6 +47,28 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     email: user.email,
     phoneNumber: user.phoneNumber,
   });
+
+  const [oldFormData, setOldFormData] = useState({
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+  });
+
+  useEffect(() => {
+    setFormData({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    });
+    setOldFormData({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+    });
+  }, [user]);
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -76,7 +97,6 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     const fetchData = async () => {
       try {
         const response = await backend.get(`/locations`);
-
         setLocations(response.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -92,7 +112,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
         const response = await backend.get(
           `/locations/get-location?uid=${user.firebaseUid}`
         );
-
+        console.log(response);
         if (response.data.length !== 0) {
           setUserLocation(response.data[0]);
         }
@@ -161,39 +181,48 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
     ) {
       await handlePasswordChange();
     }
-    try {
-      console.log("Sending request: ", formData);
-      const response = await backend.put("/users/update", {
-        ...formData,
-        firebaseUid: user.firebaseUid,
-      });
+      try {
+        console.log("Sending request: ", {
+          ...formData, 
+        firebaseUid: user.firebaseUid});
+        const response = await backend.put("/users/update", {
+          ...formData,
+          firebaseUid: user.firebaseUid,
+        });
+        setOldFormData(formData);
+        const updatedUser = await response.data;
+        setUser(updatedUser);
+        const locationResponse = await backend.put(`/locations/update-location`, {
+          uid: user.firebaseUid, 
+          locationName: userLocation.name, 
+          date: userLocation.date, 
+          calOptimaFunded: userLocation.caloptima_funded,
+        });
+        setRefreshStatus(true);
+        setEditing(false);
+        toast({
+          position: "bottom-right",
+          title: "Successfully Saved Changes.",
+          description: Date().toLocaleString(),
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Error updating user",
+          description: "An error occurred while saving your changes.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-right",
+        });
+      }
 
-      // update location here
-
-      const updatedUser = await response.data;
-      setUser(updatedUser);
-      setRefreshStatus(true);
-      setEditing(false);
-      toast({
-        position: "bottom-right",
-        title: "Successfully Saved Changes.",
-        description: Date().toLocaleString(),
-        status: "success",
-        duration: 9000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error updating user",
-        description: "An error occurred while saving your changes.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-right",
-      });
     }
-  };
+    
+    
 
   return (
     <div>
@@ -239,7 +268,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                   <Input
                     name="firstName"
                     placeholder="First Name"
-                    defaultValue={user.firstName}
+                    value={formData.firstName || ""}
                     onChange={handleChange}
                   />
                 </Stack>
@@ -254,7 +283,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                   <Input
                     name="lastName"
                     placeholder="Last Name"
-                    defaultValue={user.lastName}
+                    value={formData.lastName || ""}
                     onChange={handleChange}
                   />
                 </Stack>
@@ -281,7 +310,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                     Location
                   </Text>
                   <Select
-                    placeholder={userLocation.name}
+                    value={userLocation.name}
                     name="location"
                     onChange={handleLocationChange}
                   >
@@ -322,7 +351,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                     name="email"
                     type="email"
                     placeholder="Email"
-                    defaultValue={user.email}
+                    value={formData.email || ""}
                     onChange={handleChange}
                   />
                 </Stack>
@@ -354,7 +383,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                     name="phoneNumber"
                     type="tel"
                     placeholder="Phone Number"
-                    defaultValue={user.phoneNumber}
+                    value={formData.phoneNumber || ""}
                     onChange={handleChange}
                   />
                 </Stack>
@@ -615,6 +644,7 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
                 onClick={() => {
                   onClose();
                   handleSaveChanges();
+                  setEditing(true);
                 }}
                 ml={3}
               >
@@ -627,7 +657,11 @@ const EditSettings = ({ user, setUser, setEditing, setRefreshStatus }) => {
       <Button
         colorScheme="blue"
         style={{ marginTop: "2rem", marginLeft: "2rem" }}
-        onClick={() => setEditing(false)}
+        onClick={() => {
+          setEditing(false);
+          setFormData(oldFormData);
+          setRefreshStatus(true);
+        }}
       >
         Cancel
       </Button>

@@ -78,6 +78,7 @@ const UserSettings = () => {
                 user={user}
                 setUser={setUser}
                 setEditing={setEditing}
+                editing={editing}
                 setRefreshStatus={setRefreshStatus}
               />
             </Box>

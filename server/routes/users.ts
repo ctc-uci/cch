@@ -73,12 +73,15 @@ usersRouter.put("/update", async (req, res) => {
 
     const user = await db.query(
       `UPDATE users
-       SET email = $1, first_name = $2, last_name = $3, phone_number = $4
+       SET email = COALESCE($1, email), 
+       first_name = COALESCE($2, first_name), 
+       last_name = COALESCE($3, last_name), 
+       phone_number = COALESCE($4, phone_number)
        WHERE firebase_uid = $5
        RETURNING *`,
-      [email, firstName, lastName, phoneNumber, firebaseUid]
+       [email, firstName, lastName, phoneNumber, firebaseUid]
     );
-
+    console.log(user);
     res.status(200).json(keysToCamel(user));
   } catch (err) {
     res.status(400).send(err.message);
