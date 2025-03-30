@@ -30,8 +30,8 @@ const styles = StyleSheet.create({
       backgroundColor: "#EDF2F7"
     },
   });
-  
-  
+
+
 
 const SuccessStoryForm = ({ successStoryData }) => {
     return (
@@ -372,14 +372,506 @@ const clientInterviewScreenerForm = ({ clientInterviewScreenerData }) => {
     )
 }
 
+const InitialScreenerForm = ({ clientInitialScreeningData }) => {
+    return (
+        <Document>
+            <Page size="A4" style={styles.page}>
+            {clientInitialScreeningData && clientInitialScreeningData.map((element) => (
+            <View style={styles.table} key={element.id}>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Question</Text>
+                    <Text style={styles.tableCell}>Answer</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Date:</Text>
+                    <Text style={styles.tableCell}>{element.date}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Name:</Text>
+                    <Text style={styles.tableCell}>{element.name}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Age:</Text>
+                    <Text style={styles.tableCell}>{element.age}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Applicant Type:</Text>
+                    <Text style={styles.tableCell}>{element.applicantType}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Phone Number:</Text>
+                    <Text style={styles.tableCell}>{element.phoneNumber}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Marital Status:</Text>
+                    <Text style={styles.tableCell}>{element.maritalStatus}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Date of Birth:</Text>
+                    <Text style={styles.tableCell}>{element.dateOfBirth}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Email:</Text>
+                    <Text style={styles.tableCell}>{element.email}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last 4 digits of SSN:</Text>
+                    <Text style={styles.tableCell}>{element.ssnLastFour}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Ethnicity:</Text>
+                    <Text style={styles.tableCell}>{element.ethnicity}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Veteran?:</Text>
+                    <Text style={styles.tableCell}>{element.veteran ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Disabled?:</Text>
+                    <Text style={styles.tableCell}>{element.disabled ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Current Address:</Text>
+                    <Text style={styles.tableCell}>{element.currentAddress}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Permanent Address:</Text>
+                    <Text style={styles.tableCell}>{element.lastPermAddress}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Reason for Leaving Permanent Address:</Text>
+                    <Text style={styles.tableCell}>{element.reasonForLeavingPermAddress}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Where Resided Last Night:</Text>
+                    <Text style={styles.tableCell}>{element.whereResideLastNight}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Currently Homeless?:</Text>
+                    <Text style={styles.tableCell}>{element.currentlyHomeless ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>How Long Experiencing Homelessness:</Text>
+                    <Text style={styles.tableCell}>{element.howLongExperiencingHomelessness}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Previously Applied to CCH?:</Text>
+                    <Text style={styles.tableCell}>{element.prevAppliedToCch ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>When Applied to CCH:</Text>
+                    <Text style={styles.tableCell}>{element.whenPrevAppliedToCch}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Previously in CCH?:</Text>
+                    <Text style={styles.tableCell}>{element.prevInCch ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Child's Name:</Text>
+                    <Text style={styles.tableCell}>{element.childName}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Child's Date of Birth:</Text>
+                    <Text style={styles.tableCell}>{element.childDob}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Has Custody of Child?</Text>
+                    <Text style={styles.tableCell}>{element.custodyOfChild ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Father's Name:</Text>
+                    <Text style={styles.tableCell}>{element.fatherName}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Name of School Child Attends:</Text>
+                    <Text style={styles.tableCell}>{element.nameSchoolChildrenAttend}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>City of School:</Text>
+                    <Text style={styles.tableCell}>{element.cityOfSchool}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>How Heard About CCH?</Text>
+                    <Text style={styles.tableCell}>{element.howHearAboutCch}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Programs Been In Before:</Text>
+                    <Text style={styles.tableCell}>{element.programsBeenInBefore}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Monthly Income:</Text>
+                    <Text style={styles.tableCell}>${element.monthlyIncome}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Sources of Income:</Text>
+                    <Text style={styles.tableCell}>{element.sourcesOfIncome}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Monthly Bills:</Text>
+                    <Text style={styles.tableCell}>{element.monthlyBills}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Currently Employed:</Text>
+                    <Text style={styles.tableCell}>{element.currentlyEmployed ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Employer:</Text>
+                    <Text style={styles.tableCell}>{element.lastEmployer}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Employed Date:</Text>
+                    <Text style={styles.tableCell}>{element.lastEmployedDate}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Education History:</Text>
+                    <Text style={styles.tableCell}>{element.educationHistory}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Transportation:</Text>
+                    <Text style={styles.tableCell}>{element.transportation}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Legal Resident:</Text>
+                    <Text style={styles.tableCell}>{element.legalResident ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Medical Coverage:</Text>
+                    <Text style={styles.tableCell}>{element.medical ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Medical City:</Text>
+                    <Text style={styles.tableCell}>{element.medicalCity}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Medical Insurance:</Text>
+                    <Text style={styles.tableCell}>{element.medicalInsurance}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Medications:</Text>
+                    <Text style={styles.tableCell}>{element.medications}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Domestic Violence History:</Text>
+                    <Text style={styles.tableCell}>{element.domesticViolenceHistory}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Social Worker:</Text>
+                    <Text style={styles.tableCell}>{element.socialWorker}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Social Worker Telephone:</Text>
+                    <Text style={styles.tableCell}>{element.socialWorkerTelephone}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Social Worker Office Location:</Text>
+                    <Text style={styles.tableCell}>{element.socialWorkerOfficeLocation}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Length of Sobriety:</Text>
+                    <Text style={styles.tableCell}>{element.lengthOfSobriety}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Drug Use:</Text>
+                    <Text style={styles.tableCell}>{element.lastDrugUse}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Alcohol Use:</Text>
+                    <Text style={styles.tableCell}>{element.lastAlcoholUse}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Time Using Drugs/Alcohol:</Text>
+                    <Text style={styles.tableCell}>{element.timeUsingDrugsAlcohol}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Been Convicted:</Text>
+                    <Text style={styles.tableCell}>{element.beenConvicted ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Conviction Reason and Time:</Text>
+                    <Text style={styles.tableCell}>{element.convictedReasonAndTime}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Present Warrant Exist:</Text>
+                    <Text style={styles.tableCell}>{element.presentWarrantExist ? "Yes" : "No"}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Warrant County:</Text>
+                    <Text style={styles.tableCell}>{element.warrantCounty}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Probation/Parole Officer:</Text>
+                    <Text style={styles.tableCell}>{element.probationParoleOfficer}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Probation/Parole Officer Telephone:</Text>
+                    <Text style={styles.tableCell}>{element.probationParoleOfficerTelephone}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Personal References:</Text>
+                    <Text style={styles.tableCell}>{element.personalReferences}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Personal Reference Telephone:</Text>
+                    <Text style={styles.tableCell}>{element.personalReferenceTelephone}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Future Plans and Goals:</Text>
+                    <Text style={styles.tableCell}>{element.futurePlansGoals}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Last Permanent Residence Household Composition:</Text>
+                    <Text style={styles.tableCell}>{element.lastPermanentResidenceHouseholdComposition}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Why No Longer at Last Residence:</Text>
+                    <Text style={styles.tableCell}>{element.whyNoLongerAtLastResidence}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>What Could Prevent Homelessness:</Text>
+                    <Text style={styles.tableCell}>{element.whatCouldPreventHomeless}</Text>
+                </View>
+                <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Client ID:</Text>
+                    <Text style={styles.tableCell}>{element.clientId}</Text>
+                </View>
+            </View>
+            ))}
+            </Page>
+        </Document>
+
+    )
+}
+
+const IntakeStatsForm = ({ intakeStatsData }) => {
+  return (
+    <Document>
+    <Page size="A4" style={styles.page}>
+    {intakeStatsData && intakeStatsData.map((element) => (
+    <View style={styles.table} key={element.id}>
+        <View style={styles.tableRow}>
+            <Text style={styles.tableCellHeader}>Question</Text>
+            <Text style={styles.tableCell}>Answer</Text>
+        </View>
+        <View style={styles.tableRow}>
+                    <Text style={styles.tableCellHeader}>Title</Text>
+                    <Text style={styles.tableCell}>{element.ssnLastFour}</Text>
+                </View>
+    </View>
+    ))}
+    </Page>
+</Document>
+
+  )
+}
+
+const FrontDeskMonthlyStatsForm = ({ frontDeskMonthlyStatsData }) => {
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {frontDeskMonthlyStatsData && frontDeskMonthlyStatsData.map((element) => (
+          <View style={styles.table} key={element.id}>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Question</Text>
+              <Text style={styles.tableCell}>Answer</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Date:</Text>
+              <Text style={styles.tableCell}>{element.date}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Office Visits:</Text>
+              <Text style={styles.tableCell}>{element.totalOfficeVisits}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Calls:</Text>
+              <Text style={styles.tableCell}>{element.totalCalls}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of People:</Text>
+              <Text style={styles.tableCell}>{element.numberOfPeople}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Unduplicated Calls:</Text>
+              <Text style={styles.tableCell}>{element.totalUnduplicatedCalls}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Visits HB Donations Room:</Text>
+              <Text style={styles.tableCell}>{element.totalVisitsHbDonationsRoom}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Served HB Donations Room:</Text>
+              <Text style={styles.tableCell}>{element.totalServedHbDonationsRoom}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Visits HB Pantry:</Text>
+              <Text style={styles.tableCell}>{element.totalVisitsHbPantry}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Served HB Pantry:</Text>
+              <Text style={styles.tableCell}>{element.totalServedHbPantry}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Visits Placentia Pantry:</Text>
+              <Text style={styles.tableCell}>{element.totalVisitsPlacentiaPantry}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Served Placentia Pantry:</Text>
+              <Text style={styles.tableCell}>{element.totalServedPlacentiaPantry}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Visits Placentia Neighborhood:</Text>
+              <Text style={styles.tableCell}>{element.totalVisitsPlacentiaNeighborhood}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Served Placentia Neighborhood:</Text>
+              <Text style={styles.tableCell}>{element.totalServedPlacentiaNeighborhood}</Text>
+            </View>
+          </View>
+        ))}
+      </Page>
+    </Document>
+  );
+}
+
+
+const CaseManagerMonthlyStatsForm = ({ caseManagerMonthlyStatsData }) => {
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {caseManagerMonthlyStatsData && caseManagerMonthlyStatsData.map((element) => (
+          <View style={styles.table} key={element.id}>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Question</Text>
+              <Text style={styles.tableCell}>Answer</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Date:</Text>
+              <Text style={styles.tableCell}>{element.date}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Case Manager ID:</Text>
+              <Text style={styles.tableCell}>{element.cmId}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Total Number of Contacts:</Text>
+              <Text style={styles.tableCell}>{element.totalNumberOfContacts}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Birthdays:</Text>
+              <Text style={styles.tableCell}>{element.womenBirthdays}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Kid Birthdays:</Text>
+              <Text style={styles.tableCell}>{element.kidBirthdays}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Birthday Cards:</Text>
+              <Text style={styles.tableCell}>{element.birthdayCards}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Birthday Cards Value:</Text>
+              <Text style={styles.tableCell}>${element.birthdayCardsValue}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Food Cards:</Text>
+              <Text style={styles.tableCell}>{element.foodCards}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Food Cards Value:</Text>
+              <Text style={styles.tableCell}>${element.foodCardsValue}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Bus Passes:</Text>
+              <Text style={styles.tableCell}>{element.busPasses}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Bus Passes Value:</Text>
+              <Text style={styles.tableCell}>${element.busPassesValue}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Gas Cards:</Text>
+              <Text style={styles.tableCell}>{element.gasCards}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Gas Cards Value:</Text>
+              <Text style={styles.tableCell}>${element.gasCardsValue}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Healthcare Referrals:</Text>
+              <Text style={styles.tableCell}>{element.womenHealthcareReferrals}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Kid Healthcare Referrals:</Text>
+              <Text style={styles.tableCell}>{element.kidHealthcareReferrals}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Counseling Referrals:</Text>
+              <Text style={styles.tableCell}>{element.womenCounselingReferrals}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Kid Counseling Referrals:</Text>
+              <Text style={styles.tableCell}>{element.kidCounselingReferrals}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Babies Born:</Text>
+              <Text style={styles.tableCell}>{element.babiesBorn}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Degrees Earned:</Text>
+              <Text style={styles.tableCell}>{element.womenDegreesEarned}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Enrolled in School:</Text>
+              <Text style={styles.tableCell}>{element.womenEnrolledInSchool}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Women Licenses Earned:</Text>
+              <Text style={styles.tableCell}>{element.womenLicensesEarned}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Reunifications:</Text>
+              <Text style={styles.tableCell}>{element.reunifications}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of Interviews Conducted:</Text>
+              <Text style={styles.tableCell}>{element.numberOfInterviewsConducted}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of Positive Tests:</Text>
+              <Text style={styles.tableCell}>{element.numberOfPositiveTests}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of NCNS:</Text>
+              <Text style={styles.tableCell}>{element.numberOfNcns}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of Others:</Text>
+              <Text style={styles.tableCell}>{element.numberOfOthers}</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableCellHeader}>Number of Interviews Accepted:</Text>
+              <Text style={styles.tableCell}>{element.numberOfInterviewsAccpeted}</Text>
+            </View>
+          </View>
+        ))}
+      </Page>
+    </Document>
+  );
+}
+
+
+
+
+
 export default function PrintForm({ formType, formId }) {
+    // console.log(formType, formId);
 
     const { backend } = useBackendContext();
     const formData = useRef(<Document><Page></Page></Document>);
     const [formDataTest, setFormDataTest] = useState(null);
-    
+
     useEffect(() => {
-    async function printForm() {
+      async function printForm() {
         if (formType === 'Success Story') {
 
             try {
@@ -391,7 +883,7 @@ export default function PrintForm({ formType, formId }) {
                 console.log(`Success story response was not created: ${e.message}`)
             }
 
-        } 
+        }
         else if (formType === 'Random Survey') {
             try {
                 const response = await backend.get(`/randomSurvey/${formId}`);
@@ -417,15 +909,59 @@ export default function PrintForm({ formType, formId }) {
             try {
                 const response = await backend.get(`/screenerComment/${formId}`);
                 const data = response.data;
+
                 formData.current = <clientInterviewScreenerForm clientInterviewScreenerData={data} />
                 setFormDataTest(data)
             } catch (e) {
                 console.log(`Client Interview Screener response was not created: ${e.message}`,)
             }
+        } else if (formType === 'Initial Screeners') {
+            try {
+                const response = await backend.get(`/initialInterview/id/${formId}`);
+                const data = response.data;
+                // console.log(data);
+                formData.current = <InitialScreenerForm clientInitialScreeningData={data} />
+                setFormDataTest(data);
+            } catch (e) {
+                console.log(`Initial Screener response was not created: ${e.message}`,);
+            }
+        } else if (formType === 'Client Tracking Statistics (Intake Statistics') {
+          try {
+            const response = await backend.get(`/intakeStatsForm/${formId}`);
+            const data = [response.data];
+            formData.current = <IntakeStatsForm intakeStatsData={data} />
+            setFormDataTest(data);
+          } catch (e) {
+            console.log(`Client Tracking Statistics (Intake Statistics) response was not created: ${e.message}`);
+          }
+        } else if (formType === 'Front Desk Monthly Statistics') {
+          try {
+            const response = await backend.get(`/frontDesk/${formId}`);
+            const data = [response.data];
+            // console.log(data);
+            // console.log('front desk', data);
+            formData.current = <FrontDeskMonthlyStatsForm frontDeskMonthlyStatsData={data[0]}  />
+            setFormDataTest(data);
+          } catch (e) {
+            console.log(`Front Desk Monthly Statistics response was not created: ${e.message}`);
+          }
+        } else if (formType === 'Case Manager Monthly Statistics') {
+          try {
+            const response = await backend.get(`/caseManagerMonthlyStats/id/${formId}`);
+            const data = [response.data];
+            formData.current = <CaseManagerMonthlyStatsForm caseManagerMonthlyStatsData={data[0]} />
+            // console.log("monthly stats", data);
+            setFormDataTest(data);
+          } catch (e) {
+            console.log(`Client Tracking Statistics (Intake Statistics) response was not created: ${e.message}`);
+          }
         }
+    // console.log(formType);
+
     }
     printForm();
-    })
+  }, [formType, formId, backend])
+
 
     return (
         <>
@@ -433,6 +969,6 @@ export default function PrintForm({ formType, formId }) {
                 Export Form
             </PDFDownloadLink>
         </>
-        
+
     )
 }
