@@ -19,6 +19,12 @@ const UserSettings = () => {
   const [editing, setEditing] = useState(false);
   const uid = currentUser?.uid;
   const [refreshStatus, setRefreshStatus] = useState(true);
+  const [location, setLocation] = useState<LocationData>({
+      caloptima_funded: false,
+      cm_id: 0,
+      date: "",
+      name: ""
+    });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +69,7 @@ const UserSettings = () => {
               role={role}
               setEditing={setEditing}
               editing={editing}
+              location={location}
             />
           </Box>
 
@@ -80,6 +87,8 @@ const UserSettings = () => {
                 setEditing={setEditing}
                 editing={editing}
                 setRefreshStatus={setRefreshStatus}
+                location={location}
+                setLocation={setLocation}
               />
             </Box>
           )}

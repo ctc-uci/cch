@@ -11,7 +11,6 @@ locationsRouter.get("/", async (req, res) => {
     const data = await db.query(`SELECT DISTINCT ON (name) *
                                  FROM locations
                                  ORDER BY name, id;`);
-
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
@@ -49,7 +48,8 @@ locationsRouter.get("/get-location", async (req, res) => {
                                      WHERE u.firebase_uid = $1;`, [
       uid,
     ]);
-
+    console.log()
+    console.log(location);
     res.status(200).json(keysToCamel(location));
   } catch (err) {
     res.status(400).send(err.message);

@@ -81,7 +81,6 @@ usersRouter.put("/update", async (req, res) => {
        RETURNING *`,
        [email, firstName, lastName, phoneNumber, firebaseUid]
     );
-    console.log(user);
     res.status(200).json(keysToCamel(user));
   } catch (err) {
     res.status(400).send(err.message);

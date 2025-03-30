@@ -29,17 +29,11 @@ import { undefined } from "zod";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { LocationData } from "../../types/location.ts";
 
-const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) => {
+const EditSettings = ({ user, setUser, location, setLocation, setEditing, editing, setRefreshStatus }) => {
   const auth = getAuth();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef();
-  const [userLocation, setUserLocation] = useState<LocationData>({
-    caloptima_funded: false,
-    cm_id: 0,
-    date: "",
-    name: ""
-  });
 
   const [formData, setFormData] = useState({
     firstName: user.firstName,
@@ -53,6 +47,12 @@ const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) 
     lastName: user.lastName,
     email: user.email,
     phoneNumber: user.phoneNumber,
+  });
+  const [userLocation, setUserLocation] = useState<LocationData>({
+    caloptima_funded: false,
+    cm_id: 0,
+    date: "",
+    name: ""
   });
 
   useEffect(() => {
@@ -112,9 +112,9 @@ const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) 
         const response = await backend.get(
           `/locations/get-location?uid=${user.firebaseUid}`
         );
-        console.log(response);
         if (response.data.length !== 0) {
           setUserLocation(response.data[0]);
+          setLocation(response.data[0]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -196,8 +196,10 @@ const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) 
           uid: user.firebaseUid, 
           locationName: userLocation.name, 
           date: userLocation.date, 
-          calOptimaFunded: userLocation.caloptima_funded,
+          calOptimaFunded: false,
+          cmId: userLocation.cm_id,
         });
+        setLocation(userLocation)
         setRefreshStatus(true);
         setEditing(false);
         toast({
@@ -660,6 +662,7 @@ const EditSettings = ({ user, setUser, setEditing, editing, setRefreshStatus }) 
         onClick={() => {
           setEditing(false);
           setFormData(oldFormData);
+          setUserLocation(location);
           setRefreshStatus(true);
         }}
       >

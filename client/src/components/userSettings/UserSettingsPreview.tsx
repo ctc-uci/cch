@@ -16,14 +16,16 @@ const UserSettingsPreview = ({
   role,
   setEditing,
   editing,
+  location,
 }: {
   user: object;
   role: string;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   editing: boolean;
+  location: string;
 }) => {
   const { currentUser } = useAuthContext();
-
+  console.log(location);
   const hideEditProfile = () => {
     setEditing(true);
   };
@@ -92,7 +94,7 @@ const UserSettingsPreview = ({
           >
             LOCATION
           </Text>
-          <Text>{user.location}</Text>
+          <Text>{location.name}</Text>
         </Flex>
         <Flex justify="space-between">
           <Text
