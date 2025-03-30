@@ -52,6 +52,8 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+  
+  const [freq, setFreq] = useState<string>("");
 
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
@@ -81,6 +83,12 @@ export const Donations = () => {
       setDeletes(deletes.filter((deleteId) => !(deleteId === id)));
     }
   };
+
+  const handleFreqChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle frequency change logic here
+    setFreq(event.target.value);
+    refreshPage();
+  }
 
   const deleteClick = async () => {
     try {
@@ -116,7 +124,20 @@ export const Donations = () => {
       }
 
       try {
-        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
+        let response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+     
+        if(freq === "monthly"){
+          console.log("monthly");
+          response = await backend.get(`/donations/monthfilter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+          console.log(response.data);
+        }
+        else if (freq === "yearly"){
+          console.log("yearly");
+          response = await backend.get(`/donations/yearfilter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+          console.log(response.data);
+        }
+    
+       
         setAllDonations(response.data);
       } catch (err) {
         console.error("Error fetching donation data", err);
@@ -179,10 +200,9 @@ export const Donations = () => {
             <option value='costco'>Costco</option>
           </Select>
 
-          <Select placeholder='Select Frequency' w='50%'>
-            <option value='option1'>Option 1</option>
-            <option value='option2'>Option 2</option>
-            <option value='option3'>Option 3</option>
+          <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
+            <option value='monthly'>Monthly</option>
+            <option value='yearly'>Yearly</option>
           </Select>
 
           <Text>From:</Text>
@@ -224,15 +244,34 @@ export const Donations = () => {
                 <Th>Date</Th>
                 <Th>Donor</Th>
                 <Th>Category</Th>
+                {((freq === "yearly") || (freq === "monthly"))&&
+                <>
+                <Th>Total Weight (lb)</Th>
+                <Th>Total Value ($)</Th>
+                </>
+                }
+                {!((freq === "yearly") || (freq === "monthly"))&&
+                <>
                 <Th>Weight (lb)</Th>
                 <Th>Value ($)</Th>
                 <Th>Total</Th>
+                </>
+                } 
+               
               </Tr>
             </Thead>
             <Tbody>
               {allDonations
                 ? allDonations.map((donation, index) => {
-                  const dateString = new Date(donation.date).toLocaleDateString();
+                  let dateString = new Date(donation.date).toLocaleDateString();
+                  if (freq === "monthly"){
+                    dateString = donation.monthYear;
+                    
+                  }
+                  else if (freq === "yearly"){
+                    dateString = donation.monthYear;
+                   }
+
                   return (
                     <Tr key={index}>
                       <Td>
@@ -243,12 +282,26 @@ export const Donations = () => {
                         isChecked={deletes.some(del => del === donation.id)}
                         >{donation.id}</Checkbox>
                       </Td>
+                     
+                      {((freq === "yearly") || (freq === "monthly"))&&
+                      <>
+                      <Td>{dateString}</Td>
+                      <Td>{donation.donor}</Td>
+                      <Td>{donation.category}</Td>
+                      <Td>{donation.totalWeight}</Td>
+                      <Td>{donation.totalValue}</Td>
+                      </>
+                      }
+                      {!((freq === "yearly") || (freq === "monthly"))&&
+                      <>
                       <Td onClick={() => handleRowClick(donation)}>{dateString}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.category}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.total}</Td>
+                      </>
+                      }
                     </Tr>
                   );})
                 : null}
