@@ -24,7 +24,6 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
-import { undefined } from "zod";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { LocationData } from "../../types/location.ts";
@@ -34,6 +33,8 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef();
+
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     firstName: user.firstName,
@@ -48,7 +49,15 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
     email: user.email,
     phoneNumber: user.phoneNumber,
   });
+
   const [userLocation, setUserLocation] = useState<LocationData>({
+    caloptima_funded: false,
+    cm_id: 0,
+    date: "",
+    name: ""
+  });
+
+  const [oldUserLocation, setOldUserLocation] = useState<LocationData>({
     caloptima_funded: false,
     cm_id: 0,
     date: "",
@@ -115,6 +124,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
         if (response.data.length !== 0) {
           setUserLocation(response.data[0]);
           setLocation(response.data[0]);
+          setOldUserLocation(response.data[0]);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -183,7 +193,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
     }
       try {
         console.log("Sending request: ", {
-          ...formData, 
+          ...formData,
         firebaseUid: user.firebaseUid});
         const response = await backend.put("/users/update", {
           ...formData,
@@ -193,12 +203,13 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
         const updatedUser = await response.data;
         setUser(updatedUser);
         const locationResponse = await backend.put(`/locations/update-location`, {
-          uid: user.firebaseUid, 
-          locationName: userLocation.name, 
-          date: userLocation.date, 
+          uid: user.firebaseUid,
+          locationName: userLocation.name,
+          date: userLocation.date,
           calOptimaFunded: false,
           cmId: userLocation.cm_id,
         });
+        setOldUserLocation(userLocation);
         setLocation(userLocation)
         setRefreshStatus(true);
         setEditing(false);
@@ -223,8 +234,8 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
       }
 
     }
-    
-    
+
+
 
   return (
     <div>
@@ -514,7 +525,9 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
       <Button
         colorScheme="blue"
         style={{ marginTop: "2rem" }}
-        onClick={onOpen}
+        onClick={() => {
+          onOpen();
+        }}
       >
         Save Changes
       </Button>
@@ -529,7 +542,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
               fontSize="lg"
               fontWeight="bold"
             >
-              Confirm Changes
+              Confirm {submitting ? 'Changes' : 'Cancel'}
             </AlertDialogHeader>
 
             <AlertDialogBody>
@@ -573,6 +586,28 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
                       color="gray.600"
                     >
                       {formData.lastName}
+                    </Text>
+                  </Flex>
+                </Stack>
+              )}
+              {userLocation !== oldUserLocation && (
+                <Stack>
+                  <Flex
+                    alignItems={"center"}
+                    gap={"2rem"}
+                  >
+                    <Text
+                      fontSize="md"
+                      fontWeight="bold"
+                      color="gray.500"
+                    >
+                      LOCATION
+                    </Text>
+                    <Text
+                      fontSize="sm"
+                      color="gray.600"
+                    >
+                      {userLocation.name}
                     </Text>
                   </Flex>
                 </Stack>
@@ -623,6 +658,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
               )}
               {user.phoneNumber === formData.phoneNumber &&
                 user.email === formData.email &&
+                userLocation === oldUserLocation &&
                 user.firstName === formData.firstName &&
                 user.lastName === formData.lastName && (
                   <Text
@@ -644,13 +680,25 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
               <Button
                 colorScheme="blue"
                 onClick={() => {
+                  if(!submitting) {
+                    onClose();
+                    setEditing(false);
+                    setSubmitting(false);
+                    setFormData(oldFormData);
+                    setUserLocation(oldUserLocation);
+                    setRefreshStatus(true);
+                    return;
+                  }
+
+                  setSubmitting(true);
                   onClose();
                   handleSaveChanges();
                   setEditing(true);
                 }}
                 ml={3}
               >
-                Submit
+                {submitting && 'Submit'}
+                {!submitting && 'Cancel'}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -660,10 +708,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
         colorScheme="blue"
         style={{ marginTop: "2rem", marginLeft: "2rem" }}
         onClick={() => {
-          setEditing(false);
-          setFormData(oldFormData);
-          setUserLocation(location);
-          setRefreshStatus(true);
+          onOpen();
         }}
       >
         Cancel

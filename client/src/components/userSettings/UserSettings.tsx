@@ -8,6 +8,7 @@ import { useRoleContext } from "../../contexts/hooks/useRoleContext.ts";
 import { ManageAccounts } from "../admin/ManageAccounts";
 import EditSettings from "./EditSettings";
 import UserSettingsPreview from "./UserSettingsPreview";
+import {LocationData} from "../../types/location.ts";
 
 const UserSettings = () => {
   const { backend } = useBackendContext();
