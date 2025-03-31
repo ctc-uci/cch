@@ -1,108 +1,135 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Checkbox,
   Flex,
+  HStack,
+  IconButton,
+  Tab,
   Table,
   TableContainer,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Tbody,
   Td,
   Text,
-  Checkbox,
   Th,
   Thead,
-  IconButton,
   Tr,
 } from "@chakra-ui/react";
 
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import type { Form, TabData } from "../../types/form";
+import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
-import PrintForm from "../PrintForm";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-
-type FormItem = {
-  id: number;
-  date: string;
-  name: string;
-  title:
-    | "Initial Screeners"
-    | "Intake Statistics"
-    | "Front Desk Monthly Stats"
-    | "Case Manager Monthly Stats";
-};
-
-type ViewOption =
-  | "All Forms"
-  | "Initial Screeners"
-  | "Front Desk Monthly Statistics"
-  | "Case Manager Monthly Statistics"
-  | "Client Tracking Statistics (Intake Statistics)";
-
-  const tableMapping: Record<FormItem["title"], number> = {
-    "Initial Screeners": 1,
-    "Intake Statistics": 2,
-    "Front Desk Monthly Stats": 3,
-    "Case Manager Monthly Stats": 4,
-  };
-
-// I know you said to also include the formTable but I wanted to be able to treat all forms
-// with an INT id so I just pushed the ids to the right and put a marker at the front
-// For example if a row came from initial screeners and had id 2 it would become 12.
-const createHashedId = (id: number, title: FormItem["title"]) => {
-  const tableNumber = tableMapping[title];
-  return (id << 2) | tableNumber;
-};
-
-
+import PrintForm from "../PrintForm";
+import { MdFileUpload, MdImportExport, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
 
 export const FormTable = () => {
   const { backend } = useBackendContext();
-  const [items, setItems] = useState<FormItem[]>([]);
-  const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  const [formsTable, setFormsTable] = useState<TabData[]>([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [initialScreeners, setInitialScreeners] = useState<Form[]>([]);
+  const [intakeStatistics, setIntakeStatistics] = useState<Form[]>([]);
+  const [frontDeskStatistics, setFrontDeskStatistics] = useState<Form[]>([]);
+  const [caseManagerStatistics, setCaseManagerStatistics] = useState<Form[]>(
+    []
+  );
 
-  const formatDate = (x: string) => {
-    const date = new Date(x);
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${month}/${day}/${year}`;
-  };
+  const columns = useMemo<ColumnDef<Form>[]>(
+    () => [
+      {
+        id: "rowNumber",
+        header: ({ table }) => {
+          return (
+            <Checkbox
+              isChecked={selectedRowIds.length > 0}
+              isIndeterminate={table.getIsSomeRowsSelected()}
+              onChange={() => handleSelectAllCheckboxClick(table)}
+            />
+          );
+        },
+        enableSorting: false,
+      },
+      {
+        accessorKey: "date",
+        header: "Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
+      },
+      {
+        accessorKey: "name",
+        header: "Client Name",
+      },
+      {
+        accessorKey: "title",
+        header: "Form Title",
+      },
+    ],
+    [selectedRowIds]
+  );
 
-  const handleSelectAllCheckboxClick = () => {
+  const handleSelectAllCheckboxClick = (
+    tableInstance: ReturnType<typeof useReactTable<Form>>
+  ) => {
+    const allHashedRowIds = tableInstance
+      .getRowModel()
+      .rows.map((row) => row.original.hashedId);
     if (selectedRowIds.length === 0) {
-      setSelectedRowIds(items.map((item) => createHashedId(item.id, item.title)));
+      setSelectedRowIds(allHashedRowIds);
     } else {
       setSelectedRowIds([]);
     }
   };
 
-
-
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
+    console.log("hashedid", hashedId);
+    console.log("selected", selectedRowIds);
 
     if (isChecked) {
+      console.log("is checked");
       setSelectedRowIds((prev) => [...prev, hashedId]);
     } else {
-      setSelectedRowIds((prev) => prev.filter((id) => id !== hashedId));
+      console.log("not checked");
+      setSelectedRowIds((prev) =>
+        prev.filter((rowHashedId) => rowHashedId !== hashedId)
+      );
     }
   };
 
+  const handleExport = (tableInstance: ReturnType<typeof useReactTable<Form>>) => {
+    const allRows = tableInstance.getRowModel().rows;
 
+    const selectedItems = allRows
+      .filter((row) => selectedRowIds.includes(row.original.hashedId))
+      .map((row) => row.original);
 
-  const handleExport = () => {
-    const selectedItems = items.filter(item =>
-      selectedRowIds.includes(createHashedId(item.id, item.title))
-    );
     const headers = ["Date", "Name", "Form Title"];
-    const data = selectedItems.map(item => ({
-      "Date": formatDate(item.date),
-      "Name": item.name,
+
+    const data = selectedItems.map((item) => ({
+      Date: item.date,
+      Name: item.name,
       "Form Title": item.title,
     }));
+
     downloadCSV(headers, data, "forms.csv");
   };
 
@@ -111,48 +138,51 @@ export const FormTable = () => {
       try {
         const screenerResponse = await backend.get(`/initialInterview`);
         const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
+        const caseManagersMonthlyResponse = await backend.get(
+          `/caseManagerMonthlyStats`
+        );
         const allCaseManagersResponse = await backend.get(`/caseManagers`);
 
-        const initialScreeners: FormItem[] = screenerResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
-            name: item.name,
+        const initialScreeners: Form[] = await screenerResponse.data.map(
+          (form: Form) => ({
+            id: form.id,
+            hashedId: `Initial Screeners ${form.id}`,
+            date: form.date,
+            name: form.name,
             title: "Initial Screeners",
           })
         );
 
-        const intakeStatistics: FormItem[] = [];
+        const intakeStatistics: Form[] = [];
 
-        const frontDeskStats: FormItem[] = frontDeskResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
+        const frontDeskStats: Form[] = await frontDeskResponse.data.map(
+          (form: Form) => ({
+            id: form.id,
+            hashedId: `Front Desk Monthly Statistics ${form.id}`,
+            date: form.date,
             name: "",
             title: "Front Desk Monthly Statistics",
           })
         );
 
-        const caseManagerStats: FormItem[] =
-          caseManagersMonthlyResponse.data.map((item) => {
+        const caseManagerStats: Form[] =
+          await caseManagersMonthlyResponse.data.map((form: Form) => {
             const matchingCM = allCaseManagersResponse.data.find(
-              (cm) => cm.id === item.cmId
+              (cm) => cm.id === form.cmId
             );
             return {
-              id: item.id,
-              date: item.date,
+              id: form.id,
+              hashedId: `Case Manager Monthly Statistics ${form.id}`,
+              date: form.date,
               name: `${matchingCM.firstName} ${matchingCM.lastName}`,
               title: "Case Manager Monthly Statistics",
             };
           });
 
-        setItems([
-          ...initialScreeners,
-          ...intakeStatistics,
-          ...frontDeskStats,
-          ...caseManagerStats,
-        ]);
+        setInitialScreeners(initialScreeners);
+        setIntakeStatistics(intakeStatistics);
+        setFrontDeskStatistics(frontDeskStats);
+        setCaseManagerStatistics(caseManagerStats);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -161,35 +191,198 @@ export const FormTable = () => {
     getData();
   }, [backend]);
 
+  const allFormsData = useMemo(
+    () => [
+      ...initialScreeners,
+      ...intakeStatistics,
+      ...frontDeskStatistics,
+      ...caseManagerStatistics,
+    ],
+    [
+      initialScreeners,
+      intakeStatistics,
+      frontDeskStatistics,
+      caseManagerStatistics,
+    ]
+  );
 
-  const buttonStyle = (view: ViewOption) => {
-    const isActive = currentView === view;
-    return {
-      px: "3vh",
-      fontSize: "15pt",
-      textAlign: "center" as const,
-      cursor: "pointer",
-      color: isActive ? "#3182CE" : "#1A202C",
-      borderBottom: isActive ? "2px solid" : "none",
-      borderColor: isActive ? "#3182CE" : "transparent",
-      _hover: { bg: "transparent" },
-      whiteSpace: "nowrap",
-    };
-  };
+  const allFormsTable = useReactTable<Form>({
+    data: allFormsData,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
-  const filteredData = useMemo(() => {
-    if (currentView === "All Forms") return items;
+  const initialScreenersTable = useReactTable<Form>({
+    data: initialScreeners,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
-    return items.filter((item) => {
-      if (currentView === "Client Tracking Statistics (Intake Statistics)") {
-        return item.title === "Intake Statistics";
-      }
+  const intakeStatisticsTable = useReactTable<Form>({
+    data: intakeStatistics,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
-      return item.title === currentView;
-    });
-  }, [currentView, items]);
+  const frontDeskStatisticsTable = useReactTable<Form>({
+    data: frontDeskStatistics,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
 
-  const baseFontSize = 16;
+  const caseManagerStatisticsTable = useReactTable<Form>({
+    data: caseManagerStatistics,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const renderTable = (
+    tableInstance: ReturnType<typeof useReactTable<Form>>,
+    data: Form[]
+  ) =>
+    data.length > 0 ? (
+      <Box
+        borderWidth="1px"
+        borderRadius="12px"
+        width="100%"
+        borderColor="#E2E8F0"
+        padding="12px"
+      >
+        <TableContainer>
+          <HStack
+            width="100%"
+            justify="space-between"
+          >
+            <HStack spacing="0px">
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdOutlineFilterAlt size="16px" />
+                <Text ml="8px">Filter</Text>
+              </Box>
+            </HStack>
+            <HStack spacing="0px">
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+              >
+                <MdOutlineManageSearch size="24px" />
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
+  onClick={() => handleExport(allFormsTable)}
+              >
+                <MdFileUpload size="16px" />
+                <Text ml="8px">Export</Text>
+              </Box>
+            </HStack>
+          </HStack>
+          <Box
+            borderWidth="1px"
+            borderRadius="12px"
+            width="100%"
+            borderColor="#E2E8F0"
+            overflow="auto"
+          >
+            <Table variant="striped">
+            <Thead>
+              {tableInstance.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Th
+                      key={header.id}
+                      cursor={
+                        header.column.getCanSort() ? "pointer" : "default"
+                      }
+                      onClick={
+                        header.column.getCanSort()
+                          ? header.column.getToggleSortingHandler()
+                          : undefined
+                      }
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getCanSort() && (
+                        <Box
+                          display="inline-block"
+                          ml={1}
+                        >
+                          {header.column.getIsSorted() === "asc" ? (
+                            <TriangleUpIcon />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <TriangleDownIcon />
+                          ) : null}
+                        </Box>
+                      )}
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
+            </Thead>
+            <Tbody>
+              {tableInstance.getRowModel().rows.map((row, index) => (
+                <Tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => (
+                    <Td
+                      key={cell.id}
+                      onClick={(e) => {
+                        if (cell.column.id === "rowNumber") e.stopPropagation();
+                      }}
+                    >
+                      {cell.column.id === "rowNumber" ? (
+                        <HoverCheckbox
+                          id={row.original.hashedId}
+                          isSelected={selectedRowIds.includes(
+                            row.original.hashedId
+                          )}
+                          onSelectionChange={handleRowSelect}
+                          index={index}
+                        />
+                      ) : (
+                        flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )
+                      )}
+                    </Td>
+                  ))}
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+          </Box>
+        </TableContainer>
+      </Box>
+    ) : (
+      <Text>No data found.</Text>
+    );
+
   return (
     <Box p="4">
       <Text
@@ -200,115 +393,33 @@ export const FormTable = () => {
       </Text>
       <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
 
-      <Flex
-        overflowX="auto"
-        marginTop="1.5rem"
-        h="40px"
-        alignItems="center"
-        w="95%"
-        mb="4"
+      <Tabs
+        isFitted
+        w="full"
       >
-        <Box
-          {...buttonStyle("All Forms")}
-          onClick={() => setCurrentView("All Forms")}
-        >
-          All Forms
-        </Box>
-        <Box
-          {...buttonStyle("Initial Screeners")}
-          onClick={() => setCurrentView("Initial Screeners")}
-        >
-          Initial Screeners
-        </Box>
-        <Box
-          {...buttonStyle("Client Tracking Statistics (Intake Statistics)")}
-          onClick={() =>
-            setCurrentView("Client Tracking Statistics (Intake Statistics)")
-          }
-        >
-          Client Tracking Statistics (Intake Statistics)
-        </Box>
-        <Box
-          {...buttonStyle("Front Desk Monthly Statistics")}
-          onClick={() => setCurrentView("Front Desk Monthly Statistics")}
-        >
-          Front Desk Monthly Statistics
-        </Box>
-        <Box
-          {...buttonStyle("Case Manager Monthly Statistics")}
-          onClick={() => setCurrentView("Case Manager Monthly Statistics")}
-        >
-          Case Manager Monthly Statistics
-        </Box>
-      </Flex>
-
-      <Box borderWidth="2pt" borderColor="#E2E8F0" borderRadius='1rem' p={5}>
-
-      <Box maxW="100%" overflow="auto" bg="white" p="4">
-        <TableContainer fontSize={baseFontSize} sx={{
-            overflowX: "auto",
-            maxHeight: "600px",
-            overflowY: "auto",
-            maxWidth: "100%"
-          }}>
-          <Table variant="striped" colorScheme="gray">
-            <Thead zIndex={1} backgroundColor="white" position="sticky" top={0}>
-              <Tr>
-              <Th textAlign={"center"}>
-                  <Checkbox
-                    justifySelf="center"
-                    colorScheme="cyan"
-                    isChecked={selectedRowIds.length > 0}
-                    onChange={handleSelectAllCheckboxClick}
-                  />
-                </Th>
-                <Th>Date</Th>
-                <Th>Name</Th>
-                <Th minW="200px">Form Title</Th>
-                <Th w="50px" textAlign="right">
-                <IconButton
-              aria-label="Download CSV"
-              onClick={() =>
-                handleExport()
-              }
-            >
-              <FiUpload />
-            </IconButton>
-                </Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {filteredData.map((item, index) => (
-                <Tr key={item.id} _hover={{ bg: "gray.200" }}>
-                  <Td w="10%" onClick={(e) => e.stopPropagation()}
-                          >
-                          <HoverCheckbox
-  clientId={createHashedId(item.id, item.title)}
-  index={index}
-  isSelected={selectedRowIds.includes(createHashedId(item.id, item.title))}
-  onSelectionChange={handleRowSelect}
-/>
-</Td>
-                  <Td w="15%">{formatDate(item.date)}</Td>
-                  <Td w="20%">{item.name}</Td>
-                  <Td minW="200px">{item.title}</Td>
-                  <Td w="50px" textAlign="right">
-                  <PrintForm formId={item.id} formType={item.title} />
-                  </Td>
-                </Tr>
-              ))}
-              {filteredData.length === 0 && (
-                <Tr>
-                  <Td colSpan={5} textAlign="center" py={6}>
-                    No data found.
-                  </Td>
-                </Tr>
-              )}
-            </Tbody>
-          </Table>
-        </TableContainer>
-      </Box>
-      </Box>
+        <TabList whiteSpace="nowrap">
+          <Tab>All Forms</Tab>
+          <Tab>Initial Screeners</Tab>
+          <Tab>Intake Statistics</Tab>
+          <Tab>Front Desk Statistics</Tab>
+          <Tab>Case Manager Statistics</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>{renderTable(allFormsTable, allFormsData)}</TabPanel>
+          <TabPanel>
+            {renderTable(initialScreenersTable, initialScreeners)}
+          </TabPanel>
+          <TabPanel>
+            {renderTable(intakeStatisticsTable, intakeStatistics)}
+          </TabPanel>
+          <TabPanel>
+            {renderTable(frontDeskStatisticsTable, frontDeskStatistics)}
+          </TabPanel>
+          <TabPanel>
+            {renderTable(caseManagerStatisticsTable, caseManagerStatistics)}
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </Box>
   );
 };

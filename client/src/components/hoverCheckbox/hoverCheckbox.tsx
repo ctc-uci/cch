@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Checkbox, Flex, Text } from "@chakra-ui/react";
 
 interface HoverCheckboxProps {
-  clientId: number;
+  id: number;
   index: number;
   isSelected: boolean;
   onSelectionChange: (id: number, checked: boolean) => void;
 }
 
 export const HoverCheckbox = ({
-  clientId,
+  id,
   index,
   isSelected,
   onSelectionChange,
@@ -27,7 +27,7 @@ export const HoverCheckbox = ({
       {(isHovered || isSelected) ? (
         <Checkbox
           isChecked={isSelected}
-          onChange={(e) => onSelectionChange(clientId, e.target.checked)}
+          onChange={(e) => onSelectionChange(id, e.target.checked)}
         />
       ) : (
         <Text>{index + 1}</Text>

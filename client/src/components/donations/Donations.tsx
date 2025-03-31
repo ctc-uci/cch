@@ -41,7 +41,6 @@ import {
   formatDateStringForAPI,
 } from "../../utils/dateUtils";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-// import { useNavigate } from "react-router-dom";
 import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 
@@ -109,8 +108,7 @@ export const Donations = () => {
   const columns = useMemo<ColumnDef<Donation>[]>(
     () => [
       {
-        id: "id",
-        accessorKey: "id",
+        id: "rowNumber",
         header: ({ table }) => {
           return (
             <Checkbox
@@ -120,6 +118,7 @@ export const Donations = () => {
             />
           );
         },
+        enableSorting: false
       },
       {
         header: "Date",
@@ -376,7 +375,7 @@ export const Donations = () => {
                         header.column.getCanSort() ? "pointer" : "default"
                       }
                       onClick={
-                        header.id === "id"
+                        header.id === "rowNumber"
                           ? handleSelectAllCheckboxClick
                           : header.column.getToggleSortingHandler()
                       }
@@ -415,14 +414,14 @@ export const Donations = () => {
                       fontSize="14px"
                       fontWeight="500px"
                       onClick={(e) => {
-                        if (cell.column.id === "id") {
+                        if (cell.column.id === "rowNumber") {
                           e.stopPropagation();
                         }
                       }}
                     >
-                      {cell.column.id === "id" ? (
+                      {cell.column.id === "rowNumber" ? (
                         <HoverCheckbox
-                          clientId={row.original.id}
+                          id={row.original.id}
                           isSelected={selectedRowIds.includes(row.original.id)}
                           onSelectionChange={handleRowSelect}
                           index={index}

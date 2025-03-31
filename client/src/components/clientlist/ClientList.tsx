@@ -71,8 +71,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
       {
-        id: "id",
-        accessorKey: "id",
+        id: "rowNumber",
         header: ({ table }) => {
           return (
             <Checkbox
@@ -82,6 +81,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
             />
           );
         },
+        enableSorting: false
       },
       {
         accessorKey: "firstName",
@@ -416,7 +416,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
                     key={header.id}
                     cursor={header.column.getCanSort() ? "pointer" : "default"}
                     onClick={
-                      header.id === "id"
+                      header.id === "rowNumber"
                         ? handleSelectAllCheckboxClick
                         : header.column.getToggleSortingHandler()
                     }
@@ -454,14 +454,14 @@ export const ClientList = ({ admin }: ClientListProps) => {
                   fontSize="14px"
                   fontWeight="500px"
                   onClick={(e) => {
-                    if (cell.column.id === "id") {
+                    if (cell.column.id === "rowNumber") {
                       e.stopPropagation();
                     }
                   }}
                 >
-                  {cell.column.id === "id" ? (
+                  {cell.column.id === "rowNumber" ? (
                     <HoverCheckbox
-                      clientId={row.original.id}
+                      id={row.original.id}
                       isSelected={selectedRowIds.includes(row.original.id)}
                       onSelectionChange={handleRowSelect}
                       index={index}
