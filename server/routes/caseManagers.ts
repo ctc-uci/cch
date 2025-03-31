@@ -41,6 +41,20 @@ caseManagersRouter.get("/:id", async (req, res) => {
   }
 });
 
+// Get case manager id by email
+caseManagersRouter.get("/id-by-email/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const data = await db.query(`SELECT id FROM case_managers WHERE email = $1`, [
+      email,
+    ]);
+
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Insert new case manager
 caseManagersRouter.post("/", async (req, res) => {
   try {
