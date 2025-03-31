@@ -38,6 +38,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
 import { eventTypes } from "../../types/volunteer";
 import VolunteerDrawer from "./VolunteerDrawer";
+import { formatDateString } from "../../utils/dateUtils";
 
 interface VolunteersTableProps {
   toggleRefresh: boolean;
@@ -172,13 +173,7 @@ const VolunteersTable = ({
         accessorKey: "date",
         header: "Date",
         cell: ({ getValue }) => {
-          const date = getValue() as string;
-          return new Date(date).toLocaleDateString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Uses browser's timezone
-          });
+          return formatDateString(getValue() as string);
         },
       },
       {
