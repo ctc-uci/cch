@@ -112,95 +112,80 @@ export const FormTable = () => {
   };
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const screenerResponse = await backend.get(`/initialInterview`);
-        const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersMonthlyResponse = await backend.get(`/caseManagerMonthlyStats`);
-        const allCaseManagersResponse = await backend.get(`/caseManagers`);
-
-        const initialScreeners: FormItem[] = screenerResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
-            name: item.name,
-            title: "Initial Screeners",
-          })
-        );
-
-        const intakeStatistics: FormItem[] = [];
-
-        const frontDeskStats: FormItem[] = frontDeskResponse.data.map(
-          (item) => ({
-            id: item.id,
-            date: item.date,
-            name: "",
-            title: "Front Desk Monthly Statistics",
-          })
-        );
-
-        const caseManagerStats: FormItem[] =
-          caseManagersMonthlyResponse.data.map((item) => {
-            const matchingCM = allCaseManagersResponse.data.find(
-              (cm) => cm.id === item.cmId
-            );
-            return {
-              id: item.id,
-              date: item.date,
-              name: `${matchingCM.firstName} ${matchingCM.lastName}`,
-              title: "Case Manager Monthly Statistics",
-            };
-          });
-
-        setItems([
-          ...initialScreeners,
-          ...intakeStatistics,
-          ...frontDeskStats,
-          ...caseManagerStats,
-        ]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    getData();
-  }, [backend]);
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
-        const initialScreenerResponse = await backend.get(`/lastUpdated/initial_interview`);
-        const frontDeskMonthlyStatsResponse = await backend.get(`/lastUpdated/front_desk_monthly`);
-        const cmMonthlyStatsResponse = await backend.get(`/lastUpdated/cm_monthly_stats`);
-        
-        const getDate = (date) => {
-          if (date && date[0] && date[0].lastUpdatedAt){
-            return new Date(date[0].lastUpdatedAt);
-          }
-          return null;
-        }
-
+        const [
+          screenerResponse,
+          frontDeskResponse,
+          caseManagersMonthlyResponse,
+          allCaseManagersResponse,
+          initialScreenerResponse,
+          frontDeskMonthlyStatsResponse,
+          cmMonthlyStatsResponse
+        ] = await Promise.all([
+          backend.get(`/initialInterview`),
+          backend.get(`/frontDesk`),
+          backend.get(`/caseManagerMonthlyStats`),
+          backend.get(`/caseManagers`),
+          backend.get(`/lastUpdated/initial_interview`),
+          backend.get(`/lastUpdated/front_desk_monthly`),
+          backend.get(`/lastUpdated/cm_monthly_stats`)
+        ]);
+  
+        const initialScreeners = screenerResponse.data.map((item) => ({
+          id: item.id,
+          date: item.date,
+          name: item.name,
+          title: "Initial Screeners",
+        }));
+  
+        const intakeStatistics = [];
+  
+        const frontDeskStats = frontDeskResponse.data.map((item) => ({
+          id: item.id,
+          date: item.date,
+          name: "",
+          title: "Front Desk Monthly Statistics",
+        }));
+  
+        const caseManagerStats = caseManagersMonthlyResponse.data.map((item) => {
+          const matchingCM = allCaseManagersResponse.data.find(
+            (cm) => cm.id === item.cmId
+          );
+          return {
+            id: item.id,
+            date: item.date,
+            name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
+            title: "Case Manager Monthly Statistics",
+          };
+        });
+  
+        setItems([...initialScreeners, ...intakeStatistics, ...frontDeskStats, ...caseManagerStats]);
+  
+        const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
+  
         const initialScreener = getDate(initialScreenerResponse.data);
         const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
         const cmMonthly = getDate(cmMonthlyStatsResponse.data);
-        
+  
         setInitialScreenerDate(initialScreener);
         setFrontDeskDate(frontDesk);
         setCMMonthlyDate(cmMonthly);
   
         const mostRecent = new Date(Math.max(
-          initialScreener ? initialScreener.getTime() : 0,
-          frontDesk ? frontDesk.getTime() : 0,
-          cmMonthly ? cmMonthly.getTime() : 0
+          initialScreener?.getTime() || 0,
+          frontDesk?.getTime() || 0,
+          cmMonthly?.getTime() || 0
         ));
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
       } catch (error) {
-        console.error("Error fetching last updated:", error);
+        console.error("Error fetching data:", error);
       }
     };
   
     fetchData();
   }, [backend]);
+  
 
   useEffect(() => {
     if (currentView === "All Forms" && mostRecentDate) {

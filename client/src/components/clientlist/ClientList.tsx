@@ -149,49 +149,33 @@ export const ClientList = ({admin}: ClientListProps) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await backend.get(`/lastUpdated/clients`);
-        const date = new Date(response.data[0].lastUpdatedAt);
-        const formattedDate = date.toLocaleString();
-        setLastUpdated(formattedDate);
-
-      } catch (error) {
-        console.error("Error fetching last updated:", error);
-      }
-    };
-
-    fetchData();
-  }, [lastUpdated, backend]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        let response;
+        const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
+  
+        let clientsRequest;
         if (searchKey && filterQuery.length > 1) {
-          response = await backend.get(
-            `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
         } else if (searchKey) {
-          response = await backend.get(
-            `/clients?page=&filter=&search=${searchKey}`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
         } else if (filterQuery.length > 1) {
-          response = await backend.get(
-            `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
         } else {
-          response = await backend.get("/clients");
+          clientsRequest = backend.get("/clients");
         }
-
-        setClients(response.data);
-
+  
+        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+  
+        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+        setLastUpdated(date.toLocaleString());
+        setClients(clientsResponse.data);
+  
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching data:", error);
       }
     };
-
+  
     fetchData();
-
   }, [backend, searchKey, filterQuery]);
+  
 
   return (
     <VStack

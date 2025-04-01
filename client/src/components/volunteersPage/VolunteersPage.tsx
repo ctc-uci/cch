@@ -14,9 +14,6 @@ const VolunteersPage = () => {
   const [lastUpdated, setLastUpdated] = useState("");
 
   useEffect(() => {
-  }, [backend, toggleRefresh, totalVolunteers, totalHours]);
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await backend.get(`/lastUpdated/volunteers`);

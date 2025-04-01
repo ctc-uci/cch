@@ -31,48 +31,39 @@ export const CaseManagerMonthlyStats = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
   useEffect(() => {
-    const getData = async () => {
-      try {
-        const response = await backend.get(
-          `/calculateMonthlyStats/${selectedYear}`
-        );
-        setAllTabData(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    getData();
-  }, [backend, selectedYear]);
-
-  useEffect(() => {
     const fetchData = async () => {
       try {
-        const frontDeskResponse = await backend.get(`/lastUpdated/front_desk_monthly`);
-        const cmResponse = await backend.get(`/lastUpdated/cm_monthly_stats`);
-
+        const [monthlyStatsResponse, frontDeskResponse, cmResponse] = await Promise.all([
+          backend.get(`/calculateMonthlyStats/${selectedYear}`),
+          backend.get(`/lastUpdated/front_desk_monthly`),
+          backend.get(`/lastUpdated/cm_monthly_stats`)
+        ]);
+  
+        setAllTabData(monthlyStatsResponse.data);
+  
         const frontDesk = new Date(frontDeskResponse.data[0].lastUpdatedAt);
         const cmMonthly = new Date(cmResponse.data[0].lastUpdatedAt);
-
+  
         const mostRecent = new Date(Math.max(
           frontDesk ? frontDesk.getTime() : 0,
           cmMonthly ? cmMonthly.getTime() : 0
         ));
-
-        if (mostRecent.getTime() === 0){
-          setLastUpdated("");
-        }
-        else{
+  
+        if (mostRecent.getTime() === 0) {
+          setLastUpdated("N/A");
+        } else {
           const formattedDate = mostRecent.toLocaleString();
           setLastUpdated(formattedDate);
         }
-
+  
       } catch (error) {
-        console.error("Error fetching last updated:", error);
+        console.error("Error fetching data:", error);
       }
     };
-
+  
     fetchData();
-  }, [backend]);
+  }, [backend, selectedYear]);
+  
 
   const buttonStyle = {
     variant: "outline",

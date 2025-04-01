@@ -100,46 +100,35 @@ export const Donations = () => {
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
   };
-  useEffect(() => {
-      const fetchData = async () => {
-        try {
-          const response = await backend.get(`/lastUpdated/donations`);
-          const date = new Date(response.data[0].lastUpdatedAt);
-          const formattedDate = date.toLocaleString();
-          setLastUpdated(formattedDate);
-  
-        } catch (error) {
-          console.error("Error fetching last updated:", error);
-        }
-      };
-  
-      fetchData();
-    }, [lastUpdated, backend]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`)).data[0].sum;
-        setValueSum(valuesResponse);
+        const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        
+        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse] = await Promise.all([
+          backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/donations/weightSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/lastUpdated/donations`)
+        ]);
+  
+        setValueSum(valuesResponse.data[0]?.sum || 0);
+        setWeightSum(weightResponse.data[0]?.sum || 0);
+        setAllDonations(donationsResponse.data);
+  
+        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+        setLastUpdated(date.toLocaleString());
+  
       } catch (error) {
-        console.error("Error fetching value sum:", error);
-      }
-      try {
-        const weightResponse = await backend.get(`/donations/weightSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
-        setWeightSum(weightResponse.data[0].sum);
-      } catch (error) {
-        console.error("Error fetching weight sum:", error);
-      }
-
-      try {
-        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
-        setAllDonations(response.data);
-      } catch (err) {
-        console.error("Error fetching donation data", err);
+        console.error("Error fetching donation data:", error);
       }
     };
+  
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh]);
+  }, [donor, startDate, endDate, toggleRefresh, backend]);
+  
 
   return (
     <HStack w="100%" h="100%">
