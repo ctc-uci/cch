@@ -39,6 +39,7 @@ import { UpdateClients } from "../admin/UpdateClient";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { formatDateString } from "../../utils/dateUtils";
 
 interface ClientListProps {
   admin?: boolean;
@@ -117,6 +118,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {
         accessorKey: "dateOfBirth",
         header: "Birthday",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
         accessorKey: "age",
@@ -125,10 +129,16 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {
         accessorKey: "entranceDate",
         header: "Entry Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
         accessorKey: "exitDate",
         header: "Exit Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
         accessorKey: "bedNights",
@@ -161,6 +171,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {
         accessorKey: "estimatedExitDate",
         header: "Estimated Exit Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
         accessorKey: "pregnantUponEntry",
@@ -252,6 +265,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
     state: {
       sorting,
     },
+    sortDescFirst: true,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),

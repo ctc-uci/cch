@@ -157,6 +157,7 @@ export const Donations = () => {
     state: {
       sorting,
     },
+    sortDescFirst: true,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),

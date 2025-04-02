@@ -109,6 +109,7 @@ export const ManageAccounts = () => {
       state: {
         sorting,
       },
+      sortDescFirst: true,
       onSortingChange: setSorting,
       getCoreRowModel: getCoreRowModel(),
       getSortedRowModel: getSortedRowModel(),
