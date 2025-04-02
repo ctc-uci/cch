@@ -47,8 +47,8 @@ interface ClientListProps {
 
 export const ClientList = ({ admin }: ClientListProps) => {
   const headers = [
-    "Client First Name",
-    "Client Last Name",
+    "First Name",
+    "Last Name",
     "Phone Number",
     "E-mail",
     "Entrance Date",
@@ -88,11 +88,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "firstName",
-        header: "Client First Name",
+        header: "First Name",
       },
       {
         accessorKey: "lastName",
-        header: "Client Last Name",
+        header: "Last Name",
       },
       {
         header: "Case Manager",
@@ -287,8 +287,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
     );
 
     const data = selectedClients.map((client) => ({
-      "Client First Name": client.firstName,
-      "Client Last Name": client.lastName,
+      "First Name": client.firstName,
+      "Last Name": client.lastName,
       "Phone Number": client.phoneNumber,
       "E-mail": client.email,
       "Entrance Date": client.entranceDate,
