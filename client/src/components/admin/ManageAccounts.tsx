@@ -97,7 +97,7 @@ export const ManageAccounts = () => {
       },
       {
         accessorKey: "location",
-        header: "Location",
+        header: "Site",
       },
       ],
       []

@@ -151,39 +151,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         header: "Total Bed Nights w/ Children",
       },
       {
-        accessorKey: "phoneNumber",
-        header: "Phone Number",
-      },
-      {
-        accessorKey: "email",
-        header: "Email",
-      },
-      {
-        accessorKey: "emergencyContactName",
-        header: "Emergency Contact Name",
-      },
-      {
-        accessorKey: "emergencyContactPhoneNumber",
-        header: "Emergency Contact Phone",
-      },
-      {
-        accessorKey: "medical",
-        header: "Medical",
-      },
-      {
-        accessorKey: "estimatedExitDate",
-        header: "Estimated Exit Date",
-        cell: ({ getValue }) => {
-          return formatDateString(getValue() as string);
-        },
-      },
-      {
         accessorKey: "pregnantUponEntry",
         header: "Pregnant Upon Entry",
       },
       {
         accessorKey: "disabledChildren",
-        header: "Disabled Children",
+        header: "Children w/a Disability",
       },
       {
         accessorKey: "ethnicity",
@@ -211,7 +184,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "homelessnessLength",
-        header: "Homelessness Length",
+        header: "Length of Homelessness",
       },
       {
         accessorKey: "chronicallyHomeless",
@@ -219,11 +192,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "attendingSchoolUponEntry",
-        header: "Attending School Upon Entry",
-      },
-      {
-        accessorKey: "employmentGained",
-        header: "Employment Gained",
+        header: "In School Upon Entry",
       },
       {
         accessorKey: "reasonForLeaving",
@@ -243,7 +212,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       },
       {
         accessorKey: "attendingSchoolUponExit",
-        header: "Attending School Upon Exit",
+        header: "In School Upon Exit",
       },
       {
         accessorKey: "reunified",
@@ -254,12 +223,44 @@ export const ClientList = ({ admin }: ClientListProps) => {
         header: "Successful Completion",
       },
       {
+        accessorKey: "phoneNumber",
+        header: "Phone Number",
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "emergencyContactName",
+        header: "Emergency Contact Name",
+      },
+      {
+        accessorKey: "emergencyContactPhoneNumber",
+        header: "Emergency Contact Phone",
+      },
+      {
+        accessorKey: "medical",
+        header: "Medical",
+      },
+      {
+        accessorKey: "estimatedExitDate",
+        header: "Estimated Exit Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
+      },
+      {
+        accessorKey: "employmentGained",
+        header: "Employment Gained",
+      },
+      {
         accessorKey: "destinationCity",
         header: "Destination City",
       },
     ],
     [selectedRowIds, clients]
   );
+
 
   const table = useReactTable({
     data: clients,
