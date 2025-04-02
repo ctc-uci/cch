@@ -225,6 +225,7 @@ export const ManageAccounts = () => {
                       key={header.id}
                       cursor={header.column.getCanSort() ? "pointer" : "default"}
                       onClick={header.column.getToggleSortingHandler()}
+                      textAlign="center"
                     >
                       {flexRender(
                         header.column.columnDef.header,

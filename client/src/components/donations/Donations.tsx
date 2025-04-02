@@ -111,14 +111,16 @@ export const Donations = () => {
         id: "rowNumber",
         header: ({ table }) => {
           return (
-            <Checkbox
-              isChecked={selectedRowIds.length > 0}
-              isIndeterminate={table.getIsSomeRowsSelected()}
-              onChange={handleSelectAllCheckboxClick}
-            />
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={selectedRowIds.length > 0}
+                isIndeterminate={table.getIsSomeRowsSelected()}
+                onChange={handleSelectAllCheckboxClick}
+              />
+            </Box>
           );
         },
-        enableSorting: false
+        enableSorting: false,
       },
       {
         header: "Date",
@@ -375,11 +377,7 @@ export const Donations = () => {
                       cursor={
                         header.column.getCanSort() ? "pointer" : "default"
                       }
-                      onClick={
-                        header.id === "rowNumber"
-                          ? handleSelectAllCheckboxClick
-                          : header.column.getToggleSortingHandler()
-                      }
+                      onClick={header.column.getToggleSortingHandler()}
                     >
                       {flexRender(
                         header.column.columnDef.header,

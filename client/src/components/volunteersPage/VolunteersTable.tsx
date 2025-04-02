@@ -37,8 +37,9 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Volunteer } from "../../types/volunteer";
 import { eventTypes } from "../../types/volunteer";
-import VolunteerDrawer from "./VolunteerDrawer";
 import { formatDateString } from "../../utils/dateUtils";
+import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import VolunteerDrawer from "./VolunteerDrawer";
 
 interface VolunteersTableProps {
   toggleRefresh: boolean;
@@ -69,7 +70,15 @@ const VolunteersTable = ({
   useEffect(() => {
     const fetchVolunteers = async () => {
       try {
-        const params = {startDate: startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "", endDate: endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "", eventType: eventTypeFilter ? eventTypeFilter : ""};
+        const params = {
+          startDate: startDate
+            ? startDate.toLocaleDateString("en-US", { timeZone: "UTC" })
+            : "",
+          endDate: endDate
+            ? endDate.toLocaleDateString("en-US", { timeZone: "UTC" })
+            : "",
+          eventType: eventTypeFilter ? eventTypeFilter : "",
+        };
         const response = backend.get("/volunteers", {
           params,
         });
@@ -79,7 +88,8 @@ const VolunteersTable = ({
         const totalHours = backend.get("/volunteers/total-hours", {
           params,
         });
-        const [responseData, totalVolunteersData, totalHoursData] = await Promise.all([response, totalVolunteers, totalHours]);
+        const [responseData, totalVolunteersData, totalHoursData] =
+          await Promise.all([response, totalVolunteers, totalHours]);
         setVolunteers(responseData.data);
         setTotalVolunteers(totalVolunteersData.data.totalVolunteers);
         setTotalHours(totalHoursData.data.totalHours);
@@ -99,7 +109,9 @@ const VolunteersTable = ({
     setEndDate(undefined);
   };
 
-  const handleStartDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleStartDateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const dateValue = event.target.value;
     setStartDate(dateValue ? new Date(dateValue) : undefined);
   };
@@ -117,6 +129,14 @@ const VolunteersTable = ({
         : [...prevSelected, volunteerId]
     );
   }, []);
+
+  const handleSelectAllCheckboxClick = () => {
+    if (selectedVolunteers.length === 0) {
+      setSelectedVolunteers(volunteers.map((volunteer) => volunteer.id));
+    } else {
+      setSelectedVolunteers([]);
+    }
+  };
 
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
@@ -144,30 +164,19 @@ const VolunteersTable = ({
   const columns = useMemo<ColumnDef<Volunteer>[]>(
     () => [
       {
-        id: "select",
-        header: ({ table }) => (
-
-          <Checkbox
-            isChecked={selectedVolunteers.length === volunteers.length}
-            onChange={() => {
-              if (selectedVolunteers.length === volunteers.length) {
-                setSelectedVolunteers([]);
-              } else {
-                setSelectedVolunteers(volunteers.map((v) => v.id));
-              }
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            isChecked={selectedVolunteers.includes(row.original.id)}
-            onChange={() => handleCheckboxChange(row.original.id)}
-          />
-        ),
-      },
-      {
-        accessorKey: "id",
-        header: "ID",
+        id: "rowNumber",
+        header: ({ table }) => {
+          return (
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={selectedVolunteers.length > 0}
+                isIndeterminate={table.getIsSomeRowsSelected()}
+                onChange={handleSelectAllCheckboxClick}
+              />
+            </Box>
+          );
+        },
+        enableSorting: false,
       },
       {
         accessorKey: "date",
@@ -265,9 +274,19 @@ const VolunteersTable = ({
             <option value="option3">Option 3</option>
           </Select>
           <Text>From:</Text>
-          <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
+          <Input
+            type="date"
+            name="startDate"
+            w="40%"
+            onChange={handleStartDateChange}
+          />
           <Text>To:</Text>
-          <Input type="date" name="endDate" w='40%' onChange={handleEndDateChange}/>
+          <Input
+            type="date"
+            name="endDate"
+            w="40%"
+            onChange={handleEndDateChange}
+          />
         </HStack>
         <HStack
           justify="space-between"
@@ -400,7 +419,7 @@ const VolunteersTable = ({
                 ))}
               </Thead>
               <Tbody>
-                {table.getRowModel().rows.map((row) => (
+                {table.getRowModel().rows.map((row, index) => (
                   <Tr
                     key={row.id}
                     onClick={() => handleRowClick(row.original)}
@@ -411,10 +430,26 @@ const VolunteersTable = ({
                         key={cell.id}
                         fontSize="14px"
                         fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedVolunteers.includes(
+                              row.original.id
+                            )}
+                            onSelectionChange={handleCheckboxChange}
+                            index={index}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
                         )}
                       </Td>
                     ))}

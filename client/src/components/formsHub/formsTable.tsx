@@ -59,11 +59,13 @@ export const FormTable = () => {
         id: "rowNumber",
         header: ({ table }) => {
           return (
-            <Checkbox
-              isChecked={selectedRowIds.length > 0}
-              isIndeterminate={table.getIsSomeRowsSelected()}
-              onChange={() => handleSelectAllCheckboxClick(table)}
-            />
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={selectedRowIds.length > 0}
+                isIndeterminate={table.getIsSomeRowsSelected()}
+                onChange={() => handleSelectAllCheckboxClick(table)}
+              />
+            </Box>
           );
         },
         enableSorting: false,
@@ -323,11 +325,7 @@ export const FormTable = () => {
                       cursor={
                         header.column.getCanSort() ? "pointer" : "default"
                       }
-                      onClick={
-                        header.column.getCanSort()
-                          ? header.column.getToggleSortingHandler()
-                          : undefined
-                      }
+                      onClick={header.column.getToggleSortingHandler()}
                     >
                       {flexRender(
                         header.column.columnDef.header,

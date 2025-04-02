@@ -34,12 +34,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Client } from "../../types/client";
+import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
 import { UpdateClients } from "../admin/UpdateClient";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-import { formatDateString } from "../../utils/dateUtils";
 
 interface ClientListProps {
   admin?: boolean;
@@ -75,14 +75,16 @@ export const ClientList = ({ admin }: ClientListProps) => {
         id: "rowNumber",
         header: ({ table }) => {
           return (
-            <Checkbox
-              isChecked={selectedRowIds.length > 0}
-              isIndeterminate={table.getIsSomeRowsSelected()}
-              onChange={handleSelectAllCheckboxClick}
-            />
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={selectedRowIds.length > 0}
+                isIndeterminate={table.getIsSomeRowsSelected()}
+                onChange={handleSelectAllCheckboxClick}
+              />
+            </Box>
           );
         },
-        enableSorting: false
+        enableSorting: false,
       },
       {
         accessorKey: "firstName",
@@ -429,11 +431,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
                   <Th
                     key={header.id}
                     cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={
-                      header.id === "rowNumber"
-                        ? handleSelectAllCheckboxClick
-                        : header.column.getToggleSortingHandler()
-                    }
+                    onClick={header.column.getToggleSortingHandler()}
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -464,26 +462,26 @@ export const ClientList = ({ admin }: ClientListProps) => {
               >
                 {row.getVisibleCells().map((cell) => (
                   <Td
-                  key={cell.id}
-                  fontSize="14px"
-                  fontWeight="500px"
-                  onClick={(e) => {
-                    if (cell.column.id === "rowNumber") {
-                      e.stopPropagation();
-                    }
-                  }}
-                >
-                  {cell.column.id === "rowNumber" ? (
-                    <HoverCheckbox
-                      id={row.original.id}
-                      isSelected={selectedRowIds.includes(row.original.id)}
-                      onSelectionChange={handleRowSelect}
-                      index={index}
-                    />
-                  ) : (
-                    flexRender(cell.column.columnDef.cell, cell.getContext())
-                  )}
-                </Td>
+                    key={cell.id}
+                    fontSize="14px"
+                    fontWeight="500px"
+                    onClick={(e) => {
+                      if (cell.column.id === "rowNumber") {
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
+                    {cell.column.id === "rowNumber" ? (
+                      <HoverCheckbox
+                        id={row.original.id}
+                        isSelected={selectedRowIds.includes(row.original.id)}
+                        onSelectionChange={handleRowSelect}
+                        index={index}
+                      />
+                    ) : (
+                      flexRender(cell.column.columnDef.cell, cell.getContext())
+                    )}
+                  </Td>
                 ))}
               </Tr>
             ))}
