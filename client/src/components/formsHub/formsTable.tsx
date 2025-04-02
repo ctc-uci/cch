@@ -20,7 +20,7 @@ import { FiUpload } from "react-icons/fi";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { downloadCSV } from "../../utils/downloadCSV";
-import PrintForm from "../PrintForm";
+import PrintForm from "../printForm/PrintForm";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 type FormItem = {
@@ -84,10 +84,7 @@ export const FormTable = () => {
 
   useEffect(() => {
     setSelectedRowIds([]);
-    console.log(currentView);
   }, [currentView]);
-
-
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
 

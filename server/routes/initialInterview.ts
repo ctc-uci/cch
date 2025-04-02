@@ -122,7 +122,7 @@ initialInterviewRouter.get("/:id", async (req, res) => {
   }
 });
 
-initialInterviewRouter.get("/:id", async (req, res) => {
+initialInterviewRouter.get("/id/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const data = await db.query(

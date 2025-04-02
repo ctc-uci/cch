@@ -41,7 +41,6 @@ caseManagerMonthlyStatsRouter.get("/id/:id", async (req, res) => {
     const { id } = req.params;
 
     const data = await db.query('SELECT * FROM cm_monthly_stats where id = $1', [id]);
-    // console.log(data);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
@@ -49,7 +48,6 @@ caseManagerMonthlyStatsRouter.get("/id/:id", async (req, res) => {
 });
 
 caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
-  console.log(req.body);
   try {
     const {
       date,
