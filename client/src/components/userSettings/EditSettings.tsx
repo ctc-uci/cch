@@ -526,6 +526,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
         colorScheme="blue"
         style={{ marginTop: "2rem" }}
         onClick={() => {
+          setSubmitting(true);
           onOpen();
         }}
       >
@@ -673,7 +674,10 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
             <AlertDialogFooter>
               <Button
                 ref={cancelRef}
-                onClick={onClose}
+                onClick={() => {
+                  onClose(); 
+                  setSubmitting(false);
+                }}
               >
                 Back
               </Button>
