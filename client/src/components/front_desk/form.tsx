@@ -81,8 +81,6 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
           
       };
 
-      console.log(monthlyStatData);
-
       await backend.post("/frontDesk", monthlyStatData);
       setFormData({
         date: "",
@@ -156,7 +154,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 />
                 </Box>
             ))}
-            <Text  fontWeight={"bold"} p={2}    >
+            <Text fontWeight={"bold"} p={2}>
                 Placentia
             </Text>
             {placentiaFields.map(({ name, label }) => (
