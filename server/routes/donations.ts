@@ -35,7 +35,7 @@ donationRouter.get("/date", async (req, res) => {
 donationRouter.get("/valueSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(value) FROM donations`;
+    let query = `SELECT SUM(value*weight) FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
@@ -62,7 +62,7 @@ donationRouter.get("/valueSum", async (req, res) => {
 donationRouter.get("/weightSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(weight) FROM donations`;
+    let query = `SELECT SUM(ROUND(CAST(weight * value AS DECIMAL), 2)) FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
@@ -115,16 +115,7 @@ donationRouter.get("/filter/", async (req, res) => {
 
 donationRouter.get("/monthfilter/", async (req, res) => {
   try {
-    // Query database
     const { donor, startDate, endDate} = req.query;
-    // let query = `SELECT 
-    //               donor, category,
-    //               ROUND(CAST(weight * value AS DECIMAL), 2) as total, 
-    //               TO_CHAR(date, 'Month YYYY') AS month_year,
-    //               ROUND(SUM(CAST(weight AS DECIMAL)), 2) AS total_weight,
-    //               SUM(weight*value) as total_value
-    //               FROM donations`;
-
     let query = `SELECT 
                   donor,
                   category,
@@ -159,16 +150,7 @@ donationRouter.get("/monthfilter/", async (req, res) => {
 
 donationRouter.get("/yearfilter/", async (req, res) => {
   try {
-    // Query database
     const { donor, startDate, endDate} = req.query;
-    // let query = `SELECT 
-    //               donor, category,
-    //               ROUND(CAST(weight * value AS DECIMAL), 2) as total, 
-    //               TO_CHAR(date, 'Month YYYY') AS month_year,
-    //               ROUND(SUM(CAST(weight AS DECIMAL)), 2) AS total_weight,
-    //               SUM(weight*value) as total_value
-    //               FROM donations`;
-
     let query = `SELECT 
                   donor,
                   category,
