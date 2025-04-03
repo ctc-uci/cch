@@ -45,6 +45,7 @@ import UserSettings from "./components/userSettings/UserSettings";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
+import { Playground } from "./themes/play";
 
 const App = () => {
 
@@ -203,6 +204,7 @@ const App = () => {
                     path ="/success"
                     element ={<Success/>}
                   />
+                  <Route path="/playground" element={<Playground/>}/>
                   <Route
                     path = "/initial-screener-table"
                     element = {<ProtectedRoute element={<InitialScreenerTable />} allowedRoles={["user"]}/>}
@@ -211,6 +213,7 @@ const App = () => {
                     path = "/comment-form/:id"
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
+                  
                 <Route
                   path="/"
                   element={
@@ -227,7 +230,7 @@ const App = () => {
                     replace
                   />}
                 />
-
+                
               </Routes>
             </FormProvider>
           </RoleProvider>
