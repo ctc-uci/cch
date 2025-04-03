@@ -20,7 +20,7 @@ import { FiUpload } from "react-icons/fi";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { downloadCSV } from "../../utils/downloadCSV";
-import PrintForm from "../PrintForm";
+import PrintForm from "../printForm/PrintForm";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 type FormItem = {
@@ -30,8 +30,8 @@ type FormItem = {
   title:
     | "Initial Screeners"
     | "Intake Statistics"
-    | "Front Desk Monthly Stats"
-    | "Case Manager Monthly Stats";
+    | "Front Desk Monthly Statistics"
+    | "Case Manager Monthly Statistics";
 };
 
 type ViewOption =
@@ -44,8 +44,8 @@ type ViewOption =
   const tableMapping: Record<FormItem["title"], number> = {
     "Initial Screeners": 1,
     "Intake Statistics": 2,
-    "Front Desk Monthly Stats": 3,
-    "Case Manager Monthly Stats": 4,
+    "Front Desk Monthly Statistics": 3,
+    "Case Manager Monthly Statistics": 4,
   };
 
 // I know you said to also include the formTable but I wanted to be able to treat all forms
@@ -58,7 +58,9 @@ const createHashedId = (id: number, title: FormItem["title"]) => {
 
 
 
+
 export const FormTable = () => {
+
   const { backend } = useBackendContext();
   const [items, setItems] = useState<FormItem[]>([]);
   const [currentView, setCurrentView] = useState<ViewOption>("All Forms");
@@ -85,7 +87,9 @@ export const FormTable = () => {
     }
   };
 
-
+  useEffect(() => {
+    setSelectedRowIds([]);
+  }, [currentView]);
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
 
@@ -320,7 +324,7 @@ export const FormTable = () => {
             </Thead>
             <Tbody>
               {filteredData.map((item, index) => (
-                <Tr key={item.id} _hover={{ bg: "gray.200" }}>
+                <Tr key={index} _hover={{ bg: "gray.200" }}>
                   <Td w="10%" onClick={(e) => e.stopPropagation()}
                           >
                           <HoverCheckbox

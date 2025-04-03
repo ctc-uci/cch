@@ -35,7 +35,7 @@ donationRouter.get("/date", async (req, res) => {
 donationRouter.get("/valueSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(value) FROM donations`;
+    let query = `SELECT SUM(value*weight) FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
@@ -62,7 +62,7 @@ donationRouter.get("/valueSum", async (req, res) => {
 donationRouter.get("/weightSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(weight) FROM donations`;
+    let query = `SELECT SUM(ROUND(CAST(weight * value AS DECIMAL), 2)) FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
@@ -89,7 +89,7 @@ donationRouter.get("/weightSum", async (req, res) => {
 donationRouter.get("/filter/", async (req, res) => {
   try {
     // Query database
-    const { donor, startDate, endDate } = req.query;
+    const { donor, startDate, endDate, } = req.query;
     let query = `SELECT *, ROUND(CAST(weight * value AS DECIMAL), 2) as total FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
@@ -105,7 +105,77 @@ donationRouter.get("/filter/", async (req, res) => {
       queryParams.push(` date <= '${endDate}'`);
     }
     query += queryParams.join(" AND");
-    query += ` ORDER BY date DESC`;
+    query += ` ORDER BY date DESC`;  
+    const data = await db.query(query);
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+donationRouter.get("/monthfilter/", async (req, res) => {
+  try {
+    const { donor, startDate, endDate} = req.query;
+    let query = `SELECT 
+                  donor,
+                  category,
+                  TO_CHAR(date, 'FMMonth YYYY') AS month_year,
+                  ROUND(SUM(weight * value)::numeric, 2) AS total_value,
+                  ROUND(SUM(weight)::numeric, 2) AS total_weight,
+                  MAX(date) AS latest_date
+                FROM donations`;
+    if (donor || startDate || endDate) {
+      query += " WHERE";
+    }
+    const queryParams = [];
+    if (donor) {
+      queryParams.push(` donor = '${donor}'`);
+    }
+    if (startDate) {
+      queryParams.push(` date >= '${startDate}'`);
+    }
+    if (endDate) {
+      queryParams.push(` date <= '${endDate}'`);
+    }
+    query += queryParams.join(" AND");
+    query += ` GROUP BY donor, category, month_year`;
+    query += ` ORDER BY latest_date DESC`;    
+    
+    const data = await db.query(query);
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+donationRouter.get("/yearfilter/", async (req, res) => {
+  try {
+    const { donor, startDate, endDate} = req.query;
+    let query = `SELECT 
+                  donor,
+                  category,
+                  TO_CHAR(date, 'FMYYYY') AS month_year,
+                  ROUND(SUM(weight * value)::numeric, 2) AS total_value,
+                  ROUND(SUM(weight)::numeric, 2) AS total_weight,
+                  MAX(date) AS latest_date
+                FROM donations`;
+    if (donor || startDate || endDate) {
+      query += " WHERE";
+    }
+    const queryParams = [];
+    if (donor) {
+      queryParams.push(` donor = '${donor}'`);
+    }
+    if (startDate) {
+      queryParams.push(` date >= '${startDate}'`);
+    }
+    if (endDate) {
+      queryParams.push(` date <= '${endDate}'`);
+    }
+    query += queryParams.join(" AND");
+    query += ` GROUP BY donor, category, month_year`;
+    query += ` ORDER BY latest_date DESC`;    
+    
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
