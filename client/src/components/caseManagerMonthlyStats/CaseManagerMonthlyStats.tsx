@@ -28,20 +28,42 @@ export const CaseManagerMonthlyStats = () => {
   const currentYear = new Date().getFullYear();
   const [allTabData, setAllTabData] = useState<TabData[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   useEffect(() => {
-    const getData = async () => {
+    const fetchData = async () => {
       try {
-        const response = await backend.get(
-          `/calculateMonthlyStats/${selectedYear}`
-        );
-        setAllTabData(response.data);
+        const [monthlyStatsResponse, frontDeskResponse, cmResponse] = await Promise.all([
+          backend.get(`/calculateMonthlyStats/${selectedYear}`),
+          backend.get(`/lastUpdated/front_desk_monthly`),
+          backend.get(`/lastUpdated/cm_monthly_stats`)
+        ]);
+  
+        setAllTabData(monthlyStatsResponse.data);
+  
+        const frontDesk = new Date(frontDeskResponse.data[0].lastUpdatedAt);
+        const cmMonthly = new Date(cmResponse.data[0].lastUpdatedAt);
+  
+        const mostRecent = new Date(Math.max(
+          frontDesk ? frontDesk.getTime() : 0,
+          cmMonthly ? cmMonthly.getTime() : 0
+        ));
+  
+        if (mostRecent.getTime() === 0) {
+          setLastUpdated("N/A");
+        } else {
+          const formattedDate = mostRecent.toLocaleString();
+          setLastUpdated(formattedDate);
+        }
+  
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-    getData();
+  
+    fetchData();
   }, [backend, selectedYear]);
+  
 
   const buttonStyle = {
     variant: "outline",
@@ -58,7 +80,7 @@ export const CaseManagerMonthlyStats = () => {
         gap="10px"
       >
         <Heading>Monthly Statistics</Heading>
-        <Text fontSize="14px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text fontSize="14px">Last Updated: {lastUpdated}</Text>
       </VStack>
 
       <HStack alignSelf="end">

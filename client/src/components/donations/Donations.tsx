@@ -51,6 +51,7 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   const [freq, setFreq] = useState<string>("");
 
@@ -110,8 +111,23 @@ export const Donations = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const valuesResponse = (await backend.get(`/donations/valueSum?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`)).data[0].sum;
-        setValueSum(valuesResponse);
+        const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        
+        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse] = await Promise.all([
+          backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/donations/weightSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/lastUpdated/donations`)
+        ]);
+  
+        setValueSum(valuesResponse.data[0]?.sum || 0);
+        setWeightSum(weightResponse.data[0]?.sum || 0);
+        setAllDonations(donationsResponse.data);
+  
+        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+        setLastUpdated(date.toLocaleString());
+  
       } catch (error) {
         console.error("Error fetching value sum:", error);
       }
@@ -145,14 +161,16 @@ export const Donations = () => {
         console.error("Error fetching donation data", err);
       }
     };
+  
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh]);
+  }, [donor, startDate, endDate, toggleRefresh, backend]);
+  
 
   return (
     <HStack w="100%" h="100%">
       <VStack w="25vw" h="100vh">
         <Heading>Donations</Heading>
-        <Text>Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text>Last Updated: {lastUpdated}</Text>
         <HStack
         border="2px solid #CBD5E0"
         borderRadius="12px"
