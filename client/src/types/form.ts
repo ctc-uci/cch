@@ -6,6 +6,7 @@ export type Form = {
   date: string;
   name: string;
   title: FormType;
+  cmId?: number;
 };
 
 export type FormType =

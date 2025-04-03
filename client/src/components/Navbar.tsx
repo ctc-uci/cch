@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Avatar, Box, HStack, Link, Text, Button } from "@chakra-ui/react";
 
 import { NavLink } from "react-router-dom";
@@ -10,11 +11,15 @@ export const Navbar = () => {
   const { role } = useRoleContext();
   const { logout } = useAuthContext();
 
+  const [currentPage, setCurrentPage] = useState('home')
+
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
         as={NavLink}
         to={path}
+        variant={currentPage === pageName ? 'select' : 'hover'}
+        onClick={() => setCurrentPage(pageName)}
       >
         <Text>{pageName}</Text>
       </Link>
@@ -55,7 +60,7 @@ export const Navbar = () => {
         paddingTop="25px"
       >
         <HStack>
-          <Avatar src={"/vite.svg"} />
+          <Avatar src={"/cch_logo.png"} />
           <Box>Colette's Children's Home</Box>
         </HStack>
         <HStack spacing={5}>

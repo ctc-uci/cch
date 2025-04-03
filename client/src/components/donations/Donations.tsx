@@ -33,19 +33,15 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FaBalanceScale, FaDollarSign } from "react-icons/fa";
-
-// import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {
   formatDateString,
-  formatDateStringForAPI,
 } from "../../utils/dateUtils";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 
 export const Donations = () => {
-  //   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
   const [donor, setDonor] = useState<string>("");
@@ -55,8 +51,8 @@ export const Donations = () => {
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
 
   const [allDonations, setAllDonations] = useState<Donation[]>([]);
-  const [valueSum, setValueSum] = useState<number | null>(null);
-  const [weightSum, setWeightSum] = useState<number | null>(null);
+  const [valueSum, setValueSum] = useState<number>(0);
+  const [weightSum, setWeightSum] = useState<number>(0);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(
@@ -65,47 +61,11 @@ export const Donations = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  const handleRowClick = (donation: Donation) => {
-    setSelectedDonation(donation);
-    onOpen();
-  };
+  const [freq, setFreq] = useState<string>("");
 
-  const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setDonor(event.target.value);
-  };
-
-  const handleStartDateChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const dateValue = event.target.value;
-    setStartDate(new Date(dateValue));
-  };
-
-  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const dateValue = event.target.value;
-    setEndDate(new Date(dateValue));
-  };
-
-  const onDelete = async () => {
-    try {
-      await backend.delete("/donations", {
-        data: {
-          ids: selectedRowIds,
-        },
-      });
-      refreshPage();
-    } catch (error) {
-      console.error("Error deleting users:", error);
-    }
-    setSelectedRowIds([]);
-  };
-
-  const refreshPage = () => {
-    setToggleRefresh(!toggleRefresh);
-  };
-
-  const columns = useMemo<ColumnDef<Donation>[]>(
+  const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
       {
         id: "rowNumber",
@@ -153,6 +113,111 @@ export const Donations = () => {
     [selectedRowIds, allDonations]
   );
 
+  const columnsFreq = useMemo<ColumnDef<Donation>[]>(
+    () => [
+      {
+        id: "rowNumber",
+        header: ({ table }) => {
+          return (
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={selectedRowIds.length > 0}
+                isIndeterminate={table.getIsSomeRowsSelected()}
+                onChange={handleSelectAllCheckboxClick}
+              />
+            </Box>
+          );
+        },
+        enableSorting: false,
+      },
+      {
+        header: "Date",
+        accessorKey: "monthYear",
+      },
+      {
+        accessorKey: "donor",
+        header: "Donor",
+      },
+      {
+        accessorKey: "category",
+        header: "Category",
+      },
+      {
+        accessorKey: "totalWeight",
+        header: "Total Weight (LB)",
+      },
+      {
+        accessorKey: "totalValue",
+        header: "Total Value ($)",
+      },
+    ],
+    [selectedRowIds, allDonations]
+  );
+
+  const [columns, setColumns] = useState<ColumnDef<Donation>[]>(freq === "monthly" || freq === "yearly" ? columnsFreq : columnsReg);
+
+  const handleRowClick = (donation: Donation) => {
+    setSelectedDonation(donation);
+    onOpen();
+  };
+
+  const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setDonor(event.target.value);
+  };
+
+  const handleStartDateChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const dateValue = event.target.value;
+    setStartDate(new Date(dateValue));
+  };
+
+  const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = event.target.value;
+    setEndDate(new Date(dateValue));
+  };
+
+  // const handleCheckboxChange = (id: number) =>
+  //   (event: React.ChangeEvent<HTMLInputElement>) => {
+  //     const checked = event.target.checked;
+  //   if (checked) {
+  //     setDeletes([...deletes, id]);
+  //   } else {
+  //     setDeletes(deletes.filter((deleteId) => !(deleteId === id)));
+  //   }
+  // };
+
+  const handleFreqChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    // Handle frequency change logic here
+    setFreq(event.target.value);
+    if (event.target.value === "monthly" || event.target.value === "yearly") {
+      setColumns(columnsFreq);
+    } else {
+      setColumns(columnsReg);
+    }
+    refreshPage();
+  }
+
+  const onDelete = async () => {
+    try {
+      await backend.delete("/donations", {
+        data: {
+          ids: selectedRowIds,
+        },
+      });
+      refreshPage();
+    } catch (error) {
+      console.error("Error deleting users:", error);
+    }
+    setSelectedRowIds([]);
+  };
+
+  const refreshPage = () => {
+    setToggleRefresh(!toggleRefresh);
+  };
+
+  
+
   const table = useReactTable({
     data: allDonations,
     columns,
@@ -183,40 +248,37 @@ export const Donations = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const formattedStartDate = startDate
-        ? formatDateStringForAPI(startDate)
-        : "";
-      const formattedEndDate = endDate ? formatDateStringForAPI(endDate) : "";
 
       try {
-        const valuesResponse = (
-          await backend.get(
-            `/donations/valueSum?donor=${donor}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`
-          )
-        ).data[0].sum;
-        setValueSum(valuesResponse);
+        const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        const allDonationsQuery =
+          freq === "monthly" ? 
+            `/donations/monthfilter?donor=${donor}&startDate=${start}&endDate=${end}`
+            :
+              freq === "yearly" ?
+                `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
+                : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
+        
+        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse] = await Promise.all([
+          backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(`/donations/weightSum?donor=${donor}&startDate=${start}&endDate=${end}`),
+          backend.get(allDonationsQuery),
+          backend.get(`/lastUpdated/donations`)
+        ]);
+  
+        setValueSum(valuesResponse.data[0]?.sum || 0);
+        setWeightSum(weightResponse.data[0]?.sum || 0);
+        setAllDonations(donationsResponse.data);
+  
+        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+        setLastUpdated(date.toLocaleString());
+  
       } catch (error) {
         console.error("Error fetching value sum:", error);
       }
-
-      try {
-        const weightResponse = await backend.get(
-          `/donations/weightSum?donor=${donor}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`
-        );
-        setWeightSum(weightResponse.data[0].sum);
-      } catch (error) {
-        console.error("Error fetching weight sum:", error);
-      }
-
-      try {
-        const response = await backend.get(
-          `/donations/filter?donor=${donor}&startDate=${formattedStartDate}&endDate=${formattedEndDate}`
-        );
-        setAllDonations(response.data);
-      } catch (err) {
-        console.error("Error fetching donation data", err);
-      }
     };
+  
     fetchData();
   }, [donor, startDate, endDate, toggleRefresh, backend]);
 
@@ -230,7 +292,7 @@ export const Donations = () => {
         h="100vh"
       >
         <Heading>Donations</Heading>
-        <Text>Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text>Last Updated: {lastUpdated}</Text>
         <HStack
           border="2px solid #CBD5E0"
           borderRadius="12px"
@@ -302,13 +364,9 @@ export const Donations = () => {
             <option value="costco">Costco</option>
           </Select>
 
-          <Select
-            placeholder="Select Frequency"
-            w="50%"
-          >
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            <option value="option3">Option 3</option>
+          <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
+            <option value='monthly'>Monthly</option>
+            <option value='yearly'>Yearly</option>
           </Select>
 
           <Text>From:</Text>

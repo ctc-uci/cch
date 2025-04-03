@@ -3,11 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Button,
   Checkbox,
-  Flex,
   HStack,
-  IconButton,
   Tab,
   Table,
   TableContainer,
@@ -31,27 +28,32 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { Form, TabData } from "../../types/form";
+import type { Form } from "../../types/form";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-import PrintForm from "../PrintForm";
-import { MdFileUpload, MdImportExport, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
+import { MdFileUpload, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
+import PrintForm from "../printForm/PrintForm";
+
 
 export const FormTable = () => {
+
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  const [formsTable, setFormsTable] = useState<TabData[]>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(null);
+  const [frontDeskDate, setFrontDeskDate] = useState<Date | null>(null);
+  const [cmMonthlyDate, setCMMonthlyDate] = useState<Date | null>(null);
+  const [mostRecentDate, setMostRecentDate] = useState<Date | null>(null);
   const [initialScreeners, setInitialScreeners] = useState<Form[]>([]);
   const [intakeStatistics, setIntakeStatistics] = useState<Form[]>([]);
   const [frontDeskStatistics, setFrontDeskStatistics] = useState<Form[]>([]);
   const [caseManagerStatistics, setCaseManagerStatistics] = useState<Form[]>(
     []
   );
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
@@ -85,6 +87,10 @@ export const FormTable = () => {
         accessorKey: "title",
         header: "Form Title",
       },
+      {
+        accessorKey: "export",
+        header: "Export",
+      }
     ],
     [selectedRowIds]
   );
@@ -136,62 +142,84 @@ export const FormTable = () => {
   };
 
   useEffect(() => {
-    const getData = async () => {
+    const fetchData = async () => {
       try {
-        const screenerResponse = await backend.get(`/initialInterview`);
-        const frontDeskResponse = await backend.get(`/frontDesk`);
-        const caseManagersMonthlyResponse = await backend.get(
-          `/caseManagerMonthlyStats`
-        );
-        const allCaseManagersResponse = await backend.get(`/caseManagers`);
-
-        const initialScreeners: Form[] = await screenerResponse.data.map(
-          (form: Form) => ({
-            id: form.id,
-            hashedId: `Initial Screeners ${form.id}`,
-            date: form.date,
-            name: form.name,
-            title: "Initial Screeners",
-          })
-        );
-
+        const [
+          screenerResponse,
+          frontDeskResponse,
+          caseManagersMonthlyResponse,
+          allCaseManagersResponse,
+          initialScreenerResponse,
+          frontDeskMonthlyStatsResponse,
+          cmMonthlyStatsResponse
+        ] = await Promise.all([
+          backend.get(`/initialInterview`),
+          backend.get(`/frontDesk`),
+          backend.get(`/caseManagerMonthlyStats`),
+          backend.get(`/caseManagers`),
+          backend.get(`/lastUpdated/initial_interview`),
+          backend.get(`/lastUpdated/front_desk_monthly`),
+          backend.get(`/lastUpdated/cm_monthly_stats`)
+        ]);
+  
+        const initialScreeners: Form[] = await screenerResponse.data.map((form: Form) => ({
+          id: form.id,
+          date: form.date,
+          name: form.name,
+          title: "Initial Screeners",
+        }));
+  
         const intakeStatistics: Form[] = [];
-
-        const frontDeskStats: Form[] = await frontDeskResponse.data.map(
-          (form: Form) => ({
+  
+        const frontDeskStats: Form[] = await frontDeskResponse.data.map((form: Form) => ({
+          id: form.id,
+          date: form.date,
+          name: "",
+          title: "Front Desk Monthly Statistics",
+        }));
+  
+        const caseManagerStats: Form[] = await caseManagersMonthlyResponse.data.map((form: Form) => {
+          const matchingCM = allCaseManagersResponse.data.find(
+            (cm) => cm.id === form.cmId
+          );
+          return {
             id: form.id,
-            hashedId: `Front Desk Monthly Statistics ${form.id}`,
             date: form.date,
-            name: "",
-            title: "Front Desk Monthly Statistics",
-          })
-        );
-
-        const caseManagerStats: Form[] =
-          await caseManagersMonthlyResponse.data.map((form: Form) => {
-            const matchingCM = allCaseManagersResponse.data.find(
-              (cm) => cm.id === form.cmId
-            );
-            return {
-              id: form.id,
-              hashedId: `Case Manager Monthly Statistics ${form.id}`,
-              date: form.date,
-              name: `${matchingCM.firstName} ${matchingCM.lastName}`,
-              title: "Case Manager Monthly Statistics",
-            };
-          });
-
+            name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
+            title: "Case Manager Monthly Statistics",
+          };
+        });
+  
         setInitialScreeners(initialScreeners);
         setIntakeStatistics(intakeStatistics);
         setFrontDeskStatistics(frontDeskStats);
         setCaseManagerStatistics(caseManagerStats);
+  
+        const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
+  
+        const initialScreener = getDate(initialScreenerResponse.data);
+        const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
+        const cmMonthly = getDate(cmMonthlyStatsResponse.data);
+  
+        setInitialScreenerDate(initialScreener);
+        setFrontDeskDate(frontDesk);
+        setCMMonthlyDate(cmMonthly);
+  
+        const mostRecent = new Date(Math.max(
+          initialScreener?.getTime() || 0,
+          frontDesk?.getTime() || 0,
+          cmMonthly?.getTime() || 0
+        ));
+        setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
+        setLastUpdated(mostRecent.toLocaleString());
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
-    getData();
-  }, [backend]);
+  
+    fetchData();
+    
+  }, [backend, initialScreenerDate, frontDeskDate, cmMonthlyDate, mostRecentDate])
 
   const allFormsData = useMemo(
     () => [
@@ -367,7 +395,11 @@ export const FormTable = () => {
                           onSelectionChange={handleRowSelect}
                           index={index}
                         />
-                      ) : (
+                      ) :  cell.column.id === "export" ? (
+                        <PrintForm
+                          formId={row.original.id}
+                          formType={row.original.title} />
+                      ):(
                         flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -394,7 +426,8 @@ export const FormTable = () => {
       >
         Form History
       </Text>
-      <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+      {/* <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text> */}
+      <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
 
       <Tabs
         isFitted

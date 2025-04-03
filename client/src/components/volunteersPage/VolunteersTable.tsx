@@ -103,6 +103,8 @@ const VolunteersTable = ({
     fetchVolunteers();
   }, [toggleRefresh, backend, eventTypeFilter, startDate, endDate]);
 
+
+
   const handleResetDropdowns = () => {
     setEventTypeFilter("");
     setStartDate(undefined);
@@ -264,14 +266,6 @@ const VolunteersTable = ({
                 {eventType}
               </option>
             ))}
-          </Select>
-          <Select
-            placeholder="Select Frequency"
-            width="auto"
-          >
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            <option value="option3">Option 3</option>
           </Select>
           <Text>From:</Text>
           <Input
