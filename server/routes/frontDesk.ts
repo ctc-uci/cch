@@ -81,29 +81,37 @@ frontDeskRouter.post("/", async (req, res) => {
   try {
     // Destructure req.body
     const {
-      id,
       date,
       total_office_visits,
       total_calls,
-      total_unduplicated_calles,
-      total_visits_to_pantry_and_donations_room,
-      total_number_of_people_served_in_pantry,
-      total_visits_to_placentia_pantry,
-      total_number_of_people_served_in_placentia_pantry,
+      number_of_people,
+      total_unduplicated_calls,
+      total_visits_hb_donations_room,
+      total_served_hb_donations_room,
+      total_visits_hb_pantry,
+      total_served_hb_pantry,
+      total_visits_placentia_pantry,
+      total_served_placentia_pantry,
+      total_visits_placentia_neighborhood,
+      total_served_placentia_neighborhood
     } = req.body;
     // Do something with request body
     const data = await db.query(
-      `INSERT INTO front_desk_monthly (id, date, total_office_visits, total_calls, total_unduplicated_calles, total_visits_to_pantry_and_donations_room, total_number_of_people_served_in_pantry, total_visits_to_placentia_pantry, total_number_of_people_served_in_placentia_pantry ) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9) RETURNING id`,
+      `INSERT INTO front_desk_monthly (date, total_office_visits, total_calls, number_of_people, total_unduplicated_calls, total_visits_hb_donations_room, total_served_hb_donations_room, total_visits_hb_pantry, total_served_hb_pantry, total_visits_placentia_pantry, total_served_placentia_pantry, total_visits_placentia_neighborhood, total_served_placentia_neighborhood) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
       [
-        id,
         date,
         total_office_visits,
         total_calls,
-        total_unduplicated_calles,
-        total_visits_to_pantry_and_donations_room,
-        total_number_of_people_served_in_pantry,
-        total_visits_to_placentia_pantry,
-        total_number_of_people_served_in_placentia_pantry,
+        number_of_people,
+        total_unduplicated_calls,
+        total_visits_hb_donations_room,
+        total_served_hb_donations_room,
+        total_visits_hb_pantry,
+        total_served_hb_pantry,
+        total_visits_placentia_pantry,
+        total_served_placentia_pantry,
+        total_visits_placentia_neighborhood,
+        total_served_placentia_neighborhood
       ]
     );
 
@@ -118,7 +126,7 @@ frontDeskRouter.put("/:id", async (req, res) => {
     const {
       total_office_visits,
       total_calls,
-      total_unduplicated_calles,
+      total_unduplicated_calls,
       total_visits_to_pantry_and_donations_room,
       total_number_of_people_served_in_pantry,
       total_visits_to_placentia_pantry,
@@ -138,7 +146,7 @@ frontDeskRouter.put("/:id", async (req, res) => {
       [
         total_office_visits,
         total_calls,
-        total_unduplicated_calles,
+        total_unduplicated_calls,
         total_visits_to_pantry_and_donations_room,
         total_number_of_people_served_in_pantry,
         total_visits_to_placentia_pantry,

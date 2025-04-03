@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { MonthlyStat } from "../../types/monthlyStat";
 import FormCM from "./form";
-import TableCM from "./table";
 
 export const CaseManager = () => {
   const { backend } = useBackendContext();
   const [refreshStatus, setRefreshStatus] = useState(true);
   const [monthlyData, setMonthlyData] = useState<MonthlyStat[]>([]);
 
+  //wasn't sure if the table was completely depreciated now didnt wanna delete it yet  
   useEffect(() => {
     const getData = async () => {
       try {
@@ -32,9 +31,6 @@ export const CaseManager = () => {
     setRefreshStatus(true);
   };
   return (
-    <div>
-      <TableCM items={monthlyData} />
-      <FormCM onFormSubmitSuccess={handleFormSubmitSuccess}/>
-    </div>
+    <FormCM onFormSubmitSuccess={handleFormSubmitSuccess}/>
   );
 };
