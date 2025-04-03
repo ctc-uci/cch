@@ -14,13 +14,13 @@ initialInterviewRouter.get(
       const stringSearch = "'%" + String(search) + "%'";
 
       let queryStr = `
-      SELECT 
-        i.name AS client_name, 
-        i.social_worker_office_location, 
-        cm.first_name AS cm_first_name, 
-        cm.last_name AS cm_last_name, 
-        i.phone_number, 
-        i.email, 
+      SELECT
+        i.name AS client_name,
+        i.social_worker_office_location,
+        cm.first_name AS cm_first_name,
+        cm.last_name AS cm_last_name,
+        i.phone_number,
+        i.email,
         i.date,
         i.client_id
       FROM initial_interview i
@@ -29,7 +29,7 @@ initialInterviewRouter.get(
     `;
 
       if (search) {
-        queryStr += ` 
+        queryStr += `
         AND (
           i.name::TEXT ILIKE ${stringSearch}
           OR i.social_worker_office_location::TEXT ILIKE ${stringSearch}
@@ -73,16 +73,16 @@ initialInterviewRouter.get("/", async (req, res) => {
 initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const data = await db.query(`      
-      SELECT 
-        i.name AS client_name,  
-        cm.first_name AS cm_first_name, 
+    const data = await db.query(`
+      SELECT
+        i.name AS client_name,
+        cm.first_name AS cm_first_name,
         cm.last_name AS cm_last_name,
         i.id AS initialId,
-        i.applicant_type, 
+        i.applicant_type,
         s.willingness,
-        s.employability, 
-        s.attitude, 
+        s.employability,
+        s.attitude,
         s.length_of_sobriety,
         s.completed_tx,
         s.drug_test_results,
@@ -114,6 +114,19 @@ initialInterviewRouter.get("/:id", async (req, res) => {
   try {
     const data = await db.query(
       `SELECT * FROM initial_interview WHERE client_id = $1;`,
+      [id]
+    );
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+initialInterviewRouter.get("/id/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const data = await db.query(
+      `SELECT * FROM initial_interview WHERE id = $1;`,
       [id]
     );
     res.status(200).json(keysToCamel(data));
