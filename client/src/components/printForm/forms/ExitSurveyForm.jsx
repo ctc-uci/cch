@@ -34,6 +34,7 @@ export default function ExitSurvey({ exitSurveyData }) {
       <Page size="A4" style={styles.page}>
         {exitSurveyData && exitSurveyData.map((element) => (
           <View style={styles.table} key={element.id}>
+            <Text style={{ textAlign: 'center', fontSize: 20, marginBottom: 20 }}>Exit Survey</Text>
             <View style={styles.tableRow}>
               <Text style={styles.tableCellHeader}>Question</Text>
               <Text style={styles.tableCell}>Answer</Text>

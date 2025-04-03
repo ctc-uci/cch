@@ -44,7 +44,6 @@ export default function PrintForm({ formType, formId }) {
           case 'Initial Screeners':
             response = await backend.get(`/initialInterview/id/${formId}`);
             data = response.data;
-            console.log(data);
             formData.current = <InitialScreenerForm clientInitialScreeningData={data} />;
             break;
           case 'Client Tracking Statistics (Intake Statistics':

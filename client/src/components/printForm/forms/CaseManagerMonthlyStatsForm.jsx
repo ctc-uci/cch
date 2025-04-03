@@ -33,6 +33,7 @@ export default function CaseManagerMonthlyStatsForm({ caseManagerMonthlyStatsDat
       <Page size="A4" style={styles.page}>
       {caseManagerMonthlyStatsData && caseManagerMonthlyStatsData.map((element) => (
           <View style={styles.table} key={element.id}>
+            <Text style={{ textAlign: 'center', fontSize: 20, marginBottom: 20 }}>Case Manager Monthly Stats</Text>
             <View style={styles.tableRow}>
               <Text style={styles.tableCellHeader}>Question</Text>
               <Text style={styles.tableCell}>Answer</Text>

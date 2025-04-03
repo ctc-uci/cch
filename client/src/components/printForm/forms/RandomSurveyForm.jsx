@@ -34,6 +34,7 @@ export default function RandomSurveyForm({ randomSurveyData }) {
       <Page size="A4" style={styles.page}>
         {randomSurveyData && randomSurveyData.map((element) => (
           <View style={styles.table} key={element.id}>
+            <Text style={{ textAlign: 'center', fontSize: 20, marginBottom: 20 }}>Random Survey Form</Text>
             <View style={styles.tableRow}>
               <Text style={styles.tableCellHeader}>Question</Text>
               <Text style={styles.tableCell}>Answer</Text>

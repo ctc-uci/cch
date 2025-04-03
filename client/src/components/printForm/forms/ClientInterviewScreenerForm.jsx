@@ -33,6 +33,7 @@ export default function ClientInterviewScreenerForm({ clientInterviewScreenerDat
       <Page size="A4" style={styles.page}>
         {clientInterviewScreenerData && clientInterviewScreenerData.map((element) => (
           <View style={styles.table} key={element.id}>
+            <Text style={{ textAlign: 'center', fontSize: 20, marginBottom: 20 }}>Client Interview Screener</Text>
             <View style={styles.tableRow}><Text style={styles.tableCellHeader}>Question</Text><Text style={styles.tableCell}>Answer</Text></View>
             <View style={styles.tableRow}><Text style={styles.tableCellHeader}>ID:</Text><Text style={styles.tableCell}>{element.date}</Text></View>
             <View style={styles.tableRow}><Text style={styles.tableCellHeader}>Initial Interview ID:</Text><Text style={styles.tableCell}>{element.initialInterviewId}</Text></View>

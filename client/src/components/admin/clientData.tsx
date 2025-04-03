@@ -135,7 +135,7 @@ export const ClientData = () => {
                     <Td onClick={(e) => e.stopPropagation()}
                           >
                           <HoverCheckbox
-                      clientId={client.id}
+                      id={client.id}
                       index={index}
                       isSelected={selectedRowIds.includes(client.id)}
                       onSelectionChange={handleRowSelect}
