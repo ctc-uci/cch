@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDisclosure } from "@chakra-ui/hooks";
-// import { useNavigate } from "react-router-dom";
+
 import DonationsDrawer from "./addDonations/donationsDrawer";
 import EditDrawer from "./editDonationDrawer";
 
@@ -27,15 +27,14 @@ import {
 
 import { FaBalanceScale } from "react-icons/fa";
 import { FaDollarSign } from "react-icons/fa";
-
-// import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 import { Donation } from "./types";
+import { all } from "axios";
 
 
 export const Donations = () => {
-//   const { currentUser } = useAuthContext();
+
   const { backend } = useBackendContext();
 
   const [donor, setDonor] = useState<string>("");
@@ -45,13 +44,15 @@ export const Donations = () => {
   const [deletes, setDeletes] = useState<number[]>([]);
 
   const [allDonations, setAllDonations] = useState<Donation[]>([]);
-  const [valueSum, setValueSum] = useState<number | null>(null);
-  const [weightSum, setWeightSum] = useState<number | null>(null);
+  const [valueSum, setValueSum] = useState<number>(0);
+  const [weightSum, setWeightSum] = useState<number>(0);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
+
+  const [freq, setFreq] = useState<string>("");
 
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
@@ -81,6 +82,12 @@ export const Donations = () => {
       setDeletes(deletes.filter((deleteId) => !(deleteId === id)));
     }
   };
+
+  const handleFreqChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Handle frequency change logic here
+    setFreq(event.target.value);
+    refreshPage();
+  }
 
   const deleteClick = async () => {
     try {
@@ -116,7 +123,23 @@ export const Donations = () => {
       }
 
       try {
-        const response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}`);
+        let response;
+
+        if(freq === "monthly"){
+          response = await backend.get(`/donations/monthfilter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+        }
+        else if (freq === "yearly"){
+          response = await backend.get(`/donations/yearfilter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+        }
+        else{
+          response = await backend.get(`/donations/filter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
+        }
+
+        if (response.data.length === 0) {
+          setValueSum(0);
+          setWeightSum(0);
+        }
+
         setAllDonations(response.data);
       } catch (err) {
         console.error("Error fetching donation data", err);
@@ -179,10 +202,9 @@ export const Donations = () => {
             <option value='costco'>Costco</option>
           </Select>
 
-          <Select placeholder='Select Frequency' w='50%'>
-            <option value='option1'>Option 1</option>
-            <option value='option2'>Option 2</option>
-            <option value='option3'>Option 3</option>
+          <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
+            <option value='monthly'>Monthly</option>
+            <option value='yearly'>Yearly</option>
           </Select>
 
           <Text>From:</Text>
@@ -224,24 +246,55 @@ export const Donations = () => {
                 <Th>Date</Th>
                 <Th>Donor</Th>
                 <Th>Category</Th>
+                {((freq === "yearly") || (freq === "monthly"))&&
+                <>
+                <Th>Total Weight (lb)</Th>
+                <Th>Total Value ($)</Th>
+                </>
+                }
+                {!((freq === "yearly") || (freq === "monthly"))&&
+                <>
                 <Th>Weight (lb)</Th>
-                <Th>Value ($)</Th>
-                <Th>Total</Th>
+                <Th>Price Per Pound ($)</Th>
+                <Th>Total Value ($)</Th>
+                </>
+                }
+
               </Tr>
             </Thead>
             <Tbody>
               {allDonations
                 ? allDonations.map((donation, index) => {
-                  const dateString = new Date(donation.date).toLocaleDateString();
+                  let dateString = new Date(donation.date).toLocaleDateString();
+                  if (freq === "monthly"){
+                    dateString = donation.monthYear;
+
+                  }
+                  else if (freq === "yearly"){
+                    dateString = donation.monthYear;
+                   }
+
                   return (
                     <Tr key={index}>
+                      {((freq === "yearly") || (freq === "monthly"))&&
+                      <>
+                      <Td>{index + 1}</Td>
+                      <Td>{dateString}</Td>
+                      <Td>{donation.donor}</Td>
+                      <Td>{donation.category}</Td>
+                      <Td>{donation.totalWeight}</Td>
+                      <Td>{donation.totalValue}</Td>
+                      </>
+                      }
+                      {!((freq === "yearly") || (freq === "monthly"))&&
+                      <>
                       <Td>
                         <Checkbox
                         onChange={
                           handleCheckboxChange(donation.id)
                         }
                         isChecked={deletes.some(del => del === donation.id)}
-                        >{donation.id}</Checkbox>
+                        >{index + 1}</Checkbox>
                       </Td>
                       <Td onClick={() => handleRowClick(donation)}>{dateString}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
@@ -249,6 +302,8 @@ export const Donations = () => {
                       <Td onClick={() => handleRowClick(donation)}>{donation.weight}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.value}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.total}</Td>
+                      </>
+                      }
                     </Tr>
                   );})
                 : null}

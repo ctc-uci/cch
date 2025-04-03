@@ -260,14 +260,6 @@ const VolunteersTable = ({
               </option>
             ))}
           </Select>
-          <Select
-            placeholder="Select Frequency"
-            width="auto"
-          >
-            <option value="option1">Option 1</option>
-            <option value="option2">Option 2</option>
-            <option value="option3">Option 3</option>
-          </Select>
           <Text>From:</Text>
           <Input type="date" name="startDate" w='40%' onChange={handleStartDateChange}/>
           <Text>To:</Text>
