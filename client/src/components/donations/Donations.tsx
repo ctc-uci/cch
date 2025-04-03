@@ -1,12 +1,4 @@
-<<<<<<< HEAD
 import { useEffect, useMemo, useState } from "react";
-=======
-import { useEffect, useState } from "react";
-import { useDisclosure } from "@chakra-ui/hooks";
-
-import DonationsDrawer from "./addDonations/donationsDrawer";
-import EditDrawer from "./editDonationDrawer";
->>>>>>> main
 
 import { useDisclosure } from "@chakra-ui/hooks";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
