@@ -51,7 +51,7 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
-  
+
   const [freq, setFreq] = useState<string>("");
 
   const handleRowClick = (donation: Donation) => {
@@ -124,7 +124,7 @@ export const Donations = () => {
 
       try {
         let response;
-     
+
         if(freq === "monthly"){
           response = await backend.get(`/donations/monthfilter?donor=${donor}&startDate=${startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&endDate=${endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : ""}&freq=${freq}`);
         }
@@ -139,7 +139,7 @@ export const Donations = () => {
           setValueSum(0);
           setWeightSum(0);
         }
-       
+
         setAllDonations(response.data);
       } catch (err) {
         console.error("Error fetching donation data", err);
@@ -258,8 +258,8 @@ export const Donations = () => {
                 <Th>Price Per Pound ($)</Th>
                 <Th>Total Value ($)</Th>
                 </>
-                } 
-               
+                }
+
               </Tr>
             </Thead>
             <Tbody>
@@ -268,7 +268,7 @@ export const Donations = () => {
                   let dateString = new Date(donation.date).toLocaleDateString();
                   if (freq === "monthly"){
                     dateString = donation.monthYear;
-                    
+
                   }
                   else if (freq === "yearly"){
                     dateString = donation.monthYear;
@@ -278,7 +278,7 @@ export const Donations = () => {
                     <Tr key={index}>
                       {((freq === "yearly") || (freq === "monthly"))&&
                       <>
-                      <Td>{index}</Td>
+                      <Td>{index + 1}</Td>
                       <Td>{dateString}</Td>
                       <Td>{donation.donor}</Td>
                       <Td>{donation.category}</Td>
@@ -294,7 +294,7 @@ export const Donations = () => {
                           handleCheckboxChange(donation.id)
                         }
                         isChecked={deletes.some(del => del === donation.id)}
-                        >{donation.id}</Checkbox>
+                        >{index + 1}</Checkbox>
                       </Td>
                       <Td onClick={() => handleRowClick(donation)}>{dateString}</Td>
                       <Td onClick={() => handleRowClick(donation)}>{donation.donor}</Td>
