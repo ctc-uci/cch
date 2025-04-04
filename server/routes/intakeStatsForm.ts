@@ -12,7 +12,7 @@ intakeStatsFormRouter.post("/", async (req, res) => {
     // get attributes from request body
     // connect to db and perform insert with attributes from request body
     // need to insert data into table for intake stats form, as well as children data, if applicable
-    
+    console.log(req.body)
     console.log("Posting to database");
   } catch (err) {
     res.status(500).send(err.message);
