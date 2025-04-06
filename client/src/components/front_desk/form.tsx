@@ -132,7 +132,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 </Box>
             ))}
             <Text fontWeight={"bold"} p={2}>
-                Huntington Bean (HB)
+                Huntington Beach (HB)
             </Text>
             {hbFields.map(({ name, label }) => (
                 <Box 
