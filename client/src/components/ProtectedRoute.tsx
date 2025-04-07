@@ -8,6 +8,9 @@ interface ProtectedRouteProps {
   allowedRoles?: string | string[];
 }
 
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 export const ProtectedRoute = ({
   element,
   allowedRoles = [],
@@ -15,8 +18,18 @@ export const ProtectedRoute = ({
   const { currentUser } = useAuthContext();
   const { role } = useRoleContext();
 
+
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   const isValidRole = getIsValidRole(roles, role);
+
+  if (currentUser && isValidRole) {
+    console.log(role)
+    console.log('validated to ' + element)
+  } else {
+    console.log(role)
+    console.log('blocked to ' + element)
+  }
+
   return currentUser && isValidRole ? (
     element
   ) : currentUser && role === "admin" ? (

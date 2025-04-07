@@ -35,13 +35,14 @@ const signinSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters long"),
 });
 
+
 type SigninFormValues = z.infer<typeof signinSchema>;
 
 export const Login = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType = "Admin"} = useParams<{ userType: string }>();
-  const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
+  const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Client" ? "CL" : "AD";
 
   const { login, handleRedirectResult } = useAuthContext();
   const { backend } = useBackendContext();
@@ -74,7 +75,11 @@ export const Login = () => {
         password: data.password,
       });
       if (userType === "Case Manager") navigate("/clientlist");
-      else if (userType === "Admin") navigate("/admin-client-list");
+      else if (userType === "Admin") {
+  
+        navigate("/admin-client-list");
+      }
+      else if (userType === "Client") navigate("/client-landing-page");
     } catch (err) {
       const errorCode = err.code;
       const firebaseErrorMsg = err.message;
@@ -178,9 +183,11 @@ export const Login = () => {
                 mb={1}
               />
               <FormErrorMessage>{errors.password?.message?.toString()}</FormErrorMessage>
+              {userType !== "Client" &&
               <ChakraLink as={Link} to={`/forgot-password/${userType}`} display="block" textAlign="center" m="2">
                 <Text as="u" fontSize="sm" fontWeight="light" >Forgot password?</Text>
               </ChakraLink>
+              }
 
             </FormControl>
 
@@ -196,13 +203,14 @@ export const Login = () => {
             >
               Login
             </Button>
-
+            {userType !== "Client" &&
             <Text fontSize="sm" fontWeight="light" mx={"auto"}>
               Don't have an account?{" "}
               <ChakraLink as={Link} to={`/signup/${userType}`} color="blue.500" display="inline">
                 <Text as="u" display="inline">Create account</Text>
               </ChakraLink>
             </Text>
+            } 
 
           </Stack>
         </form>

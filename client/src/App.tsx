@@ -87,47 +87,47 @@ const App = () => {
               />
               <Route
                 path="/forgot-password/:userType?"
-                element={<ForgotPassword />}
+                element={<ForgotPassword />} 
               />
                 <Route
                 path="/admin-pin/:userType?"
-                element={<AdminPin />}
+                element={<ProtectedRoute element={<AdminPin />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/exit-survey"
-                element={<ExitSurvey />}
+                element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
               />
               <Route
                 path="/success-story"
-                element={<SuccessStory />}
+                element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
               />
               <Route
                 path="/settings"
-                element={<ProtectedRoute element={<UserSettings />} />}
+                element={<ProtectedRoute element={<UserSettings />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/dashboard"
-                element={<ProtectedRoute element={<Dashboard />} />}
+                element={<ProtectedRoute element={<Dashboard />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/client-interview-screening"
-                element={<ClientInterviewScreening />}
+                element={<ProtectedRoute element={<ClientInterviewScreening />} allowedRoles={['client']} />}
               />
               <Route
                 path="/monthly-statistics"
-                element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
+                element={<ProtectedRoute element={<CaseManagerMonthlyStats />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/forms-hub"
-                element={<FormsHub />}
+                element={<ProtectedRoute element={<FormsHub />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                   path="/start-form"
-                  element={<StartForms />}
+                  element={<ProtectedRoute element={<StartForms />} allowedRoles={['admin', 'user']} />}
                 />
               <Route
                 path="/admin-client-list"
-                element={<AdminClientList />}
+                element={<ProtectedRoute element={<AdminClientList />} allowedRoles={['admin' , 'user']} />}
               />
               <Route
                 path="/accounts"
@@ -140,17 +140,17 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ClientList />}
+                element={<ProtectedRoute element={<ClientList />} allowedRoles={['admin', 'user']} />}
               />
 
               <Route
                 path="/clientdata"
-                element={<ClientData />}
+                element={<ProtectedRoute element={<ClientData />} allowedRoles={['admin', 'user']} />}
               />
 
                 <Route
                   path = "/donations"
-                  element = {<Donations />}
+                  element={<ProtectedRoute element={<Donations />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path = "/volunteer-tracking"
@@ -162,23 +162,23 @@ const App = () => {
                 />
                 <Route
                   path="/ViewClient/:id"
-                  element={<ViewPage />}
+                  element={<ProtectedRoute element={<ViewPage />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path="/casemanager"
-                  element={<CaseManager />}
+                  element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path="/random-client-survey"
-                  element={<RandomClientSurvey />}
+                  element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={["client"]}/>}
                 />
                 <Route
                   path ="/frontDesk"
-                  element ={<FrontDeskMonthlyStats/>}
+                  element={<ProtectedRoute element={<FrontDeskMonthlyStats />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path ="/intakeStats"
-                  element ={<IntakeStats/>}
+                  element={<ProtectedRoute element={<IntakeStats />} allowedRoles={['admin', 'user']} />}
                 />
                   <Route
                     path ="/personal"
