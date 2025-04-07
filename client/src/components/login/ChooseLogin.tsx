@@ -34,6 +34,15 @@ export const ChooseLogin = () => {
                             Case Manager
                         </Text>
                     </Flex>
+
+                    <Flex direction="column" align="center" cursor="pointer" onClick={() => handleUserSelection("Client")}>
+                        <Circle size="250px" bg="#63B3ED" color="black" fontSize="210%">
+                            CL
+                        </Circle>
+                        <Text mt={5} fontSize="200%" fontWeight="medium">
+                            Client
+                        </Text>
+                    </Flex>
                 </Flex>
             </VStack>
         </Box>

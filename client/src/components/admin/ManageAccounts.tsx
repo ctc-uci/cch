@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 // import { Navbar } from "../Navbar";
-
+import { EditIcon } from "@chakra-ui/icons";
+import  EditClient  from "../userSettings/EditClient";
 import {
   Table,
   TableContainer,
@@ -16,7 +17,8 @@ import {
   VStack,
   Textarea,
   Spacer,
-  Box
+  Box,
+  Flex
 } from "@chakra-ui/react";
 import { Tabs, TabList, Tab } from '@chakra-ui/react'
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -39,6 +41,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+import EditSettings from "../userSettings/EditSettings";
 interface Person {
   id: string;
   firstName: string;
@@ -72,6 +75,9 @@ export const ManageAccounts = () => {
   });
   const [clientData, setClientData] = useState<Person[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  const [clientModalOpened, setClientModalOpened] = useState(false)
+  const [clientModalID, setClientModalID] = useState('')
 
 
   const columns = useMemo<ColumnDef<Person>[]>(
@@ -157,6 +163,19 @@ export const ManageAccounts = () => {
             </>
           </>
         );
+      case "clients":
+        return (
+          <>
+            <Text>{data.firstName} {data.lastName}</Text>
+            <Text>{data.email}</Text>
+            <Text>Client</Text>
+            <Text>{data.location}</Text>
+            <br></br>
+            <Text>Notes</Text>
+            <Textarea size="md"/>
+            <br></br>
+          </>
+        );
       default:
         return <></>;
     }
@@ -169,8 +188,12 @@ export const ManageAccounts = () => {
           const response = await backend.get("/admin/admins");
           setData(response.data);
         }
-        else {
+        else if (view === "cms"){
           const response = await backend.get("/admin/caseManagers");
+          setData(response.data);
+        }
+        else{
+          const response = await backend.get("/admin/clients");
           setData(response.data);
         }
         if (open && view === "cms") {
@@ -200,6 +223,7 @@ export const ManageAccounts = () => {
                 <TabList>
                   <Tab onClick={() => setView("admin")}>Admins</Tab>
                   <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
+                  <Tab  onClick={() => setView("clients")}>Clients</Tab>
                 </TabList>
               </Tabs>
             </HStack>
@@ -208,6 +232,7 @@ export const ManageAccounts = () => {
             <Button colorScheme="blue">Add</Button>
 
           </HStack>
+          {view !== "clients"  && 
           <TableContainer
           width = "100%"
           sx={{
@@ -273,7 +298,48 @@ export const ManageAccounts = () => {
               ))}
             </Tbody>
           </Table>
-        </TableContainer>
+          </TableContainer>
+          } 
+          <Flex wrap='wrap' gap='4'>
+            {view === "clients" ? data.map((person, id) => (
+              <Box key={id}>
+                <Box p={5}
+                  borderRadius="md"
+                  boxShadow="sm"
+                  bg="white"
+                  borderColor="gray.100"
+                  borderWidth="1px" >
+                  <Flex direction={'row'} justify="space-between" gap={'4'}>
+                    <Text textColor={'gray'} fontWeight={'bold'}>EMAIL</Text>
+                    <Text textColor={'gray'}>{person.email}</Text>
+                  </Flex>
+                  <Flex direction={'row'} justify="space-between" gap={'4'}>
+                    <Text textColor={'gray'} fontWeight={'bold'}>PASSWORD</Text>
+                    <Text textColor={'gray'}>{"*******************"}</Text>
+                  </Flex>
+                </Box>
+                <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2} onClick={() => {
+                  setClientModalID(person.email)
+                  setClientModalOpened(true)
+                }}>
+                  <EditIcon />
+                  <Text>Edit Profile</Text>
+                </Flex>
+              </Box>
+            )) : <></>}
+
+          </Flex>
+          <Modal isOpen={clientModalOpened} onClose={() => setClientModalOpened(false)}>
+            <ModalOverlay/>
+            <ModalContent>
+              <ModalHeader>Settings</ModalHeader>
+              <ModalCloseButton />
+              <ModalBody>
+                <EditClient email={clientModalID} />
+              </ModalBody>
+            </ModalContent>
+          </Modal>
+
         <Modal isOpen={open} onClose={() => setOpen(!open)}>
           <ModalOverlay />
           <ModalContent>
