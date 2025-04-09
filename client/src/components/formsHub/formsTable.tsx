@@ -36,6 +36,7 @@ import { downloadCSV } from "../../utils/downloadCSV";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import { MdFileUpload, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
 import PrintForm from "../printForm/PrintForm";
+import { LoadingWheel } from ".././loading/loading.tsx"
 
 
 
@@ -55,6 +56,8 @@ export const FormTable = () => {
     []
   );
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [loading, setLoading] = useState(true);
+
 
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
@@ -215,6 +218,8 @@ export const FormTable = () => {
         setLastUpdated(mostRecent.toLocaleString());
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
   
@@ -299,121 +304,125 @@ export const FormTable = () => {
         borderColor="#E2E8F0"
         padding="12px"
       >
-        <TableContainer>
-          <HStack
-            width="100%"
-            justify="space-between"
-          >
-            <HStack spacing="0px">
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdOutlineFilterAlt size="16px" />
-                <Text ml="8px">Filter</Text>
-              </Box>
+        {loading ?
+          <LoadingWheel/> :
+          <TableContainer>
+            <HStack
+              width="100%"
+              justify="space-between"
+            >
+              <HStack spacing="0px">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                >
+                  <MdOutlineFilterAlt size="16px" />
+                  <Text ml="8px">Filter</Text>
+                </Box>
+              </HStack>
+              <HStack spacing="0px">
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                >
+                  <MdOutlineManageSearch size="24px" />
+                </Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                  cursor="pointer"
+                  onClick={() => handleExport(allFormsTable)}
+                >
+                  <MdFileUpload size="16px" />
+                  <Text ml="8px">Export</Text>
+                </Box>
+              </HStack>
             </HStack>
-            <HStack spacing="0px">
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdOutlineManageSearch size="24px" />
-              </Box>
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-                cursor="pointer"
-  onClick={() => handleExport(allFormsTable)}
-              >
-                <MdFileUpload size="16px" />
-                <Text ml="8px">Export</Text>
-              </Box>
-            </HStack>
-          </HStack>
-          <Box
-            borderWidth="1px"
-            borderRadius="12px"
-            width="100%"
-            borderColor="#E2E8F0"
-            overflow="auto"
-          >
-            <Table variant="striped">
-            <Thead>
-              {tableInstance.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {tableInstance.getRowModel().rows.map((row, index) => (
-                <Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      onClick={(e) => {
-                        if (cell.column.id === "rowNumber") e.stopPropagation();
-                      }}
-                    >
-                      {cell.column.id === "rowNumber" ? (
-                        <HoverCheckbox
-                          id={row.original.hashedId}
-                          isSelected={selectedRowIds.includes(
-                            row.original.hashedId
-                          )}
-                          onSelectionChange={handleRowSelect}
-                          index={index}
-                        />
-                      ) :  cell.column.id === "export" ? (
-                        <PrintForm
-                          formId={row.original.id}
-                          formType={row.original.title} />
-                      ):(
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-          </Box>
-        </TableContainer>
+            <Box
+              borderWidth="1px"
+              borderRadius="12px"
+              width="100%"
+              borderColor="#E2E8F0"
+              overflow="auto"
+            >
+              <Table variant="striped">
+              <Thead>
+                {tableInstance.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {tableInstance.getRowModel().rows.map((row, index) => (
+                  <Tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") e.stopPropagation();
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.hashedId}
+                            isSelected={selectedRowIds.includes(
+                              row.original.hashedId
+                            )}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) :  cell.column.id === "export" ? (
+                          <PrintForm
+                            formId={row.original.id}
+                            formType={row.original.title} />
+                        ):(
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            </Box>
+          </TableContainer>
+        }
+        
       </Box>
     ) : (
       <Text>No data found.</Text>
