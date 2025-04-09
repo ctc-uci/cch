@@ -41,6 +41,8 @@ import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 import { all } from "axios";
+import { LoadingWheel } from ".././loading/loading.tsx"
+
 
 export const Donations = () => {
   const { backend } = useBackendContext();
@@ -65,6 +67,8 @@ export const Donations = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
   const [freq, setFreq] = useState<string>("");
+
+  const [loading, setLoading] = useState(true);
 
   const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
@@ -277,6 +281,8 @@ export const Donations = () => {
   
       } catch (error) {
         console.error("Error fetching value sum:", error);
+      }finally {
+        setLoading(false);
       }
     };
   
@@ -409,7 +415,8 @@ export const Donations = () => {
             onFormSubmitSuccess={refreshPage}
           />
         </HStack>
-
+        {loading ?
+        <LoadingWheel/> :
         <TableContainer
           width="100%"
           maxHeight="75%"
@@ -509,6 +516,7 @@ export const Donations = () => {
             />
           )}
         </TableContainer>
+        }
       </VStack>
     </HStack>
   );

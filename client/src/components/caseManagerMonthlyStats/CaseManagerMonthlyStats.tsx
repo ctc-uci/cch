@@ -19,6 +19,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import type { TabData } from "../../types/monthlyStat.ts";
 import { StatsTable } from "./StatsTable.tsx";
 import { useNavigate } from "react-router-dom";
+import { LoadingWheel } from ".././loading/loading.tsx"
 
 export const CaseManagerMonthlyStats = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export const CaseManagerMonthlyStats = () => {
   const [allTabData, setAllTabData] = useState<TabData[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,6 +60,9 @@ export const CaseManagerMonthlyStats = () => {
   
       } catch (error) {
         console.error("Error fetching data:", error);
+      }
+      finally{
+        setLoading(false);
       }
     };
   
@@ -127,6 +132,8 @@ export const CaseManagerMonthlyStats = () => {
             <Tab key={tab.tabName}>{tab.tabName}</Tab>
           ))}
         </TabList>
+        {loading ? 
+        <LoadingWheel/> :
         <TabPanels>
           {/* All Statistics: render all tables */}
           <TabPanel>
@@ -151,6 +158,7 @@ export const CaseManagerMonthlyStats = () => {
             </TabPanel>
           ))}
         </TabPanels>
+        }
       </Tabs>
     </VStack>
   );
