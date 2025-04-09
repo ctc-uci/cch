@@ -115,6 +115,3 @@ export const FormPreview = ({
     </Drawer>
   );
 };
-function parseHashedId(id: number) {
-  throw new Error("Function not implemented.");
-}
