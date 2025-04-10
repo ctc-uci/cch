@@ -1,71 +1,188 @@
 import { useState } from "react";
-import { 
-    SimpleGrid, Card, CardHeader, Heading, 
-    CardBody, Text, CardFooter, Input, Button 
+
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  CardHeader,
+  Flex,
+  Heading,
+  HStack,
+  Image,
+  SimpleGrid,
+  Stack,
+  Text,
+  Textarea,
+  VStack,
 } from "@chakra-ui/react";
-import toSnakeCase from "../../utils/snakeCase";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import toSnakeCase from "../../utils/snakeCase";
+import image from "./pfp.jpeg";
 import { Children } from "./ViewPage";
 
 interface ChildrenProps {
-    items: Children[];
+  items: Children[];
 }
 
 function ChildrenCards({ items }: ChildrenProps) {
-    const { backend } = useBackendContext();
-    
-    // State to store comments per child
-    const [comments, setComments] = useState<{ [key: number]: string }>({});
+  const { backend } = useBackendContext();
 
-    // Handle input change
-    const handleCommentChange = (childId: number, newComment: string) => {
-        setComments(prevComments => ({
-            ...prevComments,
-            [childId]: newComment,
-        }));
-    };
+  // State to store comments per child
+  const [comments, setComments] = useState<{ [key: number]: string }>({});
 
-    // Save changes for a specific child
-    const handleSaveChanges = async (childId: number) => {
-        try {
-            const comment = comments[childId];
-            if (!comment) {
-                console.error("No comment to save!");
-                return;
-            }
+  // Handle input change
+  const handleCommentChange = (childId: number, newComment: string) => {
+    setComments((prevComments) => ({
+      ...prevComments,
+      [childId]: newComment,
+    }));
+  };
 
-            const updatedData = toSnakeCase({ comment });
+  // Save changes for a specific child
+  const handleSaveChanges = async (childId: number) => {
+    try {
+      const comment = comments[childId];
+      if (!comment) {
+        console.error("No comment to save!");
+        return;
+      }
 
-            await backend.put(`/children/${childId}`, updatedData);
+      const updatedData = toSnakeCase({ comment });
 
-            console.log(`Updated comment for child ${childId}:`, comment);
-        } catch (error) {
-            console.error("Error updating comment:", error);
-        }
-    };
+      await backend.put(`/children/${childId}`, updatedData);
 
+      console.log(`Updated comment for child ${childId}:`, comment);
+    } catch (error) {
+      console.error("Error updating comment:", error);
+    }
+  };
+
+  if (!items || items.length === 0) {
     return (
-        <SimpleGrid spacing={4} templateColumns="repeat(auto-fill, minmax(200px, 1fr))">
-            {items.map((item: Children) => (
-                <Card key={item.id}>
-                    <CardHeader>
-                        <Heading>{item.firstName} {item.lastName}</Heading>
-                    </CardHeader>
-                    <CardBody>
-                        <Text>{item.dateOfBirth}</Text>
-                    </CardBody>
-                    <CardFooter>
-                        <Input 
-                            placeholder="Enter comment"
-                            value={comments[item.id] || item.comments}
-                            onChange={(e) => handleCommentChange(item.id, e.target.value)}
-                        />
-                        <Button onClick={() => handleSaveChanges(item.id)} value={item.comments}>Save</Button>
-                    </CardFooter>
-                </Card>
-            ))}
-        </SimpleGrid>
+      <Flex
+        align="center"
+        justify="center"
+        minH="300px"
+        p={6}
+      >
+        <Heading size="md">No Children Registered</Heading>
+      </Flex>
     );
+  }
+
+  return (
+    <Stack
+      flexDirection="row"
+      spacing="5vh"
+      p={6}
+    >
+      {items.map((item) => (
+        <Card
+          key={item.id}
+          overflow="hidden"
+          boxShadow="md"
+          w="320px"
+        >
+          <CardHeader>
+            <HStack spacing={4}>
+              <Image
+                boxSize="60px"
+                objectFit="cover"
+                borderRadius="full"
+                src={image}
+                alt={`${item.firstName} ${item.lastName}`}
+              />
+              <VStack
+                align="flex-start"
+                spacing={0}
+              >
+                <Text
+                  fontSize="md"
+                  fontWeight="bold"
+                >
+                  {item.firstName} {item.lastName}
+                </Text>
+                <Text
+                  fontSize="sm"
+                  color="gray.600"
+                >
+                  DOB:{" "}
+                  {new Date(item.dateOfBirth).toLocaleDateString("en-US", {
+                    month: "2-digit",
+                    day: "2-digit",
+                    year: "2-digit",
+                  })}
+                </Text>
+              </VStack>
+            </HStack>
+          </CardHeader>
+          <CardBody>
+            <Stack spacing={2}>
+              <Box>
+                <Text
+                  as="span"
+                  fontWeight="semibold"
+                >
+                  Custody:
+                </Text>{" "}
+                <Text
+                  as="span"
+                  color="gray.700"
+                >
+                  {item.custody ?? "N/A"}
+                </Text>
+              </Box>
+              <Box>
+                <Text
+                  as="span"
+                  fontWeight="semibold"
+                >
+                  School:
+                </Text>{" "}
+                <Text
+                  as="span"
+                  color="gray.700"
+                >
+                  {item.school ?? "N/A"}
+                </Text>
+              </Box>
+            </Stack>
+          </CardBody>
+          <CardFooter>
+            <Stack
+              w="100%"
+              spacing={2}
+            >
+              <Text>Comments</Text>
+              <HStack
+                w="100%"
+                align="start"
+              >
+                <Textarea
+                  flex="1"
+                  height="100px"
+                  placeholder="Enter comment"
+                  value={comments[item.id] || item.comments || ""}
+                  onChange={(e) => handleCommentChange(item.id, e.target.value)}
+                />
+              </HStack>
+              {/* <Button
+                    colorScheme="blue"
+                    onClick={() => handleSaveChanges(item.id)}
+                    size="sm"
+                    w="20%"
+                  >
+                    Save
+                  </Button> */}
+            </Stack>
+          </CardFooter>
+        </Card>
+      ))}
+    </Stack>
+  );
 }
 
 export default ChildrenCards;

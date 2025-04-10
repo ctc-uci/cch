@@ -1,25 +1,39 @@
 import { useEffect, useState } from "react";
-import toSnakeCase from "../../utils/snakeCase";
+
 import {
   Box,
   Button,
+  Card,
+  HStack,
+  Image,
   Input,
+  Spacer,
   Stack,
+  Tab,
   Table,
+  TableContainer,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
+  VStack,
 } from "@chakra-ui/react";
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 
 import { useParams } from "react-router-dom";
-import CSVButton from "./CSVButton";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import Comments from "./comments";
+import toSnakeCase from "../../utils/snakeCase";
 import ChildrenCards from "./childrenCards";
-import Forms from "./forms"
+import Comments from "./comments";
+import CSVButton from "./CSVButton";
+import Forms from "./forms";
+import image from "./pfp.jpeg";
 import { Client, FormItems } from "./types";
 
 const emptyClient: Client = {
@@ -76,96 +90,195 @@ export interface Children {
 export const ViewPage = () => {
   const { backend } = useBackendContext();
   const [client, setClient] = useState<Client>(emptyClient);
+  const [edits, setEdits] = useState<Partial<Client>>({});
   const [children, setChildren] = useState<Children[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const params = useParams<{ id: string }>();
   const [formItems, setFormItems] = useState<FormItems[]>([]);
-
-  //Toggles visibility
   const [isEditing, setIsEditing] = useState(false);
 
-
-
-  //fetches info from both data
   useEffect(() => {
-      //fetches the database for children
     const fetchChildren = async (id: number) => {
       try {
         const response = await backend.get(`/children/${id}`);
-        setChildren(response.data); // Adjust this if the response structure is different
-      } catch (err) {
+        setChildren(response.data);
+      } catch (err: any) {
         setError(err.message);
       }
     };
 
-    //fetches the database for clients
     const fetchClient = async (id: number) => {
       try {
         const response = await backend.get(`/clients/${id}`);
         setClient(response.data[0]);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       }
     };
 
     const fetchForms = async (id: number) => {
-        try{
-            const response = await backend.get(`/formsCombined/${id}`);
-            setFormItems(response.data);
-        }
-        catch (err) {
-            setError(err.message);
-        }
-    }
+      try {
+        const response = await backend.get(`/formsCombined/${id}`);
+        setFormItems(response.data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
     const fetchData = async () => {
       setLoading(true);
       if (params.id) {
         const intId = parseInt(params.id);
-        await Promise.all([fetchChildren(intId), fetchClient(intId), fetchForms(intId)]);
+        await Promise.all([
+          fetchChildren(intId),
+          fetchClient(intId),
+          fetchForms(intId),
+        ]);
       }
       setLoading(false);
     };
+
     fetchData();
-  }, [backend, params.id] );
+  }, [backend, params.id]);
 
   if (loading) return <Box>Loading...</Box>;
   if (error) return <Box>Error: {error}</Box>;
 
   const toggleEditForm = () => {
-    setIsEditing(!isEditing); // Toggle the editing state
+    if (isEditing) {
+      setEdits({});
+    }
+    setIsEditing(!isEditing);
   };
-  /*
-  //TODO: WORK ON THIS
-  // Function to handle saving changes (dummy example for now)
-  const handleSaveChanges = () => {
-      setIsEditing(false); // Hide the form after saving
-  };
-*/
-  // Function to convert camelCase to snake_case
-
 
   const handleSaveChanges = async () => {
     try {
       if (!client) {
         console.error("Client data is undefined!");
-        return; // Exit early if `client` is undefined
+        return;
       }
-
-      // Convert client object from camelCase to snake_case before sending it to the backend
-      const clientData = toSnakeCase(client);
-      // Send the updated client data in snake_case format
-      await backend.put(`/clients/${client.id}`, clientData);
-      setIsEditing(false); // Hide the form after saving
-    } catch (error) {
+      const updatedClient = { ...client, ...edits };
+      const clientDataSnakeCase = toSnakeCase(updatedClient);
+      await backend.put(`/clients/${client.id}`, clientDataSnakeCase);
+      setClient(updatedClient);
+      setEdits({});
+      setIsEditing(false);
+    } catch (error: any) {
       console.error("Error updating client information:", error.message);
     }
   };
-  //Table for Children Info
+
+  const renderField = (
+    fieldName: keyof Client,
+    displayValue: any,
+    options?: { isBoolean?: boolean; isNumeric?: boolean }
+  ) => {
+    if (isEditing) {
+      return (
+        <Input
+          value={
+            edits[fieldName] !== undefined ? edits[fieldName] : displayValue
+          }
+          onChange={(e) => {
+            let value: any = e.target.value;
+            if (options?.isBoolean) {
+              value = value.toLowerCase() === "yes";
+            }
+            if (options?.isNumeric) {
+              value = parseInt(value);
+            }
+            setEdits({ ...edits, [fieldName]: value });
+          }}
+        />
+      );
+    }
+    if (options?.isBoolean) {
+      return displayValue ? "Yes" : "No";
+    }
+    return displayValue;
+  };
+
   return (
     <div>
+      <Box
+        w="100%"
+        p={4}
+      >
+        <HStack
+          w="100%"
+          align="flex-start"
+        >
+          <HStack
+            w="60%"
+            spacing={8}
+            align="center"
+          >
+            <Image
+              boxSize="120px"
+              objectFit="cover"
+              borderRadius="full"
+              src={image}
+              alt={`${client.firstName} ${client.lastName}`}
+            />
+            <VStack
+              align="start"
+              spacing={1}
+            >
+              <Text
+                fontSize="4xl"
+                fontWeight="bold"
+              >
+                {client.firstName} {client.lastName}
+              </Text>
+              <Text
+                fontSize="xs"
+                color="gray.600"
+              >
+                Last Updated: MM/DD/YYYY HH:MM XX
+              </Text>
+            </VStack>
+          </HStack>
+          <HStack
+            w="40%"
+            justify="flex-end"
+          >
+            <Card
+              bg="white"
+              boxShadow="sm"
+              border="1px solid"
+              borderColor="gray.100"
+              borderRadius="md"
+              px={4}
+              py={2}
+              minW="200px"
+              maxW="fit-content"
+              padding={4}
+              marginTop={5}
+            >
+              <HStack spacing={10}>
+                <Text
+                  fontWeight="medium"
+                  fontSize="md"
+                >
+                  {client.email}
+                </Text>
+                <Text
+                  fontWeight="medium"
+                  fontSize="md"
+                >
+                  {client.phoneNumber}
+                </Text>
+              </HStack>
+            </Card>
+          </HStack>
+        </HStack>
+      </Box>
       <Tabs>
-        <TabList>
+        <TabList
+          w="fit-content"
+          ml="3vh"
+        >
           <Tab>Children</Tab>
           <Tab>Forms</Tab>
           <Tab>Comments</Tab>
@@ -176,22 +289,63 @@ export const ViewPage = () => {
             <ChildrenCards items={children} />
           </TabPanel>
           <TabPanel>
-            <Forms forms={[...formItems]}/>
+            <Forms forms={[...formItems]} />
           </TabPanel>
           <TabPanel>
-            <Comments clientId={client.id}/>
+            <Comments clientId={client.id} />
           </TabPanel>
         </TabPanels>
       </Tabs>
       <Box>
-        <Box mb={6}>
-          {!isEditing ? <h2>Client Information</h2> : <p></p>}
-          {!isEditing && client ? (
-            <Table variant="simple">
+        <Box
+          mb={6}
+          mr={4}
+          ml={4}
+        >
+          <HStack mt="5%" w="95%" mx="2.5%">
+            <Text fontWeight="semibold">Client Information</Text>
+            <Spacer />
+            <Stack direction="row">
+              <Button
+                onClick={toggleEditForm}
+                bg={isEditing ? "#EDF2F7" : "#3182CE"}
+                color={isEditing ? "black" : "white"}
+              >
+                {isEditing ? "Cancel" : "Edit Information"}
+              </Button>
+              {isEditing && (
+                <Box>
+                  <Button
+                    bg="#3182CE"
+                    color="white"
+                    onClick={handleSaveChanges}
+                  >
+                    Save Changes
+                  </Button>
+                </Box>
+              )}
+            </Stack>
+          </HStack>
+          <TableContainer
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              border: "1px solid gray",
+              borderColor: "gray.100",
+              borderRadius: "md",
+            }}
+            mx="2.5%"
+              w="95%"
+            mt={4}
+          >
+            <Table
+              variant="simple"
+
+            >
               <Thead>
                 <Tr>
-                  <Th>Question</Th>
-                  <Th>Answer</Th>
+                  <Th fontSize="md" color="black">Question</Th>
+                  <Th fontSize="md" color="black">Answer</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -201,359 +355,211 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>First Name</Td>
-                  <Td>{client.firstName}</Td>
+                  <Td>{renderField("firstName", client.firstName)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Last Name</Td>
-                  <Td>{client.lastName}</Td>
+                  <Td>{renderField("lastName", client.lastName)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Age</Td>
-                  <Td>{client.age}</Td>
+                  <Td>{renderField("age", client.age, { isNumeric: true })}</Td>
                 </Tr>
                 <Tr>
                   <Td>Date of Birth</Td>
-                  <Td>{client.dateOfBirth}</Td>
+                  <Td>{renderField("dateOfBirth", client.dateOfBirth)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Email</Td>
-                  <Td>{client.email}</Td>
+                  <Td>{renderField("email", client.email)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Phone Number</Td>
-                  <Td>{client.phoneNumber}</Td>
+                  <Td>{renderField("phoneNumber", client.phoneNumber)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Created By</Td>
-                  <Td>{client.createdBy}</Td>
+                  <Td>
+                    {renderField("createdBy", client.createdBy, {
+                      isNumeric: true,
+                    })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Grant</Td>
-                  <Td>{client.grant}</Td>
+                  <Td>{renderField("grant", client.grant)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Status</Td>
-                  <Td>{client.status}</Td>
+                  <Td>{renderField("status", client.status)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Ethnicity</Td>
-                  <Td>{client.ethnicity}</Td>
+                  <Td>{renderField("ethnicity", client.ethnicity)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Race</Td>
-                  <Td>{client.race}</Td>
+                  <Td>{renderField("race", client.race)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Medical</Td>
-                  <Td>{client.medical ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField("medical", client.medical, { isBoolean: true })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Emergency Contact Name</Td>
-                  <Td>{client.emergencyContactName}</Td>
+                  <Td>
+                    {renderField(
+                      "emergencyContactName",
+                      client.emergencyContactName
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Emergency Contact Phone</Td>
-                  <Td>{client.emergencyContactPhoneNumber}</Td>
+                  <Td>
+                    {renderField(
+                      "emergencyContactPhoneNumber",
+                      client.emergencyContactPhoneNumber
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
-                  <Td>Homelessness Length</Td>
-                  <Td>{client.homelessnessLength} years</Td>
+                  <Td>Homelessness Length (years)</Td>
+                  <Td>
+                    {renderField(
+                      "homelessnessLength",
+                      client.homelessnessLength,
+                      { isNumeric: true }
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Reunified</Td>
-                  <Td>{client.reunified ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField("reunified", client.reunified, {
+                      isBoolean: true,
+                    })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Successful Completion</Td>
-                  <Td>{client.successfulCompletion ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField(
+                      "successfulCompletion",
+                      client.successfulCompletion,
+                      { isBoolean: true }
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Pregnant Upon Entry</Td>
-                  <Td>{client.pregnantUponEntry ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField("pregnantUponEntry", client.pregnantUponEntry, {
+                      isBoolean: true,
+                    })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Disabled Children</Td>
-                  <Td>{client.disabledChildren ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField("disabledChildren", client.disabledChildren, {
+                      isBoolean: true,
+                    })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Attending School Upon Entry</Td>
-                  <Td>{client.attendingSchoolUponEntry ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField(
+                      "attendingSchoolUponEntry",
+                      client.attendingSchoolUponEntry,
+                      { isBoolean: true }
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Attending School Upon Exit</Td>
-                  <Td>{client.attendingSchoolUponExit ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField(
+                      "attendingSchoolUponExit",
+                      client.attendingSchoolUponExit,
+                      { isBoolean: true }
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Savings Amount</Td>
-                  <Td>{client.savingsAmount}</Td>
+                  <Td>{renderField("savingsAmount", client.savingsAmount)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Specific Destination</Td>
-                  <Td>{client.specificDestination}</Td>
+                  <Td>
+                    {renderField(
+                      "specificDestination",
+                      client.specificDestination
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Estimated Exit Date</Td>
-                  <Td>{client.estimatedExitdate}</Td>
+                  <Td>
+                    {renderField("estimatedExitdate", client.estimatedExitdate)}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Exit Date</Td>
-                  <Td>{client.exitDate}</Td>
+                  <Td>{renderField("exitDate", client.exitDate)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Unit ID</Td>
-                  <Td>{client.unitId}</Td>
+                  <Td>
+                    {renderField("unitId", client.unitId, { isNumeric: true })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Prior Living</Td>
-                  <Td>{client.priorLiving}</Td>
+                  <Td>{renderField("priorLiving", client.priorLiving)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Prior Living City</Td>
-                  <Td>{client.priorLivingCity}</Td>
+                  <Td>
+                    {renderField("priorLivingCity", client.priorLivingCity)}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Shelter in Last Five Years</Td>
-                  <Td>{client.shelterInLastFiveYears ? "Yes" : "No"}</Td>
+                  <Td>
+                    {renderField(
+                      "shelterInLastFiveYears",
+                      client.shelterInLastFiveYears,
+                      { isBoolean: true }
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Specific Reason for Leaving</Td>
-                  <Td>{client.specificReasonForLeaving}</Td>
+                  <Td>
+                    {renderField(
+                      "specificReasonForLeaving",
+                      client.specificReasonForLeaving
+                    )}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Reason for Leaving</Td>
-                  <Td>{client.reasonForLeaving}</Td>
+                  <Td>
+                    {renderField("reasonForLeaving", client.reasonForLeaving)}
+                  </Td>
                 </Tr>
               </Tbody>
             </Table>
-          ) : (
-            <p></p>
-          )}
+          </TableContainer>
 
-          <Button
-            colorScheme="blue"
-            onClick={toggleEditForm}
-          >
-            {isEditing ? "Cancel" : "Edit Client Information"}
-          </Button>
-          <CSVButton data={client} />
-
-          {/* Conditionally render the edit form */}
-          {isEditing && (
-            <Box mt={4}>
-              <h3>Edit Client Information</h3>
-              <Stack spacing={3}>
-                <Input
-                  placeholder="First Name"
-                  defaultValue={client.firstName}
-                  onChange={(e) =>
-                    setClient({ ...client, firstName: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Last Name"
-                  defaultValue={client.lastName}
-                  onChange={(e) =>
-                    setClient({ ...client, lastName: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Age"
-                  defaultValue={client.age}
-                  onChange={(e) =>
-                    setClient({ ...client, age: parseInt(e.target.value) })
-                  }
-                />
-                <Input
-                  placeholder="Date of Birth"
-                  defaultValue={client?.dateOfBirth}
-                  onChange={(e) =>
-                    setClient({ ...client, dateOfBirth: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Email"
-                  defaultValue={client?.email}
-                  onChange={(e) =>
-                    setClient({ ...client, email: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Phone Number"
-                  defaultValue={client?.phoneNumber}
-                  onChange={(e) =>
-                    setClient({ ...client, phoneNumber: e.target.value })
-                  }
-                />
-                <Input
-                  placeholder="Grant"
-                  defaultValue={client?.grant}
-                  onChange={(e) => setClient({ ...client, grant: e.target.value })}
-                />
-                <Input
-                  placeholder="Status"
-                  defaultValue={client?.status}
-                  onChange={(e) => setClient({ ...client, status: e.target.value })}
-                />
-                <Input
-                  placeholder="Ethnicity"
-                  defaultValue={client?.ethnicity}
-                  onChange={(e) => setClient({ ...client, ethnicity: e.target.value })}
-                />
-                <Input
-                  placeholder="Race"
-                  defaultValue={client?.race}
-                  onChange={(e) => setClient({ ...client, race: e.target.value })}
-                />
-                <Input
-                  placeholder="Medical"
-                  value={client.medical ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      medical: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Emergency Contact Name"
-                  defaultValue={client?.emergencyContactName}
-                  onChange={(e) => setClient({ ...client, emergencyContactName: e.target.value })}
-                />
-                <Input
-                  placeholder="Emergency Contact Phone	"
-                  defaultValue={client?.emergencyContactPhoneNumber}
-                  onChange={(e) => setClient({ ...client, emergencyContactPhoneNumber: e.target.value })}
-                />
-                <Input
-                  placeholder="Homelessness Length	"
-                  defaultValue={client?.homelessnessLength}
-                  onChange={(e) => setClient({ ...client, homelessnessLength: parseInt(e.target.value) })}
-                />
-                <Input
-                  placeholder="Reunified"
-                  value={client?.reunified ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      reunified: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Successful Completion"
-                  value={client?.successfulCompletion ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      successfulCompletion: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Pregnant Upon Entry"
-                  value={client?.pregnantUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      pregnantUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Disabled Children"
-                  value={client?.disabledChildren ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      disabledChildren: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Attending School Upon Entry"
-                  value={client?.attendingSchoolUponEntry ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      attendingSchoolUponEntry: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Attending School Upon Exit	"
-                  value={client?.attendingSchoolUponExit ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      attendingSchoolUponExit: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Saving Account"
-                  defaultValue={client?.savingsAmount}
-                  onChange={(e) => setClient({ ...client, savingsAmount: e.target.value })}
-                />
-                <Input
-                  placeholder="Specific Destination"
-                  defaultValue={client?.specificDestination}
-                  onChange={(e) => setClient({ ...client, specificDestination: e.target.value })}
-                />
-                <Input
-                  placeholder="Estimated Exit Date"
-                  defaultValue={client?.estimatedExitdate}
-                  onChange={(e) => setClient({ ...client, estimatedExitdate: e.target.value })}
-                />
-                <Input
-                  placeholder="Exit Date"
-                  defaultValue={client?.exitDate}
-                  onChange={(e) => setClient({ ...client, exitDate: e.target.value })}
-                />
-                <Input
-                  placeholder="Unit ID"
-                  defaultValue={client?.unitId}
-                  onChange={(e) => setClient({ ...client, unitId: parseInt(e.target.value) })}
-                />
-                <Input
-                  placeholder="Prior Living	"
-                  defaultValue={client?.priorLiving}
-                  onChange={(e) => setClient({ ...client, priorLiving: e.target.value })}
-                />
-                <Input
-                  placeholder="Prior Living City"
-                  defaultValue={client?.priorLivingCity}
-                  onChange={(e) => setClient({ ...client, priorLivingCity: e.target.value })}
-                />
-                <Input
-                  placeholder="Shelter in Last Five Years"
-                  value={client?.shelterInLastFiveYears ? "Yes" : "No"}  // Show "Yes" if true, "No" if false
-                  onChange={(e) =>
-                    setClient({
-                      ...client,
-                      shelterInLastFiveYears: e.target.value.toLowerCase() === "yes", // Convert to boolean
-                    })
-                  }
-                />
-                <Input
-                  placeholder="Specific Reason for Leaving"
-                  defaultValue={client?.specificReasonForLeaving}
-                  onChange={(e) => setClient({ ...client, specificReasonForLeaving: e.target.value })}
-                />
-                <Input
-                  placeholder="Reason for Leaving"
-                  defaultValue={client?.reasonForLeaving}
-                  onChange={(e) => setClient({ ...client, reasonForLeaving: e.target.value })}
-                />
-                {/* Add more fields as needed for editing */}
-                <Button colorScheme="green" onClick={handleSaveChanges}>
-                  Save Changes
-                </Button>
-              </Stack>
-            </Box>
-          )}
+          {/* {!isEditing ? <CSVButton data={client} ml={4}/> : <></>} */}
         </Box>
       </Box>
     </div>
-
   );
 };
