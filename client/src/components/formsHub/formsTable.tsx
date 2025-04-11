@@ -35,7 +35,7 @@ import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import { MdFileUpload, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
-import { PrintForm } from "../printForm/PrintForm";
+import PrintForm from "../printForm/PrintForm";
 
 
 
@@ -110,14 +110,9 @@ export const FormTable = () => {
   };
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
-    console.log("hashedid", hashedId);
-    console.log("selected", selectedRowIds);
-
     if (isChecked) {
-      console.log("is checked");
       setSelectedRowIds((prev) => [...prev, hashedId]);
     } else {
-      console.log("not checked");
       setSelectedRowIds((prev) =>
         prev.filter((rowHashedId) => rowHashedId !== hashedId)
       );

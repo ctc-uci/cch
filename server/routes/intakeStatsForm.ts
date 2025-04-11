@@ -22,7 +22,6 @@ intakeStatsFormRouter.get("/", async (req, res) => {
 intakeStatsFormRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id)
     const data = await db.query(
       `SELECT * FROM intake_statistics_form WHERE id = ${id};`
     );
