@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { HStack, VStack } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { IntakeStatisticsFormPage1 } from "../../types/intakeStatisticsForm.ts";
+import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm.ts";
 import {
   NumberInputComponent,
   SelectInputComponent,
@@ -15,8 +15,8 @@ export const IntakeStatsPg1 = ({
   formData,
   setFormData,
 }: {
-  formData: IntakeStatisticsFormPage1;
-  setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsFormPage1>>;
+  formData: IntakeStatisticsForm;
+  setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsForm>>;
 }) => {
   const [numberOfChildren, setNumberOfChildren] = useState(
     formData.numberOfChildren || 0
@@ -27,7 +27,7 @@ export const IntakeStatsPg1 = ({
   const [cms, setCms] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchCaseManagers = async () => {
       try {
         const response = await backend.get("/casemanagers");
         setCms(response.data);
@@ -35,7 +35,7 @@ export const IntakeStatsPg1 = ({
         console.error("Error fetching users:", error);
       }
     };
-    fetchData();
+    fetchCaseManagers();
   }, [backend]);
 
   const handleChange = (e) => {
@@ -155,13 +155,6 @@ export const IntakeStatsPg1 = ({
         w="100%"
         marginBottom={"30px"}
       >
-        {/* <TextInputComponent
-          label="Date"
-          name="date"
-          value={formData.date}
-          onChange={handleChange}
-          type="date"
-        /> */}
         <SelectInputComponent
           label="Site"
           name="site"
@@ -461,7 +454,13 @@ export const IntakeStatsPg1 = ({
   );
 };
 
-export const IntakeStatsPg2 = ({ formData, setFormData }) => {
+export const IntakeStatsPg2 = ({
+  formData,
+  setFormData,
+}: {
+  formData: IntakeStatisticsForm;
+  setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsForm>>;
+}) => {
   const handleChange = (input) => {
     if (typeof input === "object" && input.target) {
       // Handles regular inputs (text, number, etc.)
@@ -654,7 +653,10 @@ export const IntakeStatsPg2 = ({ formData, setFormData }) => {
         }
       />
       {formData.supportSystem === true && (
-        <VStack marginLeft={"5%"} w={"100%"}>
+        <VStack
+          marginLeft={"5%"}
+          w={"100%"}
+        >
           <TrueFalseComponent
             label="Housing"
             name="supportHousing"
