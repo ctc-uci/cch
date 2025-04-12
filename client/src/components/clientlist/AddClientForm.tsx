@@ -26,8 +26,8 @@ export const AddClientForm = () => {
         unit_id: "",
         first_name: "",
         last_name: "",
-        site: "",
-        case_managers: "",
+        // site: "",
+        // case_managers: "",
         grant: "",
         status: "",
         date_of_birth: "",
@@ -74,11 +74,11 @@ export const AddClientForm = () => {
       try {
 
         const clientData = {
-          created_by: formData.created_by,
-          unit_id: formData.unit_id,  
+          created_by: parseInt(formData.created_by || "0", 10),
+          unit_id: parseInt(formData.unit_id || "0",10),  
           first_name: formData.first_name,
           last_name: formData.last_name,
-          site: formData.site,
+          // site: formData.site,
           // case_managers: formData.case_managers,
           grant: formData.grant,
           status: formData.status,
@@ -88,31 +88,31 @@ export const AddClientForm = () => {
           email: formData.email,
           emergency_contact_name: formData.emergency_contact_name,
           emergency_contact_phone_number: formData.emergency_contact_phone_number,
-          medical: formData.medical,
+          medical: formData.medical === "Yes" ? true : false,
           entrance_date: formData.entrance_date,
           estimated_exit_date: formData.estimated_exit_date,
           exit_date: formData.exit_date,
           bed_nights: parseInt(formData.bed_nights || "0", 10),
           bed_nights_children: parseInt(formData.bed_nights_children || "0", 10),
-          pregnant_upon_entry: formData.pregnant_upon_entry,
-          disabled_children: formData.disabled_children,
+          pregnant_upon_entry: formData.pregnant_upon_entry === "Yes" ? true : false ,
+          disabled_children: formData.disabled_children === "Yes" ? true : false ,
           ethnicity: formData.ethnicity,
           race: formData.race,
           city_of_last_permanent_residence: formData.city_of_last_permanent_residence,
           prior_living: formData.prior_living,
           prior_living_city: formData.prior_living_city,
-          shelter_in_last_five_years: formData.shelter_in_last_five_years,
+          shelter_in_last_five_years: formData.shelter_in_last_five_years === "Yes" ? true : false ,
           homelessness_length: parseInt(formData.homelessness_length || "0", 10),
-          chronically_homeless: formData.chronically_homeless,
-          attending_school_upon_entry: formData.attending_school_upon_entry,
-          employment_gained: formData.employment_gained,
+          chronically_homeless: formData.chronically_homeless === "Yes" ? true : false ,
+          attending_school_upon_entry: formData.attending_school_upon_entry === "Yes" ? true : false ,
+          employement_gained: formData.employment_gained,
           reason_for_leaving: formData.reason_for_leaving,
           specific_reason_for_leaving: formData.specific_reason_for_leaving,
           specific_destination: formData.specific_destination,
-          savings_amount: formData.savings_amount,
-          attending_school_upon_exit: formData.attending_school_upon_exit,
-          reunified: formData.reunified,
-          successful_completion: formData.successful_completion,
+          savings_amount: parseFloat(formData.savings_amount || "0"),
+          attending_school_upon_exit: formData.attending_school_upon_exit === "Yes" ? true : false ,
+          reunified: formData.reunified === "Yes" ? true : false ,
+          successful_completion: formData.successful_completion === "Yes" ? true : false ,
           destination_city: formData.destination_city,
           comments: formData.comments
       };
@@ -217,23 +217,23 @@ export const AddClientForm = () => {
 
                     <Text fontWeight="medium">Medical</Text>
                     <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, medical: e.target.value })}>
+                    onChange={(e) => setFormData({ ...formData, medical: e.target.value})}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Entry Date</Text>
-                    <Input placeholder="Short Answer" 
+                    <Input type="date"
                     onChange={(e) => setFormData({ ...formData, entrance_date: e.target.value })}
                     />
 
                     <Text fontWeight="medium">Estimated Exit Date</Text>
-                    <Input placeholder="Short Answer" 
+                    <Input type="date"
                     onChange={(e) => setFormData({ ...formData, estimated_exit_date: e.target.value })}
                     />
 
                     <Text fontWeight="medium">Exit Date</Text>
-                    <Input placeholder="Short Answer" 
+                    <Input type="date"
                     onChange={(e) => setFormData({ ...formData, exit_date: e.target.value })}
                     />
 
