@@ -155,12 +155,39 @@ export const IntakeStatsPg1 = ({
         w="100%"
         marginBottom={"30px"}
       >
-        <TextInputComponent
+        {/* <TextInputComponent
           label="Date"
           name="date"
           value={formData.date}
           onChange={handleChange}
           type="date"
+        /> */}
+        <SelectInputComponent
+          label="Site"
+          name="site"
+          value={formData.site || ""}
+          onChange={handleChange}
+          options={[
+            { label: "Cypress", value: "Cypress" },
+            { label: "Glencoe", value: "Glencoe" },
+            { label: "Dairyview", value: "Dairyview" },
+            { label: "Bridge", value: "Bridge" },
+            { label: "Placentia 38", value: "Placentia 38" },
+          ]}
+          placeholder="Select Site"
+          width="30%"
+        />
+        <SelectInputComponent
+          label="Grant"
+          name="clientGrant"
+          value={formData.clientGrant || ""}
+          onChange={handleChange}
+          options={[
+            { label: "Bridge", value: "Bridge" },
+            { label: "Non Funded", value: "Non-Funded" },
+          ]}
+          placeholder="Select Grant"
+          width="30%"
         />
         <TextInputComponent
           label="First Name"
@@ -175,6 +202,21 @@ export const IntakeStatsPg1 = ({
           value={formData.lastName}
           onChange={handleChange}
           type="text"
+        />
+        <TextInputComponent
+          label="Birthday"
+          name="birthday"
+          value={formData.birthday}
+          onChange={handleChange}
+          type="date"
+        />
+        <NumberInputComponent
+          label="Age"
+          name="age"
+          value={formData.age}
+          onChange={(value) => setFormData((prev) => ({ ...prev, age: value }))}
+          min={0}
+          max={125}
         />
         <SelectInputComponent
           label="Ethnicity"
@@ -210,21 +252,6 @@ export const IntakeStatsPg1 = ({
           width="30%"
         />
         <TextInputComponent
-          label="Birthday"
-          name="birthday"
-          value={formData.birthday}
-          onChange={handleChange}
-          type="date"
-        />
-        <NumberInputComponent
-          label="Age"
-          name="age"
-          value={formData.age}
-          onChange={(value) => setFormData((prev) => ({ ...prev, age: value }))}
-          min={0}
-          max={125}
-        />
-        <TextInputComponent
           label="Phone Number"
           name="phoneNumber"
           value={formData.phoneNumber}
@@ -252,6 +279,13 @@ export const IntakeStatsPg1 = ({
           onChange={handleChange}
           type="number"
         />
+        <TextInputComponent
+          label="Entry Date"
+          name="entryDate"
+          value={formData.entryDate}
+          onChange={handleChange}
+          type="date"
+        />
         <SelectInputComponent
           label="Prior Living Situation"
           name="priorLivingSituation"
@@ -273,13 +307,6 @@ export const IntakeStatsPg1 = ({
           placeholder="Select Prior Living Situation"
           width="30%"
         />
-        <TextInputComponent
-          label="Entry Date"
-          name="entryDate"
-          value={formData.entryDate}
-          onChange={handleChange}
-          type="date"
-        />
         <TrueFalseComponent
           label="Medical"
           name="medical"
@@ -297,33 +324,6 @@ export const IntakeStatsPg1 = ({
           value={formData.assignedCaseManager}
           onChange={handleChange}
           type="text"
-        />
-        <SelectInputComponent
-          label="Site"
-          name="site"
-          value={formData.site || ""}
-          onChange={handleChange}
-          options={[
-            { label: "Cypress", value: "Cypress" },
-            { label: "Glencoe", value: "Glencoe" },
-            { label: "Dairyview", value: "Dairyview" },
-            { label: "Bridge", value: "Bridge" },
-            { label: "Placentia 38", value: "Placentia 38" },
-          ]}
-          placeholder="Select Site"
-          width="30%"
-        />
-        <SelectInputComponent
-          label="Grant"
-          name="clientGrant"
-          value={formData.clientGrant || ""}
-          onChange={handleChange}
-          options={[
-            { label: "Bridge", value: "Bridge" },
-            { label: "Non Funded", value: "Non Funded" },
-          ]}
-          placeholder="Select Grant"
-          width="30%"
         />
         <TrueFalseComponent
           label="Cal-Optima Funded Site"

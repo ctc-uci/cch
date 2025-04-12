@@ -260,6 +260,12 @@ export const IntakeStats = () => {
         isClosable: true,
       });
     }
+    setFormData((prev) => ({
+      ...prev,
+      date: new Date(),
+    }));
+
+
     try {
       await backend.post("/intakeStatsForm", formData);
       toast({
