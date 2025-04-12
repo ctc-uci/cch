@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
@@ -24,7 +23,6 @@ import {
   Tr,
   VStack,
 } from "@chakra-ui/react";
-
 import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -98,6 +96,63 @@ export const ViewPage = () => {
   const [formItems, setFormItems] = useState<FormItems[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
+  const cellHeight = "40px";
+
+
+  const renderField = (
+    fieldName: keyof Client,
+    displayValue: any,
+    options?: { isBoolean?: boolean; isNumeric?: boolean }
+  ) => {
+    if (isEditing) {
+      return (
+        <Box
+          w="100%"
+          h={cellHeight}
+          bg="#EDF2F7"
+          display="flex"
+          alignItems="center"
+          p={0}
+          m={0}
+        >
+          <Input
+            variant="unstyled"
+            size="sm"
+            w="100%"
+            p={2}
+            m={0}
+            border="1px solid"
+            borderColor="#3182CE"
+            value={edits[fieldName] !== undefined ? edits[fieldName] : displayValue}
+            onChange={(e) => {
+              let value: any = e.target.value;
+              if (options?.isBoolean) {
+                value = value.toLowerCase() === "yes";
+              }
+              if (options?.isNumeric) {
+                value = parseInt(value);
+              }
+              setEdits({ ...edits, [fieldName]: value });
+            }}
+          />
+        </Box>
+      );
+    }
+    return (
+      <Box
+        w="100%"
+        h={cellHeight}
+        display="flex"
+        alignItems="center"
+        p={0}
+      >
+        {options?.isBoolean ? (displayValue ? "Yes" : "No") : displayValue}
+      </Box>
+    );
+  };
+
+
+
   useEffect(() => {
     const fetchChildren = async (id: number) => {
       try {
@@ -169,51 +224,11 @@ export const ViewPage = () => {
     }
   };
 
-  const renderField = (
-    fieldName: keyof Client,
-    displayValue: any,
-    options?: { isBoolean?: boolean; isNumeric?: boolean }
-  ) => {
-    if (isEditing) {
-      return (
-        <Input
-          value={
-            edits[fieldName] !== undefined ? edits[fieldName] : displayValue
-          }
-          onChange={(e) => {
-            let value: any = e.target.value;
-            if (options?.isBoolean) {
-              value = value.toLowerCase() === "yes";
-            }
-            if (options?.isNumeric) {
-              value = parseInt(value);
-            }
-            setEdits({ ...edits, [fieldName]: value });
-          }}
-        />
-      );
-    }
-    if (options?.isBoolean) {
-      return displayValue ? "Yes" : "No";
-    }
-    return displayValue;
-  };
-
   return (
     <div>
-      <Box
-        w="100%"
-        p={4}
-      >
-        <HStack
-          w="100%"
-          align="flex-start"
-        >
-          <HStack
-            w="60%"
-            spacing={8}
-            align="center"
-          >
+      <Box w="100%" p={4}>
+        <HStack w="100%" align="flex-start">
+          <HStack w="60%" spacing={8} align="center">
             <Image
               boxSize="120px"
               objectFit="cover"
@@ -221,28 +236,16 @@ export const ViewPage = () => {
               src={image}
               alt={`${client.firstName} ${client.lastName}`}
             />
-            <VStack
-              align="start"
-              spacing={1}
-            >
-              <Text
-                fontSize="4xl"
-                fontWeight="bold"
-              >
+            <VStack align="start" spacing={1}>
+              <Text fontSize="4xl" fontWeight="bold">
                 {client.firstName} {client.lastName}
               </Text>
-              <Text
-                fontSize="xs"
-                color="gray.600"
-              >
+              <Text fontSize="xs" color="gray.600">
                 Last Updated: MM/DD/YYYY HH:MM XX
               </Text>
             </VStack>
           </HStack>
-          <HStack
-            w="40%"
-            justify="flex-end"
-          >
+          <HStack w="40%" justify="flex-end">
             <Card
               bg="white"
               boxShadow="sm"
@@ -257,16 +260,10 @@ export const ViewPage = () => {
               marginTop={5}
             >
               <HStack spacing={10}>
-                <Text
-                  fontWeight="medium"
-                  fontSize="md"
-                >
+                <Text fontWeight="medium" fontSize="md">
                   {client.email}
                 </Text>
-                <Text
-                  fontWeight="medium"
-                  fontSize="md"
-                >
+                <Text fontWeight="medium" fontSize="md">
                   {client.phoneNumber}
                 </Text>
               </HStack>
@@ -275,15 +272,11 @@ export const ViewPage = () => {
         </HStack>
       </Box>
       <Tabs>
-        <TabList
-          w="fit-content"
-          ml="3vh"
-        >
+        <TabList w="fit-content" ml="3vh">
           <Tab>Children</Tab>
           <Tab>Forms</Tab>
           <Tab>Comments</Tab>
         </TabList>
-
         <TabPanels>
           <TabPanel>
             <ChildrenCards items={children} />
@@ -297,11 +290,7 @@ export const ViewPage = () => {
         </TabPanels>
       </Tabs>
       <Box>
-        <Box
-          mb={6}
-          mr={4}
-          ml={4}
-        >
+        <Box mb={6} mr={4} ml={4}>
           <HStack mt="5%" w="95%" mx="2.5%">
             <Text fontWeight="semibold">Client Information</Text>
             <Spacer />
@@ -315,11 +304,7 @@ export const ViewPage = () => {
               </Button>
               {isEditing && (
                 <Box>
-                  <Button
-                    bg="#3182CE"
-                    color="white"
-                    onClick={handleSaveChanges}
-                  >
+                  <Button bg="#3182CE" color="white" onClick={handleSaveChanges}>
                     Save Changes
                   </Button>
                 </Box>
@@ -330,95 +315,93 @@ export const ViewPage = () => {
             sx={{
               overflowX: "auto",
               overflowY: "auto",
-              border: "1px solid gray",
-              borderColor: "gray.100",
-              borderRadius: "md",
+              border: "2px solid",
+              borderColor: "#E2E8F0",
+              borderRadius: "lg",
             }}
             mx="2.5%"
-              w="95%"
+            w="95%"
             mt={4}
           >
-            <Table
-              variant="simple"
-
-            >
-              <Thead>
+            <Table sx={{ tableLayout: "fixed", width: "100%" }}>
+              <Thead h='7vh' >
                 <Tr>
-                  <Th fontSize="md" color="black">Question</Th>
-                  <Th fontSize="md" color="black">Answer</Th>
+                  <Th fontSize="md" color="black"  >
+                    Question
+                  </Th>
+                  <Th fontSize="md" color="black">
+                    Answer
+                  </Th>
                 </Tr>
               </Thead>
               <Tbody>
                 <Tr>
                   <Td>ID</Td>
-                  <Td>{client.id}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {client.id}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>First Name</Td>
-                  <Td>{renderField("firstName", client.firstName)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("firstName", client.firstName)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Last Name</Td>
-                  <Td>{renderField("lastName", client.lastName)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("lastName", client.lastName)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Age</Td>
-                  <Td>{renderField("age", client.age, { isNumeric: true })}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("age", client.age, { isNumeric: true })}</Td>
                 </Tr>
                 <Tr>
                   <Td>Date of Birth</Td>
-                  <Td>{renderField("dateOfBirth", client.dateOfBirth)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("dateOfBirth", client.dateOfBirth)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Email</Td>
-                  <Td>{renderField("email", client.email)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("email", client.email)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Phone Number</Td>
-                  <Td>{renderField("phoneNumber", client.phoneNumber)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("phoneNumber", client.phoneNumber)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Created By</Td>
-                  <Td>
-                    {renderField("createdBy", client.createdBy, {
-                      isNumeric: true,
-                    })}
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("createdBy", client.createdBy, { isNumeric: true })}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Grant</Td>
-                  <Td>{renderField("grant", client.grant)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("grant", client.grant)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Status</Td>
-                  <Td>{renderField("status", client.status)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("status", client.status)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Ethnicity</Td>
-                  <Td>{renderField("ethnicity", client.ethnicity)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("ethnicity", client.ethnicity)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Race</Td>
-                  <Td>{renderField("race", client.race)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("race", client.race)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Medical</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField("medical", client.medical, { isBoolean: true })}
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>Emergency Contact Name</Td>
-                  <Td>
-                    {renderField(
-                      "emergencyContactName",
-                      client.emergencyContactName
-                    )}
+                  <Td >Emergency Contact Name</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("emergencyContactName", client.emergencyContactName)}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Emergency Contact Phone</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "emergencyContactPhoneNumber",
                       client.emergencyContactPhoneNumber
@@ -427,7 +410,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Homelessness Length (years)</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "homelessnessLength",
                       client.homelessnessLength,
@@ -437,15 +420,13 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Reunified</Td>
-                  <Td>
-                    {renderField("reunified", client.reunified, {
-                      isBoolean: true,
-                    })}
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("reunified", client.reunified, { isBoolean: true })}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Successful Completion</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "successfulCompletion",
                       client.successfulCompletion,
@@ -455,7 +436,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Pregnant Upon Entry</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField("pregnantUponEntry", client.pregnantUponEntry, {
                       isBoolean: true,
                     })}
@@ -463,7 +444,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Disabled Children</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField("disabledChildren", client.disabledChildren, {
                       isBoolean: true,
                     })}
@@ -471,7 +452,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Attending School Upon Entry</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "attendingSchoolUponEntry",
                       client.attendingSchoolUponEntry,
@@ -481,7 +462,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Attending School Upon Exit</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "attendingSchoolUponExit",
                       client.attendingSchoolUponExit,
@@ -491,46 +472,41 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Savings Amount</Td>
-                  <Td>{renderField("savingsAmount", client.savingsAmount)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("savingsAmount", client.savingsAmount)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Specific Destination</Td>
-                  <Td>
-                    {renderField(
-                      "specificDestination",
-                      client.specificDestination
-                    )}
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("specificDestination", client.specificDestination)}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Estimated Exit Date</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField("estimatedExitdate", client.estimatedExitdate)}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Exit Date</Td>
-                  <Td>{renderField("exitDate", client.exitDate)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("exitDate", client.exitDate)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Unit ID</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField("unitId", client.unitId, { isNumeric: true })}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Prior Living</Td>
-                  <Td>{renderField("priorLiving", client.priorLiving)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("priorLiving", client.priorLiving)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Prior Living City</Td>
-                  <Td>
-                    {renderField("priorLivingCity", client.priorLivingCity)}
-                  </Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("priorLivingCity", client.priorLivingCity)}</Td>
                 </Tr>
                 <Tr>
                   <Td>Shelter in Last Five Years</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "shelterInLastFiveYears",
                       client.shelterInLastFiveYears,
@@ -540,7 +516,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Specific Reason for Leaving</Td>
-                  <Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                     {renderField(
                       "specificReasonForLeaving",
                       client.specificReasonForLeaving
@@ -549,9 +525,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Reason for Leaving</Td>
-                  <Td>
-                    {renderField("reasonForLeaving", client.reasonForLeaving)}
-                  </Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("reasonForLeaving", client.reasonForLeaving)}</Td>
                 </Tr>
               </Tbody>
             </Table>
