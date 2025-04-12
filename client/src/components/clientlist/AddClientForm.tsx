@@ -429,7 +429,7 @@ export const AddClientForm = () => {
                     <Button ref={cancelRef} onClick={closeAlert}>
                       No
                     </Button>
-                    <Button colorScheme="red" onClick={handleConfirmCancel} ml={3}>
+                    <Button colorScheme="blue" onClick={handleConfirmCancel} ml={3}>
                       Yes, Cancel
                     </Button>
                   </AlertDialogFooter>
