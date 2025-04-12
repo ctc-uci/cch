@@ -1,22 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  Box,
-  FormControl,
-  FormHelperText,
-  FormLabel,
-  HStack,
-  Input,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  Radio,
-  RadioGroup,
-  Select,
-  VStack,
-} from "@chakra-ui/react";
+import { HStack, VStack } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { IntakeStatisticsFormPage1 } from "../../types/intakeStatisticsForm.ts";
@@ -34,7 +18,9 @@ export const IntakeStatsPg1 = ({
   formData: IntakeStatisticsFormPage1;
   setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsFormPage1>>;
 }) => {
-  const [numChildren, setNumChildren] = useState(formData.numChildren || 0);
+  const [numberOfChildren, setNumberOfChildren] = useState(
+    formData.numberOfChildren || 0
+  );
 
   const { backend } = useBackendContext();
 
@@ -44,7 +30,6 @@ export const IntakeStatsPg1 = ({
     const fetchData = async () => {
       try {
         const response = await backend.get("/casemanagers");
-        console.log(response);
         setCms(response.data);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -87,7 +72,7 @@ export const IntakeStatsPg1 = ({
               : Number(value)
             : field === "birthday"
               ? value
-              : field === "ethnicity"
+              : field === "race"
                 ? value
                 : value,
       };
@@ -98,10 +83,9 @@ export const IntakeStatsPg1 = ({
 
   const outputChildPrompts = (val) => {
     const childCount = Number(val);
-    setNumChildren(childCount);
+    setNumberOfChildren(childCount);
     setFormData((prev) => ({
       ...prev,
-      numChildren: childCount,
       children: Array.from(
         { length: childCount },
         (_, i) => prev.children?.[i] || {}
@@ -145,10 +129,20 @@ export const IntakeStatsPg1 = ({
           label="Case Manager"
           name="caseManager"
           value={formData.caseManager || ""}
-          onChange={handleChange}
+          onChange={(e) => {
+            const selectedCaseManager = cms.find(
+              (user) => `${user.firstName} ${user.lastName}` === e.target.value
+            );
+            setFormData((prev) => ({
+              ...prev,
+              caseManager: e.target.value, // Set the case manager's name
+              cmId: selectedCaseManager?.id || null, // Set the case manager's ID
+            }));
+          }}
           options={cms
             .filter((user) => user.role === "case manager")
             .map((user) => ({
+              key: user.id,
               label: `${user.firstName} ${user.lastName}`,
               value: `${user.firstName} ${user.lastName}`,
             }))}
@@ -157,7 +151,17 @@ export const IntakeStatsPg1 = ({
         />
       </HStack>
 
-      <VStack w="100%" marginBottom={"30px"}>
+      <VStack
+        w="100%"
+        marginBottom={"30px"}
+      >
+        <TextInputComponent
+          label="Date"
+          name="date"
+          value={formData.date}
+          onChange={handleChange}
+          type="date"
+        />
         <TextInputComponent
           label="First Name"
           name="firstName"
@@ -178,6 +182,19 @@ export const IntakeStatsPg1 = ({
           value={formData.ethnicity || ""}
           onChange={handleChange}
           options={[
+            { label: "Non-Hispanic", value: "Non-Hispanic" },
+            { label: "Hispanic", value: "Hispanic" },
+            { label: "Refused", value: "Refused" },
+          ]}
+          placeholder="Select Ethnicity"
+          width="30%"
+        />
+        <SelectInputComponent
+          label="Race"
+          name="race"
+          value={formData.race || ""}
+          onChange={handleChange}
+          options={[
             { label: "Caucasian", value: "Caucasian" },
             { label: "Hispanic", value: "Hispanic" },
             { label: "African American", value: "African American" },
@@ -189,7 +206,7 @@ export const IntakeStatsPg1 = ({
             { label: "Native American", value: "Native American" },
             { label: "Multi/Other", value: "Multi/Other" },
           ]}
-          placeholder="Select Ethnicity"
+          placeholder="Select Race"
           width="30%"
         />
         <TextInputComponent
@@ -310,11 +327,11 @@ export const IntakeStatsPg1 = ({
         />
         <TrueFalseComponent
           label="Cal-Optima Funded Site"
-          name="caloptimaFundedSite"
-          value={formData.caloptimaFundedSite}
+          name="calOptimaFundedSite"
+          value={formData.calOptimaFundedSite}
           onChange={(value) =>
             handleChange({
-              target: { name: "caloptimaFundedSite", value },
+              target: { name: "calOptimaFundedSite", value },
             })
           }
           width="30%"
@@ -338,15 +355,44 @@ export const IntakeStatsPg1 = ({
           width="30%"
         />
         <NumberInputComponent
+          label="Family Size"
+          name="familySize"
+          value={formData.familySize}
+          onChange={(value) =>
+            setFormData((prev) => ({ ...prev, familySize: value }))
+          }
+          min={0}
+          max={50}
+        />
+        <NumberInputComponent
           label="Number of Children"
           name="numberOfChildren"
-          value={numChildren || 0}
-          onChange={outputChildPrompts}
+          value={formData.numberOfChildren}
+          onChange={(value) => {
+            setFormData((prev) => ({
+              ...prev,
+              numberOfChildren: value,
+            }));
+            outputChildPrompts(value);
+          }}
+          min={0}
+          max={12}
+        />
+        <NumberInputComponent
+          label="Number of Children with Disability"
+          name="numberOfChildrenWithDisability"
+          value={formData.numberOfChildrenWithDisability}
+          onChange={(value) =>
+            setFormData((prev) => ({
+              ...prev,
+              numberOfChildrenWithDisability: value,
+            }))
+          }
           min={0}
           max={12}
         />
       </VStack>
-      {Array.from({ length: numChildren }, (_, index) => (
+      {Array.from({ length: numberOfChildren }, (_, index) => (
         <VStack
           key={index}
           w="70%"
@@ -389,29 +435,26 @@ export const IntakeStatsPg1 = ({
             min={0}
             max={17}
           />
-          <FormControl>
-            <HStack>
-              <FormLabel w="30%">Child #{index + 1} Ethnicity</FormLabel>
-              <Select
-                placeholder="Select option"
-                w="30%"
-                value={formData.children?.[index]?.ethnicity || ""}
-                onChange={(e) =>
-                  handleChildChange(index, "ethnicity", e.target.value)
-                }
-              >
-                <option value="caucasian">Caucasian</option>
-                <option value="hispanic">Hispanic</option>
-                <option value="african_american">African American</option>
-                <option value="asian">Asian</option>
-                <option value="pacific_islander_hawaiian">
-                  Pacific Islander/Hawaiian
-                </option>
-                <option value="native_american">Native American</option>
-                <option value="multi_other">Multi/Other</option>
-              </Select>
-            </HStack>
-          </FormControl>
+          <SelectInputComponent
+            label={`Child #${index + 1} Race`}
+            name={`child[${index}].race`}
+            value={formData.children?.[index]?.race}
+            onChange={(value) => handleChildChange(index, "race", value)}
+            options={[
+              { label: "Caucasian", value: "Caucasian" },
+              { label: "Hispanic", value: "Hispanic" },
+              { label: "African American", value: "African American" },
+              { label: "Asian", value: "Asian" },
+              {
+                label: "Pacific Islander/Hawaiian",
+                value: "Pacific Islander/Hawaiian",
+              },
+              { label: "Native American", value: "Native American" },
+              { label: "Multi/Other", value: "Multi/Other" },
+            ]}
+            placeholder="Select Race"
+            width="30%"
+          />
         </VStack>
       ))}
     </VStack>
@@ -439,401 +482,251 @@ export const IntakeStatsPg2 = ({ formData, setFormData }) => {
   };
 
   return (
-    <>
-      <VStack>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">City of Last Permanent Residence</FormLabel>
-            <Input
-              type="last_city"
-              w="30%"
-              placeholder="Type here"
-              name="cityLastPermanentResidence"
-              value={formData.cityLastPermanentResidence || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">
-              Where did the client sleep last night?
-            </FormLabel>
-            <Input
-              type="last_sleep"
-              w="30%"
-              placeholder="Type here"
-              name="whereClientSleptLastNight"
-              value={formData.whereClientSleptLastNight || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Last City of Residence</FormLabel>
-            <Input
-              type="last_residence"
-              w="30%"
-              placeholder="Type here"
-              name="priorLivingSituation"
-              value={formData.priorLivingSituation || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Last City Homeless In</FormLabel>
-            <Input
-              type="last_homeless"
-              w="30%"
-              placeholder="Type here"
-              name="lastCityHomeless"
-              value={formData.lastCityHomeless || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">
-              Has the client been in a shelter in the last 5 years?
-            </FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="beenInShelterLast5Years"
-              value={formData.beenInShelterLast5Years || ""}
-              onChange={(value) =>
-                handleChange(["beenInShelterLast5Years", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">
-              How many shelters has the client been in in the last 5 years?
-            </FormLabel>
-            <Input
-              type="shelters"
-              w="30%"
-              placeholder="Type here"
-              name="numberofSheltersLast5Years"
-              value={formData.shelterInLastFiveYears || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">
-              How many years has the client been homeless for?
-            </FormLabel>
-            <NumberInput
-              max={100}
-              min={0}
-              w="30%"
-              name="durationHomeless"
-              value={formData.durationHomeless || ""}
-              onChange={(value) => handleChange(["durationHomeless", value])}
-            >
-              <NumberInputField />
-              <NumberInputStepper>
-                <NumberIncrementStepper />
-                <NumberDecrementStepper />
-              </NumberInputStepper>
-            </NumberInput>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Chronically homeless</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="chronicallyHomeless"
-              value={formData.chronicallyHomeless || ""}
-              onChange={(value) => handleChange(["chronicallyHomeless", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Employed upon entry</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="employedUponEntry"
-              value={formData.employedUponEntry || ""}
-              onChange={(value) => handleChange(["employedUponEntry", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Attending school upon entry</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="attendingSchoolUponEntry"
-              value={formData.attendingSchoolUponEntry || ""}
-              onChange={(value) =>
-                handleChange(["attendingSchoolUponEntry", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Photo release signed?</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="signedPhotoRelease"
-              value={formData.signedPhotoRelease || ""}
-              onChange={(value) => handleChange(["signedPhotoRelease", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Currently Employed</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="currentlyEmployed"
-              value={formData.currentlyEmployed || ""}
-              onChange={(value) => handleChange(["currentlyEmployed", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Date of last employment</FormLabel>
-            <Input
-              type="date"
-              placeholder="Select a date"
-              w="30%"
-              name="dateLastEmployment"
-              value={formData.lastEmployment || ""}
-              onChange={handleChange}
-            />
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">History of domestic violence</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="historyDomesticViolence"
-              value={formData.historyDomesticViolence || ""}
-              onChange={(value) =>
-                handleChange(["historyDomesticViolence", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">History of Substance Abuse</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="historySubstanceAbuse"
-              value={formData.historySubstanceAbuse || ""}
-              onChange={(value) =>
-                handleChange(["historySubstanceAbuse", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          {/* Support system in place */}
-          <FormHelperText>
-            Do not include government programs/services(Ex. Church).
-          </FormHelperText>
-          <HStack>
-            <FormLabel w="30%">Support System in Place?</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="supportSystem"
-              value={formData.supportSystem || ""}
-              onChange={(value) => handleChange(["supportSystem", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-          {formData.supportSystem === "Yes" && (
-            <>
-              <HStack
-                marginLeft={"60px"}
-                marginTop={"30px"}
-                marginBottom={"10px"}
-              >
-                <FormLabel w="30%">Housing</FormLabel>
-                <Input
-                  type="supportHousing"
-                  w="30%"
-                  placeholder="Type here"
-                  name="supportHousing"
-                  value={formData.supportHousing || ""}
-                  onChange={handleChange}
-                />
-              </HStack>
-              <HStack
-                marginLeft={"60px"}
-                marginBottom={"10px"}
-              >
-                <FormLabel w="30%">Support Food</FormLabel>
-                <Input
-                  type="homeless_years"
-                  w="30%"
-                  placeholder="Type here"
-                  name="supportFood"
-                  value={formData.supportFood || ""}
-                  onChange={handleChange}
-                />
-              </HStack>
-              <HStack
-                marginLeft={"60px"}
-                marginBottom={"30px"}
-              >
-                <FormLabel w="30%">Assistance with childcare</FormLabel>
-                <Input
-                  type="homeless_years"
-                  w="30%"
-                  placeholder="Type here"
-                  name="supportChildcare"
-                  value={formData.supportChildcare || ""}
-                  onChange={handleChange}
-                />
-              </HStack>
-            </>
-          )}
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Diagnosed Mental Health Condition</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="diagnosedMentalhHealth"
-              value={formData.diagnosedMentalhHealth || ""}
-              onChange={(value) =>
-                handleChange(["diagnosedMentalhHealth", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">
-              Does Case Manager believe there is an undiagnosed Mental Health
-              Condition?
-            </FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="undiagnosedMentalHealth"
-              value={formData.undiagnosedMentalHealth || ""}
-              onChange={(value) =>
-                handleChange(["mentalHealthUndiagnosed", value])
-              }
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Form of Transportation</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="transportation"
-              value={formData.transportation || ""}
-              onChange={(value) => handleChange(["transportation", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-        <FormControl w="70%">
-          <HStack>
-            <FormLabel w="30%">Convicted of a Crime</FormLabel>
-            <RadioGroup
-              defaultValue="No"
-              w="30%"
-              name="convictedCrime"
-              value={formData.convictedCrime || ""}
-              onChange={(value) => handleChange(["convictedCrime", value])}
-            >
-              <HStack spacing="24px">
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </HStack>
-        </FormControl>
-      </VStack>
-    </>
+    <VStack
+      align="start"
+      paddingX="10%"
+      w="100%"
+    >
+      <TrueFalseComponent
+        label="Pregnant"
+        name="pregnant"
+        value={formData.pregnant}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "pregnant", value },
+          })
+        }
+      />
+      <TextInputComponent
+        label="City of Last Permanent Residence"
+        name="cityLastPermanentAddress"
+        value={formData.cityLastPermanentAddress}
+        onChange={handleChange}
+        type="text"
+      />
+      <TextInputComponent
+        label="Where did the client sleep last night?"
+        name="whereClientSleptLastNight"
+        value={formData.whereClientSleptLastNight}
+        onChange={handleChange}
+        type="text"
+      />
+      <TextInputComponent
+        label="Last City of Residence"
+        name="lastCityResided"
+        value={formData.lastCityResided}
+        onChange={handleChange}
+        type="text"
+      />
+      <TextInputComponent
+        label="Last City Homeless In"
+        name="lastCityHomeless"
+        value={formData.lastCityHomeless}
+        onChange={handleChange}
+        type="text"
+      />
+      <TrueFalseComponent
+        label="Has the client been in a shelter in the last 5 years?"
+        name="beenInShelterLast5Years"
+        value={formData.beenInShelterLast5Years}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "beenInShelterLast5Years", value },
+          })
+        }
+      />
+      <NumberInputComponent
+        label="How many shelters has the client been in in the last 5 years?"
+        name="numberofSheltersLast5Years"
+        value={formData.numberofSheltersLast5Years}
+        onChange={(value) =>
+          setFormData((prev) => ({
+            ...prev,
+            numberofSheltersLast5Years: value,
+          }))
+        }
+        min={0}
+        max={1000}
+      />
+      <TextInputComponent
+        label="How long has the client been homeless for?"
+        name="durationHomeless"
+        value={formData.durationHomeless}
+        onChange={handleChange}
+        type="text"
+      />
+      <TrueFalseComponent
+        label="Chronically homeless"
+        name="chronicallyHomeless"
+        value={formData.chronicallyHomeless}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "chronicallyHomeless", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Employed upon entry"
+        name="employedUponEntry"
+        value={formData.employedUponEntry}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "employedUponEntry", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Attending school upon entry"
+        name="attendingSchoolUponEntry"
+        value={formData.attendingSchoolUponEntry}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "attendingSchoolUponEntry", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Photo release signed?"
+        name="signedPhotoRelease"
+        value={formData.signedPhotoRelease}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "signedPhotoRelease", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="High Risk"
+        name="highRisk"
+        value={formData.highRisk}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "highRisk", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Currently Employed"
+        name="currentlyEmployed"
+        value={formData.currentlyEmployed}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "currentlyEmployed", value },
+          })
+        }
+      />
+      <TextInputComponent
+        label="Date of last employment"
+        name="dateLastEmployment"
+        value={formData.dateLastEmployment}
+        onChange={handleChange}
+        type="date"
+      />
+      <TrueFalseComponent
+        label="History of domestic violence"
+        name="historyDomesticViolence"
+        value={formData.historyDomesticViolence}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "historyDomesticViolence", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="History of Substance Abuse"
+        name="historySubstanceAbuse"
+        value={formData.historySubstanceAbuse}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "historySubstanceAbuse", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Support System in Place?"
+        helperText="Do not include government programs/services(Ex. Church)"
+        name="historySubstanceAbuse"
+        value={formData.supportSystem}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "supportSystem", value },
+          })
+        }
+      />
+      {formData.supportSystem === true && (
+        <VStack marginLeft={"5%"} w={"100%"}>
+          <TrueFalseComponent
+            label="Housing"
+            name="supportHousing"
+            value={formData.supportHousing}
+            onChange={(value) =>
+              handleChange({
+                target: { name: "supportHousing", value },
+              })
+            }
+          />
+          <TrueFalseComponent
+            label="Support Food"
+            name="supportFood"
+            value={formData.supportFood}
+            onChange={(value) =>
+              handleChange({
+                target: { name: "supportFood", value },
+              })
+            }
+          />
+          <TrueFalseComponent
+            label="Assistance with childcare"
+            name="supportChildcare"
+            value={formData.supportChildcare}
+            onChange={(value) =>
+              handleChange({
+                target: { name: "supportChildcare", value },
+              })
+            }
+          />
+        </VStack>
+      )}
+      <TrueFalseComponent
+        label="Diagnosed Mental Health Condition"
+        name="diagnosedMentalHealth"
+        value={formData.diagnosedMentalHealth}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "diagnosedMentalHealth", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Does Case Manager believe there is an undiagnosed Mental Health Condition?"
+        name="undiagnosedMentalHealth"
+        value={formData.undiagnosedMentalHealth}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "undiagnosedMentalHealth", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Form of Transportation"
+        name="transportation"
+        value={formData.transportation}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "transportation", value },
+          })
+        }
+      />
+      <TrueFalseComponent
+        label="Convicted of a Crime"
+        name="convictedCrime"
+        value={formData.convictedCrime}
+        onChange={(value) =>
+          handleChange({
+            target: { name: "convictedCrime", value },
+          })
+        }
+      />
+    </VStack>
   );
 };

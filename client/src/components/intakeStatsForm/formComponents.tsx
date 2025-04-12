@@ -1,4 +1,18 @@
-import { FormControl, FormLabel, HStack, Input, NumberDecrementStepper, NumberIncrementStepper, NumberInput, NumberInputField, NumberInputStepper, Radio, RadioGroup, Select } from "@chakra-ui/react";
+import {
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  HStack,
+  Input,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  Radio,
+  RadioGroup,
+  Select,
+} from "@chakra-ui/react";
 
 type TextInputProps = {
   label: string;
@@ -8,7 +22,7 @@ type TextInputProps = {
   placeholder?: string;
   width?: string;
   type: "text" | "number" | "email" | "date";
-}
+};
 
 export const TextInputComponent = ({
   label,
@@ -18,9 +32,7 @@ export const TextInputComponent = ({
   width = "30%",
   type = "text",
 }: TextInputProps) => (
-  <FormControl
-    isRequired
-  >
+  <FormControl isRequired>
     <HStack>
       <FormLabel w="30%">{label}</FormLabel>
       <Input
@@ -44,7 +56,7 @@ type NumberInputProps = {
   max?: number;
   step?: number;
   width?: string;
-}
+};
 
 export const NumberInputComponent = ({
   label,
@@ -73,7 +85,7 @@ export const NumberInputComponent = ({
         <FormLabel w="30%">{label}</FormLabel>
         <NumberInput
           name={name}
-          value={value}
+          value={value || min}
           onChange={handleChange}
           min={min}
           max={max}
@@ -96,10 +108,10 @@ type SelectInputProps = {
   name: string;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { label: string; value: string }[];
+  options: { key?: string, label: string; value: string }[];
   placeholder?: string;
   width?: string;
-}
+};
 
 export const SelectInputComponent = ({
   label,
@@ -108,7 +120,7 @@ export const SelectInputComponent = ({
   onChange,
   options,
   placeholder = "Select option",
-  width = "30%"
+  width = "30%",
 }: SelectInputProps) => {
   return (
     <FormControl isRequired>
@@ -122,7 +134,10 @@ export const SelectInputComponent = ({
           placeholder={placeholder}
         >
           {options.map((option) => (
-            <option key={option.value} value={option.value}>
+            <option
+              key={option.key || option.value}
+              value={option.value}
+            >
               {option.label}
             </option>
           ))}
@@ -132,12 +147,14 @@ export const SelectInputComponent = ({
   );
 };
 
+
 type TrueFalseProps = {
   label: string;
   name: string;
-  value: boolean | undefined; // Allow undefined
+  value: boolean | undefined;
   onChange: (value: boolean) => void;
   width?: string;
+  helperText?: string;
 };
 
 export const TrueFalseComponent = ({
@@ -146,6 +163,7 @@ export const TrueFalseComponent = ({
   value,
   onChange,
   width = "30%",
+  helperText,
 }: TrueFalseProps) => {
   const handleChange = (newValue: string) => {
     onChange(newValue === "true");
@@ -153,15 +171,19 @@ export const TrueFalseComponent = ({
 
   return (
     <FormControl isRequired>
+      {helperText && <FormHelperText>{helperText}</FormHelperText>}
       <HStack align="start">
         <FormLabel w="30%">{label}</FormLabel>
         <RadioGroup
           name={name}
-          value={value !== undefined ? value.toString() : ""} // Handle undefined value
+          value={value !== undefined ? value.toString() : ""}
           onChange={handleChange}
           w={width}
         >
-          <HStack spacing="24px" wrap="wrap">
+          <HStack
+            spacing="24px"
+            wrap="wrap"
+          >
             <Radio value="true">Yes</Radio>
             <Radio value="false">No</Radio>
           </HStack>

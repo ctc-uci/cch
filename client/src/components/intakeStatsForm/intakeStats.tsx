@@ -37,6 +37,7 @@ const page1Columns: string[] = [
   "emergencyContactPhoneNumber",
   "entryDate",
   "ethnicity",
+  "race",
   "firstName",
   "clientGrant",
   "uniqueId",
@@ -53,12 +54,12 @@ const page2Columns: string[] = [
   "chronicallyHomeless",
   "cityLastPermanentAddress",
   "historyDomesticViolence",
-  "employed",
+  "currentlyEmployed",
   "employedUponEntry",
   "durationHomeless",
   "dateLastEmployment",
   "whereClientSleptLastNight",
-  "diagnosedMentalhHealth",
+  "diagnosedMentalHealth",
   "undiagnosedMentalHealth",
   "signedPhotoRelease",
   "lastCityHomeless",
@@ -73,15 +74,15 @@ const page2Columns: string[] = [
 const childColumns: string[] = [
   "age",
   "birthday",
-  "ethnicity",
+  "race",
   "firstName",
   "lastName",
 ];
 
 const supportSystemColumns: string[] = [
-  "childcareAssistance",
-  "foodPurchase",
-  "housing",
+  "supportChildcare",
+  "supportFood",
+  "supportHousing",
 ];
 
 export const IntakeStats = () => {
@@ -96,6 +97,7 @@ export const IntakeStats = () => {
   const checkPage1Cols = () => {
     for (const item of page1Columns) {
       if (!(item in formData)) {
+        console.log(item);
         return false;
       }
     }
@@ -103,6 +105,7 @@ export const IntakeStats = () => {
       for (const child of formData.children) {
         for (const item of childColumns) {
           if (!(item in child)) {
+            console.log(item);
             return false;
           }
         }
@@ -114,13 +117,14 @@ export const IntakeStats = () => {
   const checkPage2Cols = () => {
     for (const item of page2Columns) {
       if (!(item in formData)) {
-        console.log(item)
+        console.log(item);
         return false;
       }
     }
-    if (formData.supportSystem === "Yes") {
+    if (formData.supportSystem === true) {
       for (const item of supportSystemColumns) {
         if (!(item in formData)) {
+          console.log(item);
           return false;
         }
       }
@@ -257,7 +261,7 @@ export const IntakeStats = () => {
       });
     }
     try {
-      backend.post("/intakeStatsForm", formData);
+      await backend.post("/intakeStatsForm", formData);
       toast({
         title: "Successfully submitted form",
         description: `Intake Statistics Form - ${new Date().toLocaleString()}`,

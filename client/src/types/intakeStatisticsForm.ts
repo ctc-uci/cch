@@ -29,6 +29,7 @@ export type IntakeStatisticsFormPage1 = {
   ethnicity: string;
 }
 
+
 export type IntakeStatisticsForm = {
   firstName: string;
   lastName: string;

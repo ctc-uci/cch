@@ -8,15 +8,12 @@ export const intakeStatsFormRouter = Router();
 // Get all forms
 intakeStatsFormRouter.get("/", async (req, res) => {
   try {
-    const data = await db.query(
-      `SELECT * FROM intake_statistics_form;`
-    );
+    const data = await db.query(`SELECT * FROM intake_statistics_form;`);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
-
 
 // Get single statistical intake form
 intakeStatsFormRouter.get("/:id", async (req, res) => {
@@ -34,13 +31,14 @@ intakeStatsFormRouter.get("/:id", async (req, res) => {
 // Post new form entry
 intakeStatsFormRouter.post("/", async (req, res) => {
   try {
-    console.log(req.body)
     const {
+      date,
       month,
       caseManager,
       cmId,
       firstName,
       lastName,
+      race,
       ethnicity,
       birthday,
       age,
@@ -59,7 +57,7 @@ intakeStatsFormRouter.post("/", async (req, res) => {
       disablingConditionForm,
       familySize,
       numberOfChildren,
-      numberofChildrenWithDisability,
+      numberOfChildrenWithDisability,
       pregnant,
       cityLastPermanentAddress,
       whereClientSleptLastNight,
@@ -81,22 +79,22 @@ intakeStatsFormRouter.post("/", async (req, res) => {
       supportHousing,
       supportFood,
       supportChildcare,
-      diagnosedMentalhHealth,
+      diagnosedMentalHealth,
       undiagnosedMentalHealth,
       transportation,
       convictedCrime,
-      race,
     } = req.body;
 
     const query = `
   INSERT INTO intake_statistics_form (
+    date,
     month,
     case_manager,
     cm_id,
     first_name,
     last_name,
-    ethnicity,
     race,
+    ethnicity,
     birthday,
     age,
     phone_number,
@@ -142,19 +140,20 @@ intakeStatsFormRouter.post("/", async (req, res) => {
     convicted_crime
   )
   VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51
   )
   RETURNING id;
 `;
 
     const values = [
+      date,
       month,
       caseManager,
       cmId,
       firstName,
       lastName,
-      ethnicity,
       race,
+      ethnicity,
       birthday,
       age,
       phoneNumber,
@@ -172,7 +171,7 @@ intakeStatsFormRouter.post("/", async (req, res) => {
       disablingConditionForm,
       familySize,
       numberOfChildren,
-      numberofChildrenWithDisability,
+      numberOfChildrenWithDisability,
       pregnant,
       cityLastPermanentAddress,
       whereClientSleptLastNight,
@@ -194,13 +193,13 @@ intakeStatsFormRouter.post("/", async (req, res) => {
       supportHousing,
       supportFood,
       supportChildcare,
-      diagnosedMentalhHealth,
+      diagnosedMentalHealth,
       undiagnosedMentalHealth,
       transportation,
       convictedCrime,
     ];
-
     const result = await db.query(query, values);
+    console.log(result);
     res.status(201).json({ id: result[0].id });
   } catch (err) {
     res.status(500).send(err.message);
