@@ -7,6 +7,12 @@ import {
     DrawerContent,
     DrawerCloseButton,
     useDisclosure,
+    AlertDialog,
+    AlertDialogOverlay,
+    AlertDialogContent,
+    AlertDialogHeader,
+    AlertDialogFooter,
+    AlertDialogBody,
     Grid,
     Text,
     Button,
@@ -14,13 +20,26 @@ import {
     Input,
     useToast,
   } from '@chakra-ui/react';
-import React from 'react';
+import React, {useRef} from 'react';
 import Client from "../../types/client";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 
 export const AddClientForm = () => {
+    const {
+      isOpen: isAlertOpen,
+      onOpen: openAlert,
+      onClose: closeAlert
+    } = useDisclosure()
+
+    const cancelRef = useRef();
+
+    const handleConfirmCancel = () => {
+      onClose()         // Close the drawer
+      closeAlert()      // Close the alert
+    }
+
     const [formData, setFormData] = React.useState({
         created_by: "",
         unit_id: "",
@@ -383,13 +402,40 @@ export const AddClientForm = () => {
             </DrawerBody>
   
             <DrawerFooter>
-              <Button variant='outline' mr={3} onClick={onClose}>
+              <Button variant='outline' mr={3} onClick={openAlert}>
                 Cancel
               </Button>
               <Button type="submit" colorScheme='blue' onClick={handleSubmit}>Submit</Button>
             </DrawerFooter>
           </DrawerContent>
         </Drawer>
+
+        <AlertDialog
+              isOpen={isAlertOpen}
+              leastDestructiveRef={cancelRef}
+              onClose={closeAlert}
+            >
+              <AlertDialogOverlay>
+                <AlertDialogContent>
+                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    Are you sure?
+                  </AlertDialogHeader>
+
+                  <AlertDialogBody>
+                    You can't undo this action afterward.
+                  </AlertDialogBody>
+
+                  <AlertDialogFooter>
+                    <Button ref={cancelRef} onClick={closeAlert}>
+                      No
+                    </Button>
+                    <Button colorScheme="red" onClick={handleConfirmCancel} ml={3}>
+                      Yes, Cancel
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialogOverlay>
+            </AlertDialog>
       </>
     )
   }
