@@ -17,7 +17,7 @@ import {
 type TextInputProps = {
   label: string;
   name: string;
-  value: string | number;
+  value: string | number | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   width?: string;
@@ -47,11 +47,12 @@ export const TextInputComponent = ({
   </FormControl>
 );
 
+
 type NumberInputProps = {
   label: string;
   name: string;
-  value: number;
-  onChange: (value: number) => void;
+  value: number | undefined;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   min?: number;
   max?: number;
   step?: number;
@@ -68,16 +69,25 @@ export const NumberInputComponent = ({
   step = 1,
   width = "30%",
 }: NumberInputProps) => {
-  const handleChange = (valueAsString: string, valueAsNumber: number) => {
-    // Ensure the value stays within the min and max range
-    if (valueAsNumber < min) {
-      onChange(min);
+  const handleNumberChange = (valueAsString: string, valueAsNumber: number) => {
+    let finalValue = valueAsNumber;
+    if (isNaN(valueAsNumber)) {
+      finalValue = min; // Default to min if not a number
+    } else if (valueAsNumber < min) {
+      finalValue = min;
     } else if (valueAsNumber > max) {
-      onChange(max);
-    } else {
-      onChange(valueAsNumber);
+      finalValue = max;
     }
+    onChange({
+      target: {
+        name,
+        value: finalValue,
+      },
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
+
+  // Convert undefined to empty string or a valid number for the value prop
+  const displayValue = value === undefined || isNaN(Number(value)) ? "" : value;
 
   return (
     <FormControl isRequired>
@@ -85,8 +95,8 @@ export const NumberInputComponent = ({
         <FormLabel w="30%">{label}</FormLabel>
         <NumberInput
           name={name}
-          value={value || min}
-          onChange={handleChange}
+          value={displayValue}
+          onChange={handleNumberChange}
           min={min}
           max={max}
           step={step}
@@ -102,11 +112,10 @@ export const NumberInputComponent = ({
     </FormControl>
   );
 };
-
 type SelectInputProps = {
   label: string;
   name: string;
-  value: string;
+  value: string | undefined;
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
   options: { key?: string, label: string; value: string }[];
   placeholder?: string;
@@ -152,7 +161,7 @@ type TrueFalseProps = {
   label: string;
   name: string;
   value: boolean | undefined;
-  onChange: (value: boolean) => void;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   width?: string;
   helperText?: string;
 };
@@ -165,8 +174,13 @@ export const TrueFalseComponent = ({
   width = "30%",
   helperText,
 }: TrueFalseProps) => {
-  const handleChange = (newValue: string) => {
-    onChange(newValue === "true");
+  const handleBooleanChange = (newValue: string) => {
+    onChange({
+      target: {
+        name,
+        value: newValue === "true",
+      },
+    } as unknown as React.ChangeEvent<HTMLInputElement>);
   };
 
   return (
@@ -177,7 +191,7 @@ export const TrueFalseComponent = ({
         <RadioGroup
           name={name}
           value={value !== undefined ? value.toString() : ""}
-          onChange={handleChange}
+          onChange={handleBooleanChange}
           w={width}
         >
           <HStack

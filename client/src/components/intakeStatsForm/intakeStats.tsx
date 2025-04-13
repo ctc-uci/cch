@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { Navbar } from "../Navbar";
 import { IntakeStatsPg1, IntakeStatsPg2 } from "./intakeStatsPgs";
+import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm";
 
 const page1Columns: string[] = [
   "age",
@@ -85,11 +86,63 @@ const supportSystemColumns: string[] = [
   "supportHousing",
 ];
 
+const initialFormData: IntakeStatisticsForm = {
+  firstName: "",
+  lastName: "",
+  birthday: "",
+  age: 0,
+  phoneNumber: "",
+  email: "",
+  emergencyContactName: "",
+  emergencyContactPhoneNumber: "",
+  priorLivingSituation: "",
+  entryDate: "",
+  medical: undefined,
+  assignedCaseManager: "",
+  site: "",
+  clientGrant: "",
+  calOptimaFundedSite: undefined,
+  uniqueId: "",
+  disablingConditionForm: undefined,
+  familySize: 0,
+  numberOfChildren: 0,
+  numberOfChildrenWithDisability: 0,
+  children: [],
+  month: "",
+  caseManager: "",
+  ethnicity: "",
+  pregnant: undefined,
+  cityLastPermanentAddress: "",
+  whereClientSleptLastNight: "",
+  lastCityResided: "",
+  lastCityHomeless: "",
+  beenInShelterLast5Years: undefined,
+  numberofSheltersLast5Years: 0,
+  durationHomeless: "",
+  chronicallyHomeless: undefined,
+  employedUponEntry: undefined,
+  attendingSchoolUponEntry: undefined,
+  signedPhotoRelease: undefined,
+  highRisk: undefined,
+  currentlyEmployed: undefined,
+  dateLastEmployment: "",
+  historyDomesticViolence: undefined,
+  historySubstanceAbuse: undefined,
+  supportSystem: undefined,
+  supportHousing: false,
+  supportFood: false,
+  supportChildcare: false,
+  diagnosedMentalHealth: undefined,
+  undiagnosedMentalHealth: undefined,
+  transportation: undefined,
+  convictedCrime: undefined,
+};
+
 export const IntakeStats = () => {
   const navigate = useNavigate();
   const [pageNum, setPageNum] = useState(1);
   const [review, setReview] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState<IntakeStatisticsForm>(initialFormData);
 
   const { backend } = useBackendContext();
   const toast = useToast();

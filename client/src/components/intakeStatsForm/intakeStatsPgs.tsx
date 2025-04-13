@@ -11,6 +11,7 @@ import {
   TrueFalseComponent,
 } from "./formComponents.tsx";
 
+
 export const IntakeStatsPg1 = ({
   formData,
   setFormData,
@@ -38,24 +39,48 @@ export const IntakeStatsPg1 = ({
     fetchCaseManagers();
   }, [backend]);
 
-  const handleChange = (e) => {
-    if (e.target) {
-      const { name, value, type } = e.target;
 
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        age: typeof e === "number" ? e : prev.age,
-        medical: typeof e === "string" ? e : prev.medical,
-        disabled: typeof e === "string" ? e : prev.disabled,
-        caloptimaFundedSite:
-          typeof e === "string" ? e : prev.caloptimaFundedSite,
-      }));
-    }
+  // const handleChange = (e) => {
+  //   if (e.target) {
+  //     const { name, value, type } = e.target;
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
+  //     }));
+  //   } else {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       age: typeof e === "number" ? e : prev.age,
+  //       medical: typeof e === "string" ? e : prev.medical,
+  //       disabled: typeof e === "string" ? e : prev.disabled,
+  //       caloptimaFundedSite:
+  //         typeof e === "string" ? e : prev.caloptimaFundedSite,
+  //     }));
+  //   }
+  // };
+
+
+  // const handleCaseManagerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const { name, value } = e.target;
+  //   const selectedCaseManager = cms.find(
+  //     (user) => `${user.firstName} ${user.lastName}` === value
+  //   );
+
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     caseManager: value,
+  //     cmId: selectedCaseManager.id
+  //   }));
+  // };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   // Handles child fields separately
@@ -207,7 +232,7 @@ export const IntakeStatsPg1 = ({
           label="Age"
           name="age"
           value={formData.age}
-          onChange={(value) => setFormData((prev) => ({ ...prev, age: value }))}
+          onChange={handleChange}
           min={0}
           max={125}
         />
@@ -304,11 +329,7 @@ export const IntakeStatsPg1 = ({
           label="Medical"
           name="medical"
           value={formData.medical}
-          onChange={(value) =>
-            handleChange({
-              target: { name: "medical", value },
-            })
-          }
+          onChange={handleChange}
           width="30%"
         />
         <TextInputComponent
@@ -322,11 +343,7 @@ export const IntakeStatsPg1 = ({
           label="Cal-Optima Funded Site"
           name="calOptimaFundedSite"
           value={formData.calOptimaFundedSite}
-          onChange={(value) =>
-            handleChange({
-              target: { name: "calOptimaFundedSite", value },
-            })
-          }
+          onChange={handleChange}
           width="30%"
         />
         <TextInputComponent
@@ -340,20 +357,14 @@ export const IntakeStatsPg1 = ({
           label="Disabling Condition"
           name="disablingConditionForm"
           value={formData.disablingConditionForm}
-          onChange={(value) =>
-            handleChange({
-              target: { name: "disablingConditionForm", value },
-            })
-          }
+          onChange={handleChange}
           width="30%"
         />
         <NumberInputComponent
           label="Family Size"
           name="familySize"
           value={formData.familySize}
-          onChange={(value) =>
-            setFormData((prev) => ({ ...prev, familySize: value }))
-          }
+          onChange={handleChange}
           min={0}
           max={50}
         />
@@ -361,11 +372,8 @@ export const IntakeStatsPg1 = ({
           label="Number of Children"
           name="numberOfChildren"
           value={formData.numberOfChildren}
-          onChange={(value) => {
-            setFormData((prev) => ({
-              ...prev,
-              numberOfChildren: value,
-            }));
+          onChange={(value: number) => {
+            handleChange("numberOfChildren", value);
             outputChildPrompts(value);
           }}
           min={0}
@@ -375,12 +383,7 @@ export const IntakeStatsPg1 = ({
           label="Number of Children with Disability"
           name="numberOfChildrenWithDisability"
           value={formData.numberOfChildrenWithDisability}
-          onChange={(value) =>
-            setFormData((prev) => ({
-              ...prev,
-              numberOfChildrenWithDisability: value,
-            }))
-          }
+          onChange={handleChange}
           min={0}
           max={12}
         />
@@ -461,23 +464,31 @@ export const IntakeStatsPg2 = ({
   formData: IntakeStatisticsForm;
   setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsForm>>;
 }) => {
-  const handleChange = (input) => {
-    if (typeof input === "object" && input.target) {
-      // Handles regular inputs (text, number, etc.)
-      const { name, value, type } = input.target;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
-      }));
-    } else {
-      // Handles RadioGroup and NumberInput
-      const [name, value] = input;
-      setFormData((prev) => ({
-        ...prev,
-        [name]:
-          value === "" ? "" : typeof value === "number" ? value : String(value),
-      }));
-    }
+  // const handleChange = (input) => {
+  //   if (typeof input === "object" && input.target) {
+  //     // Handles regular inputs (text, number, etc.)
+  //     const { name, value, type } = input.target;
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
+  //     }));
+  //   } else {
+  //     // Handles RadioGroup and NumberInput
+  //     const [name, value] = input;
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]:
+  //         value === "" ? "" : typeof value === "number" ? value : String(value),
+  //     }));
+  //   }
+  // };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -490,11 +501,7 @@ export const IntakeStatsPg2 = ({
         label="Pregnant"
         name="pregnant"
         value={formData.pregnant}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "pregnant", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TextInputComponent
         label="City of Last Permanent Residence"
@@ -528,22 +535,13 @@ export const IntakeStatsPg2 = ({
         label="Has the client been in a shelter in the last 5 years?"
         name="beenInShelterLast5Years"
         value={formData.beenInShelterLast5Years}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "beenInShelterLast5Years", value },
-          })
-        }
+        onChange={handleChange}
       />
       <NumberInputComponent
         label="How many shelters has the client been in in the last 5 years?"
         name="numberofSheltersLast5Years"
         value={formData.numberofSheltersLast5Years}
-        onChange={(value) =>
-          setFormData((prev) => ({
-            ...prev,
-            numberofSheltersLast5Years: value,
-          }))
-        }
+        onChange={handleChange}
         min={0}
         max={1000}
       />
@@ -558,61 +556,37 @@ export const IntakeStatsPg2 = ({
         label="Chronically homeless"
         name="chronicallyHomeless"
         value={formData.chronicallyHomeless}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "chronicallyHomeless", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Employed upon entry"
         name="employedUponEntry"
         value={formData.employedUponEntry}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "employedUponEntry", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Attending school upon entry"
         name="attendingSchoolUponEntry"
         value={formData.attendingSchoolUponEntry}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "attendingSchoolUponEntry", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Photo release signed?"
         name="signedPhotoRelease"
         value={formData.signedPhotoRelease}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "signedPhotoRelease", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="High Risk"
         name="highRisk"
         value={formData.highRisk}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "highRisk", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Currently Employed"
         name="currentlyEmployed"
         value={formData.currentlyEmployed}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "currentlyEmployed", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TextInputComponent
         label="Date of last employment"
@@ -625,32 +599,20 @@ export const IntakeStatsPg2 = ({
         label="History of domestic violence"
         name="historyDomesticViolence"
         value={formData.historyDomesticViolence}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "historyDomesticViolence", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="History of Substance Abuse"
         name="historySubstanceAbuse"
         value={formData.historySubstanceAbuse}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "historySubstanceAbuse", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Support System in Place?"
         helperText="Do not include government programs/services(Ex. Church)"
-        name="historySubstanceAbuse"
+        name="supportSystem"
         value={formData.supportSystem}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "supportSystem", value },
-          })
-        }
+        onChange={handleChange}
       />
       {formData.supportSystem === true && (
         <VStack
@@ -661,31 +623,19 @@ export const IntakeStatsPg2 = ({
             label="Housing"
             name="supportHousing"
             value={formData.supportHousing}
-            onChange={(value) =>
-              handleChange({
-                target: { name: "supportHousing", value },
-              })
-            }
+            onChange={handleChange}
           />
           <TrueFalseComponent
             label="Support Food"
             name="supportFood"
             value={formData.supportFood}
-            onChange={(value) =>
-              handleChange({
-                target: { name: "supportFood", value },
-              })
-            }
+            onChange={handleChange}
           />
           <TrueFalseComponent
             label="Assistance with childcare"
             name="supportChildcare"
             value={formData.supportChildcare}
-            onChange={(value) =>
-              handleChange({
-                target: { name: "supportChildcare", value },
-              })
-            }
+            onChange={handleChange}
           />
         </VStack>
       )}
@@ -693,41 +643,25 @@ export const IntakeStatsPg2 = ({
         label="Diagnosed Mental Health Condition"
         name="diagnosedMentalHealth"
         value={formData.diagnosedMentalHealth}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "diagnosedMentalHealth", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Does Case Manager believe there is an undiagnosed Mental Health Condition?"
         name="undiagnosedMentalHealth"
         value={formData.undiagnosedMentalHealth}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "undiagnosedMentalHealth", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Form of Transportation"
         name="transportation"
         value={formData.transportation}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "transportation", value },
-          })
-        }
+        onChange={handleChange}
       />
       <TrueFalseComponent
         label="Convicted of a Crime"
         name="convictedCrime"
         value={formData.convictedCrime}
-        onChange={(value) =>
-          handleChange({
-            target: { name: "convictedCrime", value },
-          })
-        }
+        onChange={handleChange}
       />
     </VStack>
   );
