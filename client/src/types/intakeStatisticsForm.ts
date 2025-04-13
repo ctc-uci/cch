@@ -21,16 +21,11 @@ export type IntakeStatisticsForm = {
   familySize: number;
   numberOfChildren: number;
   numberOfChildrenWithDisability: number;
-  children: Array<{
-    firstName: string;
-    lastName: string;
-    birthday: string;
-    age: number;
-    race: string;
-  }>;
+  children: Array<ChildData>;
   month: string;
   caseManager: string;
   ethnicity: string;
+  race: string;
 
   // Page 2 Fields
   pregnant: boolean | undefined;
@@ -58,4 +53,12 @@ export type IntakeStatisticsForm = {
   undiagnosedMentalHealth: boolean | undefined;
   transportation: boolean | undefined;
   convictedCrime: boolean | undefined;
+};
+
+export type ChildData = {
+  firstName: string;
+  lastName: string;
+  birthday: string;
+  age: number;
+  race: string;
 };

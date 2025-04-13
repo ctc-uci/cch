@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { HStack, VStack } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm.ts";
+import type {
+  ChildData,
+  IntakeStatisticsForm,
+} from "../../types/intakeStatisticsForm.ts";
 import {
   NumberInputComponent,
   SelectInputComponent,
@@ -11,6 +14,14 @@ import {
   TrueFalseComponent,
 } from "./formComponents.tsx";
 
+// Default child object
+const DEFAULT_CHILD: ChildData = {
+  firstName: "",
+  lastName: "",
+  birthday: "",
+  age: 0,
+  race: "",
+};
 
 export const IntakeStatsPg1 = ({
   formData,
@@ -25,7 +36,9 @@ export const IntakeStatsPg1 = ({
 
   const { backend } = useBackendContext();
 
-  const [cms, setCms] = useState<any[]>([]);
+  const [cms, setCms] = useState<
+    { id: string; firstName: string; lastName: string; role: string }[]
+  >([]);
 
   useEffect(() => {
     const fetchCaseManagers = async () => {
@@ -38,28 +51,6 @@ export const IntakeStatsPg1 = ({
     };
     fetchCaseManagers();
   }, [backend]);
-
-
-  // const handleChange = (e) => {
-  //   if (e.target) {
-  //     const { name, value, type } = e.target;
-
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
-  //     }));
-  //   } else {
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       age: typeof e === "number" ? e : prev.age,
-  //       medical: typeof e === "string" ? e : prev.medical,
-  //       disabled: typeof e === "string" ? e : prev.disabled,
-  //       caloptimaFundedSite:
-  //         typeof e === "string" ? e : prev.caloptimaFundedSite,
-  //     }));
-  //   }
-  // };
-
 
   // const handleCaseManagerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
   //   const { name, value } = e.target;
@@ -74,46 +65,42 @@ export const IntakeStatsPg1 = ({
   //   }));
   // };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   // Handles child fields separately
-  const handleChildChange = (index, field, value) => {
+  const handleChildChange = (
+    index: number,
+    field: keyof ChildData,
+    value: string | number
+  ) => {
     setFormData((prev) => {
       const updatedChildren = [...(prev.children ?? [])];
 
       updatedChildren[index] = {
-        ...(updatedChildren[index] || {}),
-        [field]:
-          field === "age"
-            ? value === ""
-              ? ""
-              : Number(value)
-            : field === "birthday"
-              ? value
-              : field === "race"
-                ? value
-                : value,
+        ...(updatedChildren[index] || DEFAULT_CHILD),
+        [field]: field === "age" ? (value === "" ? 0 : Number(value)) : value,
       };
 
       return { ...prev, children: updatedChildren };
     });
   };
 
-  const outputChildPrompts = (val) => {
+  const createChildrenArray = (val: string | number) => {
     const childCount = Number(val);
-    setNumberOfChildren(childCount);
     setFormData((prev) => ({
       ...prev,
       children: Array.from(
         { length: childCount },
-        (_, i) => prev.children?.[i] || {}
+        (_, i) => prev.children?.[i] || DEFAULT_CHILD
       ),
     }));
   };
@@ -372,9 +359,10 @@ export const IntakeStatsPg1 = ({
           label="Number of Children"
           name="numberOfChildren"
           value={formData.numberOfChildren}
-          onChange={(value: number) => {
-            handleChange("numberOfChildren", value);
-            outputChildPrompts(value);
+          onChange={(e) => {
+            handleChange(e);
+            // const newCount = typeof e === 'object' ? Number(e.target.value) : Number(e);
+            createChildrenArray(formData.numberOfChildren);
           }}
           min={0}
           max={12}
@@ -388,7 +376,7 @@ export const IntakeStatsPg1 = ({
           max={12}
         />
       </VStack>
-      {Array.from({ length: numberOfChildren }, (_, index) => (
+      {Array.from({ length: formData.numberOfChildren }, (_, index) => (
         <VStack
           key={index}
           w="70%"
@@ -427,7 +415,9 @@ export const IntakeStatsPg1 = ({
             label={`Child #${index + 1} Age`}
             name={`child[${index}].age`}
             value={formData.children?.[index]?.age || 0}
-            onChange={(value) => handleChildChange(index, "age", value)}
+            onChange={(e) => {
+              handleChildChange(index, "age", Number(e.target.value));
+            }}
             min={0}
             max={17}
           />
@@ -435,7 +425,7 @@ export const IntakeStatsPg1 = ({
             label={`Child #${index + 1} Race`}
             name={`child[${index}].race`}
             value={formData.children?.[index]?.race}
-            onChange={(value) => handleChildChange(index, "race", value)}
+            onChange={(e) => handleChildChange(index, "race", e.target.value)}
             options={[
               { label: "Caucasian", value: "Caucasian" },
               { label: "Hispanic", value: "Hispanic" },
@@ -464,30 +454,14 @@ export const IntakeStatsPg2 = ({
   formData: IntakeStatisticsForm;
   setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsForm>>;
 }) => {
-  // const handleChange = (input) => {
-  //   if (typeof input === "object" && input.target) {
-  //     // Handles regular inputs (text, number, etc.)
-  //     const { name, value, type } = input.target;
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       [name]: type === "number" ? (value === "" ? "" : Number(value)) : value,
-  //     }));
-  //   } else {
-  //     // Handles RadioGroup and NumberInput
-  //     const [name, value] = input;
-  //     setFormData((prev) => ({
-  //       ...prev,
-  //       [name]:
-  //         value === "" ? "" : typeof value === "number" ? value : String(value),
-  //     }));
-  //   }
-  // };
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
