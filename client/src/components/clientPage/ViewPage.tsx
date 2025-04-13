@@ -119,7 +119,7 @@ export const ViewPage = () => {
             variant="unstyled"
             size="sm"
             w="100%"
-            p={2}
+            p={3}
             m={0}
             border="1px solid"
             borderColor="#3182CE"
@@ -292,7 +292,7 @@ export const ViewPage = () => {
       <Box>
         <Box mb={6} mr={4} ml={4}>
           <HStack mt="5%" w="95%" mx="2.5%">
-            <Text fontWeight="semibold">Client Information</Text>
+            <Text fontSize='xl' fontWeight="semibold">Client Information</Text>
             <Spacer />
             <Stack direction="row">
               <Button
