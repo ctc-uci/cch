@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   Box,
@@ -23,9 +23,9 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm";
 import { Navbar } from "../Navbar";
 import { IntakeStatsPg1, IntakeStatsPg2 } from "./intakeStatsPgs";
-import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm";
 
 const page1Columns: string[] = [
   "age",
@@ -87,7 +87,7 @@ const supportSystemColumns: string[] = [
 ];
 
 const initialFormData: IntakeStatisticsForm = {
-  date: new Date(),
+  date: new Date().toISOString(),
   firstName: "",
   lastName: "",
   birthday: "",
@@ -111,6 +111,7 @@ const initialFormData: IntakeStatisticsForm = {
   children: [],
   month: "",
   caseManager: "",
+  race: "",
   ethnicity: "",
   pregnant: undefined,
   cityLastPermanentAddress: "",
@@ -142,11 +143,14 @@ const initialFormData: IntakeStatisticsForm = {
 export const IntakeStats = () => {
   const navigate = useNavigate();
   const [pageNum, setPageNum] = useState(1);
-  const [review, setReview] = useState(0);
-  const [formData, setFormData] = useState<IntakeStatisticsForm>(initialFormData);
+  const [onReview, setOnReview] = useState<boolean>(false);
+  const [formData, setFormData] =
+    useState<IntakeStatisticsForm>(initialFormData);
 
   const { backend } = useBackendContext();
   const toast = useToast();
+
+  const formRef = useRef<HTMLFormElement>(null);
 
   const checkPage1Cols = () => {
     for (const item of page1Columns) {
@@ -186,52 +190,42 @@ export const IntakeStats = () => {
     return true;
   };
 
-  const handleNext = () => {
-    if (!checkPage1Cols()) {
+  const handleNext = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (formRef.current && formRef.current.checkValidity()) {
+      setPageNum(2);
+    } else {
       toast({
         title: "Missing Information",
-        description:
-          "Please fill out all required information before submitting",
+        description: "Please fill out all required fields before submitting",
         status: "warning",
         duration: 9000,
         isClosable: true,
       });
-      return;
     }
-    setPageNum(2);
   };
 
   const handlePrev = () => {
     setPageNum(1);
   };
 
-  const handleReview = () => {
-    if (!checkPage2Cols()) {
+  const handleReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formRef.current && formRef.current.checkValidity()) {
+      setOnReview(true);
+    } else {
       toast({
         title: "Missing Information",
-        description:
-          "Please fill out all required information before submitting",
+        description: "Please fill out all required fields before submitting.",
         status: "warning",
         duration: 9000,
         isClosable: true,
       });
-      return;
     }
-    setReview(1);
   };
 
   const handlePrepareSubmit = () => {
-    if (!checkPage1Cols() || !checkPage2Cols()) {
-      toast({
-        title: "Missing Information",
-        description:
-          "Please fill out all required information before submitting",
-        status: "warning",
-        duration: 9000,
-        isClosable: true,
-      });
-      return;
-    }
     const toastId = "unique-toast";
     if (!toast.isActive(toastId)) {
       toast({
@@ -304,21 +298,10 @@ export const IntakeStats = () => {
   };
 
   const handleSubmit = async () => {
-    if (!checkPage1Cols() || !checkPage2Cols()) {
-      toast({
-        title: "Missing Information",
-        description:
-          "Please fill out all required information before submitting",
-        status: "warning",
-        duration: 9000,
-        isClosable: true,
-      });
-    }
     setFormData((prev) => ({
       ...prev,
       date: new Date().toISOString(),
     }));
-
 
     try {
       await backend.post("/intakeStatsForm", formData);
@@ -362,7 +345,7 @@ export const IntakeStats = () => {
           </Text>
         </Button>
       </Box>
-      {review === 0 ? (
+      {onReview === false ? (
         <Box
           backgroundColor="#FFFFFF"
           margin="0 8% 3% 8%"
@@ -416,55 +399,65 @@ export const IntakeStats = () => {
           >
             {pageNum === 1 ? (
               <Box>
-                <IntakeStatsPg1
-                  formData={formData}
-                  setFormData={setFormData}
-                />
-                <HStack
-                  justifyContent="flex-end"
-                  width="100%"
-                  px={10}
-                  mt={4}
-                  mb={3}
+                <form
+                  ref={formRef}
+                  onSubmit={handleNext}
                 >
-                  <Button
-                    backgroundColor="#4398cd"
-                    color="#ffffff"
-                    onClick={() => handleNext(formData)}
+                  <IntakeStatsPg1
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
+                  <HStack
+                    justifyContent="flex-end"
+                    width="100%"
+                    px={10}
+                    mt={4}
+                    mb={3}
                   >
-                    Next
-                  </Button>
-                </HStack>
+                    <Button
+                      backgroundColor="#4398cd"
+                      color="#ffffff"
+                      type="submit"
+                    >
+                      Next
+                    </Button>
+                  </HStack>
+                </form>
               </Box>
             ) : (
               <Box>
-                <IntakeStatsPg2
-                  formData={formData}
-                  setFormData={setFormData}
-                />
-                <HStack
-                  justifyContent="space-between"
-                  width="100%"
-                  px={10}
-                  mt={4}
-                  mb={3}
+                <form
+                  ref={formRef}
+                  onSubmit={handleReview}
                 >
-                  <Button
-                    border="2px solid #4398cd"
-                    backgroundColor="#ffffff"
-                    color="#4398cd"
-                    onClick={handlePrev}
+                  <IntakeStatsPg2
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
+                  <HStack
+                    justifyContent="space-between"
+                    width="100%"
+                    px={10}
+                    mt={4}
+                    mb={3}
                   >
-                    Last Page
-                  </Button>
-                  <Button
-                    backgroundColor="#4398cd"
-                    color="#ffffff"
-                    onClick={handleReview}
-                  >
-                    Review
-                  </Button>
-                </HStack>
+                    <Button
+                      border="2px solid #4398cd"
+                      backgroundColor="#ffffff"
+                      color="#4398cd"
+                      onClick={handlePrev}
+                    >
+                      Last Page
+                    </Button>
+                    <Button
+                      backgroundColor="#4398cd"
+                      color="#ffffff"
+                      onClick={handleReview}
+                    >
+                      Review
+                    </Button>
+                  </HStack>
+                </form>
               </Box>
             )}
           </Box>

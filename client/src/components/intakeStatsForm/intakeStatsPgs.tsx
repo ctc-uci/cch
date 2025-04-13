@@ -30,9 +30,6 @@ export const IntakeStatsPg1 = ({
   formData: IntakeStatisticsForm;
   setFormData: React.Dispatch<React.SetStateAction<IntakeStatisticsForm>>;
 }) => {
-  const [numberOfChildren, setNumberOfChildren] = useState(
-    formData.numberOfChildren || 0
-  );
 
   const { backend } = useBackendContext();
 
@@ -361,7 +358,6 @@ export const IntakeStatsPg1 = ({
           value={formData.numberOfChildren}
           onChange={(e) => {
             handleChange(e);
-            // const newCount = typeof e === 'object' ? Number(e.target.value) : Number(e);
             createChildrenArray(formData.numberOfChildren);
           }}
           min={0}
