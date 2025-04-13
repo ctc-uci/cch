@@ -27,65 +27,6 @@ import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm";
 import { Navbar } from "../Navbar";
 import { IntakeStatsPg1, IntakeStatsPg2 } from "./intakeStatsPgs";
 
-const page1Columns: string[] = [
-  "age",
-  "calOptimaFundedSite",
-  "caseManager",
-  "birthday",
-  "disablingConditionForm",
-  "email",
-  "emergencyContactName",
-  "emergencyContactPhoneNumber",
-  "entryDate",
-  "ethnicity",
-  "race",
-  "firstName",
-  "clientGrant",
-  "uniqueId",
-  "lastName",
-  "medical",
-  "month",
-  "phoneNumber",
-  "priorLivingSituation",
-];
-
-const page2Columns: string[] = [
-  "attendingSchoolUponEntry",
-  "convictedCrime",
-  "chronicallyHomeless",
-  "cityLastPermanentAddress",
-  "historyDomesticViolence",
-  "currentlyEmployed",
-  "employedUponEntry",
-  "durationHomeless",
-  "dateLastEmployment",
-  "whereClientSleptLastNight",
-  "diagnosedMentalHealth",
-  "undiagnosedMentalHealth",
-  "signedPhotoRelease",
-  "lastCityHomeless",
-  "lastCityResided",
-  "beenInShelterLast5Years",
-  "numberofSheltersLast5Years",
-  "historySubstanceAbuse",
-  "supportSystem", // check if this is yes, then check supportSystem
-  "transportation",
-];
-
-const childColumns: string[] = [
-  "age",
-  "birthday",
-  "race",
-  "firstName",
-  "lastName",
-];
-
-const supportSystemColumns: string[] = [
-  "supportChildcare",
-  "supportFood",
-  "supportHousing",
-];
-
 const initialFormData: IntakeStatisticsForm = {
   date: new Date().toISOString(),
   firstName: "",
@@ -152,68 +93,15 @@ export const IntakeStats = () => {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  const checkPage1Cols = () => {
-    for (const item of page1Columns) {
-      if (!(item in formData)) {
-        console.log(item);
-        return false;
-      }
-    }
-    if (formData.children) {
-      for (const child of formData.children) {
-        for (const item of childColumns) {
-          if (!(item in child)) {
-            console.log(item);
-            return false;
-          }
-        }
-      }
-    }
-    return true;
-  };
-
-  const checkPage2Cols = () => {
-    for (const item of page2Columns) {
-      if (!(item in formData)) {
-        console.log(item);
-        return false;
-      }
-    }
-    if (formData.supportSystem === true) {
-      for (const item of supportSystemColumns) {
-        if (!(item in formData)) {
-          console.log(item);
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (formRef.current && formRef.current.checkValidity()) {
-      setPageNum(2);
-    } else {
-      toast({
-        title: "Missing Information",
-        description: "Please fill out all required fields before submitting",
-        status: "warning",
-        duration: 9000,
-        isClosable: true,
-      });
-    }
-  };
-
-  const handlePrev = () => {
-    setPageNum(1);
-  };
-
-  const handleReview = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formRef.current && formRef.current.checkValidity()) {
-      setOnReview(true);
+      if (pageNum === 1) {
+        setPageNum(2);
+      } else if (pageNum === 2) {
+        setOnReview(true)
+      }
     } else {
       toast({
         title: "Missing Information",
@@ -225,7 +113,13 @@ export const IntakeStats = () => {
     }
   };
 
-  const handlePrepareSubmit = () => {
+  const handlePrev = () => {
+    setPageNum(1);
+  };
+
+  const handlePrepareSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
     const toastId = "unique-toast";
     if (!toast.isActive(toastId)) {
       toast({
@@ -302,6 +196,18 @@ export const IntakeStats = () => {
       ...prev,
       date: new Date().toISOString(),
     }));
+
+    if (!(formRef.current && formRef.current.checkValidity())) {
+      console.log(formRef)
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all required fields before submitting.",
+        status: "warning",
+        duration: 9000,
+        isClosable: true,
+      });
+      return;
+    }
 
     try {
       await backend.post("/intakeStatsForm", formData);
@@ -428,7 +334,7 @@ export const IntakeStats = () => {
               <Box>
                 <form
                   ref={formRef}
-                  onSubmit={handleReview}
+                  onSubmit={handleNext}
                 >
                   <IntakeStatsPg2
                     formData={formData}
@@ -452,7 +358,7 @@ export const IntakeStats = () => {
                     <Button
                       backgroundColor="#4398cd"
                       color="#ffffff"
-                      onClick={handleReview}
+                      onClick={handleNext}
                     >
                       Review
                     </Button>
@@ -464,140 +370,142 @@ export const IntakeStats = () => {
         </Box>
       ) : (
         <>
-          <Box
-            backgroundColor="#FFFFFF"
-            margin="0 8% 3% 8%"
-            borderRadius="md"
-            maxHeight="85vh"
-            overflow="auto"
+          <form
+            ref={formRef}
+            onSubmit={handlePrepareSubmit}
           >
             <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              pt="6vh"
+              backgroundColor="#FFFFFF"
+              margin="0 8% 3% 8%"
+              borderRadius="md"
+              maxHeight="85vh"
+              overflow="auto"
             >
-              <HStack
-                w="50%"
-                justify="center"
-                align="center"
-                spacing={4}
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                pt="6vh"
               >
-                <Text
-                  fontSize="sm"
-                  whiteSpace="nowrap"
+                <HStack
+                  w="50%"
+                  justify="center"
+                  align="center"
+                  spacing={4}
                 >
-                  Page 1 of 2
-                </Text>
-                <Progress
-                  color="#4398cd"
-                  value={100}
-                  w="100%"
-                  borderRadius="full"
-                />
-                <Progress
-                  color="#4398cd"
-                  value={0}
-                  w="100%"
-                  borderRadius="full"
-                />
-              </HStack>
-            </Box>
-            <Heading
-              marginTop={4}
-              textAlign="center"
-            >
-              Intake Statistical Form
-            </Heading>
-            <Box
-              pt={10}
-              mt={4}
-            >
-              <Box>
+                  <Text
+                    fontSize="sm"
+                    whiteSpace="nowrap"
+                  >
+                    Page 1 of 2
+                  </Text>
+                  <Progress
+                    color="#4398cd"
+                    value={100}
+                    w="100%"
+                    borderRadius="full"
+                  />
+                  <Progress
+                    color="#4398cd"
+                    value={0}
+                    w="100%"
+                    borderRadius="full"
+                  />
+                </HStack>
+              </Box>
+              <Heading
+                marginTop={4}
+                textAlign="center"
+              >
+                Intake Statistical Form
+              </Heading>
+              <Box
+                pt={10}
+                mt={4}
+              >
                 <IntakeStatsPg1
                   formData={formData}
                   setFormData={setFormData}
                 />
               </Box>
             </Box>
-          </Box>
 
-          <Box
-            backgroundColor="#FFFFFF"
-            margin="0 8% 1% 8%"
-            borderRadius="md"
-            maxHeight="85vh"
-            overflow="auto"
-          >
             <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              pt="6vh"
+              backgroundColor="#FFFFFF"
+              margin="0 8% 1% 8%"
+              borderRadius="md"
+              maxHeight="85vh"
+              overflow="auto"
             >
-              <HStack
-                w="50%"
-                justify="center"
-                align="center"
-                spacing={4}
+              <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                pt="6vh"
               >
-                <Text
-                  fontSize="sm"
-                  whiteSpace="nowrap"
+                <HStack
+                  w="50%"
+                  justify="center"
+                  align="center"
+                  spacing={4}
                 >
-                  Page 2 of 2
-                </Text>
-                <Progress
-                  color="#4398cd"
-                  value={100}
-                  w="100%"
-                  borderRadius="full"
-                />
-                <Progress
-                  color="#4398cd"
-                  value={100}
-                  w="100%"
-                  borderRadius="full"
-                />
-              </HStack>
-            </Box>
-            <Heading
-              marginTop={4}
-              textAlign="center"
-            >
-              Intake Statistical Form
-            </Heading>
-            <Box
-              pt={10}
-              mt={4}
-            >
-              <Box>
+                  <Text
+                    fontSize="sm"
+                    whiteSpace="nowrap"
+                  >
+                    Page 2 of 2
+                  </Text>
+                  <Progress
+                    color="#4398cd"
+                    value={100}
+                    w="100%"
+                    borderRadius="full"
+                  />
+                  <Progress
+                    color="#4398cd"
+                    value={100}
+                    w="100%"
+                    borderRadius="full"
+                  />
+                </HStack>
+              </Box>
+              <Heading
+                marginTop={4}
+                textAlign="center"
+              >
+                Intake Statistical Form
+              </Heading>
+              <Box
+                pt={10}
+                mt={4}
+              >
                 <IntakeStatsPg2
                   formData={formData}
                   setFormData={setFormData}
                 />
               </Box>
             </Box>
-          </Box>
-          <Box
-            width="100%"
-            pb="20px"
-            display="flex"
-          >
-            <HStack
-              justifyContent="flex-end"
+
+            <Box
               width="100%"
+              pb="20px"
+              display="flex"
             >
-              <Button
-                backgroundColor="#4398cd"
-                color="#ffffff"
-                mr="5%"
-                onClick={handlePrepareSubmit}
+              <HStack
+                justifyContent="flex-end"
+                width="100%"
               >
-                Submit
-              </Button>
-            </HStack>
-          </Box>
+                <Button
+                  backgroundColor="#4398cd"
+                  color="#ffffff"
+                  mr="5%"
+                  type="submit"
+                >
+                  Submit
+                </Button>
+              </HStack>
+            </Box>
+          </form>
         </>
       )}
     </Box>
