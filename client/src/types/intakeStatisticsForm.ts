@@ -1,4 +1,5 @@
 export type IntakeStatisticsForm = {
+  date: string;
   // Page 1 Fields
   firstName: string;
   lastName: string;

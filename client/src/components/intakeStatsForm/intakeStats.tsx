@@ -87,6 +87,7 @@ const supportSystemColumns: string[] = [
 ];
 
 const initialFormData: IntakeStatisticsForm = {
+  date: new Date(),
   firstName: "",
   lastName: "",
   birthday: "",
@@ -315,7 +316,7 @@ export const IntakeStats = () => {
     }
     setFormData((prev) => ({
       ...prev,
-      date: new Date(),
+      date: new Date().toISOString(),
     }));
 
 
