@@ -59,14 +59,26 @@ export const FormTable = () => {
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
       {
-        id: "rowNumber",
-        header: ({ table }) => {
+        id: "selection",
+        header: ({ table }) => (
+          <Box textAlign="center">
+            <Checkbox
+              isChecked={selectedRowIds.length > 0}
+              isIndeterminate={table.getIsSomeRowsSelected()}
+              onChange={() => handleSelectAllCheckboxClick(table)}
+            />
+          </Box>
+        ),
+        cell: ({ row }) => {
+          const hashedId = row.original.hashedId;
+          const isChecked = selectedRowIds.includes(hashedId);
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={() => handleSelectAllCheckboxClick(table)}
+                isChecked={isChecked}
+                onChange={(e) =>
+                  handleRowSelect(hashedId, e.target.checked)
+                }
               />
             </Box>
           );
@@ -76,9 +88,7 @@ export const FormTable = () => {
       {
         accessorKey: "date",
         header: "Date",
-        cell: ({ getValue }) => {
-          return formatDateString(getValue() as string);
-        },
+        cell: ({ getValue }) => formatDateString(getValue() as string),
       },
       {
         accessorKey: "name",
@@ -91,7 +101,7 @@ export const FormTable = () => {
       {
         accessorKey: "export",
         header: "Export",
-      }
+      },
     ],
     [selectedRowIds]
   );
@@ -162,6 +172,7 @@ export const FormTable = () => {
 
         const initialScreeners: Form[] = await screenerResponse.data.map((form: Form) => ({
           id: form.id,
+          hashedId: form.id,
           date: form.date,
           name: form.name,
           title: "Initial Screeners",
@@ -169,6 +180,7 @@ export const FormTable = () => {
 
         const intakeStatistics: Form[] = await intakeStatsResponse.data.map((form: Form) => ({
           id: form.id,
+          hashedId: form.id,
           date: form.date,
           name: form.firstName + " " + form.lastName,
           title: "Client Tracking Statistics (Intake Statistics)"
@@ -176,6 +188,7 @@ export const FormTable = () => {
 
         const frontDeskStats: Form[] = await frontDeskResponse.data.map((form: Form) => ({
           id: form.id,
+          hashedId: form.id,
           date: form.date,
           name: "",
           title: "Front Desk Monthly Statistics",
@@ -187,6 +200,7 @@ export const FormTable = () => {
           );
           return {
             id: form.id,
+            hashedId: form.id,
             date: form.date,
             name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
             title: "Case Manager Monthly Statistics",
