@@ -26,14 +26,16 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { formatDataWithLabels, getKeyByValue } from "./DataFormatter.tsx";
-import { FormItem } from "./formsTable";
+import type { Form } from "../../types/form";
+import { formatDateString } from "../../utils/dateUtils";
+
 
 export const FormPreview = ({
   formItem,
   isOpen,
   onClose,
 }: {
-  formItem: FormItem;
+  formItem: Form;
   isOpen: boolean;
   onClose: () => void;
 }) => {
@@ -102,7 +104,6 @@ export const FormPreview = ({
       }}
       size="xl"
     >
-      <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader borderBottomWidth="1px">
           <HStack spacing={27}>
@@ -124,7 +125,7 @@ export const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItem.name} - {formItem.title} {formItem.date}
+              {formItem.name} - {formItem.title} {formatDateString(formItem.date)}
             </Text>
           </HStack>
         </DrawerHeader>
@@ -168,11 +169,13 @@ export const FormPreview = ({
             ) : (
               <HStack
                 spacing={3}
-                justify="flex-end"
-                mt={6}
+                w="100%"
+                justifyContent="flex-end"
               >
                 <Button
-                  variant="ghost"
+                  variant="solid"
+                  colorScheme="gray"
+                  size="lg"
                   onClick={() => {
                     setNewFormattedFormData(formattedFormData);
                     setIsEditing(false);
@@ -182,6 +185,7 @@ export const FormPreview = ({
                 </Button>
                 <Button
                   colorScheme="blue"
+                  size="lg"
                   onClick={() => {
                     setFormattedFormData(newFormattedFormData);
                     handleSaveForm();

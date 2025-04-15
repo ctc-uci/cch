@@ -414,7 +414,7 @@ export const FormTable = () => {
                       <Td
                         key={cell.id}
                         onClick={(e) => {
-                          if (cell.column.id === "rowNumber")
+                          if (cell.column.id === "rowNumber" || cell.column.id === "export")
                             e.stopPropagation();
                         }}
                       >
@@ -466,7 +466,6 @@ export const FormTable = () => {
       >
         Form History
       </Text>
-      {/* <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text> */}
       <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
 
       <Tabs
