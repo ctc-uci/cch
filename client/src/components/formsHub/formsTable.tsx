@@ -3,11 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Button,
   Checkbox,
-  Flex,
   HStack,
-  IconButton,
   Tab,
   Table,
   TableContainer,
@@ -29,7 +26,6 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  RowExpanding,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
@@ -50,7 +46,7 @@ import { FormPreview } from "./FormPreview";
 export const FormTable = () => {
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  const [clickedFormItem, setClickedFormItem] = useState<Form>();
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -446,7 +442,7 @@ export const FormTable = () => {
             </Table>
           </Box>
         </TableContainer>
-        {clickedFormItem !== undefined && (
+        {clickedFormItem && (
           <FormPreview
             formItem={clickedFormItem}
             isOpen={isOpen}
@@ -475,7 +471,7 @@ export const FormTable = () => {
         <TabList whiteSpace="nowrap">
           <Tab>All Forms</Tab>
           <Tab>Initial Screeners</Tab>
-          <Tab>Intake Statistics</Tab>
+          <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Front Desk Statistics</Tab>
           <Tab>Case Manager Statistics</Tab>
         </TabList>

@@ -12,7 +12,6 @@ export const FormsHub = ({admin}: FormsHubProps) => {
 
     <VStack
       overflowX="hidden"
-      w="100vw"
       spacing={8}
       align="stretch"
     >
