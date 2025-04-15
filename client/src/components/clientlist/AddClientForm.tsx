@@ -97,8 +97,6 @@ export const AddClientForm = () => {
           unit_id: parseInt(formData.unit_id || "0",10),  
           first_name: formData.first_name,
           last_name: formData.last_name,
-          // site: formData.site,
-          // case_managers: formData.case_managers,
           grant: formData.grant,
           status: formData.status,
           date_of_birth: formData.date_of_birth,
@@ -124,7 +122,7 @@ export const AddClientForm = () => {
           homelessness_length: parseInt(formData.homelessness_length || "0", 10),
           chronically_homeless: formData.chronically_homeless === "Yes" ? true : false ,
           attending_school_upon_entry: formData.attending_school_upon_entry === "Yes" ? true : false ,
-          employement_gained: formData.employment_gained,
+          employment_gained: formData.employment_gained,
           reason_for_leaving: formData.reason_for_leaving,
           specific_reason_for_leaving: formData.specific_reason_for_leaving,
           specific_destination: formData.specific_destination,
@@ -135,7 +133,6 @@ export const AddClientForm = () => {
           destination_city: formData.destination_city,
           comments: formData.comments
       };
-        console.log(clientData)
         await backend.post("/clients", clientData);
         toast({
           title: "Form submitted",
@@ -145,8 +142,8 @@ export const AddClientForm = () => {
       } catch (e) {
         console.log(e)
         toast({
-          title: "An error occurred",
-          description: `Exit survey response was not created: ${e.message}`,
+          title: "Client Not Added",
+          description: `An error occurred and the client was not added.`,
           status: "error",
         });
       }
