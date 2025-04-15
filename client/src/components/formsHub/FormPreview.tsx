@@ -131,7 +131,7 @@ export const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItem.name} - {formItem.title} {formatDateString(formItem.date)}
+              {formItem.name && `${formItem.name} - `}{formItem.title} {formatDateString(formItem.date)}
             </Text>
           </HStack>
         </DrawerHeader>
