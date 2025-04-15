@@ -13,6 +13,7 @@ enum Donor {
   COSTCO = "costco",
 }
 interface Donation {
+  monthYear: string;
   id: number;
   donor: Donor;
   date: string;
@@ -20,6 +21,8 @@ interface Donation {
   weight: number;
   value: number;
   total: number;
+  totalWeight: number;
+  totalValue: number;
 }
 
 interface DonationForm {

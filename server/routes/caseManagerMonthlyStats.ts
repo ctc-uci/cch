@@ -36,59 +36,80 @@ caseManagerMonthlyStatsRouter.get("/", async (req, res) => {
   }
 });
 
+caseManagerMonthlyStatsRouter.get("/id/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const data = await db.query('SELECT * FROM cm_monthly_stats where id = $1', [id]);
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
-  console.log(req.body);
   try {
     const {
       date,
       cm_id,
-      babies_born,
-      enrolled_in_school,
-      earned_degree,
-      earned_drivers_license,
-      reunified_with_children,
-      womens_birthdays,
-      childrens_birthdays,
-      birthday_gift_card_values,
-      food_card_values,
+      total_number_of_contacts,
+      women_birthdays,
+      kid_birthdays,
+      birthday_cards,
+      birthday_cards_value,
+      food_cards,
+      food_cards_value,
       bus_passes,
+      bus_passes_value,
+      gas_cards,
       gas_cards_value,
-      phone_contacts,
-      inperson_contacts,
-      email_contacts,
-      interviews_scheduled,
-      interviews_conducted,
-      positive_tests,
-      no_call_no_shows,
-      other,
+      women_healthcare_referrals,
+      kid_healthcare_referrals,
+      women_counseling_referrals,
+      kid_counseling_referrals,
+      babies_born,
+      women_degrees_earned,
+      women_enrolled_in_school,
+      women_licenses_earned,
+      reunifications,
+      number_of_interviews_conducted,
+      number_of_positive_tests,
+      number_of_ncns,
+      number_of_others,
+      number_of_interviews_accpeted,
     } = req.body;
-
     const query = `
       INSERT INTO cm_monthly_stats (
         date,
         cm_id,
-        babies_born,
-        enrolled_in_school,
-        earned_degree,
-        earned_drivers_license,
-        reunified_with_children,
-        womens_birthdays,
-        childrens_birthdays,
-        birthday_gift_card_values,
-        food_card_values,
+        total_number_of_contacts,
+        women_birthdays,
+        kid_birthdays,
+        birthday_cards,
+        birthday_cards_value,
+        food_cards,
+        food_cards_value,
         bus_passes,
+        bus_passes_value,
+        gas_cards,
         gas_cards_value,
-        phone_contacts,
-        inperson_contacts,
-        email_contacts,
-        interviews_scheduled,
-        interviews_conducted,
-        positive_tests,
-        no_call_no_shows,
-        other
+        women_healthcare_referrals,
+        kid_healthcare_referrals,
+        women_counseling_referrals,
+        kid_counseling_referrals,
+        babies_born,
+        women_degrees_earned,
+        women_enrolled_in_school,
+        women_licenses_earned,
+        reunifications,
+        number_of_interviews_conducted,
+        number_of_positive_tests,
+        number_of_ncns,
+        number_of_others,
+        number_of_interviews_accpeted
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
       )
       RETURNING id;
     `;
@@ -96,25 +117,31 @@ caseManagerMonthlyStatsRouter.post("/", async (req, res) => {
     const data = await db.query(query, [
       date,
       cm_id,
-      babies_born,
-      enrolled_in_school,
-      earned_degree,
-      earned_drivers_license,
-      reunified_with_children,
-      womens_birthdays,
-      childrens_birthdays,
-      birthday_gift_card_values,
-      food_card_values,
+      total_number_of_contacts,
+      women_birthdays,
+      kid_birthdays,
+      birthday_cards,
+      birthday_cards_value,
+      food_cards,
+      food_cards_value,
       bus_passes,
+      bus_passes_value,
+      gas_cards,
       gas_cards_value,
-      phone_contacts,
-      inperson_contacts,
-      email_contacts,
-      interviews_scheduled,
-      interviews_conducted,
-      positive_tests,
-      no_call_no_shows,
-      other,
+      women_healthcare_referrals,
+      kid_healthcare_referrals,
+      women_counseling_referrals,
+      kid_counseling_referrals,
+      babies_born,
+      women_degrees_earned,
+      women_enrolled_in_school,
+      women_licenses_earned,
+      reunifications,
+      number_of_interviews_conducted,
+      number_of_positive_tests,
+      number_of_ncns,
+      number_of_others,
+      number_of_interviews_accpeted,
     ]);
 
     res.status(200).json({ id: data[0].id });

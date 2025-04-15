@@ -26,6 +26,7 @@ import { calculateMonthlyStats } from "../routes/calculateMonthlyStats";
 import { formsCombinedRouter } from "../routes/formsCombined.js";
 import { requestRouter } from "../routes/request.js";
 import { volunteersRouter } from "../routes/volunteers";
+import { lastUpdatedRouter } from "../routes/lastUpdated";
 
 dotenv.config();
 
@@ -75,7 +76,8 @@ app.use("/intakeStatsForm", intakeStatsFormRouter);
 app.use("/calculateMonthlyStats", calculateMonthlyStats);
 app.use("/formsCombined", formsCombinedRouter);
 app.use("/request", requestRouter);
-app.use("/volunteers", volunteersRouter)
+app.use("/volunteers", volunteersRouter);
+app.use("/lastUpdated", lastUpdatedRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);

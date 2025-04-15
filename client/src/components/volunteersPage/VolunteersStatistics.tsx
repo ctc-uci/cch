@@ -12,12 +12,19 @@ import { MdOutlineAccessAlarm, MdOutlineEmojiPeople } from "react-icons/md";
 interface VolunteersStatisticsProps {
   totalVolunteers: number;
   totalHours: number;
+  lastUpdated: string;
 }
+
+
 
 const VolunteersStatistics = ({
   totalVolunteers,
   totalHours,
+  lastUpdated,
 }: VolunteersStatisticsProps) => {
+
+
+
   return (
     <VStack
       gap="24px"
@@ -34,7 +41,7 @@ const VolunteersStatistics = ({
         >
           Volunteer Tracking
         </Text>
-        <Text fontSize="16px">Last Updated: MM/DD/YYYY HH:MM XX</Text>
+        <Text fontSize="16px">Last Updated: {lastUpdated}</Text>
       </VStack>
       <Stat
         border="1px solid #E2E8F0"

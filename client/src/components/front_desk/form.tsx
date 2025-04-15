@@ -1,65 +1,57 @@
-import { useState, useEffect } from "react";
-import {FrontDeskMonthlyStats} from "./monthlyStats";
+import { useState } from "react";
 import {
   Box,
   Button,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Text,
-  useDisclosure,
 } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 
-//This will be used to refresh the screen when pressing submit
-interface MonthlyStats {
-  date: string;
-  id: number;
-  totalOfficeVisits: number;
-  totalCalls: number;
-  totalUnduplicatedCalles: number;
-  totalVisitsToPantryAndDonationsRoom: number;
-  totalNumberOfPeopleServedInPantry: number;
-  totalVisitsToPlacentiaPantry: number;
-  totalNumberOfPeopleServedInPlacentiaPantry: number;
-}
 interface FormFrontDeskProps {
   onFormSubmitSuccess: () => void;
 } 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const { backend } = useBackendContext();
-  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    id: "",
     date: "",
     total_office_visits: "",
     total_calls: "",
-    total_unduplicated_calles: "",
-    total_visits_to_pantry_and_donations_room: "",
-    total_number_of_people_served_in_pantry: "",
-    total_visits_to_placentia_pantry: "",
-    total_number_of_people_served_in_placentia_pantry: "",
+    total_unduplicated_calls: "",
+    total_visits_hb_pantry: "",
+    total_visits_hb_donations_room: "",
+    total_served_hb_donations_room: "",
+    total_served_hb_pantry: "",
+    total_visits_placentia_neighborhood: "",
+    total_visits_placentia_pantry: "",
+    total_served_placentia_neighborhood: "",
+    total_served_placentia_pantry: "",
   });
+  const navigate = useNavigate();
 
-  const fields = [
-    { name: "id", label: "ID"},
-    { name: "date", label: "Date" },
-    { name: "total_office_visits", label: "Total Office Visits" },
-    { name: "total_calls", label: "Total # of Calls" },
-    { name: "total_unduplicated_calles", label: "Total # of unduplicated calls" },
-    { name: "total_visits_to_pantry_and_donations_room", label: "Total # of visits to the HB pantry/donations room" },
-    { name: "total_number_of_people_served_in_pantry", label: "Total # of people served in the HB pantry/donations room" },
-    { name: "total_visits_to_placentia_pantry", label: "Total # of visits to the Placentia pantry/donations room" },
-    { name: "total_number_of_people_served_in_placentia_pantry", label: "Total # of people served in the Placentia pantry/donations" },
-  ];
+
+  const generalFields = [
+    { name: "date", label: "Date", subtitle: "" },
+    { name: "total_office_visits", label: "Total Office Visits", subtitle: ""},
+    { name: "total_calls", label: "Total # of Calls", subtitle: "(including children in custody)" },
+    { name: "total_unduplicated_calls", label: "Total # of unduplicated calls", subtitle: "(including children in custody)" },
+  ]
+
+  const hbFields = [
+    { name: "total_visits_hb_pantry", label: "HB pantry room (total # of visits)" },
+    { name: "total_visits_hb_donations_room", label: "HB donation room (total # of visits)" },
+    { name: "total_served_hb_pantry", label: "HB pantry room (total # of people served)" },
+    { name: "total_served_hb_donations_room", label: "HB donation room (total # of people served)" },
+  ]
+
+  const placentiaFields = [
+    { name: "total_visits_placentia_neighborhood", label: "Placentia neighborhood (total # of visits)" },
+    { name: "total_visits_placentia_pantry", label: "Placentia pantry room (total # of visits)" },
+    { name: "total_served_placentia_neighborhood", label: "Placentia neighborhood (total # of people served)" },
+    { name: "total_served_placentia_pantry", label: "Placentia pantry room (total # of people served)" },
+  ]
   
 
   const handleChange = (event) => {
@@ -72,81 +64,130 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
     e.preventDefault();
     try {
       const monthlyStatData = {
-          id: formData.id,
           date: formData.date,
           total_office_visits: parseInt(formData.total_office_visits || "0", 10),
           total_calls: parseInt(formData.total_calls || "0", 10),
-          total_unduplicated_calles: parseInt(formData.total_unduplicated_calles || "0", 10),
-          total_visits_to_pantry_and_donations_room: parseInt(formData.total_visits_to_pantry_and_donations_room || "0", 10),
-          total_number_of_people_served_in_pantry: parseInt(formData.total_number_of_people_served_in_pantry || "0", 10),
-          total_visits_to_placentia_pantry: parseInt(formData.total_visits_to_placentia_pantry || "0", 10),
-          total_number_of_people_served_in_placentia_pantry: parseInt(formData.total_number_of_people_served_in_placentia_pantry || "0", 10),
+          //This one isn't in the figma but its in the schema, idk what its supposed to be, just placeholder for now
+          number_of_people: 0,
+          total_unduplicated_calls: parseInt(formData.total_unduplicated_calls || "0", 10),
+          total_visits_hb_pantry: parseInt(formData.total_visits_hb_pantry || "0", 10),
+          total_visits_hb_donations_room: parseInt(formData.total_visits_hb_donations_room || "0", 10),
+          total_served_hb_pantry: parseInt(formData.total_served_hb_pantry || "0", 10),
+          total_served_hb_donations_room: parseInt(formData.total_served_hb_donations_room || "0", 10),
+          total_visits_placentia_neighborhood: parseInt(formData.total_visits_placentia_neighborhood || "0", 10),
+          total_visits_placentia_pantry: parseInt(formData.total_visits_placentia_pantry || "0", 10),
+          total_served_placentia_neighborhood: parseInt(formData.total_served_placentia_neighborhood || "0", 10),
+          total_served_placentia_pantry: parseInt(formData.total_served_placentia_pantry || "0", 10),
+          
       };
-
-      console.log(monthlyStatData);
 
       await backend.post("/frontDesk", monthlyStatData);
       setFormData({
-          id: "",
-          date: "",
-          total_office_visits: "",
-          total_calls: "",
-          total_unduplicated_calles: "",
-          total_visits_to_pantry_and_donations_room: "",
-          total_number_of_people_served_in_pantry: "",
-          total_visits_to_placentia_pantry: "",
-          total_number_of_people_served_in_placentia_pantry: "",
+        date: "",
+        total_office_visits: "",
+        total_calls: "",
+        total_unduplicated_calls: "",
+        total_visits_hb_pantry: "",
+        total_visits_hb_donations_room: "",
+        total_served_hb_donations_room: "",
+        total_served_hb_pantry: "",
+        total_visits_placentia_neighborhood: "",
+        total_visits_placentia_pantry: "",
+        total_served_placentia_neighborhood: "",
+        total_served_placentia_pantry: "",
       });
       setError(null);
-      onFormSubmitSuccess();
+      // onFormSubmitSuccess();
+      navigate("/forms-hub")
     } catch (error) {
       console.error("Error submitting form:", error);
       setError("Failed to submit form. Please try again.");
-    } finally {
-      onClose();
     }
   };
 
   return (
     <>
-      <Button onClick={onOpen}>Open Modal</Button>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent maxW='700px'>
-          <ModalHeader>Front Desk Form</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {fields.map(({ name, label }) => (
-              <Box 
+        <Box maxW="700px" marginX={"20%"}>
+            <Text justifySelf="center" fontSize={30} paddingBottom={"100px"}>
+                <b>Front Desk Monthly Statistics Form</b>
+            </Text>
+            {generalFields.map(({ name, label }) => (
+                <Box 
                 key={name}
                 display="flex"
                 flexDirection="row"
                 gap="20px"
                 p={2}
-              >
+                >
                 <Text width="50%">{label}</Text>
                 <Input
-                  type = {name === "date" ? "date" : "number"}
-                  width='100%'
-                  height="30px"
-                  name={name}
-                  value={formData[name]}
-                  onChange={handleChange}
+                    type = {name === "date" ? "date" : "number"}
+                    width='50%'
+                    height="30px"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    placeholder="Type Here"
                 />
-              </Box>
+                </Box>
             ))}
-          </ModalBody>
+            <Text fontWeight={"bold"} p={2}>
+                Huntington Beach (HB)
+            </Text>
+            {hbFields.map(({ name, label }) => (
+                <Box 
+                key={name}
+                display="flex"
+                flexDirection="row"
+                gap="20px"
+                p={2}
+                >
+                <Text width="50%">{label}</Text>
+                <Input
+                    type = {name === "date" ? "date" : "number"}
+                    width='50%'
+                    height="30px"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    placeholder="Type Here"
+                />
+                </Box>
+            ))}
+            <Text fontWeight={"bold"} p={2}>
+                Placentia
+            </Text>
+            {placentiaFields.map(({ name, label }) => (
+                <Box 
+                key={name}
+                display="flex"
+                flexDirection="row"
+                gap="20px"
+                p={2}
+                >
+                <Text width="50%">{label}</Text>
+                <Input
+                    type = {name === "date" ? "date" : "number"}
+                    width='50%'
+                    height="30px"
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleChange}
+                    placeholder="Type Here"
+                />
+                </Box>
+            ))}
+            <Box justifySelf="right">
+                <Button colorScheme="gray" mr={3} onClick={() => navigate("/forms-hub")}>
+                    Cancel
+                </Button>
+                <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+                    Submit
+                </Button>
+            </Box>
+        </Box>
 
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
-              Submit
-            </Button>
-            <Button colorScheme="red" mr={3} onClick={onClose}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+
     </>
   );
 }
