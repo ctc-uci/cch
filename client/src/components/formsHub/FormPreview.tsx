@@ -13,18 +13,20 @@ import {
   IconButton,
   Input,
   Table,
+  TableContainer,
   Tbody,
   Td,
   Text,
   Th,
   Thead,
   Tr,
+  VStack,
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { formatDataWithLabels, getKeyByValue } from "./DataFormatter.tsx";
 import { FormItem } from "./formsTable";
-import {downloadCSV} from "../../utils/downloadCSV.ts";
 
 export const FormPreview = ({
   formItem,
@@ -81,14 +83,14 @@ export const FormPreview = ({
 
   const handleSaveForm = async () => {
     // do the put requests and error handling
-  }
+  };
 
   const isDate = (value: any) => {
     return (
       Object.prototype.toString.call(value) === "[object Date]" ||
       (typeof value === "string" && !isNaN(Date.parse(value)))
     );
-  }
+  };
 
   return (
     <Drawer
@@ -103,127 +105,150 @@ export const FormPreview = ({
       <DrawerOverlay />
       <DrawerContent>
         <DrawerHeader borderBottomWidth="1px">
-          <HStack spacing={2}>
-            <IconButton
-              as={ChevronRightIcon}
-              color="blue.500"
-              aria-label="Close drawer"
-              onClick={() => {
-                onClose();
-                setIsEditing(false);
-              }}
-              variant="ghost"
-              size="sm"
-            />
-            <Text fontWeight="bold">Form Preview</Text>
-            <Text color="gray.600">
+          <HStack spacing={27}>
+            <HStack spacing={2}>
+              <IconButton
+                as={ChevronRightIcon}
+                color="blue.500"
+                aria-label="Close drawer"
+                onClick={() => {
+                  onClose();
+                  setIsEditing(false);
+                }}
+                variant="ghost"
+                size="sm"
+              />
+              <Text fontSize="md">Form Preview</Text>
+            </HStack>
+            <Text
+              color="gray.600"
+              fontSize="md"
+            >
               {formItem.name} - {formItem.title} {formItem.date}
             </Text>
           </HStack>
         </DrawerHeader>
 
         <DrawerBody>
-          {!isEditing ? (
-            <HStack>
-              <Button
-                colorScheme="blue"
-                onClick={() => setIsEditing(true)}
+          <VStack
+            marginTop="12px"
+            spacing="24px"
+          >
+            {!isEditing ? (
+              <HStack
+                width="100%"
+                justifyContent="space-between"
               >
-                Edit Form
-              </Button>
-
-              <Button
-                colorScheme="blue"
-                float="right"
-                onClick={() => {
-                  const headers = ["Questions", "Answer"];
-                  const data = Object.entries(newFormattedFormData).map(([key, value]) => ({
-                    Questions: key,
-                    Answer: value
-                  }));
-                  downloadCSV(headers, data, "form.csv");
-                }}
+                <Button
+                  colorScheme="blue"
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit Form
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  float="right"
+                  size="lg"
+                  onClick={() => {
+                    const headers = ["Questions", "Answer"];
+                    const data = Object.entries(newFormattedFormData).map(
+                      ([key, value]) => ({
+                        Questions: key,
+                        Answer: value,
+                      })
+                    );
+                    downloadCSV(headers, data, "form.csv");
+                  }}
+                >
+                  Export Form
+                </Button>
+              </HStack>
+            ) : (
+              <HStack
+                spacing={3}
+                justify="flex-end"
+                mt={6}
               >
-                Export Form
-              </Button>
-            </HStack>
-          ) : (
-            <HStack
-              spacing={3}
-              justify="flex-end"
-              mt={6}
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setNewFormattedFormData(formattedFormData);
+                    setIsEditing(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  colorScheme="blue"
+                  onClick={() => {
+                    setFormattedFormData(newFormattedFormData);
+                    handleSaveForm();
+                    setIsEditing(false);
+                  }}
+                >
+                  Save
+                </Button>
+              </HStack>
+            )}
+            <TableContainer
+              w="100%"
+              border="1px"
+              borderColor="gray.200"
+              borderRadius="12px"
             >
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setNewFormattedFormData(formattedFormData);
-                  setIsEditing(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                colorScheme="blue"
-                onClick={() => {
-                  setFormattedFormData(newFormattedFormData);
-                  handleSaveForm();
-                  setIsEditing(false);
-                }}
-              >
-                Save
-              </Button>
-            </HStack>
-          )}
-
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>QUESTION</Th>
-                <Th>ANSWER</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {Object.keys(newFormattedFormData).length > 0 &&
-                Object.entries(newFormattedFormData).map(([key, value]) => (
-                  <Tr key={key}>
-                    <Td>{key}</Td>
-                    <Td>
-                      {!isEditing ? (
-                        <>{value}</>
-                      ) : (
-                        <Input
-                          value={value ?? ""}
-                          onChange={(event) => {
-                            const originalValue = formattedFormData[key];
-
-                            // event.target.value is a string
-                            // it needs to be casted to match the type in the actual form
-                            let newValue: any = event.target.value;
-
-                            if (typeof originalValue === "number") {
-                              newValue = Number(newValue);
-                            } else if (typeof originalValue === "boolean") {
-                              newValue = newValue.toLowerCase() === "true";
-                            } else if (isDate(originalValue)) {
-                              const parsedDate = new Date(newValue);
-
-                              if (!isNaN(parsedDate.getTime())) {
-                                newValue = parsedDate.toISOString();
-                              }
-                            }
-
-                            setNewFormattedFormData((prev) => ({
-                              ...prev,
-                              [key]: newValue,
-                            }));
-                          }}
-                        ></Input>
-                      )}
-                    </Td>
+              <Table variant="simple">
+                <Thead>
+                  <Tr>
+                  <Th fontSize="md" color="gray.700">Question</Th>
+                  <Th fontSize="md" color="gray.700">Answer</Th>
                   </Tr>
-                ))}
-            </Tbody>
-          </Table>
+                </Thead>
+                <Tbody>
+                  {Object.keys(newFormattedFormData).length > 0 &&
+                    Object.entries(newFormattedFormData).map(([key, value]) => (
+                      <Tr key={key}>
+                        <Td fontSize="medium">{key}</Td>
+                        <Td fontSize="medium">
+                          {!isEditing ? (
+                            <>{value}</>
+                          ) : (
+                            <Input
+                              value={value ?? ""}
+                              onChange={(event) => {
+                                const originalValue = formattedFormData[key];
+
+                                // event.target.value is a string
+                                // it needs to be casted to match the type in the actual form
+                                let newValue: any = event.target.value;
+
+                                if (typeof originalValue === "number") {
+                                  newValue = Number(newValue);
+                                } else if (typeof originalValue === "boolean") {
+                                  newValue = newValue.toLowerCase() === "true";
+                                } else if (isDate(originalValue)) {
+                                  const parsedDate = new Date(newValue);
+
+                                  if (!isNaN(parsedDate.getTime())) {
+                                    newValue = parsedDate.toISOString();
+                                  }
+                                }
+
+                                setNewFormattedFormData((prev) => ({
+                                  ...prev,
+                                  [key]: newValue,
+                                }));
+                              }}
+                            ></Input>
+                          )}
+                        </Td>
+                      </Tr>
+                    ))}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          </VStack>
         </DrawerBody>
       </DrawerContent>
     </Drawer>
