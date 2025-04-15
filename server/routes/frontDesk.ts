@@ -48,12 +48,10 @@ frontDeskRouter.get("/:date", async (req, res) => {
   }
 });
 
-
-
 frontDeskRouter.get('/stats/:year', async (req, res) => {
   try {
-    const { year } = req.params;
-    const data = await db.query(`
+      const { year } = req.params;
+      const data = await db.query(`
           SELECT
               DATE_TRUNC('month', date) AS month,
               DATE_TRUNC('year', date) AS year,
@@ -72,10 +70,10 @@ frontDeskRouter.get('/stats/:year', async (req, res) => {
           WHERE EXTRACT(YEAR FROM date) = $1
           GROUP BY DATE_TRUNC('month', date), DATE_TRUNC('year', date)
           ORDER BY month;
-      `, [year]);
-    res.status(200).json(keysToCamel(data));
+      `,[year]);
+      res.status(200).json(keysToCamel(data));
   } catch (err) {
-    res.status(500).send(err.message);
+      res.status(500).send(err.message);
   }
 });
 

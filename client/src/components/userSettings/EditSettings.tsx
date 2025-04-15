@@ -675,7 +675,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
               <Button
                 ref={cancelRef}
                 onClick={() => {
-                  onClose();
+                  onClose(); 
                   setSubmitting(false);
                 }}
               >
