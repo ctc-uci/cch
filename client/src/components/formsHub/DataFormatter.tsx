@@ -122,6 +122,7 @@ export const formatDataWithLabels = (
 
     const readableKey = section.labelMap[key] ?? key;
     formatted[readableKey] = value;
+    console.log("set ", readableKey, "to ", value)
   }
 
   return formatted;

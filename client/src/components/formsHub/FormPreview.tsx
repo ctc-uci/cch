@@ -48,6 +48,7 @@ export const FormPreview = ({
   useEffect(() => {
     const getData = async () => {
       let endpoint = "";
+      console.log(formItem)
 
       switch (formItem.title) {
         case "Initial Screeners":
@@ -60,7 +61,7 @@ export const FormPreview = ({
           endpoint = `/frontDesk/${formItem.id}`;
           break;
         case "Case Manager Monthly Statistics":
-          endpoint = `/caseManagers/${formItem.id}`;
+          endpoint = `/caseManagerMonthlyStats/${formItem.id}`;
           break;
         default:
           console.error("Unknown form title:", formItem.title);
@@ -71,7 +72,9 @@ export const FormPreview = ({
       try {
         setIsLoading(true);
         const response = await backend.get(endpoint);
-        const data = formatDataWithLabels(response.data[0], formItem.title);
+        console.log(response)
+        const data = await formatDataWithLabels(response.data[0], formItem.title);
+        console.log(data)
 
         setFormData(response.data[0]);
         setFormattedFormData(data);
@@ -128,8 +131,7 @@ export const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItem.name} - {formItem.title}{" "}
-              {formatDateString(formItem.date)}
+              {formItem.name} - {formItem.title} {formatDateString(formItem.date)}
             </Text>
           </HStack>
         </DrawerHeader>

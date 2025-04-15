@@ -65,7 +65,7 @@ export default function PrintForm({ formType, formId }) {
           );
           break;
         case "Case Manager Monthly Statistics":
-          response = await backend.get(`/caseManagerMonthlyStats/id/${formId}`);
+          response = await backend.get(`/caseManagerMonthlyStats/${formId}`);
           data = [response.data];
           documentComponent = (
             <CaseManagerMonthlyStatsForm
