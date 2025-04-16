@@ -295,8 +295,12 @@ export const FormTable = () => {
   const renderTable = (
     tableInstance: ReturnType<typeof useReactTable<Form>>,
     data: Form[]
-  ) =>
-    data.length > 0 ? (
+  ) => {
+    if (loading) {
+      return <LoadingWheel />;
+    }
+  
+    return data.length > 0 ? (
       <Box
         borderWidth="1px"
         borderRadius="12px"
@@ -304,8 +308,6 @@ export const FormTable = () => {
         borderColor="#E2E8F0"
         padding="12px"
       >
-        {loading ?
-          <LoadingWheel/> :
           <TableContainer>
             <HStack
               width="100%"
@@ -421,12 +423,11 @@ export const FormTable = () => {
             </Table>
             </Box>
           </TableContainer>
-        }
-        
       </Box>
     ) : (
       <Text>No data found.</Text>
     );
+  };
 
   return (
     <Box p="4">
