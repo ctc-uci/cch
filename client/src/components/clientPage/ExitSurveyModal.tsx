@@ -379,7 +379,6 @@ export default function ExitSurveyModal({
               </Box>
             )}
           </Box>
-
           <TableContainer
             border="2px solid"
             borderColor="#E2E8F0"
