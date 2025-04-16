@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { Box, Button, Textarea } from "@chakra-ui/react";
+import { Box, Textarea } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../utils/snakeCase";
@@ -125,12 +125,10 @@ function Comments({ clientId }: ClientProps) {
   const handleSaveChanges = async () => {
     try {
       if (!client) {
-        console.error("Client data is undefined!");
         return;
       }
       const clientData = toSnakeCase(client);
       await backend.put(`/clients/${client.id}`, clientData);
-      console.log("Client updated successfully.");
     } catch (error: any) {
       console.error("Error updating client information:", error.message);
     }
@@ -151,13 +149,6 @@ function Comments({ clientId }: ClientProps) {
         placeholder="Type Here"
         onChange={(e) => setClient({ ...client, comments: e.target.value })}
       />
-      {/* <Button
-        colorScheme="green"
-        mt={4}
-        onClick={handleSaveChanges}
-      >
-        Save
-      </Button> */}
     </Box>
   );
 }

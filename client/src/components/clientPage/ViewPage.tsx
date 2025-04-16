@@ -21,6 +21,7 @@ import {
   Th,
   Thead,
   Tr,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
@@ -29,7 +30,6 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../utils/snakeCase";
 import ChildrenCards from "./childrenCards";
 import Comments from "./comments";
-import CSVButton from "./CSVButton";
 import Forms from "./forms";
 import image from "./pfp.jpeg";
 import { Client, FormItems } from "./types";
@@ -97,7 +97,7 @@ export const ViewPage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const cellHeight = "40px";
-
+  const toast = useToast();
 
   const renderField = (
     fieldName: keyof Client,
@@ -125,14 +125,23 @@ export const ViewPage = () => {
             borderColor="#3182CE"
             value={edits[fieldName] !== undefined ? edits[fieldName] : displayValue}
             onChange={(e) => {
-              let value: any = e.target.value;
+              let newValue = e.target.value;
+
               if (options?.isBoolean) {
-                value = value.toLowerCase() === "yes";
+                newValue = newValue.toLowerCase() === "yes";
+                setEdits({ ...edits, [fieldName]: newValue });
+                return;
               }
+
               if (options?.isNumeric) {
-                value = parseInt(value);
+                if (newValue !== "" && !/^\d+$/.test(newValue)) {
+                  return;
+                }
+                setEdits({ ...edits, [fieldName]: newValue });
+                return;
               }
-              setEdits({ ...edits, [fieldName]: value });
+
+              setEdits({ ...edits, [fieldName]: newValue });
             }}
           />
         </Box>
@@ -151,7 +160,27 @@ export const ViewPage = () => {
     );
   };
 
+  function NoEditToast() {
+    toast({
+      title: "Did Not Save Changes",
+      description: "There was an error while saving changes",
+      status: "warning",
+      duration: 800,
+      isClosable: true,
+      position: "bottom-right"
+    });
+  };
 
+  function SaveEditToast() {
+    toast({
+      title: "Successfully Saved Changes",
+      description: "Initial Screen Comment Form.",
+      status: "success",
+      duration: 800,
+      isClosable: true,
+      position: "bottom-right"
+    })
+  }
 
   useEffect(() => {
     const fetchChildren = async (id: number) => {
@@ -210,7 +239,6 @@ export const ViewPage = () => {
   const handleSaveChanges = async () => {
     try {
       if (!client) {
-        console.error("Client data is undefined!");
         return;
       }
       const updatedClient = { ...client, ...edits };
@@ -218,8 +246,16 @@ export const ViewPage = () => {
       await backend.put(`/clients/${client.id}`, clientDataSnakeCase);
       setClient(updatedClient);
       setEdits({});
+      SaveEditToast();
       setIsEditing(false);
     } catch (error: any) {
+      toast({
+        title: "Did Not Save Changes",
+        description: "There was an error while saving changes",
+        status: "warning",
+        duration: 800,
+        isClosable: true,
+      });
       console.error("Error updating client information:", error.message);
     }
   };
@@ -296,7 +332,12 @@ export const ViewPage = () => {
             <Spacer />
             <Stack direction="row">
               <Button
-                onClick={toggleEditForm}
+                onClick={() => {
+                  if (isEditing) {
+                    NoEditToast();
+                  }
+                  toggleEditForm();
+                }}
                 bg={isEditing ? "#EDF2F7" : "#3182CE"}
                 color={isEditing ? "black" : "white"}
               >
@@ -304,8 +345,8 @@ export const ViewPage = () => {
               </Button>
               {isEditing && (
                 <Box>
-                  <Button bg="#3182CE" color="white" onClick={handleSaveChanges}>
-                    Save Changes
+                  <Button bg="#3182CE" color="white" onClick={handleSaveChanges} isDisabled={Object.keys(edits).length === 0}>
+                    Save
                   </Button>
                 </Box>
               )}
@@ -351,12 +392,26 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Age</Td>
-                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("age", client.age, { isNumeric: true })}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField( "age", client.age, { isNumeric: true })}
+                  </Td>
                 </Tr>
                 <Tr>
-                  <Td>Date of Birth</Td>
-                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("dateOfBirth", client.dateOfBirth)}</Td>
-                </Tr>
+                {/* probably need to check this updates backend correctly and maintains date form it */}
+                <Td>Date of Birth</Td>
+                <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                  {renderField(
+                    "dateOfBirth",
+                    client.dateOfBirth
+                      ? new Date(client.dateOfBirth).toLocaleDateString("en-US", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          year: "numeric",
+                        })
+                      : ""
+                  )}
+                </Td>
+              </Tr>
+
                 <Tr>
                   <Td>Email</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("email", client.email)}</Td>
@@ -530,8 +585,6 @@ export const ViewPage = () => {
               </Tbody>
             </Table>
           </TableContainer>
-
-          {/* {!isEditing ? <CSVButton data={client} ml={4}/> : <></>} */}
         </Box>
       </Box>
     </div>
