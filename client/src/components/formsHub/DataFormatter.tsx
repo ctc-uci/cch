@@ -82,11 +82,33 @@ export const frontDeskKeyLabelMap: Record<string, string> = {
 };
 
 export const caseManagerKeyLabelMap: Record<string, string> = {
-  role: "Role",
-  firstName: "First Name",
-  lastName: "Last Name",
-  phoneNumber: "Phone Number",
-  email: "Email"
+  date: "Date",
+  cmId: "Case Manager ID",
+  totalNumberOfContacts: "Total Number of Contacts",
+  womenBirthdays: "Women's Birthdays",
+  kidBirthdays: "Kid's Birthdays",
+  birthdayCards: "Birthday Cards Given",
+  birthdayCardsValue: "Value of Birthday Cards",
+  foodCards: "Food Cards Given",
+  foodCardsValue: "Value of Food Cards",
+  busPasses: "Bus Passes Given",
+  busPassesValue: "Value of Bus Passes",
+  gasCards: "Gas Cards Given",
+  gasCardsValue: "Value of Gas Cards",
+  womenHealthcareReferrals: "Women's Healthcare Referrals",
+  kidHealthcareReferrals: "Kid's Healthcare Referrals",
+  womenCounselingReferrals: "Women's Counseling Referrals",
+  kidCounselingReferrals: "Kid's Counseling Referrals",
+  babiesBorn: "Babies Born",
+  womenDegreesEarned: "Degrees Earned by Women",
+  womenEnrolledInSchool: "Women Enrolled in School",
+  womenLicensesEarned: "Licenses Earned by Women",
+  reunifications: "Family Reunifications",
+  numberOfInterviewsConducted: "Interviews Conducted",
+  numberOfPositiveTests: "Positive Tests",
+  numberOfNcns: "NCNs",
+  numberOfOthers: "Other",
+  numberOfInterviewsAccpeted: "Interviews Accepted"
 };
 
 const config: Record<
@@ -122,7 +144,6 @@ export const formatDataWithLabels = (
 
     const readableKey = section.labelMap[key] ?? key;
     formatted[readableKey] = value;
-    console.log("set ", readableKey, "to ", value)
   }
 
   return formatted;
@@ -139,4 +160,22 @@ export const getKeyByValue = (
 
   return Object.entries(section.labelMap).find(([_, val]) => val === value)?.[0];
 };
+
+export const reverseLabelKeys = (labeledObj: Record<string, any>, title: string): Record<string, any> => {
+  const section = config[title];
+
+  if (!section) return labeledObj;
+
+  const labelToKeyMap = Object.fromEntries(
+    Object.entries(section.labelMap).map(([key, label]) => [label, key])
+  );
+
+  return Object.fromEntries(
+    Object.entries(labeledObj).map(([label, value]) => {
+      const originalKey = labelToKeyMap[label];
+      return [originalKey ?? label, value]; // fallback to original label if no match
+    })
+  );
+};
+
 

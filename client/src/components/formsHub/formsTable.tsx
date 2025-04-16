@@ -43,12 +43,20 @@ import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import PrintForm from "../printForm/PrintForm";
 import { FormPreview } from "./FormPreview";
 
-export const FormTable = () => {
+export const FormTable = ({
+  clickedFormItem,
+  setClickedFormItem,
+  onOpen,
+}: {
+  clickedFormItem: Form | null;
+  setClickedFormItem: (form: Form | null) => void;
+  onOpen: () => void;
+}) => {
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  // const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  // const { isOpen, onOpen, onClose } = useDisclosure();
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
     null
@@ -235,11 +243,7 @@ export const FormTable = () => {
 
     fetchData();
   }, [
-    backend,
-    initialScreenerDate,
-    frontDeskDate,
-    cmMonthlyDate,
-    mostRecentDate,
+    backend
   ]);
 
   const allFormsData = useMemo(
@@ -442,13 +446,16 @@ export const FormTable = () => {
             </Table>
           </Box>
         </TableContainer>
-        {clickedFormItem && (
+        {/* {clickedFormItem && (
           <FormPreview
-            formItem={clickedFormItem}
+            formItemId={clickedFormItem.id}
+            formItemTitle={clickedFormItem.title}
+            formItemName={clickedFormItem.name}
+            formItemDate={clickedFormItem.date}
             isOpen={isOpen}
             onClose={onClose}
           />
-        )}
+        )} */}
       </Box>
     ) : (
       <Text>No data found.</Text>

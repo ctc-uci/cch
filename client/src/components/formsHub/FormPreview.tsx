@@ -19,27 +19,43 @@ import {
   Th,
   Thead,
   Tr,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { Form } from "../../types/form";
+import { useRoleContext } from "../../contexts/hooks/useRoleContext.ts";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
-import { formatDataWithLabels, getKeyByValue } from "./DataFormatter.tsx";
+import {
+  formatDataWithLabels,
+  getKeyByValue, reverseLabelKeys,
+} from "./DataFormatter.tsx";
+import { RequestFormPreview } from "./RequestFormPreview.tsx";
 
 export const FormPreview = ({
-  formItem,
+  formItemId,
+  formItemTitle,
+  formItemName,
+  formItemDate,
   isOpen,
   onClose,
 }: {
-  formItem: Form;
+  formItemId: number;
+  formItemTitle: string;
+  formItemName: string;
+  formItemDate: string;
   isOpen: boolean;
   onClose: () => void;
 }) => {
   const { backend } = useBackendContext();
+  const { role } = useRoleContext();
+
+  const toast = useToast();
 
   const [formData, setFormData] = useState({});
+  const [newFormData, setNewFormData] = useState({});
+
   const [newFormattedFormData, setNewFormattedFormData] = useState({});
   const [formattedFormData, setFormattedFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -48,35 +64,37 @@ export const FormPreview = ({
   useEffect(() => {
     const getData = async () => {
       let endpoint = "";
-      console.log(formItem)
 
-      switch (formItem.title) {
+      switch (formItemTitle) {
         case "Initial Screeners":
-          endpoint = `/initialInterview/get-interview/${formItem.id}`;
+          endpoint = `/initialInterview/get-interview/${formItemId}`;
           break;
         case "Client Tracking Statistics (Intake Statistics)":
-          endpoint = `/intakeStats/${formItem.id}`;
+          endpoint = `/intakeStats/${formItemId}`;
           break;
         case "Front Desk Monthly Statistics":
-          endpoint = `/frontDesk/${formItem.id}`;
+          endpoint = `/frontDesk/${formItemId}`;
           break;
         case "Case Manager Monthly Statistics":
-          endpoint = `/caseManagerMonthlyStats/${formItem.id}`;
+          endpoint = `/caseManagerMonthlyStats/${formItemId}`;
           break;
         default:
-          console.error("Unknown form title:", formItem.title);
+          console.error("Unknown form title:", formItemTitle);
           setIsLoading(false);
           return;
       }
 
       try {
         setIsLoading(true);
+
         const response = await backend.get(endpoint);
-        console.log(response)
-        const data = await formatDataWithLabels(response.data[0], formItem.title);
-        console.log(data)
+        const data = formatDataWithLabels(response.data[0], formItemTitle);
+
+        console.log(response.data[0]);
 
         setFormData(response.data[0]);
+        setNewFormData(response.data[0]);
+
         setFormattedFormData(data);
         setNewFormattedFormData(data);
       } catch (error) {
@@ -87,16 +105,61 @@ export const FormPreview = ({
     };
 
     getData();
-  }, [backend, formItem]);
+  }, [backend, formItemTitle, formItemId]);
 
   const handleSaveForm = async () => {
-    // do the put requests and error handling
+    let endpoint = "";
+
+    switch (formItemTitle) {
+      case "Initial Screeners":
+        endpoint = `/initialInterview/`;
+        break;
+      case "Front Desk Monthly Statistics":
+        endpoint = `/frontDesk/`;
+        break;
+      case "Case Manager Monthly Statistics":
+        endpoint = `/caseManagerMonthlyStats/`;
+        break;
+      default:
+        console.error("Unknown form title:", formItemTitle);
+        return;
+    }
+
+    try {
+      console.log(reverseLabelKeys(newFormattedFormData, formItemTitle))
+      await backend.post(endpoint, reverseLabelKeys(newFormattedFormData, formItemTitle));
+    } catch (error) {
+      console.error("Error updating form:", error);
+
+      toast({
+        title: "Did Not Save Changes",
+        description: `There was an error while saving changes`,
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
+
+      return;
+    }
+
+    toast({
+      title: "Successfully submitted form",
+      description: `${formItemTitle} Form - ${new Date().toLocaleString()}`,
+      status: "success",
+      duration: 9000,
+      isClosable: true,
+    });
+
+    onClose();
+    setFormattedFormData(newFormattedFormData);
+    setFormData(newFormData)
+    setIsEditing(false);
   };
 
-  const isDate = (value: any) => {
+  const isDate = (value: string) => {
     return (
-      Object.prototype.toString.call(value) === "[object Date]" ||
-      (typeof value === "string" && !isNaN(Date.parse(value)))
+      Object.prototype.toString.call(value) === "[object String]" &&
+      !isNaN(Date.parse(value))
     );
   };
 
@@ -106,6 +169,8 @@ export const FormPreview = ({
       placement="right"
       onClose={() => {
         onClose();
+        setNewFormattedFormData(formattedFormData);
+        setNewFormData(formData);
         setIsEditing(false);
       }}
       size="xl"
@@ -120,6 +185,8 @@ export const FormPreview = ({
                 aria-label="Close drawer"
                 onClick={() => {
                   onClose();
+                  setNewFormattedFormData(formattedFormData);
+                  setNewFormData(formData);
                   setIsEditing(false);
                 }}
                 variant="ghost"
@@ -131,7 +198,8 @@ export const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItem.name && `${formItem.name} - `}{formItem.title} {formatDateString(formItem.date)}
+              {formItemName && `${formItemName} - `}
+              {formItemTitle} {formatDateString(formItemDate)}
             </Text>
           </HStack>
         </DrawerHeader>
@@ -149,6 +217,10 @@ export const FormPreview = ({
               />
               <Text>Loading...</Text>
             </VStack>
+          ) : role === "user" &&
+            formItemTitle ===
+              "Client Tracking Statistics (Intake Statistics)" ? (
+            RequestFormPreview()
           ) : (
             <VStack
               marginTop="12px"
@@ -197,6 +269,7 @@ export const FormPreview = ({
                     size="lg"
                     onClick={() => {
                       setNewFormattedFormData(formattedFormData);
+                      setNewFormData(formData);
                       setIsEditing(false);
                     }}
                   >
@@ -206,9 +279,7 @@ export const FormPreview = ({
                     colorScheme="blue"
                     size="lg"
                     onClick={() => {
-                      setFormattedFormData(newFormattedFormData);
-                      handleSaveForm();
-                      setIsEditing(false);
+                      handleSaveForm().then();
                     }}
                   >
                     Save
@@ -246,17 +317,28 @@ export const FormPreview = ({
                             <Td fontSize="medium">{key}</Td>
                             <Td fontSize="medium">
                               {!isEditing ? (
-                                <>{value}</>
+                                <>
+                                  {isDate(value)
+                                    ? formatDateString(value)
+                                    : value}
+                                </>
                               ) : (
                                 <Input
-                                  value={value ?? ""}
+                                  value={value}
                                   onChange={(event) => {
-                                    const originalValue =
-                                      formattedFormData[key];
+                                    const realKey = getKeyByValue(
+                                      key,
+                                      formItemTitle
+                                    );
+                                    const originalValue = formData[realKey];
 
                                     // event.target.value is a string
                                     // it needs to be casted to match the type in the actual form
-                                    let newValue: any = event.target.value;
+                                    let newValue:
+                                      | string
+                                      | number
+                                      | boolean
+                                      | Date = event.target.value;
 
                                     if (typeof originalValue === "number") {
                                       newValue = Number(newValue);
@@ -272,6 +354,15 @@ export const FormPreview = ({
                                         newValue = parsedDate.toISOString();
                                       }
                                     }
+
+                                    if(isNaN(newValue)) {
+                                      return;
+                                    }
+
+                                    setNewFormData((prev) => ({
+                                      ...prev,
+                                      [realKey]: newValue,
+                                    }));
 
                                     setNewFormattedFormData((prev) => ({
                                       ...prev,
