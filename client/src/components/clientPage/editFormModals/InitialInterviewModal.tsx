@@ -21,9 +21,9 @@ import {
   TableContainer,
   useToast,
 } from "@chakra-ui/react";
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import PrintForm from "../printForm/PrintForm";
-import { InitialInterview } from "./types/InitialInterview";
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
+import PrintForm from "../../printForm/PrintForm";
+import { InitialInterview } from "../types/InitialInterview";
 
 interface InitialInterviewModalProps {
   form: { id: number; type: string; title?: string };
@@ -115,11 +115,10 @@ export default function InitialInterviewModal({
     whatCouldPreventHomeless: undefined,
   };
 
-  // convert CamelCase to snake_case for payload
+  // Unsure if we have this in utils sorry
   const toSnake = (s: string) =>
     s.replace(/([A-Z])/g, "_$1").toLowerCase();
 
-  // load data
   useEffect(() => {
     if (!isOpen || !form.id) return;
     setLoading(true);

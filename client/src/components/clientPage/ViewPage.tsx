@@ -28,9 +28,9 @@ import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../utils/snakeCase";
-import ChildrenCards from "./childrenCards";
-import Comments from "./comments";
-import Forms from "./forms";
+import ChildrenCards from "./subComponents/childrenCards";
+import Comments from "./subComponents/comments";
+import Forms from "./subComponents/forms";
 import image from "./pfp.jpeg";
 import { Client, FormItems } from "./types";
 

@@ -10,11 +10,11 @@ import {
   Tr,
   useDisclosure,
 } from "@chakra-ui/react";
-import { FormsProps } from "./types";
-import PrintForm from "../printForm/PrintForm";
-import ExitSurveyModal from "./ExitSurveyModal";
-import SuccessStoryModal from "./SuccessStoryModal";
-import InitialInterviewModal from "./InitialInterviewModal";
+import { FormsProps } from "../types";
+import PrintForm from "../../../printForm/PrintForm";
+import ExitSurveyModal from "../editFormModals/ExitSurveyModal";
+import SuccessStoryModal from "../editFormModals/SuccessStoryModal";
+import InitialInterviewModal from "../editFormModals/InitialInterviewModal";
 
 function Forms({ forms }: FormsProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();

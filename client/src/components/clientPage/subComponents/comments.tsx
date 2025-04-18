@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 import { Box, Textarea } from "@chakra-ui/react";
 
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import toSnakeCase from "../../utils/snakeCase";
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
+import toSnakeCase from "../../../utils/snakeCase";
 
 interface Client {
   age: number;
@@ -143,7 +143,7 @@ function Comments({ clientId }: ClientProps) {
       <Textarea
         width="100%"
         h="40vh"
-        resize="vertical" // Allows users to adjust the height vertically
+        resize="vertical"
         fontSize="md"
         value={client.comments}
         placeholder="Type Here"
