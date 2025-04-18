@@ -16,23 +16,25 @@ export const ProtectedRoute = ({
   element,
   allowedRoles = [],
 }: ProtectedRouteProps) => {
-  const { currentUser, loading } = useAuthContext();
+  const { currentUser, loading, initialized } = useAuthContext();
   const { role } = useRoleContext();
 
 
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   const isValidRole = getIsValidRole(roles, role);
-
+  
   if (currentUser && isValidRole) {
     console.log(role)
     console.log('validated to ' + element)
   } else {
     console.log(role)
+    console.log(currentUser)
     console.log('blocked to ' + element)
   }
- if (loading || role === undefined) { 
+  if (!initialized && (loading || role === undefined)) { 
     return <Spinner/>;
   }
+
   return currentUser && isValidRole ? (
     element
   ) : currentUser && role === "admin" ? (
