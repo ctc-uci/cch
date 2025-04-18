@@ -102,6 +102,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
       experienceTakeaway,
       experienceAccomplished,
       experienceExtraNotes,
+      date,
     } = req.body;
 
     const user = await db.query(
@@ -121,7 +122,8 @@ exitSurveyRouter.put("/:id", async (req, res) => {
       cm_most_beneficial = COALESCE($14, cm_most_beneficial),
       experience_takeaway = COALESCE($15, experience_takeaway),
       experience_accomplished = COALESCE($16, experience_accomplished),
-      experience_extra_notes = COALESCE($17, experience_extra_notes)
+      experience_extra_notes = COALESCE($17, experience_extra_notes),
+      date = COALESCE($18, date)
       WHERE id = $1 RETURNING *`,
       [
         id,
@@ -141,6 +143,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
         experienceTakeaway,
         experienceAccomplished,
         experienceExtraNotes,
+        date,
       ]
     );
     res.status(200).json({ id });

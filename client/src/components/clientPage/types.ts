@@ -5,11 +5,11 @@ interface InitialInterview {
   age: number;
   date: string;
   phone_number: string;
-  marital_status: 'single' | 'married' | 'divorced' | 'widowed';
+  marital_status: "single" | "married" | "divorced" | "widowed";
   date_of_birth: string;
   email: string;
   ssn_last_four: number;
-  ethnicity: 'Non-Hispanic' | 'Hispanic' | 'Refused';
+  ethnicity: "Non-Hispanic" | "Hispanic" | "Refused";
   veteran: boolean;
   disabled: boolean;
   current_address: string;
@@ -86,12 +86,20 @@ interface ExitSurvey {
   site: number;
   date: string;
   program_date_completion: string;
-  cch_rating: 'Excellent' | 'Good' | 'Fair' | 'Unsatisfactory';
+  cch_rating: "Excellent" | "Good" | "Fair" | "Unsatisfactory";
   cch_like_most: string;
-  life_skills_rating: 'very helpful' | 'helpful' | 'not very helpful' | 'not helpful at all';
+  life_skills_rating:
+    | "very helpful"
+    | "helpful"
+    | "not very helpful"
+    | "not helpful at all";
   life_skills_helpful_topics: string;
   life_skills_offer_topics_in_the_future: string;
-  cm_rating: 'very helpful' | 'helpful' | 'not very helpful' | 'not helpful at all';
+  cm_rating:
+    | "very helpful"
+    | "helpful"
+    | "not very helpful"
+    | "not helpful at all";
   cm_change_about: string;
   cm_most_beneficial: string;
   cch_could_be_improved: string;
@@ -108,7 +116,6 @@ interface FormItems {
 interface FormsProps {
   forms: FormItems[];
 }
-
 
 interface Client {
   age: number;
@@ -153,4 +160,11 @@ interface Client {
   comments: string;
 }
 
-export type { InitialInterview, SuccessStory, ExitSurvey, FormItems, FormsProps, Client };
+export type {
+  InitialInterview,
+  SuccessStory,
+  ExitSurvey,
+  FormItems,
+  FormsProps,
+  Client,
+};
