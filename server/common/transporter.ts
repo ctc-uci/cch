@@ -17,6 +17,10 @@ const emailSender =
   process.env.NODE_ENV === "development"
     ? `${process.env.DEV_EMAIL_FIRSTNAME} ${process.env.DEV_EMAIL_LASTNAME}`
     : `${process.env.PROD_EMAIL_FIRSTNAMS} ${process.env.DEV_EMAIL_LASTNAME}`;
+const sendEmail = 
+  process.env.NODE_ENV === "development"
+    ? `${process.env.DEV_USERNAME}`
+    : `${process.env.PROD_USERNAME}`;
 
 // sender information
 const transport = {
@@ -27,8 +31,9 @@ const transport = {
   },
   from: user,
   secure: true,
+  service: 'gmail'
 };
 
 const transporter = nodemailer.createTransport(transport);
 
-export { transporter, emailSender };
+export { transporter, emailSender, sendEmail };

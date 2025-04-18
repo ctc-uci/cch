@@ -18,7 +18,13 @@ import {
   Textarea,
   Spacer,
   Box,
-  Flex
+
+  Flex,
+  IconButton,
+  FormControl,
+  FormHelperText,
+  Input,
+  useToast
 } from "@chakra-ui/react";
 import { Tabs, TabList, Tab } from '@chakra-ui/react'
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -40,8 +46,10 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+
 import EditSettings from "../userSettings/EditSettings";
+import { TriangleDownIcon, TriangleUpIcon, ChevronLeftIcon } from "@chakra-ui/icons";
+
 interface Person {
   id: string;
   firstName: string;
@@ -75,6 +83,8 @@ export const ManageAccounts = () => {
   });
   const [clientData, setClientData] = useState<Person[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [add, setAdd] = useState<boolean>(true);
+  const toast = useToast();
 
   const [clientModalOpened, setClientModalOpened] = useState(false)
   const [clientModalID, setClientModalID] = useState('')
@@ -207,7 +217,45 @@ export const ManageAccounts = () => {
     fetchData();
   }, [view, backend, open, selectedData]);
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    const email = data.email;
+    const role = view === "admin" ? "admin" : "user";
+    try {
+      await backend.post("/users/invite", {
+        email: email,
+        role: role,
+      });
+      await backend.post("/email", {
+        email: email,
+        message: "Sign up"
+      });
+      toast({
+        title: `${view === 'admin' ? "Admin" : "Case Manager"} User invited!`,
+        description: `Thank you!`,
+        status: "success",
+      });
+    } catch (e) {
+      toast({
+        title: "An error occurred",
+        description: `User was not invited: ${e.message}`,
+        status: "error",
+      });
+    }
+  };
+
   return (
+      <HStack alignItems="flex-start" width = "100%" height="100%">
+      {add ? (
+      <VStack
+      justifyContent = "flex-start"
+      alignItems = "flex-start"
+      width = "60%"
+      marginLeft="5%"
+      >
 
       <HStack justifyContent="space-between">
         <VStack
@@ -226,10 +274,12 @@ export const ManageAccounts = () => {
                   <Tab  onClick={() => setView("clients")}>Clients</Tab>
                 </TabList>
               </Tabs>
+
             </HStack>
-            <Spacer/>
-            <Button >Delete</Button>
-            <Button colorScheme="blue">Add</Button>
+              
+            
+         
+          </Box>
 
           </HStack>
           {view !== "clients"  && 
@@ -358,5 +408,6 @@ export const ManageAccounts = () => {
         </Modal>
         </VStack>
       </HStack>
+
   );
 };

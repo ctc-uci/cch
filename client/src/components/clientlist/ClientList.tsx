@@ -40,6 +40,8 @@ import { UpdateClients } from "../admin/UpdateClient";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { LoadingWheel } from ".././loading/loading.tsx"
+
 
 interface ClientListProps {
   admin?: boolean;
@@ -69,6 +71,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [loading, setLoading] = useState(true);
+
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -348,6 +352,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
   
@@ -418,6 +424,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         </HStack>
       </HStack>
       {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
+      <Box
+        width = {'100%'}
+        justifyContent={"center"}
+      >
+      {loading ?
+      <LoadingWheel/> : 
       <TableContainer
         maxHeight="calc(100vh - 20px)"
         sx={{
@@ -492,6 +504,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </Tbody>
         </Table>
       </TableContainer>
+      }
+      </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
