@@ -1,18 +1,24 @@
 import { useState } from "react";
 import { Avatar, Box, HStack, Link, Text, Button } from "@chakra-ui/react";
 
-import { NavLink } from "react-router-dom";
+import { useNavigate , NavLink } from "react-router-dom";
 
 import { useAuthContext } from "../contexts/hooks/useAuthContext";
 import { useRoleContext } from "../contexts/hooks/useRoleContext";
 import { User } from "../types/user";
 
+
+
+
 export const Navbar = () => {
   const { role } = useRoleContext();
   const { logout } = useAuthContext();
-
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState('home')
-
+  const logoutNavigate = () => { 
+    navigate("/");
+    logout();
+  };
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
@@ -65,7 +71,7 @@ export const Navbar = () => {
         </HStack>
         <HStack spacing={5}>
           {createTabs(role ?? "user")}
-          <Button onClick={logout}>Sign Out</Button>
+          <Button onClick={logoutNavigate}>Sign Out</Button>
         </HStack>
       </HStack>
     </Box>

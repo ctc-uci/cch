@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
 
 import { CreateToastFnReturn, Spinner } from "@chakra-ui/react";
-
+import { Navigate } from "react-router-dom";
 import { AxiosInstance } from "axios";
 import {
   createUserWithEmailAndPassword,
@@ -20,6 +20,8 @@ import { useBackendContext } from "./hooks/useBackendContext";
 interface AuthContextProps {
   currentUser: User | null;
   currentUserRole: string | null;
+  loading: boolean;
+  initialized: boolean;
   signup: ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => Promise<UserCredential>;
   login: ({ email, password }: EmailPassword) => Promise<UserCredential>;
   logout: () => Promise<void>;
@@ -53,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const [initialized, setInitialized] = useState(false);
   const signup = async ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => {
     if (currentUser) {
       signOut(auth);
@@ -101,7 +103,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    <Navigate to={"/landing-page"} />
     return signOut(auth);
+    
   };
 
   const resetPassword = ({ email }: Pick<EmailPassword, "email">) => {
@@ -158,6 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setLoading(false);
+      setInitialized(true);
     });
 
     return unsubscribe;
