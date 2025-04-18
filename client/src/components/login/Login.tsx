@@ -44,7 +44,7 @@ export const Login = () => {
   const { userType = "Admin"} = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Client" ? "CL" : "AD";
 
-  const { login, handleRedirectResult } = useAuthContext();
+  const { login, handleRedirectResult, loading } = useAuthContext();
   const { backend } = useBackendContext();
 
   const {

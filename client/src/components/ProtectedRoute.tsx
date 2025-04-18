@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { useAuthContext } from "../contexts/hooks/useAuthContext";
 import { useRoleContext } from "../contexts/hooks/useRoleContext";
 
+import { Spinner } from "@chakra-ui/react";
 interface ProtectedRouteProps {
   element: JSX.Element;
   allowedRoles?: string | string[];
@@ -15,7 +16,7 @@ export const ProtectedRoute = ({
   element,
   allowedRoles = [],
 }: ProtectedRouteProps) => {
-  const { currentUser } = useAuthContext();
+  const { currentUser, loading } = useAuthContext();
   const { role } = useRoleContext();
 
 
@@ -29,7 +30,9 @@ export const ProtectedRoute = ({
     console.log(role)
     console.log('blocked to ' + element)
   }
-
+ if (loading || role === undefined) { 
+    return <Spinner/>;
+  }
   return currentUser && isValidRole ? (
     element
   ) : currentUser && role === "admin" ? (
