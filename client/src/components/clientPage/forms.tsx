@@ -12,19 +12,28 @@ import {
 } from "@chakra-ui/react";
 import { FormsProps } from "./types";
 import PrintForm from "../printForm/PrintForm";
-import ExitSurveyModal from "./ExitSurveyModal"; // Adjust the path as needed
+import ExitSurveyModal from "./ExitSurveyModal";
+import SuccessStoryModal from "./SuccessStoryModal";
+import InitialInterviewModal from "./InitialInterviewModal";
 
 function Forms({ forms }: FormsProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedForm, setSelectedForm] = useState<any>(null);
 
   const handleRowClick = (form: any) => {
-    // Open the modal only for Exit Survey forms
+
     if (form.type === "Exit Survey") {
       setSelectedForm(form);
       onOpen();
     }
-    // For other form types you might do something different
+    if (form.type === "Success Story") {
+      setSelectedForm(form);
+      onOpen();
+    }
+    if (form.type === "Initial Interview") {
+      setSelectedForm(form);
+      onOpen();
+    }
   };
 
   return (
@@ -70,7 +79,7 @@ function Forms({ forms }: FormsProps) {
                 <Td
                   fontSize="sm"
                   textAlign="center"
-                  onClick={(e) => e.stopPropagation()} // Prevent row click when Export is clicked
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <PrintForm
                     formType={
@@ -86,9 +95,28 @@ function Forms({ forms }: FormsProps) {
           </Tbody>
         </Table>
       </TableContainer>
-      {/* Conditionally render the ExitSurveyModal when a form is selected */}
       {selectedForm && selectedForm.type === "Exit Survey" && (
         <ExitSurveyModal
+          form={selectedForm}
+          isOpen={isOpen}
+          onClose={() => {
+            setSelectedForm(null);
+            onClose();
+          }}
+        />
+      )}
+      {selectedForm && selectedForm.type === "Success Story" && (
+        <SuccessStoryModal
+          form={selectedForm}
+          isOpen={isOpen}
+          onClose={() => {
+            setSelectedForm(null);
+            onClose();
+          }}
+        />
+      )}
+      {selectedForm && selectedForm.type === "Initial Interview" && (
+        <InitialInterviewModal
           form={selectedForm}
           isOpen={isOpen}
           onClose={() => {
