@@ -15,10 +15,10 @@ import {
   VStack,
   Button,
 } from "@chakra-ui/react";
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import toSnakeCase from "../../utils/snakeCase";
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
+import toSnakeCase from "../../../utils/snakeCase";
 import image from "./pfp.jpeg";
-import { Children } from "./ViewPage";
+import { Children } from "../ViewPage";
 
 interface ChildrenProps {
   items: Children[];
