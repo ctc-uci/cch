@@ -36,7 +36,7 @@ caseManagerMonthlyStatsRouter.get("/", async (req, res) => {
   }
 });
 
-caseManagerMonthlyStatsRouter.get("/id/:id", async (req, res) => {
+caseManagerMonthlyStatsRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 

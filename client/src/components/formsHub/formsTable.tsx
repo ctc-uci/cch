@@ -18,6 +18,7 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
 } from "@chakra-ui/react";
 
 import {
@@ -28,23 +29,38 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
+import {
+  MdFileUpload,
+  MdOutlineFilterAlt,
+  MdOutlineManageSearch,
+} from "react-icons/md";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Form } from "../../types/form";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-import { MdFileUpload, MdOutlineFilterAlt, MdOutlineManageSearch } from "react-icons/md";
 import PrintForm from "../printForm/PrintForm";
+import { FormPreview } from "./FormPreview";
 
-
-
-export const FormTable = () => {
-
+export const FormTable = ({
+  clickedFormItem,
+  setClickedFormItem,
+  onOpen,
+}: {
+  clickedFormItem: Form | null;
+  setClickedFormItem: (form: Form | null) => void;
+  onOpen: () => void;
+}) => {
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  // const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+
+  // const { isOpen, onOpen, onClose } = useDisclosure();
   const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(null);
+  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
+    null
+  );
   const [frontDeskDate, setFrontDeskDate] = useState<Date | null>(null);
   const [cmMonthlyDate, setCMMonthlyDate] = useState<Date | null>(null);
   const [mostRecentDate, setMostRecentDate] = useState<Date | null>(null);
@@ -91,7 +107,7 @@ export const FormTable = () => {
       {
         accessorKey: "export",
         header: "Export",
-      }
+      },
     ],
     [selectedRowIds]
   );
@@ -110,9 +126,6 @@ export const FormTable = () => {
   };
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
-    console.log("hashedid", hashedId);
-    console.log("selected", selectedRowIds);
-
     if (isChecked) {
       console.log("is checked");
       setSelectedRowIds((prev) => [...prev, hashedId]);
@@ -124,7 +137,9 @@ export const FormTable = () => {
     }
   };
 
-  const handleExport = (tableInstance: ReturnType<typeof useReactTable<Form>>) => {
+  const handleExport = (
+    tableInstance: ReturnType<typeof useReactTable<Form>>
+  ) => {
     const allRows = tableInstance.getRowModel().rows;
 
     const selectedItems = allRows
@@ -152,7 +167,7 @@ export const FormTable = () => {
           allCaseManagersResponse,
           initialScreenerResponse,
           frontDeskMonthlyStatsResponse,
-          cmMonthlyStatsResponse
+          cmMonthlyStatsResponse,
         ] = await Promise.all([
           backend.get(`/initialInterview`),
           backend.get(`/frontDesk`),
@@ -160,67 +175,76 @@ export const FormTable = () => {
           backend.get(`/caseManagers`),
           backend.get(`/lastUpdated/initial_interview`),
           backend.get(`/lastUpdated/front_desk_monthly`),
-          backend.get(`/lastUpdated/cm_monthly_stats`)
+          backend.get(`/lastUpdated/cm_monthly_stats`),
         ]);
-  
-        const initialScreeners: Form[] = await screenerResponse.data.map((form: Form) => ({
-          id: form.id,
-          date: form.date,
-          name: form.name,
-          title: "Initial Screeners",
-        }));
-  
-        const intakeStatistics: Form[] = [];
-  
-        const frontDeskStats: Form[] = await frontDeskResponse.data.map((form: Form) => ({
-          id: form.id,
-          date: form.date,
-          name: "",
-          title: "Front Desk Monthly Statistics",
-        }));
-  
-        const caseManagerStats: Form[] = await caseManagersMonthlyResponse.data.map((form: Form) => {
-          const matchingCM = allCaseManagersResponse.data.find(
-            (cm) => cm.id === form.cmId
-          );
-          return {
+
+        const initialScreeners: Form[] = await screenerResponse.data.map(
+          (form: Form) => ({
             id: form.id,
             date: form.date,
-            name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
-            title: "Case Manager Monthly Statistics",
-          };
-        });
-  
+            name: form.name,
+            title: "Initial Screeners",
+          })
+        );
+
+        const intakeStatistics: Form[] = [];
+
+        const frontDeskStats: Form[] = await frontDeskResponse.data.map(
+          (form: Form) => ({
+            id: form.id,
+            date: form.date,
+            name: "",
+            title: "Front Desk Monthly Statistics",
+          })
+        );
+
+        const caseManagerStats: Form[] =
+          await caseManagersMonthlyResponse.data.map((form: Form) => {
+            const matchingCM = allCaseManagersResponse.data.find(
+              (cm) => cm.id === form.cmId
+            );
+            return {
+              id: form.id,
+              date: form.date,
+              name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
+              title: "Case Manager Monthly Statistics",
+            };
+          });
+
         setInitialScreeners(initialScreeners);
         setIntakeStatistics(intakeStatistics);
         setFrontDeskStatistics(frontDeskStats);
         setCaseManagerStatistics(caseManagerStats);
-  
-        const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
-  
+
+        const getDate = (date) =>
+          date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
+
         const initialScreener = getDate(initialScreenerResponse.data);
         const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
         const cmMonthly = getDate(cmMonthlyStatsResponse.data);
-  
+
         setInitialScreenerDate(initialScreener);
         setFrontDeskDate(frontDesk);
         setCMMonthlyDate(cmMonthly);
-  
-        const mostRecent = new Date(Math.max(
-          initialScreener?.getTime() || 0,
-          frontDesk?.getTime() || 0,
-          cmMonthly?.getTime() || 0
-        ));
+
+        const mostRecent = new Date(
+          Math.max(
+            initialScreener?.getTime() || 0,
+            frontDesk?.getTime() || 0,
+            cmMonthly?.getTime() || 0
+          )
+        );
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
         setLastUpdated(mostRecent.toLocaleString());
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-  
+
     fetchData();
-    
-  }, [backend, initialScreenerDate, frontDeskDate, cmMonthlyDate, mostRecentDate])
+  }, [
+    backend
+  ]);
 
   const allFormsData = useMemo(
     () => [
@@ -330,7 +354,7 @@ export const FormTable = () => {
                 paddingX="16px"
                 paddingY="8px"
                 cursor="pointer"
-  onClick={() => handleExport(allFormsTable)}
+                onClick={() => handleExport(allFormsTable)}
               >
                 <MdFileUpload size="16px" />
                 <Text ml="8px">Export</Text>
@@ -345,75 +369,93 @@ export const FormTable = () => {
             overflow="auto"
           >
             <Table variant="striped">
-            <Thead>
-              {tableInstance.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {tableInstance.getRowModel().rows.map((row, index) => (
-                <Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      onClick={(e) => {
-                        if (cell.column.id === "rowNumber") e.stopPropagation();
-                      }}
-                    >
-                      {cell.column.id === "rowNumber" ? (
-                        <HoverCheckbox
-                          id={row.original.hashedId}
-                          isSelected={selectedRowIds.includes(
-                            row.original.hashedId
-                          )}
-                          onSelectionChange={handleRowSelect}
-                          index={index}
-                        />
-                      ) :  cell.column.id === "export" ? (
-                        <PrintForm
-                          formId={row.original.id}
-                          formType={row.original.title} />
-                      ):(
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              <Thead>
+                {tableInstance.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {tableInstance.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => {
+                      setClickedFormItem(row.original);
+                      onOpen();
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber" || cell.column.id === "export")
+                            e.stopPropagation();
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.hashedId}
+                            isSelected={selectedRowIds.includes(
+                              row.original.hashedId
+                            )}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : cell.column.id === "export" ? (
+                          <PrintForm
+                            formId={row.original.id}
+                            formType={row.original.title}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
           </Box>
         </TableContainer>
+        {/* {clickedFormItem && (
+          <FormPreview
+            formItemId={clickedFormItem.id}
+            formItemTitle={clickedFormItem.title}
+            formItemName={clickedFormItem.name}
+            formItemDate={clickedFormItem.date}
+            isOpen={isOpen}
+            onClose={onClose}
+          />
+        )} */}
       </Box>
     ) : (
       <Text>No data found.</Text>
@@ -427,7 +469,6 @@ export const FormTable = () => {
       >
         Form History
       </Text>
-      {/* <Text fontSize="12pt">Last Updated: MM/DD/YYYY HH:MM XX</Text> */}
       <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
 
       <Tabs
@@ -437,7 +478,7 @@ export const FormTable = () => {
         <TabList whiteSpace="nowrap">
           <Tab>All Forms</Tab>
           <Tab>Initial Screeners</Tab>
-          <Tab>Intake Statistics</Tab>
+          <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Front Desk Statistics</Tab>
           <Tab>Case Manager Statistics</Tab>
         </TabList>
