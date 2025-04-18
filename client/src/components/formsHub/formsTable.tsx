@@ -62,14 +62,26 @@ export const FormTable = () => {
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
       {
-        id: "rowNumber",
-        header: ({ table }) => {
+        id: "selection",
+        header: ({ table }) => (
+          <Box textAlign="center">
+            <Checkbox
+              isChecked={selectedRowIds.length > 0}
+              isIndeterminate={table.getIsSomeRowsSelected()}
+              onChange={() => handleSelectAllCheckboxClick(table)}
+            />
+          </Box>
+        ),
+        cell: ({ row }) => {
+          const hashedId = row.original.hashedId;
+          const isChecked = selectedRowIds.includes(hashedId);
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={() => handleSelectAllCheckboxClick(table)}
+                isChecked={isChecked}
+                onChange={(e) =>
+                  handleRowSelect(hashedId, e.target.checked)
+                }
               />
             </Box>
           );
@@ -79,13 +91,11 @@ export const FormTable = () => {
       {
         accessorKey: "date",
         header: "Date",
-        cell: ({ getValue }) => {
-          return formatDateString(getValue() as string);
-        },
+        cell: ({ getValue }) => formatDateString(getValue() as string),
       },
       {
         accessorKey: "name",
-        header: "Client Name",
+        header: "Name",
       },
       {
         accessorKey: "title",
@@ -94,7 +104,7 @@ export const FormTable = () => {
       {
         accessorKey: "export",
         header: "Export",
-      }
+      },
     ],
     [selectedRowIds]
   );
@@ -113,14 +123,9 @@ export const FormTable = () => {
   };
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
-    console.log("hashedid", hashedId);
-    console.log("selected", selectedRowIds);
-
     if (isChecked) {
-      console.log("is checked");
       setSelectedRowIds((prev) => [...prev, hashedId]);
     } else {
-      console.log("not checked");
       setSelectedRowIds((prev) =>
         prev.filter((rowHashedId) => rowHashedId !== hashedId)
       );
@@ -155,7 +160,8 @@ export const FormTable = () => {
           allCaseManagersResponse,
           initialScreenerResponse,
           frontDeskMonthlyStatsResponse,
-          cmMonthlyStatsResponse
+          cmMonthlyStatsResponse,
+          intakeStatsResponse
         ] = await Promise.all([
           backend.get(`/initialInterview`),
           backend.get(`/frontDesk`),
@@ -163,52 +169,62 @@ export const FormTable = () => {
           backend.get(`/caseManagers`),
           backend.get(`/lastUpdated/initial_interview`),
           backend.get(`/lastUpdated/front_desk_monthly`),
-          backend.get(`/lastUpdated/cm_monthly_stats`)
+          backend.get(`/lastUpdated/cm_monthly_stats`),
+          backend.get(`/intakeStatsForm`)
         ]);
-  
+
         const initialScreeners: Form[] = await screenerResponse.data.map((form: Form) => ({
           id: form.id,
+          hashedId: form.id,
           date: form.date,
           name: form.name,
           title: "Initial Screeners",
         }));
-  
-        const intakeStatistics: Form[] = [];
-  
+
+        const intakeStatistics: Form[] = await intakeStatsResponse.data.map((form: Form) => ({
+          id: form.id,
+          hashedId: form.id,
+          date: form.date,
+          name: form.firstName + " " + form.lastName,
+          title: "Client Tracking Statistics (Intake Statistics)"
+        }));
+
         const frontDeskStats: Form[] = await frontDeskResponse.data.map((form: Form) => ({
           id: form.id,
+          hashedId: form.id,
           date: form.date,
           name: "",
           title: "Front Desk Monthly Statistics",
         }));
-  
+
         const caseManagerStats: Form[] = await caseManagersMonthlyResponse.data.map((form: Form) => {
           const matchingCM = allCaseManagersResponse.data.find(
             (cm) => cm.id === form.cmId
           );
           return {
             id: form.id,
+            hashedId: form.id,
             date: form.date,
             name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
             title: "Case Manager Monthly Statistics",
           };
         });
-  
+
         setInitialScreeners(initialScreeners);
         setIntakeStatistics(intakeStatistics);
         setFrontDeskStatistics(frontDeskStats);
         setCaseManagerStatistics(caseManagerStats);
-  
+
         const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
-  
+
         const initialScreener = getDate(initialScreenerResponse.data);
         const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
         const cmMonthly = getDate(cmMonthlyStatsResponse.data);
-  
+
         setInitialScreenerDate(initialScreener);
         setFrontDeskDate(frontDesk);
         setCMMonthlyDate(cmMonthly);
-  
+
         const mostRecent = new Date(Math.max(
           initialScreener?.getTime() || 0,
           frontDesk?.getTime() || 0,
@@ -222,9 +238,9 @@ export const FormTable = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
-    
+
   }, [backend, initialScreenerDate, frontDeskDate, cmMonthlyDate, mostRecentDate])
 
   const allFormsData = useMemo(
@@ -447,7 +463,7 @@ export const FormTable = () => {
         <TabList whiteSpace="nowrap">
           <Tab>All Forms</Tab>
           <Tab>Initial Screeners</Tab>
-          <Tab>Intake Statistics</Tab>
+          <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Front Desk Statistics</Tab>
           <Tab>Case Manager Statistics</Tab>
         </TabList>

@@ -46,9 +46,9 @@ export default function PrintForm({ formType, formId }) {
             data = response.data;
             formData.current = <InitialScreenerForm clientInitialScreeningData={data} />;
             break;
-          case 'Client Tracking Statistics (Intake Statistics':
+          case 'Client Tracking Statistics (Intake Statistics)':
             response = await backend.get(`/intakeStatsForm/${formId}`);
-            data = [response.data];
+            data = response.data;
             formData.current = <IntakeStatsForm intakeStatsData={data} />;
             break;
           case 'Front Desk Monthly Statistics':
