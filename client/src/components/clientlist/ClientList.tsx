@@ -43,6 +43,8 @@ import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import { LoadingWheel } from ".././loading/loading.tsx"
 
 
+import {AddClientForm} from "../clientlist/AddClientForm";
+
 interface ClientListProps {
   admin?: boolean;
 }
@@ -328,6 +330,10 @@ export const ClientList = ({ admin }: ClientListProps) => {
     }
   };
 
+  const handleAdd = async () => {
+    
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -413,7 +419,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            {/* <Button fontSize="12px">add</Button> */}
+            <AddClientForm>a</AddClientForm>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
