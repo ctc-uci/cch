@@ -40,6 +40,7 @@ import { eventTypes } from "../../types/volunteer";
 import { formatDateString } from "../../utils/dateUtils";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import VolunteerDrawer from "./VolunteerDrawer";
+import { LoadingWheel } from "../loading/loading";
 
 interface VolunteersTableProps {
   toggleRefresh: boolean;
@@ -327,6 +328,8 @@ const VolunteersTable = ({
         borderColor="#E2E8F0"
         padding="12px"
       >
+        {loading ? 
+        <LoadingWheel/> :
         <TableContainer>
           <HStack
             width="100%"
@@ -452,7 +455,7 @@ const VolunteersTable = ({
               </Tbody>
             </Table>
           </Box>
-        </TableContainer>
+        </TableContainer>}
         {currentlySelectedVolunteer && (
           <VolunteerDrawer
             volunteer={currentlySelectedVolunteer}
