@@ -42,6 +42,7 @@ import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 import { all } from "axios";
 import { LoadingWheel } from ".././loading/loading.tsx"
+import { DonationListFilter } from "./donationFilter.tsx"
 
 
 export const Donations = () => {
@@ -69,6 +70,8 @@ export const Donations = () => {
   const [freq, setFreq] = useState<string>("");
 
   const [loading, setLoading] = useState(true);
+
+  const [filterQuery, setFilterQuery] = useState<string[]>([]);
 
   const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
@@ -414,6 +417,9 @@ export const Donations = () => {
             }}
             onFormSubmitSuccess={refreshPage}
           />
+        <HStack>
+          <DonationListFilter setFilterQuery={setFilterQuery}/>
+        </HStack>
         </HStack>
         {loading ?
         <LoadingWheel/> :
