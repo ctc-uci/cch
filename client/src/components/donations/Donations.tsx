@@ -42,7 +42,7 @@ import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 import { all } from "axios";
 import { LoadingWheel } from ".././loading/loading.tsx"
-
+import { DonationFilter } from "./DonationFilter.tsx";
 
 export const Donations = () => {
   const { backend } = useBackendContext();
@@ -69,6 +69,8 @@ export const Donations = () => {
   const [freq, setFreq] = useState<string>("");
 
   const [loading, setLoading] = useState(true);
+  const [donors, setDonors] = useState<string[]>([]);
+  const [newDonor, setNewDonor] = useState<string>("");
 
   const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
@@ -182,6 +184,19 @@ export const Donations = () => {
     setEndDate(new Date(dateValue));
   };
 
+  const handleAddDonor = async () => {
+    try {
+      await backend.post("/donations/donors", {
+        name: newDonor,
+      });
+      setDonors((prev) => [...prev, newDonor]);
+      setNewDonor("");
+    } catch (error) {
+      console.error("Error adding donor:", error);
+    }
+  }
+
+
   // const handleCheckboxChange = (id: number) =>
   //   (event: React.ChangeEvent<HTMLInputElement>) => {
   //     const checked = event.target.checked;
@@ -221,10 +236,13 @@ export const Donations = () => {
     setToggleRefresh(!toggleRefresh);
   };
 
-  
+  const filteredDonations = useMemo(() => {
+    if (!donor) return allDonations;
+    return allDonations.filter(d => d.donor === donor);
+  }, [allDonations, donor]);
 
   const table = useReactTable({
-    data: allDonations,
+    data: filteredDonations,
     columns,
     state: {
       sorting,
@@ -258,34 +276,36 @@ export const Donations = () => {
         const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
         const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
         const allDonationsQuery =
-          freq === "monthly" ? 
+          freq === "monthly" ?
             `/donations/monthfilter?donor=${donor}&startDate=${start}&endDate=${end}`
             :
               freq === "yearly" ?
                 `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
-        
-        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse] = await Promise.all([
+
+        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse, donorResponse] = await Promise.all([
           backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
           backend.get(`/donations/weightSum?donor=${donor}&startDate=${start}&endDate=${end}`),
           backend.get(allDonationsQuery),
-          backend.get(`/lastUpdated/donations`)
+          backend.get(`/lastUpdated/donations`),
+          backend.get(`/donations/donors`)
         ]);
-  
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
-  
+        setDonors(donorResponse.data.map((donor: { name: string }) => donor.name));
+
+
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-  
+
       } catch (error) {
         console.error("Error fetching value sum:", error);
       }finally {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [donor, startDate, endDate, toggleRefresh, backend]);
 
@@ -356,20 +376,14 @@ export const Donations = () => {
           spacing={4}
           align="center"
         >
-          <Select
-            id="donorSelect"
-            placeholder="Select Donor"
-            w="50%"
-            onChange={handleDonorChange}
-          >
-            <option value="panera">Panera</option>
-            <option value="sprouts">Sprouts</option>
-            <option value="copia">Copia</option>
-            <option value="mcdonalds">Mcdonalds</option>
-            <option value="pantry">Pantry</option>
-            <option value="grand theater">Grand Theater</option>
-            <option value="costco">Costco</option>
-          </Select>
+          <DonationFilter
+          donors={donors}
+        donor={donor}
+        setDonor={setDonor}
+        newDonor={newDonor}
+        setNewDonor={setNewDonor}
+        handleAddDonor={handleAddDonor}
+        />
 
           <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
             <option value='monthly'>Monthly</option>

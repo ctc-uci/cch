@@ -26,7 +26,7 @@ import { FormField } from '../formField/FormField';
 import { Donation, Donor, DonationForm } from './types';
 import { CloseIcon } from '@chakra-ui/icons';
 import { useBackendContext } from '../../contexts/hooks/useBackendContext';
-
+import { DonationFilter } from '../donations/DonationFilter';
 import { formatDateForInput } from "../../utils/dateUtils";
 
 interface EditDrawerProps {
@@ -48,11 +48,40 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
     const { backend } = useBackendContext();
     const [donation, setDonation] = useState<DonationForm>(initialDonation);
     const [totalValue, setTotalValue] = useState<number>(0);
+    const [donor, setDonor] = useState<string>("");
+    const [donors, setDonors] = useState<string[]>([]);
+    const [newDonor, setNewDonor] = useState<string>("");
+
+    const handleAddDonor = async () => {
+      try {
+        await backend.post("/donations/donors", {
+          name: newDonor,
+        });
+        setDonors((prev) => [...prev, newDonor]);
+        setNewDonor("");
+      } catch (error) {
+        console.error("Error adding donor:", error);
+      }
+    }
+
     useEffect(() => {
         const weight = donation?.weight || 0;
         const value = donation?.value || 0;
         setTotalValue(weight * value);
+
+        const fetchData = async () => {
+            try {
+                const response = await backend.get<Donor[]>('/donations/donors');
+                console.log(response.data);
+                setDonors(response.data);
+            } catch (error) {
+                console.error("Error fetching donors:", error);
+            }
+        }
+        fetchData();
       }, [donation]);
+
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -172,22 +201,14 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                 <VStack spacing={4} align="stretch">
                     <Grid templateColumns="40% 55%" gap={6} alignItems="center">
                         <FormField isRequired label='Donor'>
-                          <Select
-                              id="donorSelect"
-                              name="donor"
-                              placeholder="Select Donor"
-                              onChange={handleChange}
-                              value={donation.donor}
-                          >
-                              {Object.keys(Donor).map(key => {
-                                const value = Donor[key as keyof typeof Donor];
-                                return (
-                                  <option key={value} value={value}>
-                                    {value}
-                                  </option>
-                                );
-                              })}
-                          </Select>
+                          <DonationFilter
+                                    donors={donors.map((donor) => donor.name)}
+                                  donor={donor}
+                                  setDonor={setDonor}
+                                  newDonor={newDonor}
+                                  setNewDonor={setNewDonor}
+                                  handleAddDonor={handleAddDonor}
+                                  />
                         </FormField>
                         <FormField isRequired label='Date Donated'>
                           <Input
