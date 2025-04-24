@@ -51,6 +51,7 @@ import { Donation } from "./types";
 import { all } from "axios";
 import { LoadingWheel } from ".././loading/loading.tsx"
 import { DonationListFilter } from "./donationFilter.tsx"
+import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
 
 
 export const Donations = () => {
@@ -449,7 +450,7 @@ export const Donations = () => {
               >
                 Delete
               </Button>
-              <Button
+              {/* <Button
                 ml="auto"
                 background={"#4397CD"}
                 color="white"
@@ -467,7 +468,8 @@ export const Donations = () => {
                   setSelectedDonation(null);
                 }}
                 onFormSubmitSuccess={refreshPage}
-              />
+              /> */}
+              <AddDonationsDrawer/>
           </HStack>
         </HStack>
         <HStack w="100%" justifyContent="flex-start">

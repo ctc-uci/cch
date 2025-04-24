@@ -68,6 +68,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
 
       const toast = useToast();
 
+    //Need to adjust this to just edit
     const handleEditDonation = async () => {
       try{
           if (donation.id) {
@@ -97,8 +98,6 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         });
       }
     };
-
-
 
     function submitEdit() {
         handleEditDonation();
@@ -167,7 +166,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
+          <DrawerHeader>{'Edit Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>
               <CardBody>
