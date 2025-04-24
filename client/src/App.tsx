@@ -46,6 +46,7 @@ import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
 import { Playground } from "./themes/play";
+import { AdminFormsHub } from "./components/adminClientForms/adminFormsHub";
 
 const App = () => {
 
@@ -158,7 +159,7 @@ const App = () => {
                 />
                 <Route
                   path = "/admin-client-forms"
-                  element = {<ProtectedRoute element={<FormsHub admin />} allowedRoles={["admin"]}/>}
+                  element = {<ProtectedRoute element={<AdminFormsHub admin />} allowedRoles={["admin"]}/>}
                 />
                 <Route
                   path="/ViewClient/:id"
