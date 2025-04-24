@@ -19,7 +19,9 @@ import {
   Divider,
   useToast,
   IconButton,
-  Box
+  Box,
+  InputGroup,
+  InputLeftElement
 } from '@chakra-ui/react';
 
 import { FormField } from '../formField/FormField';
@@ -161,87 +163,87 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
     }
 
     return (
-        <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
+      <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
           <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>
-                <CardBody>
+              <CardBody>
                 <VStack spacing={4} align="stretch">
-                    <Grid templateColumns="40% 55%" gap={6} alignItems="center">
-                        <FormField isRequired label='Donor'>
-                          <Select
-                              id="donorSelect"
-                              name="donor"
-                              placeholder="Select Donor"
-                              onChange={handleChange}
-                              value={donation.donor}
-                          >
-                              {Object.keys(Donor).map(key => {
-                                const value = Donor[key as keyof typeof Donor];
-                                return (
-                                  <option key={value} value={value}>
-                                    {value}
-                                  </option>
-                                );
-                              })}
-                          </Select>
-                        </FormField>
-                        <FormField isRequired label='Date Donated'>
-                          <Input
-                              type="date"
-                              name="date"
-                              onChange={handleChange}
-                              value={donation.date}
-                          />
-                        </FormField>
-                        <FormField isRequired label='Type'>
-                          <Select
-                              name="category"
-                              onChange={handleChange}
-                              value={donation.category}
-                          >
-                              <option value="">Select Type</option>
-                              <option value="food">Food</option>
-                              <option value="client">Client</option>
-                          </Select>
-                        </FormField>
-
-                        <FormField isRequired label='Weight'>
-                          <Input
-                              type="number"
-                              name="weight"
-                              onChange={handleChange}
-                              value={donation.weight}
-                          />
-                        </FormField>
-
-                        <FormField isRequired label='Value'>
-                          <Input
-                              type="number"
-                              name="value"
-                              onChange={handleChange}
-                              value={donation.value}
-                          />
-                        </FormField>
-                        <Divider w='125%'></Divider>
-                        <Divider></Divider>
-                        <FormField label="Total Value">
-                          <Text
-                            width="60%"
-                            textAlign="right"
-                            size="md"
-                            fontWeight="semibold"
-                            color={totalValue === 0 ? "#718096" : "inherit"}
-                          >
-                            ${totalValue.toFixed(2)}
-                          </Text>
-                        </FormField>
-                    </Grid>
+                  <Grid templateColumns="1fr 2fr" gap={4} alignItems="center">
+                    <Text textAlign="left" fontWeight="semibold">Date Donated</Text>
+                    <Input
+                      type="date"
+                      name="date"
+                      onChange={handleChange}
+                      value={donation.date}
+                      textAlign="left"
+                      width="100%"
+                    />
+    
+                    <Text textAlign="left" fontWeight="semibold">Donor</Text>
+                    <Select
+                      id="donorSelect"
+                      name="donor"
+                      placeholder="Select Donor"
+                      onChange={handleChange}
+                      value={donation.donor}
+                      textAlign="left"
+                      width="100%"
+                    >
+                      {Object.keys(Donor).map(key => {
+                        const value = Donor[key as keyof typeof Donor];
+                        return (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        );
+                      })}
+                    </Select>
+    
+                    <Text textAlign="left" fontWeight="semibold">Type</Text>
+                    <Text textAlign="left" fontWeight="medium">
+                      {donation.category === 'food' ? 'Food' : donation.category === 'client' ? 'Client' : ''}
+                    </Text>
+    
+                    <Text textAlign="left" fontWeight="semibold">Total Weight (pounds)</Text>
+                    <Input
+                      type="number"
+                      name="weight"
+                      onChange={handleChange}
+                      value={donation.weight}
+                      textAlign="left"
+                      width="100%"
+                    />
+    
+                    <Text textAlign="left" fontWeight="semibold">Value Per Pound</Text>
+                    <InputGroup>
+                      <InputLeftElement
+                        pointerEvents="none"
+                        color="gray.500"
+                        children="$"
+                      />
+                      <Input
+                        type="number"
+                        name="value"
+                        onChange={handleChange}
+                        value={donation.value}
+                        textAlign="left"
+                        width="100%"
+                      />
+                    </InputGroup>
+    
+                    <Divider gridColumn="1 / -1" />
+    
+                    <Text textAlign="left" fontWeight="semibold">Total Value</Text>
+                    <Text textAlign="left" fontWeight="bold">
+                      ${totalValue.toFixed(2)}
+                    </Text>
+                  </Grid>
                 </VStack>
-                </CardBody>
+              </CardBody>
             </Card>
           </DrawerBody>
           <DrawerFooter>
@@ -254,7 +256,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-    )
+    );    
 }
 
 export default EditDrawer;
