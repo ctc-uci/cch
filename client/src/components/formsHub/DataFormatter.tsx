@@ -1,4 +1,4 @@
-export const interviewScreenerKeyLabelMap: Record<string, string> = {
+export const initialScreenerKeyLabelMap: Record<string, string> = {
   applicantType: "Applicant Type",
   name: "Name",
   age: "Age",
@@ -116,7 +116,7 @@ const config: Record<
   { labelMap: Record<string, string>; excludeKeys: string[] }
 > = {
   "Initial Screeners": {
-    labelMap: interviewScreenerKeyLabelMap,
+    labelMap: initialScreenerKeyLabelMap,
     excludeKeys: ["id", "clientId"],
   },
   "Front Desk Monthly Statistics": {

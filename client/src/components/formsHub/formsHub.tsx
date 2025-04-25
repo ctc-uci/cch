@@ -11,13 +11,6 @@ interface FormsHubProps {
 }
 
 export const FormsHub = ({admin}: FormsHubProps) => {
-  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => setIsOpen(false);
-  console.log("once forms hub")
-
   return (
 
     <VStack
@@ -49,11 +42,11 @@ export const FormsHub = ({admin}: FormsHubProps) => {
       )}
       <Box px={8}>
         <FormTable
-        clickedFormItem={clickedFormItem}
-        setClickedFormItem={setClickedFormItem}
-        onOpen={handleOpen}
+        // clickedFormItem={clickedFormItem}
+        // setClickedFormItem={setClickedFormItem}
+        // onOpen={handleOpen}
       />
-      {clickedFormItem && (
+      {/* {clickedFormItem && (
         <FormPreview
           formItemId={clickedFormItem.id}
           formItemTitle={clickedFormItem.title}
@@ -62,7 +55,7 @@ export const FormsHub = ({admin}: FormsHubProps) => {
           isOpen={isOpen}
           onClose={handleClose}
         />
-      )}
+      )} */}
       </Box>
     </VStack>
   );

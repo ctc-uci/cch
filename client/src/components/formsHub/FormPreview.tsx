@@ -25,12 +25,18 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useRoleContext } from "../../contexts/hooks/useRoleContext.ts";
+import { camelToSnakeCase } from "../../utils/camelCase.ts";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
+import { CaseManagerMonthlyTableBody } from "./CaseManagerMonthlyTableBody.tsx";
 import {
   formatDataWithLabels,
-  getKeyByValue, reverseLabelKeys,
+  getKeyByValue,
+  reverseLabelKeys,
 } from "./DataFormatter.tsx";
+import { FrontDeskMonthlyTableBody } from "./FrontDeskTableBody.tsx";
+import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
+import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 
 export const FormPreview = ({
@@ -40,6 +46,7 @@ export const FormPreview = ({
   formItemDate,
   isOpen,
   onClose,
+  setRefreshTable
 }: {
   formItemId: number;
   formItemTitle: string;
@@ -47,6 +54,7 @@ export const FormPreview = ({
   formItemDate: string;
   isOpen: boolean;
   onClose: () => void;
+  setRefreshTable: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const { backend } = useBackendContext();
   const { role } = useRoleContext();
@@ -56,10 +64,43 @@ export const FormPreview = ({
   const [formData, setFormData] = useState({});
   const [newFormData, setNewFormData] = useState({});
 
-  const [newFormattedFormData, setNewFormattedFormData] = useState({});
+  const [newFormattedModifiedData, setFormattedModifiedData] = useState({});
   const [formattedFormData, setFormattedFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
+
+  const renderTableBody = () => {
+    switch (formItemTitle) {
+      case "Initial Screeners":
+        return (
+          <InitialScreenerTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
+      case "Client Tracking Statistics (Intake Statistics)":
+        return (
+          <IntakeStatisticsTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
+      case "Front Desk Monthly Statistics":
+        return (
+          <FrontDeskMonthlyTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
+      case "Case Manager Monthly Statistics":
+        return (
+          <CaseManagerMonthlyTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
+    }
+  };
 
   useEffect(() => {
     const getData = async () => {
@@ -89,14 +130,10 @@ export const FormPreview = ({
 
         const response = await backend.get(endpoint);
         const data = formatDataWithLabels(response.data[0], formItemTitle);
-
-        console.log(response.data[0]);
-
         setFormData(response.data[0]);
         setNewFormData(response.data[0]);
-
-        setFormattedFormData(data);
-        setNewFormattedFormData(data);
+        setFormattedFormData(data); // human readable keys
+        setFormattedModifiedData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -107,12 +144,25 @@ export const FormPreview = ({
     getData();
   }, [backend, formItemTitle, formItemId]);
 
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setNewFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSaveForm = async () => {
+    // setNewFormData(formData);
+
     let endpoint = "";
 
     switch (formItemTitle) {
       case "Initial Screeners":
-        endpoint = `/initialInterview/`;
+        endpoint = `/initialInterview/${formData.id}`;
         break;
       case "Front Desk Monthly Statistics":
         endpoint = `/frontDesk/`;
@@ -126,8 +176,15 @@ export const FormPreview = ({
     }
 
     try {
-      console.log(reverseLabelKeys(newFormattedFormData, formItemTitle))
-      await backend.post(endpoint, reverseLabelKeys(newFormattedFormData, formItemTitle));
+      if (
+        formItemTitle === "Front Desk Monthly Statistics" ||
+        formItemTitle === "Initial Screeners"
+      ) {
+        await backend.put(endpoint, camelToSnakeCase(newFormData));
+      } else {
+        console.log(newFormData)
+        await backend.put(endpoint, newFormData);
+      }
     } catch (error) {
       console.error("Error updating form:", error);
 
@@ -151,8 +208,9 @@ export const FormPreview = ({
     });
 
     onClose();
-    setFormattedFormData(newFormattedFormData);
-    setFormData(newFormData)
+    setRefreshTable((prev) => !prev);
+    setFormattedFormData(newFormattedModifiedData);
+    setFormData(newFormData);
     setIsEditing(false);
   };
 
@@ -169,7 +227,7 @@ export const FormPreview = ({
       placement="right"
       onClose={() => {
         onClose();
-        setNewFormattedFormData(formattedFormData);
+        setFormattedModifiedData(formattedFormData);
         setNewFormData(formData);
         setIsEditing(false);
       }}
@@ -185,7 +243,7 @@ export const FormPreview = ({
                 aria-label="Close drawer"
                 onClick={() => {
                   onClose();
-                  setNewFormattedFormData(formattedFormData);
+                  setFormattedModifiedData(formattedFormData);
                   setNewFormData(formData);
                   setIsEditing(false);
                 }}
@@ -245,7 +303,7 @@ export const FormPreview = ({
                     size="lg"
                     onClick={() => {
                       const headers = ["Questions", "Answer"];
-                      const data = Object.entries(newFormattedFormData).map(
+                      const data = Object.entries(formattedFormData).map(
                         ([key, value]) => ({
                           Questions: key,
                           Answer: value,
@@ -268,7 +326,7 @@ export const FormPreview = ({
                     colorScheme="gray"
                     size="lg"
                     onClick={() => {
-                      setNewFormattedFormData(formattedFormData);
+                      // setFormattedModifiedData(formattedFormData);
                       setNewFormData(formData);
                       setIsEditing(false);
                     }}
@@ -278,9 +336,7 @@ export const FormPreview = ({
                   <Button
                     colorScheme="blue"
                     size="lg"
-                    onClick={() => {
-                      handleSaveForm().then();
-                    }}
+                    onClick={handleSaveForm}
                   >
                     Save
                   </Button>
@@ -310,71 +366,16 @@ export const FormPreview = ({
                     </Tr>
                   </Thead>
                   <Tbody>
-                    {Object.keys(newFormattedFormData).length > 0 &&
-                      Object.entries(newFormattedFormData).map(
-                        ([key, value]) => (
-                          <Tr key={key}>
-                            <Td fontSize="medium">{key}</Td>
-                            <Td fontSize="medium">
-                              {!isEditing ? (
-                                <>
-                                  {isDate(value)
-                                    ? formatDateString(value)
-                                    : value}
-                                </>
-                              ) : (
-                                <Input
-                                  value={value}
-                                  onChange={(event) => {
-                                    const realKey = getKeyByValue(
-                                      key,
-                                      formItemTitle
-                                    );
-                                    const originalValue = formData[realKey];
-
-                                    // event.target.value is a string
-                                    // it needs to be casted to match the type in the actual form
-                                    let newValue:
-                                      | string
-                                      | number
-                                      | boolean
-                                      | Date = event.target.value;
-
-                                    if (typeof originalValue === "number") {
-                                      newValue = Number(newValue);
-                                    } else if (
-                                      typeof originalValue === "boolean"
-                                    ) {
-                                      newValue =
-                                        newValue.toLowerCase() === "true";
-                                    } else if (isDate(originalValue)) {
-                                      const parsedDate = new Date(newValue);
-
-                                      if (!isNaN(parsedDate.getTime())) {
-                                        newValue = parsedDate.toISOString();
-                                      }
-                                    }
-
-                                    if(isNaN(newValue)) {
-                                      return;
-                                    }
-
-                                    setNewFormData((prev) => ({
-                                      ...prev,
-                                      [realKey]: newValue,
-                                    }));
-
-                                    setNewFormattedFormData((prev) => ({
-                                      ...prev,
-                                      [key]: newValue,
-                                    }));
-                                  }}
-                                ></Input>
-                              )}
-                            </Td>
-                          </Tr>
+                    {!isEditing
+                      ? Object.entries(newFormattedModifiedData).map(
+                          ([key, value]) => (
+                            <Tr key={key}>
+                              <Td>{key}</Td>
+                              <Td>{isDate(value) ? formatDateString(value): value}</Td>
+                            </Tr>
+                          )
                         )
-                      )}
+                      : renderTableBody()}
                   </Tbody>
                 </Table>
               </TableContainer>

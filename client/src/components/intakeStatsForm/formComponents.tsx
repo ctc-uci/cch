@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 
 type TextInputProps = {
-  label: string;
+  label?: string;
   name: string;
   value: string | number | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -34,7 +34,7 @@ export const TextInputComponent = ({
 }: TextInputProps) => (
   <FormControl isRequired>
     <HStack>
-      <FormLabel w="30%">{label}</FormLabel>
+      {label && <FormLabel w="30%">{label}</FormLabel>}
       <Input
         name={name}
         value={value}
@@ -47,9 +47,8 @@ export const TextInputComponent = ({
   </FormControl>
 );
 
-
 type NumberInputProps = {
-  label: string;
+  label?: string;
   name: string;
   value: number | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -92,7 +91,7 @@ export const NumberInputComponent = ({
   return (
     <FormControl isRequired>
       <HStack>
-        <FormLabel w="30%">{label}</FormLabel>
+        {label && <FormLabel w="30%">{label}</FormLabel>}
         <NumberInput
           name={name}
           value={displayValue}
@@ -113,11 +112,11 @@ export const NumberInputComponent = ({
   );
 };
 type SelectInputProps = {
-  label: string;
+  label?: string;
   name: string;
   value: string | undefined;
   onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { key?: string, label: string; value: string }[];
+  options: { key?: string; label: string; value: string }[];
   placeholder?: string;
   width?: string;
 };
@@ -134,7 +133,7 @@ export const SelectInputComponent = ({
   return (
     <FormControl isRequired>
       <HStack>
-        <FormLabel w="30%">{label}</FormLabel>
+      {label && <FormLabel w="30%">{label}</FormLabel>}
         <Select
           name={name}
           value={value}
@@ -156,9 +155,8 @@ export const SelectInputComponent = ({
   );
 };
 
-
 type TrueFalseProps = {
-  label: string;
+  label?: string;
   name: string;
   value: boolean | undefined;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -187,7 +185,7 @@ export const TrueFalseComponent = ({
     <FormControl isRequired>
       {helperText && <FormHelperText>{helperText}</FormHelperText>}
       <HStack align="start">
-        <FormLabel w="30%">{label}</FormLabel>
+        {label && <FormLabel w="30%">{label}</FormLabel>}
         <RadioGroup
           name={name}
           value={value !== undefined ? value.toString() : ""}

@@ -44,20 +44,11 @@ import PrintForm from "../printForm/PrintForm";
 import { LoadingWheel } from ".././loading/loading.tsx"
 import { FormPreview } from "./FormPreview";
 
-export const FormTable = ({
-  clickedFormItem,
-  setClickedFormItem,
-  onOpen,
-}: {
-  clickedFormItem: Form | null;
-  setClickedFormItem: (form: Form | null) => void;
-  onOpen: () => void;
-}) => {
+export const FormTable = () => {
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  // const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
-
-  // const { isOpen, onOpen, onClose } = useDisclosure();
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
     null
@@ -73,6 +64,7 @@ export const FormTable = ({
   );
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTable, setRefreshTable] = useState(false);
 
 
   const columns = useMemo<ColumnDef<Form>[]>(
@@ -256,7 +248,7 @@ export const FormTable = ({
 
     fetchData();
   }, [
-    backend
+    backend, refreshTable
   ]);
 
   const allFormsData = useMemo(
@@ -463,7 +455,7 @@ export const FormTable = ({
             </Table>
           </Box>
         </TableContainer>
-        {/* {clickedFormItem && (
+        {clickedFormItem && (
           <FormPreview
             formItemId={clickedFormItem.id}
             formItemTitle={clickedFormItem.title}
@@ -471,8 +463,9 @@ export const FormTable = ({
             formItemDate={clickedFormItem.date}
             isOpen={isOpen}
             onClose={onClose}
+            setRefreshTable={setRefreshTable}
           />
-        )} */}
+        )}
       </Box>
     ) : (
       <Text>No data found.</Text>
