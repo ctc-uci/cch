@@ -237,18 +237,21 @@ donationRouter.get("/yearfilter/", async (req, res) => {
 donationRouter.post("/", async (req, res) => {
   try {
     const { date, weight, value, donor, category } = req.body;
-    const donor_id = await db.query(
+    //console.log(donor);
+    const data = await db.query(
       `SELECT id FROM donors WHERE name = $1`,
       [donor]
-    );
-    const data = await db.query(
-      `INSERT INTO donations (date, weight, value, donor_id, category) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-      [date, weight, value, donor_id, category]
-    );
+    ).then((donor_id) => {
+      return db.query(
+        `INSERT INTO donations (date, weight, value, donor_id, category) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [date, weight, value, donor_id[0]['id'], category]
+      );
+    })
 
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
     res.status(500).send(err.message);
+    //console.log(err);
   }
 });
 

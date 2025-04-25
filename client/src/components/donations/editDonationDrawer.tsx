@@ -101,7 +101,8 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
               await backend.put(`/donations/${donation.id}`, donation);
           }
           else{
-              await backend.post('/donations', donation);
+              console.log({...donation, donor});
+              await backend.post('/donations', {...donation, donor});
           }
           toast({
             title: donation.id ? "Donation Edited": "Donation Added",
