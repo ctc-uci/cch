@@ -11,7 +11,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { FormsProps } from "../types";
-import PrintForm from "../../../printForm/PrintForm";
+import PrintForm from "../../printForm/PrintForm";
 import ExitSurveyModal from "../editFormModals/ExitSurveyModal";
 import SuccessStoryModal from "../editFormModals/SuccessStoryModal";
 import InitialInterviewModal from "../editFormModals/InitialInterviewModal";

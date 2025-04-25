@@ -121,10 +121,8 @@ export const FormTable = ({
         accessorKey: "export",
         header: "Export",
       },
-      },
     ],
-    [selectedRowIds]
-  );
+    [selectedRowIds]);
 
   const handleSelectAllCheckboxClick = (
     tableInstance: ReturnType<typeof useReactTable<Form>>
@@ -236,24 +234,15 @@ export const FormTable = ({
 
         const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
 
-
-        const getDate = (date) =>
-          date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
-
-        const initialScreener = getDate(initialScreenerResponse.data);
-        const frontDesk = getDate(frontDeskMonthlyStatsResponse.data);
-        const cmMonthly = getDate(cmMonthlyStatsResponse.data);
-
-
-        setInitialScreenerDate(initialScreener);
-        setFrontDeskDate(frontDesk);
-        setCMMonthlyDate(cmMonthly);
+        setInitialScreenerDate(getDate(initialScreenerResponse.data));
+        setFrontDeskDate(getDate(frontDeskMonthlyStatsResponse.data));
+        setCMMonthlyDate(getDate(cmMonthlyStatsResponse.data));
 
         const mostRecent = new Date(
           Math.max(
-            initialScreener?.getTime() || 0,
-            frontDesk?.getTime() || 0,
-            cmMonthly?.getTime() || 0
+            initialScreenerDate?.getTime() || 0,
+            frontDeskDate?.getTime() || 0,
+            cmMonthlyDate?.getTime() || 0
           )
         );
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
@@ -382,7 +371,7 @@ export const FormTable = ({
                 paddingX="16px"
                 paddingY="8px"
                 cursor="pointer"
-  onClick={() => handleExport(allFormsTable)}
+                onClick={() => handleExport(allFormsTable)}
               >
                 <MdFileUpload size="16px" />
                 <Text ml="8px">Export</Text>
@@ -397,75 +386,93 @@ export const FormTable = ({
             overflow="auto"
           >
             <Table variant="striped">
-            <Thead>
-              {tableInstance.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {tableInstance.getRowModel().rows.map((row, index) => (
-                <Tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      onClick={(e) => {
-                        if (cell.column.id === "rowNumber") e.stopPropagation();
-                      }}
-                    >
-                      {cell.column.id === "rowNumber" ? (
-                        <HoverCheckbox
-                          id={row.original.hashedId}
-                          isSelected={selectedRowIds.includes(
-                            row.original.hashedId
-                          )}
-                          onSelectionChange={handleRowSelect}
-                          index={index}
-                        />
-                      ) :  cell.column.id === "export" ? (
-                        <PrintForm
-                          formId={row.original.id}
-                          formType={row.original.title} />
-                      ):(
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              <Thead>
+                {tableInstance.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {tableInstance.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => {
+                      setClickedFormItem(row.original);
+                      onOpen();
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber" || cell.column.id === "export")
+                            e.stopPropagation();
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.hashedId}
+                            isSelected={selectedRowIds.includes(
+                              row.original.hashedId
+                            )}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : cell.column.id === "export" ? (
+                          <PrintForm
+                            formId={row.original.id}
+                            formType={row.original.title}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
           </Box>
         </TableContainer>
+        {/* {clickedFormItem && (
+          <FormPreview
+            formItemId={clickedFormItem.id}
+            formItemTitle={clickedFormItem.title}
+            formItemName={clickedFormItem.name}
+            formItemDate={clickedFormItem.date}
+            isOpen={isOpen}
+            onClose={onClose}
+          />
+        )} */}
       </Box>
     ) : (
       <Text>No data found.</Text>
