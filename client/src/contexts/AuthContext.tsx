@@ -58,6 +58,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (currentUser) {
       signOut(auth);
     }
+    const existingUser = await backend.get(`/users/email/${email}`);
+
+    if (existingUser.data.length === 0) {
+      throw new Error(`Unauthorized email to create ${role === "user" ? "Case Manager" : "Admin"} account`);
+    }
+
+    if (existingUser.data[0].firebaseUid) {
+      throw new Error("Email already in use");
+    }
+
+    if (existingUser.data[0].role !== role) {
+      throw new Error("Not authorized to create this type of user");
+    }
+
+    await backend.delete(`users/email/${email}`)
 
     const userCredential = await createUserWithEmailAndPassword(
       auth,
