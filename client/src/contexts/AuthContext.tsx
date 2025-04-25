@@ -11,6 +11,10 @@ import {
   signOut,
   User,
   UserCredential,
+  signInWithCredential,
+  EmailAuthProvider,
+  EmailAuthCredential,
+
 } from "firebase/auth";
 import { NavigateFunction } from "react-router-dom";
 
@@ -21,8 +25,10 @@ interface AuthContextProps {
   currentUser: User | null;
   currentUserRole: string | null;
   signup: ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => Promise<UserCredential>;
-  login: ({ email, password }: EmailPassword) => Promise<UserCredential>;
+  login: ({ email, password }: EmailPassword) => Promise<EmailAuthCredential>;
+  createCode: () => Promise<void>;
   logout: () => Promise<void>;
+  authenticate: ({code}: Authenticate) => Promise<UserCredential | void>; 
   resetPassword: ({ email }: Pick<EmailPassword, "email">) => Promise<void>;
   handleRedirectResult: (
     backend: AxiosInstance,
@@ -32,6 +38,10 @@ interface AuthContextProps {
 }
 
 export const AuthContext = createContext<AuthContextProps | null>(null);
+
+interface Authenticate{
+  code: number;
+}
 
 interface EmailPassword {
   email: string;
@@ -53,6 +63,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authCredential, setAuthCredential] = useState<EmailAuthCredential | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
 
   const signup = async ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => {
     if (currentUser) {
@@ -92,13 +104,73 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userCredential;
   };
 
-  const login = ({ email, password }: EmailPassword) => {
+  const login = async ({ email, password }: EmailPassword) => {
     if (currentUser) {
       signOut(auth);
     }
-
-    return signInWithEmailAndPassword(auth, email, password);
+    const authCredential = EmailAuthProvider.credential(email, password);
+    setAuthCredential(authCredential);
+    setEmail(email);
+    return authCredential; 
   };
+
+  const createCode = async () => {
+    if (authCredential && email) {
+      try {
+        // Delete all the stale codes associated with this email
+        await backend.delete(`authentification/email?email=${email}`)
+
+        // Create new code for them
+        const now = new Date()
+        const validUntil = new Date(now.getTime() + (24 * 60 * 60 * 1000));
+        const authData = await backend.post("/authentification", {
+          email: email,
+          validUntil: validUntil,
+        });
+        const code = authData?.data[0]?.code;
+
+        // Send the code to the user via email
+        
+        await backend.post("/authentification/email", {
+          email: email,
+          message: `
+          Hi,
+
+          Your two-factor authentication (2FA) code is:
+
+          ${code}
+
+          This code will expire in 24 hours. If you did not request this code, please ignore this email or contact our support team immediately.
+
+          Stay secure,
+          
+          Collete's Children's Home
+          `
+        });
+        
+        return;
+      } catch (error) {
+        console.error("Error signing in with credential:", error);
+      }
+    }
+  };
+
+  const authenticate = async ({ code }: Authenticate) => {
+    if (authCredential && email) {
+
+      const data = await backend.get(`/authentification/email?email=${email}`);
+      const storedCode = data.data[0]?.code;
+      if (code !== storedCode) {
+        throw new Error("Invalid code. Try again.");
+      }
+
+      const userCredential = await signInWithCredential(auth, authCredential);
+      setAuthCredential(null);
+      setEmail(null);
+      return userCredential;
+
+    }
+  }
 
   const logout = () => {
     return signOut(auth);
@@ -170,7 +242,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         currentUserRole,
         signup,
         login,
+        createCode,
         logout,
+        authenticate,
         resetPassword,
         handleRedirectResult,
       }}

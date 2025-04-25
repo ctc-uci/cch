@@ -6,7 +6,7 @@ export const ChooseLogin = () => {
 
     const handleUserSelection = (userType: string) => {
         navigate(`/login/${userType}`);
-        console.log("user type: ", userType);
+        // console.log("user type: ", userType);
     };
 
     return (
