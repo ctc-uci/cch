@@ -9,6 +9,13 @@ import {
   Heading,
   HStack,
   Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
   Select,
   Stat,
   StatLabel,
@@ -21,6 +28,7 @@ import {
   Th,
   Thead,
   Tr,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 
@@ -42,9 +50,13 @@ import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 import { all } from "axios";
 import { LoadingWheel } from ".././loading/loading.tsx"
-import { DonationFilter } from "./DonationFilter.tsx";
+import { DonationFilter, DonationListFilter } from "./donationFilter.tsx"
+import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
+
 
 export const Donations = () => {
+  const toast = useToast();
+
   const { backend } = useBackendContext();
 
   const [donor, setDonor] = useState<string>("");
@@ -71,6 +83,14 @@ export const Donations = () => {
   const [loading, setLoading] = useState(true);
   const [donors, setDonors] = useState<string[]>([]);
   const [newDonor, setNewDonor] = useState<string>("");
+
+  const [filterQuery, setFilterQuery] = useState<string[]>([]);
+
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
 
   const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
@@ -196,6 +216,14 @@ export const Donations = () => {
     }
   }
 
+  const handleReset = () => {
+    setDonor("");
+    setFreq("");
+    setColumns(columnsReg);
+    setStartDate(null);
+    setEndDate(null);
+    refreshPage();
+  };
 
   // const handleCheckboxChange = (id: number) =>
   //   (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,8 +256,22 @@ export const Donations = () => {
       refreshPage();
     } catch (error) {
       console.error("Error deleting users:", error);
+      toast({
+        title: 'Donation(s) Not Deleted',
+        description: "There was something wrong that happened and the donation(s) were not deleted.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
     setSelectedRowIds([]);
+    toast({
+      title: 'Selected Donation(s) Deleted',
+      description: "The donation(s) have successfully been deleted from the database.",
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
   };
 
   const refreshPage = () => {
@@ -307,12 +349,12 @@ export const Donations = () => {
     };
 
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh, backend]);
+  }, [donor, startDate, endDate, toggleRefresh, freq, backend]);
 
   return (
     <HStack
       w="100%"
-      h="100%"
+      maxHeight="100%"
     >
       <VStack
         w="25vw"
@@ -371,6 +413,7 @@ export const Donations = () => {
         w="69vw"
         h="95vh"
       >
+        <HStack>
         <HStack
           w="90%"
           spacing={4}
@@ -385,153 +428,217 @@ export const Donations = () => {
         handleAddDonor={handleAddDonor}
         />
 
-          <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
-            <option value='monthly'>Monthly</option>
-            <option value='yearly'>Yearly</option>
-          </Select>
+            <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange} value={freq}>
+              <option value='monthly'>Monthly</option>
+              <option value='yearly'>Yearly</option>
+            </Select>
 
-          <Text>From:</Text>
-          <Input
-            type="date"
-            name="startDate"
-            w="40%"
-            onChange={handleStartDateChange}
-          />
-          <Text>To:</Text>
-          <Input
-            type="date"
-            name="endDate"
-            w="40%"
-            onChange={handleEndDateChange}
-          />
-
+            <Text>From:</Text>
+            <Input
+              type="date"
+              name="startDate"
+              w="40%"
+              value={startDate ? startDate.toISOString().split("T")[0] : ""}
+              onChange={handleStartDateChange}
+            />
+            <Text>To:</Text>
+            <Input
+              type="date"
+              name="endDate"
+              w="40%"
+              value={endDate ? endDate.toISOString().split("T")[0] : ""}
+              onChange={handleEndDateChange}
+            />
+          </HStack>
+          <HStack
+            align="right">
+            <Button
+                ml="auto"
+                color = "gray.500"
+                background={"white"}
+                border={"0.5px solid"}
+                borderColor={"gray.300"}
+                onClick={onDeleteOpen}
+              >
+                Delete
+              </Button>
+              {/* <Button
+                ml="auto"
+                background={"#4397CD"}
+                color="white"
+                onClick={() => {
+                  setSelectedDonation(null);
+                  onOpen();
+                }}
+              >
+                Add
+              </Button>
+              <EditDrawer
+                isOpen={isOpen}
+                onClose={() => {
+                  onClose();
+                  setSelectedDonation(null);
+                }}
+                onFormSubmitSuccess={refreshPage}
+              /> */}
+              <AddDonationsDrawer/>
+          </HStack>
+        </HStack>
+        <HStack w="100%" justifyContent="flex-start">
           <Button
-            ml="auto"
-            onClick={onDelete}
+            background={"#4397CD"}
+            color="white"
+            size="sm"
+            onClick={handleReset}
           >
-            Delete
-          </Button>
-          <Button
-            ml="auto"
-            onClick={() => {
-              setSelectedDonation(null);
-              onOpen();
-            }}
-          >
-            Add
-          </Button>
-          <EditDrawer
-            isOpen={isOpen}
-            onClose={() => {
-              onClose();
-              setSelectedDonation(null);
-            }}
-            onFormSubmitSuccess={refreshPage}
-          />
+            Reset All Dropdowns
+          </Button> could move to be inline with filter button?
         </HStack>
         {loading ?
         <LoadingWheel/> :
-        <TableContainer
-          width="100%"
-          maxHeight="75%"
-          sx={{
-            overflowX: "auto",
-            overflowY: "auto",
-            maxWidth: "100%",
-          }}
-        >
-          <Table
-            variant="striped"
+        <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
+          <HStack padding="5px">
+            <DonationListFilter setFilterQuery={setFilterQuery}/>
+            <Input maxWidth="20%" placeholder="search"></Input>
+          </HStack>
+          <TableContainer
+            width="100%"
+            maxHeight="100%"
+            paddingBottom="10"
             sx={{
-              borderCollapse: "collapse",
-              border: "1px solid gray",
-              width: "100%",
+              overflowX: "auto",
+              overflowY: "auto",
+              maxWidth: "100%",
             }}
           >
-            <Thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {table.getRowModel().rows.map((row, index) => (
-                <Tr
-                  key={row.id}
-                  onClick={() => handleRowClick(row.original)}
-                  cursor="pointer"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      fontSize="14px"
-                      fontWeight="500px"
-                      onClick={(e) => {
-                        if (cell.column.id === "rowNumber") {
-                          e.stopPropagation();
-                        }
-                      }}
-                    >
-                      {cell.column.id === "rowNumber" ? (
-                        <HoverCheckbox
-                          id={row.original.id}
-                          isSelected={selectedRowIds.includes(row.original.id)}
-                          onSelectionChange={handleRowSelect}
-                          index={index}
-                        />
-                      ) : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-          {selectedDonation && (
-            <EditDrawer
-              isOpen={isOpen}
-              onClose={() => {
-                onClose();
-                setSelectedDonation(null);
-                refreshPage();
+            <Table
+              variant="striped"
+              sx={{
+                borderCollapse: "collapse",
+                border: "1px solid gray",
+                width: "100%",
               }}
-              existingDonation={selectedDonation}
-              onFormSubmitSuccess={refreshPage}
-            />
-          )}
-        </TableContainer>
+            >
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => handleRowClick(row.original)}
+                    cursor="pointer"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedRowIds.includes(row.original.id)}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {selectedDonation && (
+              <EditDrawer
+                isOpen={isOpen}
+                onClose={() => {
+                  onClose();
+                  setSelectedDonation(null);
+                  refreshPage();
+                }}
+                existingDonation={selectedDonation}
+                onFormSubmitSuccess={refreshPage}
+              />
+            )}
+          </TableContainer>
+        </Box>
         }
       </VStack>
+
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Delete Donation</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          Are you sure? You can't undo this action afterwards.
+        </ModalBody>
+
+        <ModalFooter>
+          <Button
+            color="gray.500"
+            background="white"
+            border="0.5px solid"
+            borderColor="gray.300"
+            mr={3}
+            onClick={onDeleteClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="white"
+            background="#4397CD"
+            onClick={() => {
+              onDelete();
+              onDeleteClose();
+            }}
+          >
+            Delete
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+
     </HStack>
   );
 };

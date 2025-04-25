@@ -19,7 +19,9 @@ import {
   Divider,
   useToast,
   IconButton,
-  Box
+  Box,
+  InputGroup,
+  InputLeftElement
 } from '@chakra-ui/react';
 
 import { FormField } from '../formField/FormField';
@@ -51,6 +53,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
     const [donor, setDonor] = useState<string>("");
     const [donors, setDonors] = useState<string[]>([]);
     const [newDonor, setNewDonor] = useState<string>("");
+    //const [filterQuery, setFilterQuery] = useState<string[]>([]);
 
     const handleAddDonor = async () => {
       try {
@@ -95,6 +98,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
 
       const toast = useToast();
 
+    //Need to adjust this to just edit
     const handleEditDonation = async () => {
       try{
           if (donation.id) {
@@ -125,8 +129,6 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         });
       }
     };
-
-
 
     function submitEdit() {
         handleEditDonation();
@@ -191,25 +193,25 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
     }
 
     return (
-        <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
+      <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
+          <DrawerHeader>{'Edit Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>
-                <CardBody>
+              <CardBody>
                 <VStack spacing={4} align="stretch">
-                    <Grid templateColumns="40% 55%" gap={6} alignItems="center">
+                  <Grid templateColumns="1fr 2fr" gap={4} alignItems="center">
                         <FormField isRequired label='Donor'>
                           <DonationFilter
-                                    donors={donors.map((donor) => donor.name)}
-                                  donor={donor}
-                                  setDonor={setDonor}
-                                  newDonor={newDonor}
-                                  setNewDonor={setNewDonor}
-                                  handleAddDonor={handleAddDonor}
-                                  />
+                            donors={donors}
+                            donor={donor}
+                            setDonor={setDonor}
+                            newDonor={newDonor}
+                            setNewDonor={setNewDonor}
+                            handleAddDonor={handleAddDonor}
+                          />
                         </FormField>
                         <FormField isRequired label='Date Donated'>
                           <Input
@@ -263,7 +265,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
                         </FormField>
                     </Grid>
                 </VStack>
-                </CardBody>
+              </CardBody>
             </Card>
           </DrawerBody>
           <DrawerFooter>
@@ -276,7 +278,7 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
-    )
+    );    
 }
 
 export default EditDrawer;

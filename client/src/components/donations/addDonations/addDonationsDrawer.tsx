@@ -20,7 +20,8 @@ import {
 import DonationCard, {Donation} from './donationsCard'
 
 import { useBackendContext } from '../../../contexts/hooks/useBackendContext';
-function DonationsDrawer() {
+
+function AddDonationsDrawer() {
   const { isOpen: isDrawerOpen, onOpen: openDrawer, onClose: closeDrawer } = useDisclosure();
   const { isOpen: isModalOpen, onOpen: openModal, onClose: closeModal } = useDisclosure();
   //const { isOpen, onOpen, onClose } = useDisclosure();
@@ -162,8 +163,8 @@ function DonationsDrawer() {
   }
   return (
     <>
-      <Button ref={btnRef} colorScheme="blue" onClick={openDrawer} sx={{ width: "250px", padding: "12px 24px" }}>
-        Add Donation
+      <Button ref={btnRef} colorScheme="blue" onClick={openDrawer} sx={{ width: "45px", padding: "12px 24px" }}>
+        Add
       </Button>
       <Drawer isOpen={isDrawerOpen} placement="right" onClose={closeDrawer} closeOnOverlayClick={false} size="xl">
         <DrawerOverlay />
@@ -214,4 +215,4 @@ function DonationsDrawer() {
     </>
   );
 }
-export default DonationsDrawer;
+export default AddDonationsDrawer;
