@@ -21,7 +21,7 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
-import PrintForm from "../../../printForm/PrintForm";
+import PrintForm from "../../printForm/PrintForm";
 import { exitSurvey } from "../types/ExitSurvey";
 
 interface ExitSurveyModalProps {

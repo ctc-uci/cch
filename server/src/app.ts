@@ -28,6 +28,7 @@ import { requestRouter } from "../routes/request.js";
 import { volunteersRouter } from "../routes/volunteers";
 import { lastUpdatedRouter } from "../routes/lastUpdated";
 import { emailRouter } from "../routes/nodemailer";
+import { authentificationRouter } from "../routes/authentification";
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ app.use("/request", requestRouter);
 app.use("/volunteers", volunteersRouter);
 app.use("/lastUpdated", lastUpdatedRouter);
 app.use("/email", emailRouter);
+app.use("/authentification", authentificationRouter)
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);

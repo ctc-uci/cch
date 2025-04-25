@@ -14,7 +14,7 @@ import { ViewPage } from "./components/clientPage/ViewPage";
 import { LandingPage } from "./components/login/LandingPage";
 import { ChooseLogin } from "./components/login/ChooseLogin";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
-import { AdminPin } from "./components/authentification/AdminPin";
+import { Authentification } from "./components/authentification/authentification";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
@@ -58,7 +58,7 @@ const App = () => {
     currentRoute === 'choose-login' ||
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
-    currentRoute === 'admin-pin'
+    currentRoute === 'authentification'
   );
 
   return (
@@ -90,8 +90,8 @@ const App = () => {
                 element={<ForgotPassword />}
               />
                 <Route
-                path="/admin-pin/:userType?"
-                element={<AdminPin />}
+                path="/authentification/:userType?"
+                element={<Authentification />}
               />
               <Route
                 path="/exit-survey"

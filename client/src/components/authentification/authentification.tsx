@@ -35,19 +35,36 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export const AdminPin = () => {
+export const Authentification = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType } = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
 
-  const { resetPassword, handleRedirectResult } = useAuthContext();
+  const { resetPassword, handleRedirectResult, currentUser } = useAuthContext();
   const { backend } = useBackendContext();
     // update when 2FA is integrated
   const handlePinSubmit = () => {
-    navigate("/casemanager")
+    navigate("/admin-client-list")
   }
 
+  useEffect(() => {
+    const generateCode = async () => {
+      try {
+        const validUntil = new Date().getTime() + 24 * 60 * 60 * 1000;
+
+        const res = await backend.post('/authentification', {
+          email: currentUser?.email, validUntil: validUntil
+        });
+
+        console.log(res.data);
+      } catch (err) {
+        console.error('Error posting code: ', err);
+      }
+    }
+    generateCode();
+    // console.log("current user", currentUser);
+  }, [backend]);
 
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);
