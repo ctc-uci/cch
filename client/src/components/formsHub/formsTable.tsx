@@ -66,7 +66,6 @@ export const FormTable = () => {
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
 
-
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
       {
@@ -137,18 +136,6 @@ export const FormTable = () => {
       );
     }
   };
-
-  const handleRowClick = useCallback(
-    (rowData) => {
-      setClickedFormItem(rowData);
-      onOpen();
-    },
-    [onOpen]
-  );
-
-  const handleFormPreviewClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
 
   const handleExport = (
     tableInstance: ReturnType<typeof useReactTable<Form>>
@@ -268,6 +255,12 @@ export const FormTable = () => {
 
     fetchData();
   }, [backend, refreshTable]);
+
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
 
   const allFormsData = useMemo(
     () => [
@@ -432,7 +425,10 @@ export const FormTable = () => {
                 {tableInstance.getRowModel().rows.map((row, index) => (
                   <Tr
                     key={row.id}
-                    onClick={() => handleRowClick(row.original)}
+                    onClick={() => {
+                      setClickedFormItem(row.original);
+                      onOpen();
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <Td
@@ -473,15 +469,6 @@ export const FormTable = () => {
             </Table>
           </Box>
         </TableContainer>
-        <FormPreview
-          formItemId={clickedFormItem?.id || 0}
-          formItemTitle={clickedFormItem?.title || ""}
-          formItemName={clickedFormItem?.name || ""}
-          formItemDate={clickedFormItem?.date || ""}
-          isOpen={isOpen}
-          onClose={handleFormPreviewClose}
-          setRefreshTable={setRefreshTable}
-        />
       </Box>
     ) : (
       <Text>No data found.</Text>
@@ -525,6 +512,18 @@ export const FormTable = () => {
           </TabPanel>
         </TabPanels>
       </Tabs>
+      {clickedFormItem && (
+          <FormPreview
+            clickedFormItem={clickedFormItem}
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setClickedFormItem(null);
+            }}
+            refreshTable={refreshTable}
+            setRefreshTable={setRefreshTable}
+          />
+        )}
     </Box>
   );
 };

@@ -28,33 +28,34 @@ import { camelToSnakeCase } from "../../utils/camelCase.ts";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { CaseManagerMonthlyTableBody } from "./CaseManagerMonthlyTableBody.tsx";
-import {
-  formatDataWithLabels,
-} from "./DataFormatter.tsx";
+import { formatDataWithLabels } from "./DataFormatter.tsx";
 import { FrontDeskMonthlyTableBody } from "./FrontDeskTableBody.tsx";
 import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
 import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 
 const FormPreview = ({
-  formItemId,
-  formItemTitle,
-  formItemName,
-  formItemDate,
+  clickedFormItem,
   isOpen,
   onClose,
+  refreshTable,
   setRefreshTable,
 }: {
-  formItemId: number;
-  formItemTitle: string;
-  formItemName: string;
-  formItemDate: string;
+  clickedFormItem: any;
   isOpen: boolean;
   onClose: () => void;
+  refreshTable: boolean;
   setRefreshTable: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const { backend } = useBackendContext();
   const { role } = useRoleContext();
+
+  const {
+    id: formItemId,
+    title: formItemTitle,
+    name: formItemName,
+    date: formItemDate,
+  } = clickedFormItem;
 
   const toast = useToast();
 
@@ -65,6 +66,8 @@ const FormPreview = ({
   const [formattedFormData, setFormattedFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  console.log("i am showing forms preview just this")
 
   const renderTableBody = () => {
     switch (formItemTitle) {
@@ -144,7 +147,8 @@ const FormPreview = ({
 
     getData();
     console.log("forms preview useffect running")
-  }, [backend, formItemTitle, formItemId]);
+    console.log(clickedFormItem, refreshTable);
+  }, [backend, clickedFormItem, refreshTable]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -162,13 +166,13 @@ const FormPreview = ({
 
     switch (formItemTitle) {
       case "Initial Screeners":
-        endpoint = `/initialInterview/${formData.id}`;
+        endpoint = `/initialInterview/${formItemId}`;
         break;
       case "Front Desk Monthly Statistics":
-        endpoint = `/frontDesk/${formData.id}`;
+        endpoint = `/frontDesk/${formItemId}`;
         break;
       case "Case Manager Monthly Statistics":
-        endpoint = `/caseManagerMonthlyStats/${formData.id}`;
+        endpoint = `/caseManagerMonthlyStats/${formItemId}`;
         break;
       default:
         console.error("Unknown form title:", formItemTitle);
@@ -182,9 +186,22 @@ const FormPreview = ({
       ) {
         await backend.put(endpoint, camelToSnakeCase(newFormData));
       } else {
-        console.log(newFormData);
         await backend.put(endpoint, newFormData);
       }
+
+      toast({
+        title: "Successfully submitted form",
+        description: `${formItemTitle} Form - ${new Date().toLocaleString()}`,
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+
+      onClose();
+      setRefreshTable((prev) => !prev);
+      setFormattedFormData(newFormattedModifiedData);
+      setFormData(newFormData);
+      setIsEditing(false);
     } catch (error) {
       console.error("Error updating form:", error);
 
@@ -195,23 +212,7 @@ const FormPreview = ({
         duration: 9000,
         isClosable: true,
       });
-
-      return;
     }
-
-    toast({
-      title: "Successfully submitted form",
-      description: `${formItemTitle} Form - ${new Date().toLocaleString()}`,
-      status: "success",
-      duration: 9000,
-      isClosable: true,
-    });
-
-    onClose();
-    setRefreshTable((prev) => !prev);
-    setFormattedFormData(newFormattedModifiedData);
-    setFormData(newFormData);
-    setIsEditing(false);
   };
 
   const isDate = (value: string) => {
@@ -278,7 +279,7 @@ const FormPreview = ({
           ) : role === "user" &&
             formItemTitle ===
               "Client Tracking Statistics (Intake Statistics)" ? (
-            <RequestFormPreview/>
+            <RequestFormPreview />
           ) : (
             <VStack
               marginTop="12px"
