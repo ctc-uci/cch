@@ -43,6 +43,8 @@ import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 
 import {AddClientForm} from "../clientlist/AddClientForm";
 
+import { UnfinishedClientAlert } from "./UnfinishedClientAlert";
+
 interface ClientListProps {
   admin?: boolean;
 }
@@ -330,33 +332,33 @@ export const ClientList = ({ admin }: ClientListProps) => {
     
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-  
-        let clientsRequest;
-        if (searchKey && filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
-        } else if (searchKey) {
-          clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
-        } else if (filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
-        } else {
-          clientsRequest = backend.get("/clients");
-        }
-  
-        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-  
-        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString());
-        setClients(clientsResponse.data);
-  
-      } catch (error) {
-        console.error("Error fetching data:", error);
+  const fetchData = async () => {
+    try {
+      const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
+
+      let clientsRequest;
+      if (searchKey && filterQuery.length > 1) {
+        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
+      } else if (searchKey) {
+        clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
+      } else if (filterQuery.length > 1) {
+        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
+      } else {
+        clientsRequest = backend.get("/clients");
       }
-    };
-  
+
+      const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+
+      const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+      setLastUpdated(date.toLocaleString());
+      setClients(clientsResponse.data);
+
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
   
@@ -367,12 +369,13 @@ export const ClientList = ({ admin }: ClientListProps) => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
+      <UnfinishedClientAlert/>
       <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
       <HStack width="100%">
         <Heading size="md">My Complete Client Table</Heading>
         <Heading
           size="sm"
-          paddingLeft="10%"
+          paddingLeft="10%"             
         >
           Last Updated: {lastUpdated}
         </Heading>
@@ -414,7 +417,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
               delete
             </Button>
             {/* <Button fontSize="12px">add</Button> */}
-            <AddClientForm>a</AddClientForm>
+            <AddClientForm onClientAdded={fetchData}>a</AddClientForm>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}

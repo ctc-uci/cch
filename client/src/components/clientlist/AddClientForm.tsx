@@ -20,13 +20,13 @@ import {
     Input,
     useToast,
   } from '@chakra-ui/react';
-import React, {useRef} from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Client from "../../types/client";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 
-export const AddClientForm = () => {
+export const AddClientForm = ({ onClientAdded }: { onClientAdded: () => void }) => {
     const {
       isOpen: isAlertOpen,
       onOpen: openAlert,
@@ -34,12 +34,50 @@ export const AddClientForm = () => {
     } = useDisclosure()
 
     const cancelRef = useRef();
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+
+    useEffect(() => {
+      if (hasSubmitted) {
+        onClientAdded();
+        setHasSubmitted(false);
+        setFormData({});
+      }
+    }, [hasSubmitted]);
+
+
+    const handleCloseAndSave = () => {
+      onClose();
+      toast({
+        title: "New Client Data Saved",
+        description: "Successfully saved unfinished client data.",
+        status: "info",
+        position: 'bottom-right',
+        isClosable: true,
+      });
+    }
 
     const handleConfirmCancel = () => {
       onClose()         // Close the drawer
       closeAlert()      // Close the alert
+      setFormData({});
+      setFormInProgress(false)
     }
 
+    const drawerContentRef = useRef<HTMLDivElement | null>(null);
+    
+    const handleOverlayClick = (event: React.MouseEvent) => {
+      // Prevent the event if clicked inside the content
+      if (
+        drawerContentRef.current &&
+        drawerContentRef.current.contains(event.target as Node)
+      ) {
+        return;
+      }
+
+      console.log("Drawer lost focus via outside click");
+      onClose();
+    };
+             
     const [formData, setFormData] = React.useState({
         created_by: "",
         unit_id: "",
@@ -83,15 +121,32 @@ export const AddClientForm = () => {
         destination_city: "",
         comments: ""
     });
+    const [formInProgress, setFormInProgress] = React.useState(false)
     const { isOpen, onOpen, onClose } = useDisclosure()
     const btnRef = React.useRef()
     const {backend} = useBackendContext()
     const toast = useToast()
     
     const handleSubmit = async (event: React.FormEvent) => {
+      if (
+        Object.values(formData).some(
+          (value) =>
+            value === null ||
+            value === undefined ||
+            (typeof value === "string" && value.trim() === "")
+        )
+      ) {
+        toast({
+          title: "Missing information.",
+          description: "There is a missing or incorrect field.",
+          status: "warning",
+          position: 'top-right',
+          isClosable: true,
+        });
+        return; // prevent submission
+      }
 
       try {
-
         const clientData = {
           created_by: parseInt(formData.created_by || "0", 10),
           unit_id: parseInt(formData.unit_id || "0",10),  
@@ -135,10 +190,13 @@ export const AddClientForm = () => {
       };
         await backend.post("/clients", clientData);
         toast({
-          title: "Form submitted",
-          description: `Thanks for your feedback!`,
+          title: "Client Added",
+          description: `Client Name has been added!`,
+          position: 'bottom-right',
           status: "success",
         });
+        setHasSubmitted(true);
+        setFormInProgress(false);
       } catch (e) {
         console.log(e)
         toast({
@@ -152,143 +210,144 @@ export const AddClientForm = () => {
     return (
       <>
         <Button ref={btnRef} colorScheme='blue' onClick={onOpen}>
-          Add New Client
+          {!formInProgress && <Text>Add New Client</Text>}
+          {formInProgress && <Text>Edit New Client</Text>}
         </Button>
         <Drawer
           isOpen={isOpen}
           placement='right'
-          onClose={onClose}
+          onClose={handleCloseAndSave}
           finalFocusRef={btnRef}
           size="lg"
         >
-          <DrawerOverlay />
-          <DrawerContent>
+          <DrawerOverlay onClick={handleOverlayClick}/>
+          <DrawerContent ref={drawerContentRef}>
             <DrawerCloseButton />
             <DrawerHeader>Add Client</DrawerHeader>
   
             <DrawerBody>
                 <Grid templateColumns="1fr 2fr" gap={5}>
                     <Text fontWeight="medium">First Name</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    <Input placeholder="Short Answer" value={formData.first_name}
+                    onChange={(e) => {setFormData({ ...formData, first_name: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Last Name</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    <Input placeholder="Short Answer" value={formData.last_name}
+                    onChange={(e) => {setFormData({ ...formData, last_name: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Status</Text>
-                    <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.status}
+                    onChange={(e) => {setFormData({ ...formData, status: e.target.value }); setFormInProgress(true)}}>
                         <option value="Active">Active</option>
                         <option value="Exited">Exited</option>
                     </Select>
 
                     <Text fontWeight="medium">Site</Text>
                     <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+                    onChange={(e) => {setFormData({ ...formData, site: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Unit ID</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                    <Input placeholder="Short Answer" value={formData.unit_id}
+                    onChange={(e) => {setFormData({ ...formData, unit_id: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Case Manager ID</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, created_by: e.target.value })} />
+                    <Input placeholder="Short Answer"
+                    onChange={(e) => {setFormData({ ...formData, created_by: e.target.value }); setFormInProgress(true)}} />
 
                     <Text fontWeight="medium">Grant</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, grant: e.target.value })} />
+                    <Input placeholder="Short Answer" value={formData.grant}
+                    onChange={(e) => {setFormData({ ...formData, grant: e.target.value }); setFormInProgress(true)}} />
 
                     <Text fontWeight="medium">Birthday</Text>
-                    <Input type="date"
-                    onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
+                    <Input type="date" value={formData.date_of_birth}
+                    onChange={(e) => {setFormData({ ...formData, date_of_birth: e.target.value }); setFormInProgress(true)}} />
 
                     <Text fontWeight="medium">Age</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}/>
+                    <Input placeholder="Short Answer" value={formData.age}
+                    onChange={(e) => {setFormData({ ...formData, age: e.target.value }); setFormInProgress(true)}}/>
 
                     <Text fontWeight="medium">Phone Number</Text>
-                    <Input placeholder="Enter phone number" maxLength={10} 
-                    onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                    <Input placeholder="Enter phone number" maxLength={10}  value={formData.phone_number}
+                    onChange={(e) => {setFormData({ ...formData, phone_number: e.target.value }); setFormInProgress(true)}}
                     />
                     
                     <Text fontWeight="medium">Email</Text>
-                    <Input type="email" placeholder="Enter email" maxLength={32} 
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    <Input type="email" placeholder="Enter email" maxLength={32} value={formData.email}
+                    onChange={(e) => {setFormData({ ...formData, email: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Emergency Contact Name</Text>
-                    <Input placeholder="Enter name" maxLength={32} 
-                    onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+                    <Input placeholder="Enter name" maxLength={32} value={formData.emergency_contact_name}
+                    onChange={(e) => {setFormData({ ...formData, emergency_contact_name: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Emergency Contact Phone</Text>
-                    <Input placeholder="Enter phone number" maxLength={10} 
-                    onChange={(e) => setFormData({ ...formData, emergency_contact_phone_number: e.target.value })}
+                    <Input placeholder="Enter phone number" maxLength={10} value={formData.emergency_contact_phone_number}
+                    onChange={(e) => {setFormData({ ...formData, emergency_contact_phone_number: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Medical</Text>
-                    <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, medical: e.target.value})}>
+                    <Select placeholder="Select option" value={formData.medical}
+                    onChange={(e) => {setFormData({ ...formData, medical: e.target.value}); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Entry Date</Text>
-                    <Input type="date"
-                    onChange={(e) => setFormData({ ...formData, entrance_date: e.target.value })}
+                    <Input type="date" value={formData.entrance_date}
+                    onChange={(e) => {setFormData({ ...formData, entrance_date: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Estimated Exit Date</Text>
-                    <Input type="date"
-                    onChange={(e) => setFormData({ ...formData, estimated_exit_date: e.target.value })}
+                    <Input type="date" value={formData.estimated_exit_date}
+                    onChange={(e) => {setFormData({ ...formData, estimated_exit_date: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Exit Date</Text>
-                    <Input type="date"
-                    onChange={(e) => setFormData({ ...formData, exit_date: e.target.value })}
+                    <Input type="date" value={formData.exit_date}
+                    onChange={(e) => {setFormData({ ...formData, exit_date: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Bed Nights</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, bed_nights: e.target.value })}
+                    <Input placeholder="Short Answer" value={formData.bed_nights}
+                    onChange={(e) => {setFormData({ ...formData, bed_nights: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Bed Nights with Children</Text>
-                    <Input placeholder="Short Answer" 
-                    onChange={(e) => setFormData({ ...formData, bed_nights_children: e.target.value })}
+                    <Input placeholder="Short Answer" value={formData.bed_nights_children}
+                    onChange={(e) => {setFormData({ ...formData, bed_nights_children: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Pregnant Upon Entry?</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, pregnant_upon_entry: e.target.value })}
+                    <Select placeholder="Select option" value={formData.pregnant_upon_entry}
+                    onChange={(e) => {setFormData({ ...formData, pregnant_upon_entry: e.target.value }); setFormInProgress(true)}}
                     >
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Disabled Children</Text>
-                    <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, disabled_children: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.disabled_children}
+                    onChange={(e) => {setFormData({ ...formData, disabled_children: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Ethnicity</Text>
-                    <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, ethnicity: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.ethnicity}
+                    onChange={(e) => {setFormData({ ...formData, ethnicity: e.target.value }); setFormInProgress(true)}}>
                         <option value="Hispanic">Hispanic</option>
                         <option value="Non-Hispanic">Non-Hispanic</option>
                         <option value="Refused">Refused</option>
                     </Select>
 
                     <Text fontWeight="medium">Race</Text>
-                    <Select placeholder="Select option" 
-                    onChange={(e) => setFormData({ ...formData, race: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.race}
+                    onChange={(e) => {setFormData({ ...formData, race: e.target.value }); setFormInProgress(true)}}>
                         <option value="Hispanic">Hispanic</option>
                         <option value="Caucasian">Caucasian</option>
                         <option value="African American">African American</option>
@@ -299,100 +358,101 @@ export const AddClientForm = () => {
                     </Select>
 
                     <Text fontWeight="medium">City of Last Permanent Residence</Text>
-                    <Input placeholder="Enter city" 
-                    onChange={(e) => setFormData({ ...formData, city_of_last_permanent_residence: e.target.value })}
+                    <Input placeholder="Enter city" value={formData.city_of_last_permanent_residence}
+                    onChange={(e) => {setFormData({ ...formData, city_of_last_permanent_residence: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Prior Living</Text>
-                    <Input placeholder="Enter prior living situation" 
-                    onChange={(e) => setFormData({ ...formData, prior_living: e.target.value })}
+                    <Input placeholder="Enter prior living situation" value={formData.prior_living}
+                    onChange={(e) => {setFormData({ ...formData, prior_living: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Prior Living City</Text>
-                    <Input placeholder="Enter city" onChange={(e) => setFormData({ ...formData, prior_living_city: e.target.value })}
+                    <Input placeholder="Enter city" value={formData.prior_living_city}
+                    onChange={(e) => {setFormData({ ...formData, prior_living_city: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Shelter in Last 5 Years</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, shelter_in_last_five_years: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.shelter_in_last_five_years}
+                    onChange={(e) => {setFormData({ ...formData, shelter_in_last_five_years: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Length of Homelessness (months)</Text>
-                    <Input type="number" placeholder="Enter number" 
-                    onChange={(e) => setFormData({ ...formData, homelessness_length: e.target.value })}
+                    <Input type="number" placeholder="Enter number" value={formData.homelessness_length}
+                    onChange={(e) => {setFormData({ ...formData, homelessness_length: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Chronically Homeless</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, chronically_homeless: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.chronically_homeless}
+                    onChange={(e) => {setFormData({ ...formData, chronically_homeless: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Attending School Upon Entry</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, attending_school_upon_entry: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.attending_school_upon_entry}
+                    onChange={(e) => {setFormData({ ...formData, attending_school_upon_entry: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Employment Gained</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, employment_gained: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.employment_gained}
+                    onChange={(e) => {setFormData({ ...formData, employment_gained: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Reason for Leaving</Text>
-                    <Input placeholder="Enter reason" 
-                    onChange={(e) => setFormData({ ...formData, reason_for_leaving: e.target.value })}/>
+                    <Input placeholder="Enter reason" value={formData.reason_for_leaving}
+                    onChange={(e) => {setFormData({ ...formData, reason_for_leaving: e.target.value }); setFormInProgress(true)}}/>
 
                     <Text fontWeight="medium">Specific Reason for Leaving</Text>
-                    <Input placeholder="Enter specific reason"
-                    onChange={(e) => setFormData({ ...formData, specific_reason_for_leaving: e.target.value })}
+                    <Input placeholder="Enter specific reason" value={formData.specific_reason_for_leaving}
+                    onChange={(e) => {setFormData({ ...formData, specific_reason_for_leaving: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Specific Destination</Text>
-                    <Input placeholder="Enter destination"
-                    onChange={(e) => setFormData({ ...formData, specific_destination: e.target.value })}
+                    <Input placeholder="Enter destination" value={formData.specific_destination}
+                    onChange={(e) => {setFormData({ ...formData, specific_destination: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Savings Amount ($)</Text>
-                    <Input type="number" step="0.01" placeholder="Enter amount"
-                    onChange={(e) => setFormData({ ...formData, savings_amount: e.target.value })}
+                    <Input type="number" step="0.01" placeholder="Enter amount" value={formData.savings_amount}
+                    onChange={(e) => {setFormData({ ...formData, savings_amount: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Attending School Upon Exit</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, attending_school_upon_exit: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.attending_school_upon_exit}
+                    onChange={(e) => {setFormData({ ...formData, attending_school_upon_exit: e.target.value }); setFormInProgress(true)}}>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Reunified</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, reunified: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.reunified}
+                    onChange={(e) => {setFormData({ ...formData, reunified: e.target.value }); setFormInProgress(true)}}>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Successful Completion</Text>
-                    <Select placeholder="Select option"
-                    onChange={(e) => setFormData({ ...formData, successful_completion: e.target.value })}>
+                    <Select placeholder="Select option" value={formData.successful_completion}
+                    onChange={(e) => {setFormData({ ...formData, successful_completion: e.target.value }); setFormInProgress(true)}}>
                     <option value="true">Yes</option>
                     <option value="false">No</option>
                     </Select>
 
                     <Text fontWeight="medium">Destination City</Text>
-                    <Input placeholder="Enter city"
-                    onChange={(e) => setFormData({ ...formData, destination_city: e.target.value })}
+                    <Input placeholder="Enter city" value={formData.destination_city}
+                    onChange={(e) => {setFormData({ ...formData, destination_city: e.target.value }); setFormInProgress(true)}}
                     />
 
                     <Text fontWeight="medium">Comments</Text>
-                    <Input placeholder="Enter comments"
-                    onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+                    <Input placeholder="Enter comments" value={formData.comments}
+                    onChange={(e) => {setFormData({ ...formData, comments: e.target.value }); setFormInProgress(true)}}
                     />
                 </Grid>
 
