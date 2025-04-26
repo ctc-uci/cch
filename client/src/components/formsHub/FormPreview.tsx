@@ -35,7 +35,6 @@ import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 import {ExitSurveyTableBody} from "./ExitSurveyTableBody.tsx";
 import {SuccessStoryTableBody} from "./SuccessStoryTableBody.tsx";
-import {RandomClientSurvey} from "../randomClientSurvey/RandomClientSurvey.tsx";
 import {RandomSurveyTableBody} from "./RandomSurveyTableBody.tsx";
 
 const FormPreview = ({
@@ -329,7 +328,11 @@ const FormPreview = ({
           ) : role === "user" &&
             formItemTitle ===
               "Client Tracking Statistics (Intake Statistics)" ? (
-            <RequestFormPreview />
+            <RequestFormPreview
+              cmId={formData["cmId"]}
+              clientId={formData["email"]}
+              onClose={onClose}
+            />
           ) : (
             <VStack
               marginTop="12px"

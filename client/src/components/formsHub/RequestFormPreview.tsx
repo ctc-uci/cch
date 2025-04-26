@@ -14,15 +14,17 @@ import {
   Textarea,
   Th,
   Thead,
-  Tr,
+  Tr, useToast,
   VStack,
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { formatDateString } from "../../utils/dateUtils.ts";
 
-export const RequestFormPreview = () => {
+export const RequestFormPreview = ({cmId, clientEmail, onClose} : {cmId: number, clientId: number}) => {
   const { backend } = useBackendContext();
+
+  const toast = useToast();
 
   const [requestHistoryDates, setRequestHistoryDates] = useState([]);
   const [requestComment, setRequestComment] = useState("");
@@ -48,13 +50,36 @@ export const RequestFormPreview = () => {
 
   const handleSubmitRequest = async () => {
     try {
+      const response = await backend.get("/clients", {
+        params: {
+          search: clientEmail
+        }
+      });
+
       await backend.post("/request", {
         comments: requestComment,
-        cm_id: 0,
-        client_ids: [],
+        cm_id: cmId,
+        client_ids: [response.data[0].id],
       });
+
+      toast({
+        title: "Successfully request form",
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
+
+      onClose();
     } catch (error) {
       console.error("Error handing submit request:", error);
+
+      toast({
+        title: "Did not successfully submit request form",
+        description: `There was an error while submitting the request.`,
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
     }
   };
 
