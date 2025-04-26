@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import { Select } from '@chakra-ui/react'
 import { Card, CardHeader, CardBody, CardFooter, Text } from '@chakra-ui/react'
-
+import { useBackendContext } from '../../../contexts/hooks/useBackendContext.ts';
 import DonationInputs, { DonationSub } from "./donationInputs";
 import {DonationFilter} from "../DonationFilter.tsx"
 export interface Donation {
@@ -16,6 +16,9 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
         sub: [],
       }
     );
+
+    const { backend } = useBackendContext();
+    const [donor, setDonor] = useState<string>(donation.donor);
 
     const [donors, setDonors] = useState<string[]>([]);
     const [newDonor, setNewDonor] = useState<string>("");
@@ -33,6 +36,18 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
           return updatedDonation;
         });
       };
+
+      const handleAddDonor = async () => {
+        try {
+          await backend.post("/donations/donors", {
+            name: newDonor,
+          });
+          setDonors((prev) => [...prev, newDonor]);
+          setNewDonor("");
+        } catch (error) {
+          console.error("Error adding donor:", error);
+        }
+      }
 
     const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
