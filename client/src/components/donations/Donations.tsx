@@ -53,7 +53,7 @@ import { Donation } from "./types";
 import { all } from "axios";
 import { downloadCSV } from "../../utils/downloadCSV";
 import { LoadingWheel } from ".././loading/loading.tsx"
-import { DonationFilter, DonationListFilter } from "./donationFilter.tsx"
+import { DonationFilter, DonationListFilter } from "./DonationFilter.tsx"
 import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
 
 
@@ -88,6 +88,8 @@ export const Donations = () => {
   const [newDonor, setNewDonor] = useState<string>("");
 
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
+  const [searchKey, setSearchKey] = useState("");
+
 
   const {
     isOpen: isDeleteOpen,
@@ -370,10 +372,28 @@ export const Donations = () => {
               freq === "yearly" ?
                 `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
-        
-          if (filterQuery.length > 0) {
-            allDonationsQuery = `/donations?${encodeURIComponent(filterQuery.join(" "))}`;
+           
+        if (freq !== "monthly" && freq !== "yearly") {    
+          if (filterQuery.length > 0 && searchKey.length > 0) {
+            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
           }
+          else if (searchKey.length > 0) {
+            allDonationsQuery = `/donations?filter=&search=${searchKey}`;
+          }
+          else if (filterQuery.length > 0) {
+            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=`;
+          }
+        } else {
+          if (filterQuery.length > 0 && searchKey.length > 0) {
+            allDonationsQuery += `&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
+          }
+          else if (searchKey.length > 0) {
+            allDonationsQuery += `&filter=&search=${searchKey}`;
+          }
+          else if (filterQuery.length > 0) {
+            allDonationsQuery += `&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`;
+          }
+        }
 
         const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse, donorResponse] = await Promise.all([
           backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
@@ -382,12 +402,10 @@ export const Donations = () => {
           backend.get(`/lastUpdated/donations`),
           backend.get(`/donations/donors`)
         ]);
-        console.log(donationsResponse.data);
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
         setDonors(donorResponse.data.map((donor: { name: string }) => donor.name));
-
 
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
@@ -400,7 +418,7 @@ export const Donations = () => {
     };
 
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh, freq, backend]);
+  }, [donor, startDate, endDate, toggleRefresh, freq, filterQuery, searchKey, backend]);
 
   return (
     <HStack
@@ -550,7 +568,7 @@ export const Donations = () => {
         <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
           <HStack padding="5px">
             <DonationListFilter setFilterQuery={setFilterQuery}/>
-            <Input maxWidth="20%" placeholder="search"></Input>
+            <Input maxWidth="20%" placeholder="search" onChange={(e) => setSearchKey(e.target.value)}></Input>
             <HStack width="100%" justifyContent={"right"}>
               <IconButton
                 aria-label="Download CSV"

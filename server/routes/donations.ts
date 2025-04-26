@@ -160,7 +160,7 @@ donationRouter.get("/weightSum", async (req, res) => {
 donationRouter.get("/filter/", async (req, res) => {
   try {
     // Query database
-    const { donor, startDate, endDate} = req.query;
+    const { donor, startDate, endDate, search, filter} = req.query;
     let query = `
       SELECT
         donations.*,
@@ -171,7 +171,7 @@ donationRouter.get("/filter/", async (req, res) => {
         ON donations.donor_id = donors.id
     `
     if (donor || startDate || endDate) {
-      query += " WHERE";
+      query += " WHERE ";
     }
     const queryParams = [];
     if (donor) {
@@ -183,7 +183,27 @@ donationRouter.get("/filter/", async (req, res) => {
     if (endDate) {
       queryParams.push(` donations.date <= '${endDate}'`);
     }
-    query += queryParams.join(" AND");
+    query += queryParams.join(" AND ");
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      query += ` 
+      AND (donations.id::TEXT ILIKE ${stringSearch}
+        OR donations.date::TEXT ILIKE ${stringSearch}
+        OR donations.weight::TEXT ILIKE ${stringSearch}
+        OR donations.value::TEXT ILIKE ${stringSearch}
+        OR donations.category::TEXT ILIKE ${stringSearch}
+        OR donors.name::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+
+    if (filter) {
+      if (typeof filter === 'string') {
+        query += `AND (${filter.replace(/donations\.category/g, 'donations.category::TEXT')})`;
+      }
+    }
+
     query += " ORDER BY donations.date DESC;";
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
@@ -194,7 +214,7 @@ donationRouter.get("/filter/", async (req, res) => {
 
 donationRouter.get("/monthfilter/", async (req, res) => {
   try {
-    const { donor, startDate, endDate} = req.query;
+    const { donor, startDate, endDate, search, filter} = req.query;
     let query = `
       SELECT
         donors.name              AS donor,
@@ -208,7 +228,7 @@ donationRouter.get("/monthfilter/", async (req, res) => {
         ON donations.donor_id = donors.id
     `;
     if (donor || startDate || endDate) {
-      query += " WHERE";
+      query += " WHERE ";
     }
     const queryParams = [];
     if (donor) {
@@ -220,11 +240,33 @@ donationRouter.get("/monthfilter/", async (req, res) => {
     if (endDate) {
       queryParams.push(` donations.date <= '${endDate}'`);
     }
-    query += queryParams.join(" AND");
+    query += queryParams.join(" AND ");
     query += `
-      GROUP BY donor, category, month_year
+      GROUP BY donors.name, donations.category, TO_CHAR(donations.date, 'FMMonth YYYY')
       ORDER BY latest_date DESC
     `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      query = ` 
+        WITH filtered AS (${query})
+        SELECT *
+        FROM filtered
+        WHERE 
+        month_year::TEXT ILIKE ${stringSearch}
+        OR total_weight::TEXT ILIKE ${stringSearch}
+        OR total_value::TEXT ILIKE ${stringSearch}
+        OR category::TEXT ILIKE ${stringSearch}
+        OR donor::TEXT ILIKE ${stringSearch}
+      `;
+    }
+
+    if (filter) {
+      if (typeof filter === 'string') {
+        query += `AND (${filter.replace(/donations\.category/g, 'donations.category::TEXT')})`;
+      }
+    }
 
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
@@ -235,7 +277,7 @@ donationRouter.get("/monthfilter/", async (req, res) => {
 
 donationRouter.get("/yearfilter/", async (req, res) => {
   try {
-    const { donor, startDate, endDate} = req.query;
+    const { donor, startDate, endDate, search, filter} = req.query;
     let query = `
       SELECT
         donors.name              AS donor,
@@ -268,6 +310,28 @@ donationRouter.get("/yearfilter/", async (req, res) => {
       GROUP BY donor, category, month_year
       ORDER BY latest_date DESC
     `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      query = ` 
+        WITH filtered AS (${query})
+        SELECT *
+        FROM filtered
+        WHERE 
+        month_year::TEXT ILIKE ${stringSearch}
+        OR total_weight::TEXT ILIKE ${stringSearch}
+        OR total_value::TEXT ILIKE ${stringSearch}
+        OR category::TEXT ILIKE ${stringSearch}
+        OR donor::TEXT ILIKE ${stringSearch}
+      `;
+    }
+
+    if (filter) {
+      if (typeof filter === 'string') {
+        query += `AND (${filter.replace(/donations\.category/g, 'donations.category::TEXT')})`;
+      }
+    }
 
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));

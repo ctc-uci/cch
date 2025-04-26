@@ -46,7 +46,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
 
     const columns = [
       { name: "Date", value: "donations.date", type: "date" },
-      { name: "Donor", value: "donations.donor", type: "string" },
+      { name: "Donor", value: "donors.name", type: "string" },
       { name: "Category", value: "donations.category", type: "string" },
       { name: "Value ($)", value: "donations.value", type: "number" },
       { name: "Total ($)", value: "donations.total", type: "number" },

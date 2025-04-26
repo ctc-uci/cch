@@ -34,7 +34,6 @@ function AddDonationsDrawer() {
   const { backend } = useBackendContext();
   const toast = useToast();
 
-
   const handleAddDonor = () => {
     setDonations((prevDonations) => [
       ...prevDonations,
