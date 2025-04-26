@@ -43,7 +43,6 @@ export const TextInputComponent = ({
         w={width}
         type={type}
         required
-        disabled
       />
     </HStack>
   </FormControl>

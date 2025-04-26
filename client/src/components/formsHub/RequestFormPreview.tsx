@@ -107,12 +107,14 @@ export const RequestFormPreview = () => {
               <Textarea
                 placeholder="Type Here"
                 size="sm"
+                onChange={(e) => setRequestComment(e.target.value)}
               />
             </FormControl>
             <Button
               mt={3}
               colorScheme="blue"
               size="sm"
+              onClick={handleSubmitRequest}
             >
               Send Request
             </Button>

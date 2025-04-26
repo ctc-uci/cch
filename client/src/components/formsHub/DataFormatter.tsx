@@ -111,6 +111,57 @@ export const caseManagerKeyLabelMap: Record<string, string> = {
   numberOfInterviewsAccpeted: "Interviews Accepted"
 };
 
+export const exitSurveyKeyLabelMap: Record<string, string> = {
+  date: "Date",
+  name: "Name",
+  program_date_completion: "Program Date Completion",
+  cch_rating: "CCH Rating",
+  cch_like_most: "What Did You Like Most About CCH",
+  life_skills_rating: "Life Skills Rating",
+  life_skills_helpful_topics: "Helpful Life Skills Topics",
+  life_skills_offer_topics_in_the_future: "Life Skills Topics to Offer in Future",
+  cm_rating: "Case Manager Rating",
+  cm_change_about: "What Would You Change About Case Management",
+  cm_most_beneficial: "Most Beneficial Part of Case Management",
+  cch_could_be_improved: "Ways CCH Could Be Improved",
+  experience_takeaway: "Personal Takeaway from the Program",
+  experience_accomplished: "Accomplishments Achieved",
+  experience_extra_notes: "Extra Notes About Experience",
+};
+
+export const randomSurveyKeyLabelMap: Record<string, string> = {
+  date: "Date",
+  cchQos: "CCH Quality of Service",
+  cmQos: "Case Manager Quality of Service",
+  courteous: "Staff Courteous",
+  informative: "Staff Informative",
+  promptAndHelpful: "Staff Prompt and Helpful",
+  entryQuality: "Entry Quality",
+  unitQuality: "Unit Quality",
+  clean: "Cleanliness",
+  overallExperience: "Overall Experience",
+  caseMeetingFrequency: "Case Meeting Frequency",
+  lifeskills: "Life Skills Classes Attended",
+  recommend: "Would Recommend",
+  recommendReasoning: "Reason for Recommendation",
+  makeCchMoreHelpful: "Suggestions for Improvement",
+  cmFeedback: "Case Manager Feedback",
+  otherComments: "Other Comments",
+};
+
+export const successStoryKeyLabelMap: Record<string, string> = {
+  date: "Date",
+  name: "Name",
+  previousSituation: "Previous Situation",
+  cchImpact: "Impact of CCH",
+  whereNow: "Current Status",
+  tellDonors: "Message to Donors",
+  quote: "Quote",
+  consent: "Consent Given",
+  entranceDate: "Entrance Date",
+  exitDate: "Exit Date"
+};
+
 const config: Record<
   string,
   { labelMap: Record<string, string>; excludeKeys: string[] }
@@ -127,8 +178,19 @@ const config: Record<
     labelMap: caseManagerKeyLabelMap,
     excludeKeys: ["id"],
   },
+  "Exit Surveys": {
+    labelMap: exitSurveyKeyLabelMap,
+    excludeKeys: ["id", "cm_id", "client_id"],
+  },
+  "Random Client Surveys": {
+    labelMap: randomSurveyKeyLabelMap,
+    excludeKeys: ["id", "cm_id"],
+  },
+  "Success Stories": {
+    labelMap: successStoryKeyLabelMap,
+    excludeKeys: ["id", "client_id", "cm_id"],
+  },
 };
-
 
 export const formatDataWithLabels = (
   rawData: Record<string, any>,

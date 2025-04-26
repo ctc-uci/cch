@@ -5,7 +5,13 @@ import {
   TrueFalseComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const SuccessStoryTableBody = (formData, handleChange) => {
+export const SuccessStoryTableBody = ({
+                                        formData,
+                                        handleChange,
+                                      }: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>
@@ -25,7 +31,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <NumberInputComponent
             name="client_id"
-            value={formData.client_id}
+            value={formData.clientId}
             onChange={handleChange}
             width="100%"
           />
@@ -48,7 +54,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <NumberInputComponent
             name="cm_id"
-            value={formData.cm_id}
+            value={formData.cmId}
             onChange={handleChange}
             width="100%"
           />
@@ -59,7 +65,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <TextInputComponent
             name="previous_situation"
-            value={formData.previous_situation}
+            value={formData.previousSituation}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -71,7 +77,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <TextInputComponent
             name="cch_impact"
-            value={formData.cch_impact}
+            value={formData.cchImpact}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -83,7 +89,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <TextInputComponent
             name="where_now"
-            value={formData.where_now}
+            value={formData.whereNow}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -95,7 +101,7 @@ export const SuccessStoryTableBody = (formData, handleChange) => {
         <Td>
           <TextInputComponent
             name="tell_donors"
-            value={formData.tell_donors}
+            value={formData.tellDonors}
             onChange={handleChange}
             type="text"
             width="100%"

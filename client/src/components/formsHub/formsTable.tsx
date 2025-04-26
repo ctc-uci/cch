@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
@@ -240,7 +240,7 @@ export const FormTable = () => {
           })
         );
 
-        const exitSurveyForms: Form[] = await exitSurveyResponse.data.map(
+        const exitSurveyForms: Form[] = await exitSurveyResponse.data.data.map(
           (form: Form) => ({
             id: form.id,
             hashedId: form.id,
@@ -330,26 +330,22 @@ export const FormTable = () => {
     }
   }, [clickedFormItem, onOpen]);
 
-  const allFormsData = useMemo(
-    () => [
-      ...initialScreeners,
-      ...intakeStatistics,
-      ...frontDeskStatistics,
-      ...caseManagerStatistics,
-      ...exitSurvey,
-      ...successStory,
-      ...randomClientSurvey
-    ],
-    [
-      initialScreeners,
-      intakeStatistics,
-      frontDeskStatistics,
-      caseManagerStatistics,
-      exitSurvey,
-      successStory,
-      randomClientSurvey
-    ]
-  );
+  const allFormsData = useMemo(() => [
+    ...initialScreeners,
+    ...intakeStatistics,
+    ...frontDeskStatistics,
+    ...caseManagerStatistics,
+    ...(role === "admin" ? [...exitSurvey, ...successStory, ...randomClientSurvey] : []),
+  ], [
+    role,
+    initialScreeners,
+    intakeStatistics,
+    frontDeskStatistics,
+    caseManagerStatistics,
+    exitSurvey,
+    successStory,
+    randomClientSurvey,
+  ]);
 
   const allFormsTable = useReactTable<Form>({
     data: allFormsData,
@@ -411,8 +407,18 @@ export const FormTable = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const succes = useReactTable<Form>({
-    data: caseManagerStatistics,
+  const successStoryTable = useReactTable<Form>({
+    data: successStory,
+    columns,
+    state: { sorting },
+    sortDescFirst: true,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const randomClientSurveyTable = useReactTable<Form>({
+    data: randomClientSurvey,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -589,6 +595,9 @@ export const FormTable = () => {
           <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Front Desk Statistics</Tab>
           <Tab>Case Manager Statistics</Tab>
+          {role === "admin" && <Tab>Exit Survey Forms</Tab>}
+          {role === "admin" && <Tab>Success Story Forms</Tab>}
+          {role === "admin" && <Tab>Random Client Survey Forms</Tab>}
         </TabList>
         <TabPanels>
         <TabPanel>{renderTable(allFormsTable, allFormsData)}</TabPanel>
@@ -604,6 +613,9 @@ export const FormTable = () => {
           <TabPanel>
             {renderTable(caseManagerStatisticsTable, caseManagerStatistics)}
           </TabPanel>
+          {role === "admin" && <TabPanel>{renderTable(exitSurveyTable, exitSurvey)}</TabPanel>}
+          {role === "admin" && <TabPanel>{renderTable(successStoryTable, successStory)}</TabPanel>}
+          {role === "admin" && <TabPanel>{renderTable(randomClientSurveyTable, randomClientSurvey)}</TabPanel>}
         </TabPanels>
       </Tabs>
       {clickedFormItem && (

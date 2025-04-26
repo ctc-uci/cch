@@ -33,6 +33,10 @@ import { FrontDeskMonthlyTableBody } from "./FrontDeskTableBody.tsx";
 import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
 import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
+import {ExitSurveyTableBody} from "./ExitSurveyTableBody.tsx";
+import {SuccessStoryTableBody} from "./SuccessStoryTableBody.tsx";
+import {RandomClientSurvey} from "../randomClientSurvey/RandomClientSurvey.tsx";
+import {RandomSurveyTableBody} from "./RandomSurveyTableBody.tsx";
 
 const FormPreview = ({
   clickedFormItem,
@@ -97,6 +101,27 @@ const FormPreview = ({
             handleChange={handleChange}
           />
         );
+      case "Exit Surveys":
+        return (
+          <ExitSurveyTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+            />
+        );
+      case "Success Stories":
+        return (
+          <SuccessStoryTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
+      case "Random Client Surveys":
+        return (
+          <RandomSurveyTableBody
+            formData={newFormData}
+            handleChange={handleChange}
+          />
+        );
     }
   };
 
@@ -124,6 +149,15 @@ const FormPreview = ({
         case "Case Manager Monthly Statistics":
           endpoint = `/caseManagerMonthlyStats/${formItemId}`;
           break;
+        case "Exit Surveys":
+          endpoint = `/exitSurvey/${formItemId}`;
+          break;
+        case "Success Stories":
+          endpoint = `/successStory/${formItemId}`;
+          break;
+        case "Random Client Surveys":
+          endpoint = `/randomSurvey/${formItemId}`;
+          break;
         default:
           console.error("Unknown form title:", formItemTitle);
           return;
@@ -131,9 +165,19 @@ const FormPreview = ({
 
       try {
         const response = await backend.get(endpoint);
-        const data = formatDataWithLabels(response.data[0], formItemTitle);
-        setFormData(response.data[0]);
-        setNewFormData(response.data[0]);
+        let normalData = response.data[0];
+
+        if(formItemTitle === "Exit Surveys") {
+          normalData = response.data.data[0];
+        } else if (formItemTitle === "Random Client Surveys") {
+          normalData = response.data;
+        }
+
+        console.log(normalData);
+
+        const data = formatDataWithLabels(normalData, formItemTitle);
+        setFormData(normalData);
+        setNewFormData(normalData);
         setFormattedFormData(data); // human readable keys
         setFormattedModifiedData(data);
       } catch (error) {
@@ -170,6 +214,15 @@ const FormPreview = ({
       case "Case Manager Monthly Statistics":
         endpoint = `/caseManagerMonthlyStats/${formItemId}`;
         break;
+      case "Exit Surveys":
+        endpoint = `/exitSurvey/${formItemId}`;
+        break;
+      case "Success Stories":
+        endpoint = `/successStory/${formItemId}`;
+        break;
+      case "Random Client Surveys":
+        endpoint = `/randomSurvey/${formItemId}`;
+        break;
       default:
         console.error("Unknown form title:", formItemTitle);
         return;
@@ -178,7 +231,8 @@ const FormPreview = ({
     try {
       if (
         formItemTitle === "Front Desk Monthly Statistics" ||
-        formItemTitle === "Initial Screeners"
+        formItemTitle === "Initial Screeners" ||
+        formItemTitle === "Exit Surveys"
       ) {
         await backend.put(endpoint, camelToSnakeCase(newFormData));
       } else {

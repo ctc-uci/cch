@@ -5,7 +5,13 @@ import {
   TextInputComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const ExitSurveyTableBody = (formData, handleChange) => {
+export const ExitSurveyTableBody = ({
+                                      formData,
+                                      handleChange,
+                                    }: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>

@@ -5,10 +5,10 @@ import {
   TrueFalseComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const RandomSurveyTableBody =  ({
-  formData,
-  handleChange,
-}: {
+export const RandomSurveyTableBody = ({
+                                        formData,
+                                        handleChange,
+                                      }: {
   formData: Record<string, any>;
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 }) => {
@@ -30,8 +30,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">CCH Quality of Service</Td>
         <Td>
           <NumberInputComponent
-            name="cch_qos"
-            value={formData.cch_qos}
+            name="cchQos"
+            value={formData.cchQos}
             onChange={handleChange}
             width="100%"
           />
@@ -41,8 +41,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Case Manager Quality of Service</Td>
         <Td>
           <NumberInputComponent
-            name="cm_qos"
-            value={formData.cm_qos}
+            name="cmQos"
+            value={formData.cmQos}
             onChange={handleChange}
             width="100%"
           />
@@ -74,8 +74,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Staff Prompt and Helpful</Td>
         <Td>
           <TrueFalseComponent
-            name="prompt_and_helpful"
-            value={formData.prompt_and_helpful}
+            name="promptAndHelpful"
+            value={formData.promptAndHelpful}
             onChange={handleChange}
             width="100%"
           />
@@ -85,8 +85,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Entry Quality</Td>
         <Td>
           <NumberInputComponent
-            name="entry_quality"
-            value={formData.entry_quality}
+            name="entryQuality"
+            value={formData.entryQuality}
             onChange={handleChange}
             width="100%"
           />
@@ -96,8 +96,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Unit Quality</Td>
         <Td>
           <NumberInputComponent
-            name="unit_quality"
-            value={formData.unit_quality}
+            name="unitQuality"
+            value={formData.unitQuality}
             onChange={handleChange}
             width="100%"
           />
@@ -118,8 +118,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Overall Experience</Td>
         <Td>
           <NumberInputComponent
-            name="overall_experience"
-            value={formData.overall_experience}
+            name="overallExperience"
+            value={formData.overallExperience}
             onChange={handleChange}
             width="100%"
           />
@@ -129,8 +129,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Case Meeting Frequency</Td>
         <Td>
           <TextInputComponent
-            name="case_meeting_frequency"
-            value={formData.case_meeting_frequency}
+            name="caseMeetingFrequency"
+            value={formData.caseMeetingFrequency}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -163,8 +163,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Recommend Reasoning</Td>
         <Td>
           <TextInputComponent
-            name="recommend_reasoning"
-            value={formData.recommend_reasoning}
+            name="recommendReasoning"
+            value={formData.recommendReasoning}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -175,8 +175,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">How to Make CCH More Helpful</Td>
         <Td>
           <TextInputComponent
-            name="make_cch_more_helpful"
-            value={formData.make_cch_more_helpful}
+            name="makeCchMoreHelpful"
+            value={formData.makeCchMoreHelpful}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -187,8 +187,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Case Manager ID</Td>
         <Td>
           <NumberInputComponent
-            name="cm_id"
-            value={formData.cm_id}
+            name="cmId"
+            value={formData.cmId}
             onChange={handleChange}
             width="100%"
           />
@@ -198,8 +198,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Case Manager Feedback</Td>
         <Td>
           <TextInputComponent
-            name="cm_feedback"
-            value={formData.cm_feedback}
+            name="cmFeedback"
+            value={formData.cmFeedback}
             onChange={handleChange}
             type="text"
             width="100%"
@@ -210,8 +210,8 @@ export const RandomSurveyTableBody =  ({
         <Td fontSize="medium">Other Comments</Td>
         <Td>
           <TextInputComponent
-            name="other_comments"
-            value={formData.other_comments}
+            name="otherComments"
+            value={formData.otherComments}
             onChange={handleChange}
             type="text"
             width="100%"
