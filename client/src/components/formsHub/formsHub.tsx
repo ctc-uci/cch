@@ -11,12 +11,14 @@ interface FormsHubProps {
 }
 
 export const FormsHub = ({admin}: FormsHubProps) => {
+  console.log("forms hub is being rendered")
   return (
 
     <VStack
       overflowX="hidden"
       spacing={8}
       align="stretch"
+      width="100%"
     >
       <Box>
         <Heading

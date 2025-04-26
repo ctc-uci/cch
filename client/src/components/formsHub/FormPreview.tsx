@@ -39,14 +39,14 @@ import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
 import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 
-export const FormPreview = ({
+const FormPreview = ({
   formItemId,
   formItemTitle,
   formItemName,
   formItemDate,
   isOpen,
   onClose,
-  setRefreshTable
+  setRefreshTable,
 }: {
   formItemId: number;
   formItemTitle: string;
@@ -103,6 +103,13 @@ export const FormPreview = ({
   };
 
   useEffect(() => {
+    setFormData({});
+    setNewFormData({});
+    setFormattedFormData({});
+    setFormattedModifiedData({});
+    setIsEditing(false);
+    setIsLoading(true);
+
     const getData = async () => {
       let endpoint = "";
 
@@ -111,7 +118,7 @@ export const FormPreview = ({
           endpoint = `/initialInterview/get-interview/${formItemId}`;
           break;
         case "Client Tracking Statistics (Intake Statistics)":
-          endpoint = `/intakeStats/${formItemId}`;
+          endpoint = `/intakeStatsForm/${formItemId}`;
           break;
         case "Front Desk Monthly Statistics":
           endpoint = `/frontDesk/${formItemId}`;
@@ -121,13 +128,10 @@ export const FormPreview = ({
           break;
         default:
           console.error("Unknown form title:", formItemTitle);
-          setIsLoading(false);
           return;
       }
 
       try {
-        setIsLoading(true);
-
         const response = await backend.get(endpoint);
         const data = formatDataWithLabels(response.data[0], formItemTitle);
         setFormData(response.data[0]);
@@ -142,6 +146,7 @@ export const FormPreview = ({
     };
 
     getData();
+    console.log("forms preview useffect running")
   }, [backend, formItemTitle, formItemId]);
 
   const handleChange = (
@@ -156,8 +161,6 @@ export const FormPreview = ({
   };
 
   const handleSaveForm = async () => {
-    // setNewFormData(formData);
-
     let endpoint = "";
 
     switch (formItemTitle) {
@@ -165,10 +168,10 @@ export const FormPreview = ({
         endpoint = `/initialInterview/${formData.id}`;
         break;
       case "Front Desk Monthly Statistics":
-        endpoint = `/frontDesk/`;
+        endpoint = `/frontDesk/${formData.id}`;
         break;
       case "Case Manager Monthly Statistics":
-        endpoint = `/caseManagerMonthlyStats/`;
+        endpoint = `/caseManagerMonthlyStats/${formData.id}`;
         break;
       default:
         console.error("Unknown form title:", formItemTitle);
@@ -182,7 +185,7 @@ export const FormPreview = ({
       ) {
         await backend.put(endpoint, camelToSnakeCase(newFormData));
       } else {
-        console.log(newFormData)
+        console.log(newFormData);
         await backend.put(endpoint, newFormData);
       }
     } catch (error) {
@@ -347,6 +350,7 @@ export const FormPreview = ({
                 border="1px"
                 borderColor="gray.200"
                 borderRadius="12px"
+                overflowY="auto"
               >
                 <Table variant="simple">
                   <Thead>
@@ -371,7 +375,11 @@ export const FormPreview = ({
                           ([key, value]) => (
                             <Tr key={key}>
                               <Td>{key}</Td>
-                              <Td>{isDate(value) ? formatDateString(value): value}</Td>
+                              <Td>
+                                {isDate(value)
+                                  ? formatDateString(value)
+                                  : value}
+                              </Td>
                             </Tr>
                           )
                         )
@@ -386,3 +394,5 @@ export const FormPreview = ({
     </Drawer>
   );
 };
+
+export default FormPreview;
