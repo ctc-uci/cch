@@ -8,6 +8,7 @@ import {
   Checkbox,
   Heading,
   HStack,
+  IconButton,
   Input,
   Modal,
   ModalOverlay,
@@ -41,6 +42,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FaBalanceScale, FaDollarSign } from "react-icons/fa";
+import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {
   formatDateString,
@@ -49,6 +51,7 @@ import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
 import { all } from "axios";
+import { downloadCSV } from "../../utils/downloadCSV";
 import { LoadingWheel } from ".././loading/loading.tsx"
 import { DonationFilter, DonationListFilter } from "./donationFilter.tsx"
 import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
@@ -311,19 +314,66 @@ export const Donations = () => {
     }
   };
 
+  const onPressCSVButton = () => {
+      let headers, data;
+      if (freq !== "yearly" && freq !== "monthly") {
+        headers = [
+          "ID",
+          "Date",
+          "Donor",
+          "Category",
+          "Weight (lb)",
+          "Value ($)",
+          "Total"
+        ];
+
+        data = allDonations.map((donation) => ({
+          "ID": donation.id,
+          "Date": donation.date,
+          "Donor": donation.donor,
+          "Category": donation.category,
+          "Weight (lb)": donation.weight,
+          "Value ($)": donation.value,
+          "Total": donation.total,
+        }));
+
+      } else {
+        headers = [
+          "Date",
+          "Donor",
+          "Category",
+          "Total Weight (lb)",
+          "Total Value ($)"
+        ];
+        data = allDonations.map((donation) => ({
+          "Date": donation.monthYear,
+          "Donor": donation.donor,
+          "Category": donation.category,
+          "Total Weight (lb)": donation.totalWeight,
+          "Total Value ($)": donation.totalValue,
+        }));
+      }
+  
+      downloadCSV(headers, data, `clients.csv`);
+    };
+
   useEffect(() => {
     const fetchData = async () => {
 
       try {
         const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
         const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
-        const allDonationsQuery =
+        let allDonationsQuery =
           freq === "monthly" ?
             `/donations/monthfilter?donor=${donor}&startDate=${start}&endDate=${end}`
             :
               freq === "yearly" ?
                 `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
+        
+          if (filterQuery.length > 0) {
+            allDonationsQuery = `/donations?${encodeURIComponent(filterQuery.join(" "))}`;
+          }
 
         const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse, donorResponse] = await Promise.all([
           backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
@@ -332,6 +382,7 @@ export const Donations = () => {
           backend.get(`/lastUpdated/donations`),
           backend.get(`/donations/donors`)
         ]);
+        console.log(donationsResponse.data);
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
@@ -500,6 +551,14 @@ export const Donations = () => {
           <HStack padding="5px">
             <DonationListFilter setFilterQuery={setFilterQuery}/>
             <Input maxWidth="20%" placeholder="search"></Input>
+            <HStack width="100%" justifyContent={"right"}>
+              <IconButton
+                aria-label="Download CSV"
+                onClick={() => onPressCSVButton()}
+              >
+                <FiUpload />
+              </IconButton>
+            </HStack>
           </HStack>
           <TableContainer
             width="100%"

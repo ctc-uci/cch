@@ -13,9 +13,9 @@ donationRouter.get("/", async (req, res) => {
     // Query database
     const data = await db.query(
       `SELECT donations.*,
-	donors.name AS donor
-	FROM donations
-LEFT JOIN donors ON donations.donor_id = donors.id`
+      donors.name AS donor
+      FROM donations
+      LEFT JOIN donors ON donations.donor_id = donors.id`
     );
 
     res.status(200).json(keysToCamel(data));
@@ -146,6 +146,46 @@ donationRouter.get("/filter/", async (req, res) => {
     const data = await db.query(query);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+donationRouter.get("/", async (req, res) => {
+  try {
+    const { search, filter } = req.query;
+    let queryStr = `
+      SELECT
+        donations.*,
+        donors.name        AS donor,
+        ROUND(donations.weight * donations.value, 2) AS total
+      FROM donations
+      JOIN donors
+        ON donations.donor_id = donors.id
+    `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      queryStr += ` 
+      AND (donations.id::TEXT ILIKE ${stringSearch}
+        OR donations.date::TEXT ILIKE ${stringSearch}
+        OR donations.weight::TEXT ILIKE ${stringSearch}
+        OR donations.value::TEXT ILIKE ${stringSearch}
+        OR donations.category::TEXT ILIKE ${stringSearch}
+        OR donations.donor_id::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY clients.id ASC";
+
+    const clients = await db.query(queryStr);
+    res.status(200).json(keysToCamel(clients));
+  } catch (err) {
+    console.log(err.message);
     res.status(500).send(err.message);
   }
 });
