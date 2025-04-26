@@ -25,8 +25,12 @@ import Client from "../../types/client";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
+interface AddClientFormProps {
+  onClientAdded: () => void;
+  setShowUnfinishedAlert: (e: boolean) => void;
+}
 
-export const AddClientForm = ({ onClientAdded }: { onClientAdded: () => void }) => {
+export const AddClientForm = ({ onClientAdded, setShowUnfinishedAlert}: AddClientFormProps) => {
     const {
       isOpen: isAlertOpen,
       onOpen: openAlert,
@@ -61,22 +65,11 @@ export const AddClientForm = ({ onClientAdded }: { onClientAdded: () => void }) 
       closeAlert()      // Close the alert
       setFormData({});
       setFormInProgress(false)
+      setShowUnfinishedAlert(false)
     }
 
     const drawerContentRef = useRef<HTMLDivElement | null>(null);
     
-    const handleOverlayClick = (event: React.MouseEvent) => {
-      // Prevent the event if clicked inside the content
-      if (
-        drawerContentRef.current &&
-        drawerContentRef.current.contains(event.target as Node)
-      ) {
-        return;
-      }
-
-      console.log("Drawer lost focus via outside click");
-      onClose();
-    };
              
     const [formData, setFormData] = React.useState({
         created_by: "",
@@ -220,8 +213,8 @@ export const AddClientForm = ({ onClientAdded }: { onClientAdded: () => void }) 
           finalFocusRef={btnRef}
           size="lg"
         >
-          <DrawerOverlay onClick={handleOverlayClick}/>
-          <DrawerContent ref={drawerContentRef}>
+          <DrawerOverlay />
+          <DrawerContent>
             <DrawerCloseButton />
             <DrawerHeader>Add Client</DrawerHeader>
   
@@ -229,7 +222,7 @@ export const AddClientForm = ({ onClientAdded }: { onClientAdded: () => void }) 
                 <Grid templateColumns="1fr 2fr" gap={5}>
                     <Text fontWeight="medium">First Name</Text>
                     <Input placeholder="Short Answer" value={formData.first_name}
-                    onChange={(e) => {setFormData({ ...formData, first_name: e.target.value }); setFormInProgress(true)}}
+                    onChange={(e) => {setFormData({ ...formData, first_name: e.target.value }); setFormInProgress(true); setShowUnfinishedAlert(true)}}
                     />
 
                     <Text fontWeight="medium">Last Name</Text>

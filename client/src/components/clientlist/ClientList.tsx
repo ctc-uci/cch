@@ -74,6 +74,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
 
+  const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
+
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
       {
@@ -327,10 +329,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
       console.error("Error deleting clients", error);
     }
   };
+  
 
-  const handleAdd = async () => {
-    
-  }
 
   const fetchData = async () => {
     try {
@@ -369,7 +369,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
-      <UnfinishedClientAlert/>
+      {showUnfinishedAlert && <UnfinishedClientAlert/>}
       <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
       <HStack width="100%">
         <Heading size="md">My Complete Client Table</Heading>
@@ -417,7 +417,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
               delete
             </Button>
             {/* <Button fontSize="12px">add</Button> */}
-            <AddClientForm onClientAdded={fetchData}>a</AddClientForm>
+            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert}>a</AddClientForm>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
