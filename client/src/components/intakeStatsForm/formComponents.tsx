@@ -21,6 +21,7 @@ type TextInputProps = {
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
   width?: string;
+  disabled?: boolean;
   type: "text" | "number" | "email" | "date";
 };
 
@@ -42,6 +43,7 @@ export const TextInputComponent = ({
         w={width}
         type={type}
         required
+        disabled
       />
     </HStack>
   </FormControl>

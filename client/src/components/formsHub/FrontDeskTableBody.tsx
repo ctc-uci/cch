@@ -5,7 +5,13 @@ import {
   TextInputComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const FrontDeskMonthlyTableBody = (formData, handleChange) => {
+export const FrontDeskMonthlyTableBody =  ({
+  formData,
+  handleChange,
+}: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>
@@ -17,6 +23,7 @@ export const FrontDeskMonthlyTableBody = (formData, handleChange) => {
             onChange={handleChange}
             type="date"
             width="100%"
+            disabled
           />
         </Td>
       </Tr>

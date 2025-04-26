@@ -5,7 +5,13 @@ import {
   TrueFalseComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const RandomSurveyTableBody = (formData, handleChange) => {
+export const RandomSurveyTableBody =  ({
+  formData,
+  handleChange,
+}: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>

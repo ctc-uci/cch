@@ -5,7 +5,13 @@ import {
   TextInputComponent,
 } from "../intakeStatsForm/formComponents";
 
-export const CaseManagerMonthlyTableBody = (formData, handleChange) => {
+export const CaseManagerMonthlyTableBody = ({
+  formData,
+  handleChange,
+}: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>

@@ -49,7 +49,13 @@ const clientGrantOptions = [
   { label: "Non-Funded", value: "Non-Funded" },
 ];
 
-export const IntakeStatisticsTableBody = (formData, handleChange) => {
+export const IntakeStatisticsTableBody =  ({
+  formData,
+  handleChange,
+}: {
+  formData: Record<string, any>;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+}) => {
   return (
     <>
       <Tr>

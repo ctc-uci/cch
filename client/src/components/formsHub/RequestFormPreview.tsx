@@ -1,14 +1,25 @@
 import { useEffect, useState } from "react";
 
-
-
-import { Box, Button, FormControl, FormLabel, Heading, Table, TableContainer, Tbody, Td, Text, Textarea, Th, Thead, Tr, VStack } from "@chakra-ui/react";
-
-
+import {
+  Box,
+  Button,
+  FormControl,
+  FormLabel,
+  Heading,
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Text,
+  Textarea,
+  Th,
+  Thead,
+  Tr,
+  VStack,
+} from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { formatDateString } from "../../utils/dateUtils.ts";
-
 
 export const RequestFormPreview = () => {
   const { backend } = useBackendContext();
@@ -22,7 +33,7 @@ export const RequestFormPreview = () => {
         const response = await backend.get("/request/activeRequests");
         const dates = [];
 
-        for(const data of response.data) {
+        for (const data of response.data) {
           dates.push(formatDateString(data.created_at));
         }
 
@@ -41,9 +52,11 @@ export const RequestFormPreview = () => {
         comments: requestComment,
         cm_id: 0,
         client_ids: [],
-      })
+      });
+    } catch (error) {
+      console.error("Error handing submit request:", error);
     }
-  }
+  };
 
   return (
     <Box
@@ -124,8 +137,8 @@ export const RequestFormPreview = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                    {requestHistoryDates.length === 0 ? (
-                      <Tr>
+                  {requestHistoryDates.length === 0 ? (
+                    <Tr>
                       <Td colSpan={2}>
                         <Text
                           fontSize="sm"
@@ -134,15 +147,15 @@ export const RequestFormPreview = () => {
                           No entries yet
                         </Text>
                       </Td>
+                    </Tr>
+                  ) : (
+                    requestHistoryDates.map((date, index) => (
+                      <Tr>
+                        <Td>{index + 1}</Td>
+                        <Td>{date}</Td>
                       </Tr>
-                    ) : (
-                      requestHistoryDates.map((date, index) => (
-                        <Tr>
-                          <Td>{index + 1}</Td>
-                          <Td>{date}</Td>
-                        </Tr>
-                      ))
-                    )}
+                    ))
+                  )}
                 </Tbody>
               </Table>
             </TableContainer>

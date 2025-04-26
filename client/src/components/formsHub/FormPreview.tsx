@@ -67,8 +67,6 @@ const FormPreview = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  console.log("i am showing forms preview just this")
-
   const renderTableBody = () => {
     switch (formItemTitle) {
       case "Initial Screeners":
@@ -146,8 +144,6 @@ const FormPreview = ({
     };
 
     getData();
-    console.log("forms preview useffect running")
-    console.log(clickedFormItem, refreshTable);
   }, [backend, clickedFormItem, refreshTable]);
 
   const handleChange = (
