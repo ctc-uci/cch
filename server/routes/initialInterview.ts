@@ -235,8 +235,6 @@ initialInterviewRouter.post("/", async (req, res) => {
       whatCouldPreventHomeless,
     } = req.body;
 
-    console.log(req.body);
-
     const query = `
       INSERT INTO initial_interview (
         applicant_type,
@@ -386,7 +384,6 @@ initialInterviewRouter.post("/", async (req, res) => {
 });
 
 initialInterviewRouter.put("/:id", async (req, res) => {
-  console.log(req.body)
   const { id } = req.params;
   const {
     applicant_type,

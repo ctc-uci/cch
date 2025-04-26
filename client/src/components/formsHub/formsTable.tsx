@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
@@ -39,10 +39,10 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Form } from "../../types/form";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
+import { LoadingWheel } from ".././loading/loading.tsx";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import PrintForm from "../printForm/PrintForm";
-import { LoadingWheel } from ".././loading/loading.tsx"
-import { FormPreview } from "./FormPreview";
+import FormPreview from "./FormPreview";
 
 export const FormTable = () => {
   const { backend } = useBackendContext();
@@ -87,9 +87,7 @@ export const FormTable = () => {
             <Box textAlign="center">
               <Checkbox
                 isChecked={isChecked}
-                onChange={(e) =>
-                  handleRowSelect(hashedId, e.target.checked)
-                }
+                onChange={(e) => handleRowSelect(hashedId, e.target.checked)}
               />
             </Box>
           );
@@ -114,7 +112,8 @@ export const FormTable = () => {
         header: "Export",
       },
     ],
-    [selectedRowIds]);
+    [selectedRowIds]
+  );
 
   const handleSelectAllCheckboxClick = (
     tableInstance: ReturnType<typeof useReactTable<Form>>
@@ -139,6 +138,18 @@ export const FormTable = () => {
     }
   };
 
+  const handleRowClick = useCallback(
+    (rowData) => {
+      setClickedFormItem(rowData);
+      onOpen();
+    },
+    [onOpen]
+  );
+
+  const handleFormPreviewClose = useCallback(() => {
+    onClose();
+  }, [onClose]);
+
   const handleExport = (
     tableInstance: ReturnType<typeof useReactTable<Form>>
   ) => {
@@ -160,6 +171,7 @@ export const FormTable = () => {
   };
 
   useEffect(() => {
+    console.log("forms table logging");
     const fetchData = async () => {
       try {
         const [
@@ -170,7 +182,7 @@ export const FormTable = () => {
           initialScreenerResponse,
           frontDeskMonthlyStatsResponse,
           cmMonthlyStatsResponse,
-          intakeStatsResponse
+          intakeStatsResponse,
         ] = await Promise.all([
           backend.get(`/initialInterview`),
           backend.get(`/frontDesk`),
@@ -179,52 +191,60 @@ export const FormTable = () => {
           backend.get(`/lastUpdated/initial_interview`),
           backend.get(`/lastUpdated/front_desk_monthly`),
           backend.get(`/lastUpdated/cm_monthly_stats`),
-          backend.get(`/intakeStatsForm`)
+          backend.get(`/intakeStatsForm`),
         ]);
 
-        const initialScreeners: Form[] = await screenerResponse.data.map((form: Form) => ({
-          id: form.id,
-          hashedId: form.id,
-          date: form.date,
-          name: form.name,
-          title: "Initial Screeners",
-        }));
-
-        const intakeStatistics: Form[] = await intakeStatsResponse.data.map((form: Form) => ({
-          id: form.id,
-          hashedId: form.id,
-          date: form.date,
-          name: form.firstName + " " + form.lastName,
-          title: "Client Tracking Statistics (Intake Statistics)"
-        }));
-
-        const frontDeskStats: Form[] = await frontDeskResponse.data.map((form: Form) => ({
-          id: form.id,
-          hashedId: form.id,
-          date: form.date,
-          name: "",
-          title: "Front Desk Monthly Statistics",
-        }));
-
-        const caseManagerStats: Form[] = await caseManagersMonthlyResponse.data.map((form: Form) => {
-          const matchingCM = allCaseManagersResponse.data.find(
-            (cm) => cm.id === form.cmId
-          );
-          return {
+        const initialScreeners: Form[] = await screenerResponse.data.map(
+          (form: Form) => ({
             id: form.id,
             hashedId: form.id,
             date: form.date,
-            name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
-            title: "Case Manager Monthly Statistics",
-          };
-        });
+            name: form.name,
+            title: "Initial Screeners",
+          })
+        );
+
+        const intakeStatistics: Form[] = await intakeStatsResponse.data.map(
+          (form: Form) => ({
+            id: form.id,
+            hashedId: form.id,
+            date: form.date,
+            name: form.firstName + " " + form.lastName,
+            title: "Client Tracking Statistics (Intake Statistics)",
+          })
+        );
+
+        const frontDeskStats: Form[] = await frontDeskResponse.data.map(
+          (form: Form) => ({
+            id: form.id,
+            hashedId: form.id,
+            date: form.date,
+            name: "",
+            title: "Front Desk Monthly Statistics",
+          })
+        );
+
+        const caseManagerStats: Form[] =
+          await caseManagersMonthlyResponse.data.map((form: Form) => {
+            const matchingCM = allCaseManagersResponse.data.find(
+              (cm) => cm.id === form.cmId
+            );
+            return {
+              id: form.id,
+              hashedId: form.id,
+              date: form.date,
+              name: `${matchingCM?.firstName || ""} ${matchingCM?.lastName || ""}`,
+              title: "Case Manager Monthly Statistics",
+            };
+          });
 
         setInitialScreeners(initialScreeners);
         setIntakeStatistics(intakeStatistics);
         setFrontDeskStatistics(frontDeskStats);
         setCaseManagerStatistics(caseManagerStats);
 
-        const getDate = (date) => (date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null);
+        const getDate = (date) =>
+          date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
 
         setInitialScreenerDate(getDate(initialScreenerResponse.data));
         setFrontDeskDate(getDate(frontDeskMonthlyStatsResponse.data));
@@ -247,9 +267,7 @@ export const FormTable = () => {
     };
 
     fetchData();
-  }, [
-    backend, refreshTable
-  ]);
+  }, [backend, refreshTable]);
 
   const allFormsData = useMemo(
     () => [
@@ -414,16 +432,16 @@ export const FormTable = () => {
                 {tableInstance.getRowModel().rows.map((row, index) => (
                   <Tr
                     key={row.id}
-                    onClick={() => {
-                      setClickedFormItem(row.original);
-                      onOpen();
-                    }}
+                    onClick={() => handleRowClick(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <Td
                         key={cell.id}
                         onClick={(e) => {
-                          if (cell.column.id === "rowNumber" || cell.column.id === "export")
+                          if (
+                            cell.column.id === "rowNumber" ||
+                            cell.column.id === "export"
+                          )
                             e.stopPropagation();
                         }}
                       >
@@ -455,17 +473,15 @@ export const FormTable = () => {
             </Table>
           </Box>
         </TableContainer>
-        {clickedFormItem && (
-          <FormPreview
-            formItemId={clickedFormItem.id}
-            formItemTitle={clickedFormItem.title}
-            formItemName={clickedFormItem.name}
-            formItemDate={clickedFormItem.date}
-            isOpen={isOpen}
-            onClose={onClose}
-            setRefreshTable={setRefreshTable}
-          />
-        )}
+        <FormPreview
+          formItemId={clickedFormItem?.id || 0}
+          formItemTitle={clickedFormItem?.title || ""}
+          formItemName={clickedFormItem?.name || ""}
+          formItemDate={clickedFormItem?.date || ""}
+          isOpen={isOpen}
+          onClose={handleFormPreviewClose}
+          setRefreshTable={setRefreshTable}
+        />
       </Box>
     ) : (
       <Text>No data found.</Text>
@@ -489,7 +505,6 @@ export const FormTable = () => {
         <TabList whiteSpace="nowrap">
           <Tab>All Forms</Tab>
           <Tab>Initial Screeners</Tab>
-          <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
           <Tab>Front Desk Statistics</Tab>
           <Tab>Case Manager Statistics</Tab>
