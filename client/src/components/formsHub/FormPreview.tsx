@@ -9,7 +9,6 @@ import {
   DrawerHeader,
   HStack,
   IconButton,
-  Input,
   Spinner,
   Table,
   TableContainer,
@@ -31,8 +30,6 @@ import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { CaseManagerMonthlyTableBody } from "./CaseManagerMonthlyTableBody.tsx";
 import {
   formatDataWithLabels,
-  getKeyByValue,
-  reverseLabelKeys,
 } from "./DataFormatter.tsx";
 import { FrontDeskMonthlyTableBody } from "./FrontDeskTableBody.tsx";
 import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
@@ -111,7 +108,7 @@ export const FormPreview = ({
           endpoint = `/initialInterview/get-interview/${formItemId}`;
           break;
         case "Client Tracking Statistics (Intake Statistics)":
-          endpoint = `/intakeStats/${formItemId}`;
+          endpoint = `/intakeStatsForm/${formItemId}`;
           break;
         case "Front Desk Monthly Statistics":
           endpoint = `/frontDesk/${formItemId}`;
@@ -278,7 +275,7 @@ export const FormPreview = ({
           ) : role === "user" &&
             formItemTitle ===
               "Client Tracking Statistics (Intake Statistics)" ? (
-            RequestFormPreview()
+            <RequestFormPreview/>
           ) : (
             <VStack
               marginTop="12px"
