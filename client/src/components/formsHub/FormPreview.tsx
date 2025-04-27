@@ -330,7 +330,7 @@ const FormPreview = ({
               "Client Tracking Statistics (Intake Statistics)" ? (
             <RequestFormPreview
               cmId={formData["cmId"]}
-              clientId={formData["email"]}
+              clientEmail={formData["email"]}
               onClose={onClose}
             />
           ) : (
