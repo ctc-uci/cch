@@ -33,7 +33,7 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
-import type { SuccessStory } from "../../../types/successStory.ts";
+import type { ExitSurvey } from "../../../types/exitSurvey.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
@@ -41,12 +41,12 @@ import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
 
-export const SuccessStoryTable = () => {
+export const ExitSurveyTable = () => {
   // still gotta do this -- but I'll do it later
   const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
 
-  const [successData, setSuccessData] = useState<
-    (SuccessStory & { isChecked: boolean; isHovered: boolean })[]
+  const [exitData, setExitData] = useState<
+    (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
   >([]);
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
@@ -57,7 +57,7 @@ export const SuccessStoryTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
 
-  const columns = useMemo<ColumnDef<SuccessStory>[]>(
+  const columns = useMemo<ColumnDef<ExitSurvey>[]>(
     () => [
       {
         id: "rowNumber",
@@ -75,6 +75,10 @@ export const SuccessStoryTable = () => {
         enableSorting: false,
       },
       {
+        accessorKey: "location",
+        header: "Site",
+      },
+      {
         header: "Case Manager",
         accessorFn: (row) => `${row.cmFirstName} ${row.cmLastName}`,
         cell: ({ row }) => {
@@ -89,45 +93,66 @@ export const SuccessStoryTable = () => {
         },
       },
       {
-        accessorKey: "location",
-        header: "Site",
-      },
-      {
-        accessorKey: "entranceDate",
-        header: "Entrance Date",
+        accessorKey: "programDateCompletion",
+        header: "Date of Program Completion",
         cell: ({ getValue }) => {
           return formatDateString(getValue() as string);
         },
       },
       {
-        accessorKey: "exitDate",
-        header: "Exit Date",
-        cell: ({ getValue }) => {
-          return formatDateString(getValue() as string);
-        },
+        accessorKey: "cchRating",
+        header: "Overall Rating",
       },
       {
-        accessorKey: "previousSituation",
-        header: "Situation Before Entering CCH",
+        accessorKey: "cchLikeMost",
+        header: "What did you like most about CCH?",
       },
       {
-        accessorKey: "whereNow",
-        header: "Current Situation",
+        accessorKey: "cchCouldBeImproved",
+        header: "What could make CCH better?",
       },
       {
-        accessorKey: "tellDonors",
-        header: "Tell Donors",
+        accessorKey: "lifeSkillsRating",
+        header: "Life Skills Meetings Rating",
       },
       {
-        accessorKey: "quote",
-        header: "Quote",
+        accessorKey: "lifeSkillsHelpfulTopics",
+        header: "Which Life Skills Most Helpful?",
+      },
+      {
+        accessorKey: "lifeSkillsOfferTopicsInTheFuture",
+        header: "What topics CCH offer in the future?",
+      },
+      {
+        accessorKey: "cmRating",
+        header: "Case Management Rating",
+      },
+      {
+        accessorKey: "cmChangeAbout",
+        header: "What change about Case Management?",
+      },
+      {
+        accessorKey: "cmMostBeneficial",
+        header: "Most Beneficial about Case Management?",
+      },
+      {
+        accessorKey: "experienceTakeaway",
+        header: "How CCH change your future?",
+      },
+      {
+        accessorKey: "experienceAccomplished",
+        header: "What have you accomplished at CCH?",
+      },
+      {
+        accessorKey: "experienceExtraNotes",
+        header: "Extra Notes",
       },
     ],
-    [selectedRowIds, successData]
+    [selectedRowIds, exitData]
   );
 
   const table = useReactTable({
-    data: successData,
+    data: exitData,
     columns,
     state: {
       sorting,
@@ -140,14 +165,14 @@ export const SuccessStoryTable = () => {
 
   const handleSelectAllCheckboxClick = () => {
     if (selectedRowIds.length === 0) {
-      setSelectedRowIds(successData.map((row) => row.id));
+      setSelectedRowIds(exitData.map((row) => row.id));
     } else {
       setSelectedRowIds([]);
     }
   };
 
   const onPressCSVButton = () => {
-    const selectedTableData = successData.filter((row) =>
+    const selectedTableData = exitData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
 
@@ -155,7 +180,7 @@ export const SuccessStoryTable = () => {
       Site: row.site,
     }));
 
-    downloadCSV(headers, data, `success-stories.csv`);
+    downloadCSV(headers, data, `exit-surveys.csv`);
   };
 
   // doesn't need any changes
@@ -172,11 +197,11 @@ export const SuccessStoryTable = () => {
     try {
       await Promise.all(
         selectedRowIds.map(
-          (row_id) => backend.delete(`/successStory/${row_id}`) //add a delete route for success story router
+          (row_id) => backend.delete(`/exitSurvey/${row_id}`) //check if route exists
         )
       );
-      setSuccessData(
-        successData.filter((row) => !selectedRowIds.includes(row.id))
+      setExitData(
+        exitData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
       setDeleteModalOpen(true);
@@ -188,23 +213,23 @@ export const SuccessStoryTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/successStory`);
+        const lastUpdatedRequest = backend.get(`/lastUpdated/exitSurvey`);
 
         let tableDataRequest;
         if (searchKey && filterQuery.length > 1) {
           tableDataRequest = backend.get(
-            `/successStory/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
+            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
           );
         } else if (searchKey) {
           tableDataRequest = backend.get(
-            `/successStory/search-filter?page=&filter=&search=${searchKey}`
+            `/exitSurvey/search-filter?page=&filter=&search=${searchKey}`
           );
         } else if (filterQuery.length > 1) {
           tableDataRequest = backend.get(
-            `/successStory/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
+            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
           );
         } else {
-          tableDataRequest = backend.get("/successStory/table-data");
+          tableDataRequest = backend.get("/exitSurvey/table-data");
         }
 
         const [lastUpdatedResponse, tableDataResponse] = await Promise.all([
@@ -213,7 +238,8 @@ export const SuccessStoryTable = () => {
         ]);
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-        setSuccessData(tableDataResponse.data);
+        setExitData(tableDataResponse.data);
+        console.log(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -240,18 +266,18 @@ export const SuccessStoryTable = () => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"successStory"} />
+        <FilterTemplate setFilterQuery={setFilterQuery} type={"exitSurvey"} />
         <HStack
           width="55%"
           justifyContent="space-between"
         >
           <Text fontSize="12px">
-            showing {successData.length} results on this page
+            showing {exitData.length} results on this page
           </Text>
           <HStack>
             <Button></Button>
             <Text fontSize="12px">
-              page {} of {Math.ceil(successData.length / 20)}
+              page {} of {Math.ceil(exitData.length / 20)}
             </Text>
             <Button></Button>
           </HStack>

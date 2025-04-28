@@ -22,6 +22,7 @@ import {
 
 import { InitialScreenerTable } from "./FormTables/InitialScreenerTable.tsx";
 import { SuccessStoryTable } from "./FormTables/SuccessStoryTable.tsx";
+import { ExitSurveyTable } from "./FormTables/ExitSurveyTable.tsx";
 
 
 export const AdminFormsHub = () => {
@@ -61,7 +62,7 @@ export const AdminFormsHub = () => {
             <TabList whiteSpace="nowrap"> 
               <Tab>Initial Screeners</Tab>
               <Tab>Success Story</Tab>
-              <Tab>Front Desk Statistics</Tab>
+              <Tab>Exit Survey</Tab>
               <Tab>Case Manager Statistics</Tab>
               <Tab>All Forms</Tab>
             </TabList>
@@ -72,7 +73,9 @@ export const AdminFormsHub = () => {
               <TabPanel>
                 <SuccessStoryTable />
               </TabPanel>
-              <TabPanel></TabPanel>
+              <TabPanel>
+                <ExitSurveyTable />
+              </TabPanel>
               <TabPanel></TabPanel>
               <TabPanel></TabPanel>
             </TabPanels>
