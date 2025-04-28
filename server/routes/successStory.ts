@@ -15,6 +15,79 @@ successRouter.get("/", async (req, res) => {
   }
 });
 
+successRouter.get("/search-filter", async (req, res) => {
+  try {
+    const { search, page, filter } = req.query;
+    let queryStr = `
+      SELECT ss.*, cm.first_name AS cm_first_name, cm.last_name AS cm_last_name, l.name AS location
+      FROM success_story AS ss
+      INNER JOIN case_managers AS cm ON ss.cm_id = cm.id
+      INNER JOIN locations AS l ON ss.site = l.id
+      WHERE 1=1
+    `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      queryStr += ` 
+      AND (ss.id::TEXT ILIKE ${stringSearch}
+        OR ss.previous_situation::TEXT ILIKE ${stringSearch}
+        OR ss.cch_impact::TEXT ILIKE ${stringSearch}
+        OR ss.where_now::TEXT ILIKE ${stringSearch}
+        OR ss.tell_donors::TEXT ILIKE ${stringSearch}
+        OR ss.quote::TEXT ILIKE ${stringSearch}
+        OR ss.entrance_date::TEXT ILIKE ${stringSearch}
+        OR ss.exit_date::TEXT ILIKE ${stringSearch}
+        OR cm.first_name::TEXT ILIKE ${stringSearch}
+        OR cm.last_name::TEXT ILIKE ${stringSearch}
+        OR l.name::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY ss.id ASC";
+
+    if (page) {
+      queryStr += ` LIMIT ${page}`;
+    }
+
+    const success_story = await db.query(queryStr);
+    res.status(200).json(keysToCamel(success_story));
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
+successRouter.get("/table-data", async (req, res) => {
+  try {
+    const success = await db.query(`
+      SELECT
+        ss.id AS id, 
+        cm.first_name AS cm_first_name,
+        cm.last_name AS cm_last_name,
+        l.name AS location,
+        ss.entrance_date,
+        ss.exit_date,
+        ss.previous_situation,
+        ss.where_now,
+        ss.cch_impact,
+        ss.tell_donors,
+        ss.quote
+      FROM success_story AS ss
+      INNER JOIN locations AS l ON ss.site = l.id
+      INNER JOIN case_managers AS cm ON ss.cm_id = cm.id
+      `);
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+
 successRouter.get("/:clientId", async (req, res) => {
   try {
     const { clientId } = req.params;
