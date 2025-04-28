@@ -181,7 +181,7 @@ export const SuccessStoryTable = () => {
       setSelectedRowIds([]);
       setDeleteModalOpen(true);
     } catch (error) {
-      console.error("Error deleting interview", error);
+      console.error("Error deleting success story", error);
     }
   };
 

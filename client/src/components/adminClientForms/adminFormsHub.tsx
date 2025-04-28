@@ -23,6 +23,8 @@ import {
 import { InitialScreenerTable } from "./FormTables/InitialScreenerTable.tsx";
 import { SuccessStoryTable } from "./FormTables/SuccessStoryTable.tsx";
 import { ExitSurveyTable } from "./FormTables/ExitSurveyTable.tsx";
+import { RandomClientTable } from "./FormTables/RandomClientTable.tsx";
+import { AllFormTable } from "./FormTables/AllFormTable.tsx";
 
 
 export const AdminFormsHub = () => {
@@ -61,9 +63,9 @@ export const AdminFormsHub = () => {
             {/* maybe use some onClick to change some variable to the name of the current panel to do the last updated stuff */}
             <TabList whiteSpace="nowrap"> 
               <Tab>Initial Screeners</Tab>
-              <Tab>Success Story</Tab>
-              <Tab>Exit Survey</Tab>
-              <Tab>Case Manager Statistics</Tab>
+              <Tab>Success Stories</Tab>
+              <Tab>Exit Surveys</Tab>
+              <Tab>Random Client Surveys</Tab>
               <Tab>All Forms</Tab>
             </TabList>
             <TabPanels>
@@ -76,8 +78,12 @@ export const AdminFormsHub = () => {
               <TabPanel>
                 <ExitSurveyTable />
               </TabPanel>
-              <TabPanel></TabPanel>
-              <TabPanel></TabPanel>
+              <TabPanel>
+                <RandomClientTable />
+              </TabPanel>
+              <TabPanel>
+                <AllFormTable />
+              </TabPanel>
             </TabPanels>
           </Tabs>
         </Box>

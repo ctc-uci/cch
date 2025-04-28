@@ -29,35 +29,47 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
-
-import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
-//have to make the separate types for each table
-
-import type { ExitSurvey } from "../../../types/exitSurvey.ts";
-import { formatDateString } from "../../../utils/dateUtils.ts";
-import { downloadCSV } from "../../../utils/downloadCSV.ts";
-import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
-import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
-import { LoadingWheel } from "../../loading/loading.tsx";
+import { useAuthContext } from "../../../contexts/hooks/useAuthContext";
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
+import type { Client } from "../../../types/client";
+import { formatDateString } from "../../../utils/dateUtils";
+import { downloadCSV } from "../../../utils/downloadCSV";
+import { UpdateClients } from "../../admin/UpdateClient";
+import { DeleteRowModal } from "../../deleteRow/deleteRowModal";
+import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox";
+import { LoadingWheel } from "../.././loading/loading.tsx"
 import { FilterTemplate } from "./FilterTemplate.tsx";
 
-export const ExitSurveyTable = () => {
-  // still gotta do this -- but I'll do it later
-  const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
 
-  const [exitData, setExitData] = useState<
-    (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
-  >([]);
+
+export const AllFormTable = () => {
+  const headers = [
+    "First Name",
+    "Last Name",
+    "Phone Number",
+    "E-mail",
+    "Entrance Date",
+    "Exit Date",
+    "Birthday",
+  ];
+
+  const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
+
+  const [clients, setClients] = useState<
+    (Client & { isChecked: boolean; isHovered: boolean })[]
+  >([]);
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
 
-  const columns = useMemo<ColumnDef<ExitSurvey>[]>(
+
+  const columns = useMemo<ColumnDef<Client>[]>(
     () => [
       {
         id: "rowNumber",
@@ -75,84 +87,183 @@ export const ExitSurveyTable = () => {
         enableSorting: false,
       },
       {
-        accessorKey: "location",
-        header: "Site",
+        accessorKey: "firstName",
+        header: "First Name",
+      },
+      {
+        accessorKey: "lastName",
+        header: "Last Name",
       },
       {
         header: "Case Manager",
-        accessorFn: (row) => `${row.cmFirstName} ${row.cmLastName}`,
+        accessorFn: (row) =>
+          `${row.caseManagerFirstName} ${row.caseManagerLastName}`,
         cell: ({ row }) => {
-          const firstName = row.original.cmFirstName;
-          const lastName = row.original.cmLastName;
+          const firstName = row.original.caseManagerFirstName;
+          const lastName = row.original.caseManagerLastName;
           return `${firstName} ${lastName}`;
         },
         sortingFn: (a, b) => {
-          const aValue = `${a.original.cmFirstName} ${a.original.cmLastName}`;
-          const bValue = `${b.original.cmFirstName} ${b.original.cmLastName}`;
+          const aValue = `${a.original.caseManagerFirstName} ${a.original.caseManagerLastName}`;
+          const bValue = `${b.original.caseManagerFirstName} ${b.original.caseManagerLastName}`;
           return aValue.localeCompare(bValue);
         },
       },
       {
-        accessorKey: "programDateCompletion",
-        header: "Date of Program Completion",
+        accessorKey: "locationName",
+        header: "Site",
+      },
+      {
+        accessorKey: "grant",
+        header: "Grant",
+      },
+      {
+        accessorKey: "dateOfBirth",
+        header: "Birthday",
         cell: ({ getValue }) => {
           return formatDateString(getValue() as string);
         },
       },
       {
-        accessorKey: "cchRating",
-        header: "Overall Rating",
+        accessorKey: "age",
+        header: "Age",
       },
       {
-        accessorKey: "cchLikeMost",
-        header: "What did you like most about CCH?",
+        accessorKey: "entranceDate",
+        header: "Entry Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
-        accessorKey: "cchCouldBeImproved",
-        header: "What could make CCH better?",
+        accessorKey: "exitDate",
+        header: "Exit Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
       },
       {
-        accessorKey: "lifeSkillsRating",
-        header: "Life Skills Meetings Rating",
+        accessorKey: "bedNights",
+        header: "Bed Nights",
       },
       {
-        accessorKey: "lifeSkillsHelpfulTopics",
-        header: "Which Life Skills Most Helpful?",
+        accessorKey: "bedNightsChildren",
+        header: "Total Bed Nights w/ Children",
       },
       {
-        accessorKey: "lifeSkillsOfferTopicsInTheFuture",
-        header: "What topics CCH offer in the future?",
+        accessorKey: "pregnantUponEntry",
+        header: "Pregnant Upon Entry",
       },
       {
-        accessorKey: "cmRating",
-        header: "Case Management Rating",
+        accessorKey: "disabledChildren",
+        header: "Children w/a Disability",
       },
       {
-        accessorKey: "cmChangeAbout",
-        header: "What change about Case Management?",
+        accessorKey: "ethnicity",
+        header: "Ethnicity",
       },
       {
-        accessorKey: "cmMostBeneficial",
-        header: "Most Beneficial about Case Management?",
+        accessorKey: "race",
+        header: "Race",
       },
       {
-        accessorKey: "experienceTakeaway",
-        header: "How CCH change your future?",
+        accessorKey: "cityOfLastPermanentResidence",
+        header: "City of Last Permanent Residence",
       },
       {
-        accessorKey: "experienceAccomplished",
-        header: "What have you accomplished at CCH?",
+        accessorKey: "priorLiving",
+        header: "Prior Living",
       },
       {
-        accessorKey: "experienceExtraNotes",
-        header: "Extra Notes",
+        accessorKey: "priorLivingCity",
+        header: "Prior Living City",
+      },
+      {
+        accessorKey: "shelterInLastFiveYears",
+        header: "Shelter in Last Five Years",
+      },
+      {
+        accessorKey: "homelessnessLength",
+        header: "Length of Homelessness",
+      },
+      {
+        accessorKey: "chronicallyHomeless",
+        header: "Chronically Homeless",
+      },
+      {
+        accessorKey: "attendingSchoolUponEntry",
+        header: "In School Upon Entry",
+      },
+      {
+        accessorKey: "reasonForLeaving",
+        header: "Reason For Leaving",
+      },
+      {
+        accessorKey: "specificReasonForLeaving",
+        header: "Specific Reason for Leaving",
+      },
+      {
+        accessorKey: "specificDestination",
+        header: "Specific Destination",
+      },
+      {
+        accessorKey: "savingsAmount",
+        header: "Savings Amount",
+      },
+      {
+        accessorKey: "attendingSchoolUponExit",
+        header: "In School Upon Exit",
+      },
+      {
+        accessorKey: "reunified",
+        header: "Reunified",
+      },
+      {
+        accessorKey: "successfulCompletion",
+        header: "Successful Completion",
+      },
+      {
+        accessorKey: "phoneNumber",
+        header: "Phone Number",
+      },
+      {
+        accessorKey: "email",
+        header: "Email",
+      },
+      {
+        accessorKey: "emergencyContactName",
+        header: "Emergency Contact Name",
+      },
+      {
+        accessorKey: "emergencyContactPhoneNumber",
+        header: "Emergency Contact Phone",
+      },
+      {
+        accessorKey: "medical",
+        header: "Medical",
+      },
+      {
+        accessorKey: "estimatedExitDate",
+        header: "Estimated Exit Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
+      },
+      {
+        accessorKey: "employementGained",
+        header: "Employment Gained",
+      },
+      {
+        accessorKey: "destinationCity",
+        header: "Destination City",
       },
     ],
-    [selectedRowIds, exitData]
+    [selectedRowIds, clients]
   );
 
+
   const table = useReactTable({
-    data: exitData,
+    data: clients,
     columns,
     state: {
       sorting,
@@ -165,25 +276,30 @@ export const ExitSurveyTable = () => {
 
   const handleSelectAllCheckboxClick = () => {
     if (selectedRowIds.length === 0) {
-      setSelectedRowIds(exitData.map((row) => row.id));
+      setSelectedRowIds(clients.map((client) => client.id));
     } else {
       setSelectedRowIds([]);
     }
   };
 
   const onPressCSVButton = () => {
-    const selectedTableData = exitData.filter((row) =>
-      selectedRowIds.includes(row.id)
+    const selectedClients = clients.filter((client) =>
+      selectedRowIds.includes(client.id)
     );
 
-    const data = selectedTableData.map((row) => ({
-      Site: row.site,
+    const data = selectedClients.map((client) => ({
+      "First Name": client.firstName,
+      "Last Name": client.lastName,
+      "Phone Number": client.phoneNumber,
+      "E-mail": client.email,
+      "Entrance Date": client.entranceDate,
+      "Exit Date": client.exitDate,
+      Birthday: client.dateOfBirth,
     }));
 
-    downloadCSV(headers, data, `exit-surveys.csv`);
+    downloadCSV(headers, data, `clients.csv`);
   };
 
-  // doesn't need any changes
   const handleRowSelect = (id: number, isChecked: boolean) => {
     if (isChecked) {
       setSelectedRowIds((prev) => [...prev, id]);
@@ -192,62 +308,53 @@ export const ExitSurveyTable = () => {
     }
   };
 
-  //not sure if it works -- afraid to try
   const handleDelete = async () => {
     try {
       await Promise.all(
-        selectedRowIds.map(
-          (row_id) => backend.delete(`/exitSurvey/${row_id}`)
-        )
+        selectedRowIds.map((row_id) => backend.delete(`/clients/${row_id}`))
       );
-      setExitData(
-        exitData.filter((row) => !selectedRowIds.includes(row.id))
+      setClients(
+        clients.filter((client) => !selectedRowIds.includes(client.id))
       );
       setSelectedRowIds([]);
-      setDeleteModalOpen(true);
+      setDeleteModalOpen(false);
     } catch (error) {
-      console.error("Error deleting exit survey", error);
+      console.error("Error deleting clients", error);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/exitSurvey`);
-
-        let tableDataRequest;
+        const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
+  
+        let clientsRequest;
         if (searchKey && filterQuery.length > 1) {
-          tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
         } else if (searchKey) {
-          tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=&search=${searchKey}`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
         } else if (filterQuery.length > 1) {
-          tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
-          );
+          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
         } else {
-          tableDataRequest = backend.get("/exitSurvey/table-data");
+          clientsRequest = backend.get("/clients");
         }
-
-        const [lastUpdatedResponse, tableDataResponse] = await Promise.all([
-          lastUpdatedRequest,
-          tableDataRequest,
-        ]);
+  
+        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+  
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-        setExitData(tableDataResponse.data);
+        setClients(clientsResponse.data);
+  
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, [backend, searchKey, filterQuery]);
+  
 
   return (
     <VStack
@@ -265,18 +372,18 @@ export const ExitSurveyTable = () => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"exitSurvey"} />
+        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} />
         <HStack
           width="55%"
           justifyContent="space-between"
         >
           <Text fontSize="12px">
-            showing {exitData.length} results on this page
+            showing {clients.length} results on this page
           </Text>
           <HStack>
             <Button></Button>
             <Text fontSize="12px">
-              page {} of {Math.ceil(exitData.length / 20)}
+              page {} of {Math.ceil(clients.length / 20)}
             </Text>
             <Button></Button>
           </HStack>
@@ -396,3 +503,4 @@ export const ExitSurveyTable = () => {
     </VStack>
   );
 };
+

@@ -33,7 +33,7 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
-import type { ExitSurvey } from "../../../types/exitSurvey.ts";
+import type { RandomSurvey } from "../../../types/randomSurvey.ts"; 
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
@@ -41,12 +41,12 @@ import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
 
-export const ExitSurveyTable = () => {
+export const RandomClientTable = () => {
   // still gotta do this -- but I'll do it later
   const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
 
-  const [exitData, setExitData] = useState<
-    (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
+  const [randomData, setRandomData] = useState<
+    (RandomSurvey & { isChecked: boolean; isHovered: boolean })[]
   >([]);
   const { backend } = useBackendContext();
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
@@ -57,7 +57,7 @@ export const ExitSurveyTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
 
-  const columns = useMemo<ColumnDef<ExitSurvey>[]>(
+  const columns = useMemo<ColumnDef<RandomSurvey>[]>(
     () => [
       {
         id: "rowNumber",
@@ -75,8 +75,67 @@ export const ExitSurveyTable = () => {
         enableSorting: false,
       },
       {
-        accessorKey: "location",
-        header: "Site",
+        accessorKey: "date",
+        header: "Date",
+        cell: ({ getValue }) => {
+          return formatDateString(getValue() as string);
+        },
+      },
+      {
+        accessorKey: "cchQos",
+        header: "Quality of Service: CCH"
+      },
+      {
+        accessorKey: "cmQos",
+        header: "Quality of Service: Case Management"
+      },
+      {
+        accessorKey: "courteous",
+        header: "CM: Courteous"
+      },
+      {
+        accessorKey: "informative",
+        header: "CM: Informative"
+      },
+      {
+        accessorKey: "promptAndHelpful",
+        header: "CM: Prompt and HelpfuL"
+      },
+      {
+        accessorKey: "entryQuality",
+        header: "Quality of CCH Entrance"
+      },
+      {
+        accessorKey: "unitQuality",
+        header: "Quality of Unit"
+      },
+      {
+        accessorKey: "clean",
+        header: "Site Cleanliness"
+      },
+      {
+        accessorKey: "overallExperience",
+        header: "Overall Experience"
+      },
+      {
+        accessorKey: "caseMeetingFrequency",
+        header: "Case Meeting Frequency"
+      },
+      {
+        accessorKey: "lifeskills",
+        header: "Life Skills Classes Beneficial?"
+      },
+      {
+        accessorKey: "recommend",
+        header: "Recommend CCH"
+      },
+      {
+        accessorKey: "recommendReasoning",
+        header: "Why or why not?"
+      },
+      {
+        accessorKey: "makeCchMoreHelpful",
+        header: "How make CCH more helpful?"
       },
       {
         header: "Case Manager",
@@ -93,66 +152,19 @@ export const ExitSurveyTable = () => {
         },
       },
       {
-        accessorKey: "programDateCompletion",
-        header: "Date of Program Completion",
-        cell: ({ getValue }) => {
-          return formatDateString(getValue() as string);
-        },
+        accessorKey: "cmFeedback",
+        header: "Case Manager Feedback"
       },
       {
-        accessorKey: "cchRating",
-        header: "Overall Rating",
-      },
-      {
-        accessorKey: "cchLikeMost",
-        header: "What did you like most about CCH?",
-      },
-      {
-        accessorKey: "cchCouldBeImproved",
-        header: "What could make CCH better?",
-      },
-      {
-        accessorKey: "lifeSkillsRating",
-        header: "Life Skills Meetings Rating",
-      },
-      {
-        accessorKey: "lifeSkillsHelpfulTopics",
-        header: "Which Life Skills Most Helpful?",
-      },
-      {
-        accessorKey: "lifeSkillsOfferTopicsInTheFuture",
-        header: "What topics CCH offer in the future?",
-      },
-      {
-        accessorKey: "cmRating",
-        header: "Case Management Rating",
-      },
-      {
-        accessorKey: "cmChangeAbout",
-        header: "What change about Case Management?",
-      },
-      {
-        accessorKey: "cmMostBeneficial",
-        header: "Most Beneficial about Case Management?",
-      },
-      {
-        accessorKey: "experienceTakeaway",
-        header: "How CCH change your future?",
-      },
-      {
-        accessorKey: "experienceAccomplished",
-        header: "What have you accomplished at CCH?",
-      },
-      {
-        accessorKey: "experienceExtraNotes",
-        header: "Extra Notes",
+        accessorKey: "otherComments",
+        header: "Additional Comments/Suggestions"
       },
     ],
-    [selectedRowIds, exitData]
+    [selectedRowIds, randomData]
   );
 
   const table = useReactTable({
-    data: exitData,
+    data: randomData,
     columns,
     state: {
       sorting,
@@ -165,22 +177,23 @@ export const ExitSurveyTable = () => {
 
   const handleSelectAllCheckboxClick = () => {
     if (selectedRowIds.length === 0) {
-      setSelectedRowIds(exitData.map((row) => row.id));
+      setSelectedRowIds(randomData.map((row) => row.id));
     } else {
       setSelectedRowIds([]);
     }
   };
 
+  //needs changes
   const onPressCSVButton = () => {
-    const selectedTableData = exitData.filter((row) =>
+    const selectedTableData = randomData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
 
     const data = selectedTableData.map((row) => ({
-      Site: row.site,
+      "Date": row.date
     }));
 
-    downloadCSV(headers, data, `exit-surveys.csv`);
+    downloadCSV(headers, data, `random-client-surveys.csv`);
   };
 
   // doesn't need any changes
@@ -197,39 +210,39 @@ export const ExitSurveyTable = () => {
     try {
       await Promise.all(
         selectedRowIds.map(
-          (row_id) => backend.delete(`/exitSurvey/${row_id}`)
+          (row_id) => backend.delete(`/randomSurvey/${row_id}`)
         )
       );
-      setExitData(
-        exitData.filter((row) => !selectedRowIds.includes(row.id))
+      setRandomData(
+        randomData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
       setDeleteModalOpen(true);
     } catch (error) {
-      console.error("Error deleting exit survey", error);
+      console.error("Error deleting random client survey", error);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/exitSurvey`);
+        const lastUpdatedRequest = backend.get(`/lastUpdated/randomSurvey`);
 
         let tableDataRequest;
         if (searchKey && filterQuery.length > 1) {
           tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
+            `/randomSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
           );
         } else if (searchKey) {
           tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=&search=${searchKey}`
+            `/randomSurvey/search-filter?page=&filter=&search=${searchKey}`
           );
         } else if (filterQuery.length > 1) {
           tableDataRequest = backend.get(
-            `/exitSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
+            `/randomSurvey/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
           );
         } else {
-          tableDataRequest = backend.get("/exitSurvey/table-data");
+          tableDataRequest = backend.get("/randomSurvey/table-data");
         }
 
         const [lastUpdatedResponse, tableDataResponse] = await Promise.all([
@@ -238,7 +251,8 @@ export const ExitSurveyTable = () => {
         ]);
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-        setExitData(tableDataResponse.data);
+        setRandomData(tableDataResponse.data);
+        console.log(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -265,18 +279,18 @@ export const ExitSurveyTable = () => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"exitSurvey"} />
+        <FilterTemplate setFilterQuery={setFilterQuery} type={"randomSurvey"} />
         <HStack
           width="55%"
           justifyContent="space-between"
         >
           <Text fontSize="12px">
-            showing {exitData.length} results on this page
+            showing {randomData.length} results on this page
           </Text>
           <HStack>
             <Button></Button>
             <Text fontSize="12px">
-              page {} of {Math.ceil(exitData.length / 20)}
+              page {} of {Math.ceil(randomData.length / 20)}
             </Text>
             <Button></Button>
           </HStack>

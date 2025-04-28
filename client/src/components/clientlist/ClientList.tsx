@@ -255,7 +255,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         },
       },
       {
-        accessorKey: "employmentGained",
+        accessorKey: "employementGained",
         header: "Employment Gained",
       },
       {
