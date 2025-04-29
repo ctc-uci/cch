@@ -8,7 +8,6 @@ import {
   Checkbox,
   Heading,
   HStack,
-  IconButton,
   Input,
   Modal,
   ModalOverlay,
@@ -42,7 +41,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FaBalanceScale, FaDollarSign } from "react-icons/fa";
-import { FiUpload } from "react-icons/fi";
+import { MdFileUpload, MdOutlineManageSearch } from "react-icons/md";
+
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {
   formatDateString,
@@ -55,6 +56,7 @@ import { downloadCSV } from "../../utils/downloadCSV";
 import { LoadingWheel } from ".././loading/loading.tsx"
 import { DonationFilter, DonationListFilter } from "./DonationFilter.tsx"
 import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
+import { set } from "react-hook-form";
 
 
 export const Donations = () => {
@@ -89,6 +91,8 @@ export const Donations = () => {
 
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [searchKey, setSearchKey] = useState("");
+
+  const [showSearch, setShowSearch] = useState(false);
 
 
   const {
@@ -355,8 +359,19 @@ export const Donations = () => {
           "Total Value ($)": donation.totalValue,
         }));
       }
-  
+      const now = new Date();
+      const date = now.toLocaleDateString();
+      const time = now.toLocaleTimeString();
+      const success = "Donation Data " + date + " " + time;
+
       downloadCSV(headers, data, `clients.csv`);
+      toast({
+        title: 'Successfully Exported',
+        description: success,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
     };
 
   useEffect(() => {
@@ -555,8 +570,8 @@ export const Donations = () => {
         </HStack>
         <HStack w="100%" justifyContent="flex-start">
           <Button
-            background={"#4397CD"}
-            color="white"
+            variant = "link"
+            color="#4397CD"
             size="sm"
             onClick={handleReset}
           >
@@ -568,20 +583,38 @@ export const Donations = () => {
         <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
           <HStack padding="5px">
             <DonationListFilter setFilterQuery={setFilterQuery}/>
-            <Input maxWidth="20%" placeholder="search" onChange={(e) => setSearchKey(e.target.value)}></Input>
             <HStack width="100%" justifyContent={"right"}>
-              <IconButton
-                aria-label="Download CSV"
+              <Input maxWidth="20%" placeholder="search" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} display={showSearch ? 'block' : 'none'}></Input>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => {setShowSearch(!showSearch); setSearchKey("")}}
+              >
+                <MdOutlineManageSearch size="24px" />
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
                 onClick={() => onPressCSVButton()}
               >
-                <FiUpload />
-              </IconButton>
+                <MdFileUpload size="16px" />
+                <Text ml="8px">Export</Text>
+              </Box>
             </HStack>
           </HStack>
           <TableContainer
             width="100%"
             maxHeight="100%"
             paddingBottom="10"
+            borderRadius="lg" 
+            overflow="hidden" 
+            boxShadow="sm" 
             sx={{
               overflowX: "auto",
               overflowY: "auto",
@@ -590,9 +623,11 @@ export const Donations = () => {
           >
             <Table
               variant="striped"
+              border="1px solid gray"
+              borderRadius="lg"
               sx={{
-                borderCollapse: "collapse",
-                border: "1px solid gray",
+                borderCollapse: "separate",
+                borderSpacing: "0",
                 width: "100%",
               }}
             >
