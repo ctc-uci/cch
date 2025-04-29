@@ -44,13 +44,8 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const AllFormTable = () => {
   const headers = [
-    "First Name",
-    "Last Name",
-    "Phone Number",
-    "E-mail",
-    "Entrance Date",
-    "Exit Date",
-    "Birthday",
+    "age","attendingSchoolUponEntry","attendingSchoolUponExit","bedNights","bedNightsChildren","caseManagerFirstName","caseManagerLastName","chronicallyHomeless","cityOfLastPermanentResidence","comments","createdBy","dateOfBirth","destinationCity","disabledChildren","email","emergencyContactName","emergencyContactPhoneNumber","employementGained","entranceDate","estimatedExitDate","ethnicity","exitDate","firstName","grant","homelessnessLength","id","lastName","locationName","medical","phoneNumber","pregnantUponEntry","priorLiving","priorLivingCity","race","reasonForLeaving","reunified","savingsAmount","shelterInLastFiveYears","specificDestination","specificReasonForLeaving","status","successfulCompletion","unitId"
+
   ];
 
   const { currentUser } = useAuthContext();
@@ -286,15 +281,51 @@ export const AllFormTable = () => {
     const selectedClients = clients.filter((client) =>
       selectedRowIds.includes(client.id)
     );
-
+    
     const data = selectedClients.map((client) => ({
-      "First Name": client.firstName,
-      "Last Name": client.lastName,
-      "Phone Number": client.phoneNumber,
-      "E-mail": client.email,
-      "Entrance Date": client.entranceDate,
-      "Exit Date": client.exitDate,
-      Birthday: client.dateOfBirth,
+      "age": client.age,
+"attendingSchoolUponEntry": client.attendingSchoolUponEntry,
+"attendingSchoolUponExit": client.attendingSchoolUponExit,
+"bedNights": client.bedNights,
+"bedNightsChildren": client.bedNightsChildren,
+"caseManagerFirstName": client.caseManagerFirstName,
+"caseManagerLastName": client.caseManagerLastName,
+"chronicallyHomeless": client.chronicallyHomeless,
+"cityOfLastPermanentResidence": client.cityOfLastPermanentResidence,
+"comments": client.comments,
+"createdBy": client.createdBy,
+"dateOfBirth": client.dateOfBirth,
+"destinationCity": client.destinationCity,
+"disabledChildren": client.disabledChildren,
+"email": client.email,
+"emergencyContactName": client.emergencyContactName,
+"emergencyContactPhoneNumber": client.emergencyContactPhoneNumber,
+"employementGained": client.employementGained,
+"entranceDate": client.entranceDate,
+"estimatedExitDate": client.estimatedExitDate,
+"ethnicity": client.ethnicity,
+"exitDate": client.exitDate,
+"firstName": client.firstName,
+"grant": client.grant,
+"homelessnessLength": client.homelessnessLength,
+"id": client.id,
+"lastName": client.lastName,
+"locationName": client.locationName,
+"medical": client.medical,
+"phoneNumber": client.phoneNumber,
+"pregnantUponEntry": client.pregnantUponEntry,
+"priorLiving": client.priorLiving,
+"priorLivingCity": client.priorLivingCity,
+"race": client.race,
+"reasonForLeaving": client.reasonForLeaving,
+"reunified": client.reunified,
+"savingsAmount": client.savingsAmount,
+"shelterInLastFiveYears": client.shelterInLastFiveYears,
+"specificDestination": client.specificDestination,
+"specificReasonForLeaving": client.specificReasonForLeaving,
+"status": client.status,
+"successfulCompletion": client.successfulCompletion,
+"unitId": client.unitId,
     }));
 
     downloadCSV(headers, data, `clients.csv`);

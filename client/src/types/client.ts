@@ -39,4 +39,7 @@ export type Client = {
   successfulCompletion: string;
   destinationCity: string;
   locationName: string;
+  status: string;
+  unitId: string;
+  comments: string;
 }

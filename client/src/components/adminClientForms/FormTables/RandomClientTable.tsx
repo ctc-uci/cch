@@ -43,7 +43,8 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const RandomClientTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
+  const headers = ["caseMeetingFrequency","cchQos","clean","cmFeedback","cmFirstName","cmLastName","cmQos","courteous","date","entryQuality","id","informative","lifeskills","makeCchMoreHelpful","otherComments","overallExperience","promptAndHelpful","recommend","recommendReasoning","unitQuality"
+];
 
   const [randomData, setRandomData] = useState<
     (RandomSurvey & { isChecked: boolean; isHovered: boolean })[]
@@ -188,9 +189,27 @@ export const RandomClientTable = () => {
     const selectedTableData = randomData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-
     const data = selectedTableData.map((row) => ({
-      "Date": row.date
+      "caseMeetingFrequency": row.caseMeetingFrequency,
+"cchQos": row.cchQos,
+"clean": row.clean,
+"cmFeedback": row.cmFeedback,
+"cmFirstName": row.cmFirstName,
+"cmLastName": row.cmLastName,
+"cmQos": row.cmQos,
+"courteous": row.courteous,
+"date": row.date,
+"entryQuality": row.entryQuality,
+"id": row.id,
+"informative": row.informative,
+"lifeskills": row.lifeskills,
+"makeCchMoreHelpful": row.makeCchMoreHelpful,
+"otherComments": row.otherComments,
+"overallExperience": row.overallExperience,
+"promptAndHelpful": row.promptAndHelpful,
+"recommend": row.recommend,
+"recommendReasoning": row.recommendReasoning,
+"unitQuality": row.unitQuality,
     }));
 
     downloadCSV(headers, data, `random-client-surveys.csv`);
@@ -217,7 +236,7 @@ export const RandomClientTable = () => {
         randomData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
-      setDeleteModalOpen(true);
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting random client survey", error);
     }
@@ -252,7 +271,7 @@ export const RandomClientTable = () => {
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setRandomData(tableDataResponse.data);
-        console.log(tableDataResponse.data);
+        // console.log(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

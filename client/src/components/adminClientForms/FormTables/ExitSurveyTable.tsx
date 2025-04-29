@@ -43,7 +43,8 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const ExitSurveyTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
+  const headers = ["cchCouldBeImproved","cchLikeMost","cchRating","cmChangeAbout","cmFirstName","cmLastName","cmMostBeneficial","cmRating","experienceAccomplished","experienceExtraNotes","experienceTakeaway","id","lifeSkillsHelpfulTopics","lifeSkillsOfferTopicsInTheFuture","lifeSkillsRating","location","programDateCompletion"
+];
 
   const [exitData, setExitData] = useState<
     (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
@@ -175,9 +176,25 @@ export const ExitSurveyTable = () => {
     const selectedTableData = exitData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-
+    console.log(selectedTableData)
     const data = selectedTableData.map((row) => ({
-      Site: row.site,
+      "cchCouldBeImproved": row.cchCouldBeImproved,
+"cchLikeMost": row.cchLikeMost,
+"cchRating": row.cchRating,
+"cmChangeAbout": row.cmChangeAbout,
+"cmFirstName": row.cmFirstName,
+"cmLastName": row.cmLastName,
+"cmMostBeneficial": row.cmMostBeneficial,
+"cmRating": row.cmRating,
+"experienceAccomplished": row.experienceAccomplished,
+"experienceExtraNotes": row.experienceExtraNotes,
+"experienceTakeaway": row.experienceTakeaway,
+"id": row.id,
+"lifeSkillsHelpfulTopics": row.lifeSkillsHelpfulTopics,
+"lifeSkillsOfferTopicsInTheFuture": row.lifeSkillsOfferTopicsInTheFuture,
+"lifeSkillsRating": row.lifeSkillsRating,
+"location": row.location,
+"programDateCompletion": row.programDateCompletion,
     }));
 
     downloadCSV(headers, data, `exit-surveys.csv`);
@@ -204,7 +221,7 @@ export const ExitSurveyTable = () => {
         exitData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
-      setDeleteModalOpen(true);
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting exit survey", error);
     }

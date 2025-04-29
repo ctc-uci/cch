@@ -43,7 +43,8 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const InitialScreenerTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
+  const headers = ["age","applicantType","beenConvicted","childDob","childName","cityOfSchool","clientId","convictedReasonAndTime","currentAddress","currentlyEmployed","currentlyHomeless","custodyOfChild","date","dateOfBirth","disabled","domesticViolenceHistory","educationHistory","email","ethnicity","eventLeadingToHomelessness","fatherName","futurePlansGoals","howHearAboutCch","howLongExperiencingHomelessness","id","lastAlcoholUse","lastDrugUse","lastEmployedDate","lastEmployer","lastPermAddress","lastPermanentResidenceHouseholdComposition","legalResident","lengthOfSobriety","maritalStatus","medical","medicalCity","medicalInsurance","medications","monthlyBills","monthlyIncome","name","nameSchoolChildrenAttend","personalReferenceTelephone","personalReferences","phoneNumber","presentWarrantExist","prevAppliedToCch","prevInCch","probationParoleOfficer","probationParoleOfficerTelephone","programsBeenInBefore","reasonForLeavingPermAddress","socialWorker","socialWorkerOfficeLocation","socialWorkerTelephone","sourcesOfIncome","ssnLastFour","timeUsingDrugsAlcohol","transportation","veteran","warrantCounty","whatCouldPreventHomeless","whenPrevAppliedToCch","whenPrevInCch","whereResideLastNight","whyNoLongerAtLastResidence"
+];
 
   const [initialData, setInitialData] = useState<
     (InitialInterview & { isChecked: boolean; isHovered: boolean })[]
@@ -57,199 +58,7 @@ export const InitialScreenerTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
 
-  // const columns = useMemo<ColumnDef<Client>[]>(
-  //   () => [
-  //     {
-  //       id: "rowNumber",
-  //       header: ({ table }) => {
-  //         return (
-  //           <Box textAlign="center">
-  //             <Checkbox
-  //               isChecked={selectedRowIds.length > 0}
-  //               isIndeterminate={table.getIsSomeRowsSelected()}
-  //               onChange={handleSelectAllCheckboxClick}
-  //             />
-  //           </Box>
-  //         );
-  //       },
-  //       enableSorting: false,
-  //     },
-  //     {
-  //       accessorKey: "firstName",
-  //       header: "First Name",
-  //     },
-  //     {
-  //       accessorKey: "lastName",
-  //       header: "Last Name",
-  //     },
-  //     {
-  //       header: "Case Manager",
-  //       accessorFn: (row) =>
-  //         `${row.caseManagerFirstName} ${row.caseManagerLastName}`,
-  //       cell: ({ row }) => {
-  //         const firstName = row.original.caseManagerFirstName;
-  //         const lastName = row.original.caseManagerLastName;
-  //         return `${firstName} ${lastName}`;
-  //       },
-  //       sortingFn: (a, b) => {
-  //         const aValue = `${a.original.caseManagerFirstName} ${a.original.caseManagerLastName}`;
-  //         const bValue = `${b.original.caseManagerFirstName} ${b.original.caseManagerLastName}`;
-  //         return aValue.localeCompare(bValue);
-  //       },
-  //     },
-  //     {
-  //       accessorKey: "locationName",
-  //       header: "Site",
-  //     },
-  //     {
-  //       accessorKey: "grant",
-  //       header: "Grant",
-  //     },
-  //     {
-  //       accessorKey: "dateOfBirth",
-  //       header: "Birthday",
-  //       cell: ({ getValue }) => {
-  //         return formatDateString(getValue() as string);
-  //       },
-  //     },
-  //     {
-  //       accessorKey: "age",
-  //       header: "Age",
-  //     },
-  //     {
-  //       accessorKey: "entranceDate",
-  //       header: "Entry Date",
-  //       cell: ({ getValue }) => {
-  //         return formatDateString(getValue() as string);
-  //       },
-  //     },
-  //     {
-  //       accessorKey: "exitDate",
-  //       header: "Exit Date",
-  //       cell: ({ getValue }) => {
-  //         return formatDateString(getValue() as string);
-  //       },
-  //     },
-  //     {
-  //       accessorKey: "bedNights",
-  //       header: "Bed Nights",
-  //     },
-  //     {
-  //       accessorKey: "bedNightsChildren",
-  //       header: "Total Bed Nights w/ Children",
-  //     },
-  //     {
-  //       accessorKey: "pregnantUponEntry",
-  //       header: "Pregnant Upon Entry",
-  //     },
-  //     {
-  //       accessorKey: "disabledChildren",
-  //       header: "Children w/a Disability",
-  //     },
-  //     {
-  //       accessorKey: "ethnicity",
-  //       header: "Ethnicity",
-  //     },
-  //     {
-  //       accessorKey: "race",
-  //       header: "Race",
-  //     },
-  //     {
-  //       accessorKey: "cityOfLastPermanentResidence",
-  //       header: "City of Last Permanent Residence",
-  //     },
-  //     {
-  //       accessorKey: "priorLiving",
-  //       header: "Prior Living",
-  //     },
-  //     {
-  //       accessorKey: "priorLivingCity",
-  //       header: "Prior Living City",
-  //     },
-  //     {
-  //       accessorKey: "shelterInLastFiveYears",
-  //       header: "Shelter in Last Five Years",
-  //     },
-  //     {
-  //       accessorKey: "homelessnessLength",
-  //       header: "Length of Homelessness",
-  //     },
-  //     {
-  //       accessorKey: "chronicallyHomeless",
-  //       header: "Chronically Homeless",
-  //     },
-  //     {
-  //       accessorKey: "attendingSchoolUponEntry",
-  //       header: "In School Upon Entry",
-  //     },
-  //     {
-  //       accessorKey: "reasonForLeaving",
-  //       header: "Reason For Leaving",
-  //     },
-  //     {
-  //       accessorKey: "specificReasonForLeaving",
-  //       header: "Specific Reason for Leaving",
-  //     },
-  //     {
-  //       accessorKey: "specificDestination",
-  //       header: "Specific Destination",
-  //     },
-  //     {
-  //       accessorKey: "savingsAmount",
-  //       header: "Savings Amount",
-  //     },
-  //     {
-  //       accessorKey: "attendingSchoolUponExit",
-  //       header: "In School Upon Exit",
-  //     },
-  //     {
-  //       accessorKey: "reunified",
-  //       header: "Reunified",
-  //     },
-  //     {
-  //       accessorKey: "successfulCompletion",
-  //       header: "Successful Completion",
-  //     },
-  //     {
-  //       accessorKey: "phoneNumber",
-  //       header: "Phone Number",
-  //     },
-  //     {
-  //       accessorKey: "email",
-  //       header: "Email",
-  //     },
-  //     {
-  //       accessorKey: "emergencyContactName",
-  //       header: "Emergency Contact Name",
-  //     },
-  //     {
-  //       accessorKey: "emergencyContactPhoneNumber",
-  //       header: "Emergency Contact Phone",
-  //     },
-  //     {
-  //       accessorKey: "medical",
-  //       header: "Medical",
-  //     },
-  //     {
-  //       accessorKey: "estimatedExitDate",
-  //       header: "Estimated Exit Date",
-  //       cell: ({ getValue }) => {
-  //         return formatDateString(getValue() as string);
-  //       },
-  //     },
-  //     {
-  //       accessorKey: "employmentGained",
-  //       header: "Employment Gained",
-  //     },
-  //     {
-  //       accessorKey: "destinationCity",
-  //       header: "Destination City",
-  //     },
-  //   ],
-  //   [selectedRowIds, clients]
-  // );
-
-  //
+ 
 
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
     () => [
@@ -540,17 +349,77 @@ export const InitialScreenerTable = () => {
     }
   };
 
-  // this is also something I must fix -- needs ADAPTATION
   const onPressCSVButton = () => {
     const selectedTableData = initialData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-
     const data = selectedTableData.map((row) => ({
-      "First Name": row.name.split(" ")[0],
-      "Last Name": row.name.split(" ")[0],
-      "Phone Number": row.phoneNumber,
-      "E-mail": row.email,
+      "age": row.age,
+"applicantType": row.applicantType,
+"beenConvicted": row.beenConvicted,
+"childDob": row.childDob,
+"childName": row.childName,
+"cityOfSchool": row.cityOfSchool,
+"clientId": row.clientId,
+"convictedReasonAndTime": row.convictedReasonAndTime,
+"currentAddress": row.currentAddress,
+"currentlyEmployed": row.currentlyEmployed,
+"currentlyHomeless": row.currentlyHomeless,
+"custodyOfChild": row.custodyOfChild,
+"date": row.date,
+"dateOfBirth": row.dateOfBirth,
+"disabled": row.disabled,
+"domesticViolenceHistory": row.domesticViolenceHistory,
+"educationHistory": row.educationHistory,
+"email": row.email,
+"ethnicity": row.ethnicity,
+"eventLeadingToHomelessness": row.eventLeadingToHomelessness,
+"fatherName": row.fatherName,
+"futurePlansGoals": row.futurePlansGoals,
+"howHearAboutCch": row.howHearAboutCch,
+"howLongExperiencingHomelessness": row.howLongExperiencingHomelessness,
+"id": row.id,
+"lastAlcoholUse": row.lastAlcoholUse,
+"lastDrugUse": row.lastDrugUse,
+"lastEmployedDate": row.lastEmployedDate,
+"lastEmployer": row.lastEmployer,
+"lastPermAddress": row.lastPermAddress,
+"lastPermanentResidenceHouseholdComposition": row.lastPermanentResidenceHouseholdComposition,
+"legalResident": row.legalResident,
+"lengthOfSobriety": row.lengthOfSobriety,
+"maritalStatus": row.maritalStatus,
+"medical": row.medical,
+"medicalCity": row.medicalCity,
+"medicalInsurance": row.medicalInsurance,
+"medications": row.medications,
+"monthlyBills": row.monthlyBills,
+"monthlyIncome": row.monthlyIncome,
+"name": row.name,
+"nameSchoolChildrenAttend": row.nameSchoolChildrenAttend,
+"personalReferenceTelephone": row.personalReferenceTelephone,
+"personalReferences": row.personalReferences,
+"phoneNumber": row.phoneNumber,
+"presentWarrantExist": row.presentWarrantExist,
+"prevAppliedToCch": row.prevAppliedToCch,
+"prevInCch": row.prevInCch,
+"probationParoleOfficer": row.probationParoleOfficer,
+"probationParoleOfficerTelephone": row.probationParoleOfficerTelephone,
+"programsBeenInBefore": row.programsBeenInBefore,
+"reasonForLeavingPermAddress": row.reasonForLeavingPermAddress,
+"socialWorker": row.socialWorker,
+"socialWorkerOfficeLocation": row.socialWorkerOfficeLocation,
+"socialWorkerTelephone": row.socialWorkerTelephone,
+"sourcesOfIncome": row.sourcesOfIncome,
+"ssnLastFour": row.ssnLastFour,
+"timeUsingDrugsAlcohol": row.timeUsingDrugsAlcohol,
+"transportation": row.transportation,
+"veteran": row.veteran,
+"warrantCounty": row.warrantCounty,
+"whatCouldPreventHomeless": row.whatCouldPreventHomeless,
+"whenPrevAppliedToCch": row.whenPrevAppliedToCch,
+"whenPrevInCch": row.whenPrevInCch,
+"whereResideLastNight": row.whereResideLastNight,
+"whyNoLongerAtLastResidence": row.whyNoLongerAtLastResidence,
     }));
 
     downloadCSV(headers, data, `initial-screeners.csv`);
@@ -565,7 +434,6 @@ export const InitialScreenerTable = () => {
     }
   };
 
-  //doesn't work yet -- DELETE FROM keyword isn't working and I'm scared of using it
   const handleDelete = async () => {
     try {
       await Promise.all(
@@ -577,7 +445,7 @@ export const InitialScreenerTable = () => {
         initialData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
-      setDeleteModalOpen(true);
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting interview", error);
     }

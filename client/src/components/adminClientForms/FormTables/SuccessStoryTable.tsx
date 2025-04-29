@@ -43,7 +43,8 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const SuccessStoryTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["First Name", "Last Name", "Phone Number", "E-mail"];
+  const headers = ["cchImpact","cmFirstName","cmLastName","entranceDate","exitDate","id","location","previousSituation","quote","tellDonors","whereNow"
+];
 
   const [successData, setSuccessData] = useState<
     (SuccessStory & { isChecked: boolean; isHovered: boolean })[]
@@ -150,9 +151,19 @@ export const SuccessStoryTable = () => {
     const selectedTableData = successData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-
+    console.log(selectedTableData);
     const data = selectedTableData.map((row) => ({
-      Site: row.site,
+      "cchImpact": row.cchImpact,
+"cmFirstName": row.cmFirstName,
+"cmLastName": row.cmLastName,
+"entranceDate": row.entranceDate,
+"exitDate": row.exitDate,
+"id": row.id,
+"location": row.location,
+"previousSituation": row.previousSituation,
+"quote": row.quote,
+"tellDonors": row.tellDonors,
+"whereNow": row.whereNow,
     }));
 
     downloadCSV(headers, data, `success-stories.csv`);
@@ -179,7 +190,7 @@ export const SuccessStoryTable = () => {
         successData.filter((row) => !selectedRowIds.includes(row.id))
       );
       setSelectedRowIds([]);
-      setDeleteModalOpen(true);
+      setDeleteModalOpen(false);
     } catch (error) {
       console.error("Error deleting success story", error);
     }

@@ -2,6 +2,7 @@
 
 export type SuccessStory = {
     id: number;
+    cchImpact: string;
     cmFirstName: string;
     cmLastName: string;
     site: string;
@@ -11,4 +12,8 @@ export type SuccessStory = {
     currentSituation: string;
     donorMessage: string;
     quote: string;
+    location: string;
+    previousSituation: string;
+    whereNow: string;
+    tellDonors: string;
 }
