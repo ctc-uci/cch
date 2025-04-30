@@ -364,10 +364,8 @@ donationRouter.post("/", async (req, res) => {
 donationRouter.put("/:id", async (req, res) => {
   try {
     const { date, weight, value, donor } = req.body;
-    console.log(req.body);
     const { id } = req.params;
-    console.log(id);
-    // Use the same pattern as POST request to ensure donor_id is properly retrieved
+
     const data = await db.query(
       `SELECT id FROM donors WHERE name = $1`,
       [donor]
@@ -380,7 +378,6 @@ donationRouter.put("/:id", async (req, res) => {
     });
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
-    console.log(err);
     res.status(400).send(err.message);
   }
 });
