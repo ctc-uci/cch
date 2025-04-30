@@ -103,7 +103,7 @@ export const AddClientForm = ({ onClientAdded, setShowUnfinishedAlert}: AddClien
         homelessness_length: "",
         chronically_homeless: "",
         attending_school_upon_entry: "",
-        employment_gained: "",
+        employement_gained: "",
         reason_for_leaving: "",
         specific_reason_for_leaving: "",
         specific_destination: "",
@@ -170,7 +170,7 @@ export const AddClientForm = ({ onClientAdded, setShowUnfinishedAlert}: AddClien
           homelessness_length: parseInt(formData.homelessness_length || "0", 10),
           chronically_homeless: formData.chronically_homeless === "Yes" ? true : false ,
           attending_school_upon_entry: formData.attending_school_upon_entry === "Yes" ? true : false ,
-          employment_gained: formData.employment_gained,
+          employement_gained: formData.employement_gained,
           reason_for_leaving: formData.reason_for_leaving,
           specific_reason_for_leaving: formData.specific_reason_for_leaving,
           specific_destination: formData.specific_destination,
@@ -392,8 +392,8 @@ export const AddClientForm = ({ onClientAdded, setShowUnfinishedAlert}: AddClien
                     </Select>
 
                     <Text fontWeight="medium">Employment Gained</Text>
-                    <Select placeholder="Select option" value={formData.employment_gained}
-                    onChange={(e) => {setFormData({ ...formData, employment_gained: e.target.value }); setFormInProgress(true)}}>
+                    <Select placeholder="Select option" value={formData.employement_gained}
+                    onChange={(e) => {setFormData({ ...formData, employement_gained: e.target.value }); setFormInProgress(true)}}>
                         <option value="true">Yes</option>
                         <option value="false">No</option>
                     </Select>
