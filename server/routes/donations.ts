@@ -24,7 +24,7 @@ donationRouter.get("/", async (req, res) => {
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
-      queryStr += ` 
+      queryStr += `
       AND (donations.id::TEXT ILIKE ${stringSearch}
         OR donations.date::TEXT ILIKE ${stringSearch}
         OR donations.weight::TEXT ILIKE ${stringSearch}
@@ -188,7 +188,7 @@ donationRouter.get("/filter/", async (req, res) => {
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
-      query += ` 
+      query += `
       AND (donations.id::TEXT ILIKE ${stringSearch}
         OR donations.date::TEXT ILIKE ${stringSearch}
         OR donations.weight::TEXT ILIKE ${stringSearch}
@@ -249,11 +249,11 @@ donationRouter.get("/monthfilter/", async (req, res) => {
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
-      query = ` 
+      query = `
         WITH filtered AS (${query})
         SELECT *
         FROM filtered
-        WHERE 
+        WHERE
         month_year::TEXT ILIKE ${stringSearch}
         OR total_weight::TEXT ILIKE ${stringSearch}
         OR total_value::TEXT ILIKE ${stringSearch}
@@ -314,11 +314,11 @@ donationRouter.get("/yearfilter/", async (req, res) => {
     const stringSearch = "'%" + String(search) + "%'";
 
     if (search) {
-      query = ` 
+      query = `
         WITH filtered AS (${query})
         SELECT *
         FROM filtered
-        WHERE 
+        WHERE
         month_year::TEXT ILIKE ${stringSearch}
         OR total_weight::TEXT ILIKE ${stringSearch}
         OR total_value::TEXT ILIKE ${stringSearch}
@@ -363,19 +363,24 @@ donationRouter.post("/", async (req, res) => {
 
 donationRouter.put("/:id", async (req, res) => {
   try {
-    const { date, weight, value, donor, category } = req.body;
+    const { date, weight, value, donor } = req.body;
+    console.log(req.body);
     const { id } = req.params;
-    const donor_id = await db.query(
+    console.log(id);
+    // Use the same pattern as POST request to ensure donor_id is properly retrieved
+    const data = await db.query(
       `SELECT id FROM donors WHERE name = $1`,
       [donor]
-    );
-    const data = await db.query(
-      `UPDATE donations SET date = COALESCE($1, date),weight = COALESCE($2, weight),value = COALESCE($3, value),
-    donor_id = COALESCE($4, donor_id), category = COALESCE($5, category) WHERE id = $6 RETURNING id`,
-      [date, weight, value, donor_id, category, id]
-    );
+    ).then((donor_id) => {
+      return db.query(
+        `UPDATE donations SET date = COALESCE($1, date), weight = COALESCE($2, weight), value = COALESCE($3, value),
+        donor_id = COALESCE($4, donor_id) WHERE id = $5 RETURNING id`,
+        [date, weight, value, donor_id[0]['id'], id]
+      );
+    });
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
+    console.log(err);
     res.status(400).send(err.message);
   }
 });

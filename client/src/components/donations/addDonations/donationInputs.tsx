@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react'
 import { Select } from '@chakra-ui/react'
-import { CardBody, Text,  Input, InputGroup, InputRightAddon, InputLeftAddon, Box, Flex} from '@chakra-ui/react'
+import { CardBody, Text, Input, InputGroup, InputRightAddon, InputLeftAddon } from '@chakra-ui/react'
 
 
 export interface DonationSub {
@@ -31,7 +31,25 @@ function DonationInputs({ subDonation, index, onChange }: {
                   name="date"
                   type="date"
                   value={subDonation.date instanceof Date ? subDonation.date.toISOString().split('T')[0] : ''}
-                  onChange={(e) => onChange(index, e)}
+                  onChange={(e) => {
+                    // Create a new date object from the input value
+                    const newDate = new Date(e.target.value);
+                    
+                    // Create a custom event with the new date
+                    const customEvent = {
+                      target: {
+                        name: 'date',
+                        value: newDate,
+                        // Add other required properties to match ChangeEvent
+                        checked: false,
+                        type: 'date',
+                        validity: {} as ValidityState,
+                        // Add other properties as needed
+                      }
+                    } as unknown as React.ChangeEvent<HTMLInputElement>;
+                    
+                    onChange(index, customEvent);
+                  }}
                 />
               </CardBody>
           
