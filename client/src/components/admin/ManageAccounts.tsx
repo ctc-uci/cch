@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 // import { Navbar } from "../Navbar";
 import { EditIcon } from "@chakra-ui/icons";
-// import  EditClient  from "../userSettings/EditClient";
+import  EditClient  from "../userSettings/EditClient";
 import {
   Table,
   TableContainer,
@@ -335,7 +335,7 @@ export const ManageAccounts = () => {
               <ModalHeader>Settings</ModalHeader>
               <ModalCloseButton />
               <ModalBody>
-                {/* <EditClient email={clientModalID} /> */}
+                <EditClient email={clientModalID} />
               </ModalBody>
             </ModalContent>
           </Modal>

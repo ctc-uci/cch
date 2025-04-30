@@ -98,6 +98,18 @@ clientsRouter.get("/", async (req, res) => {
   }
 });
 
+clientsRouter.get("/email/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const clients = await db.query(`SELECT * FROM clients WHERE email = $1`, [
+      email,
+    ]);
+    res.status(200).json(keysToCamel(clients));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Creates new client based on key values provided into request body.
 clientsRouter.post("/", async (req, res) => {
   try {
