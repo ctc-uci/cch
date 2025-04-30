@@ -36,7 +36,7 @@ import {
 
 interface DonationListFilterProps {
   setFilterQuery: React.Dispatch<React.SetStateAction<string[]>>;
-  
+
 }
 
 
@@ -51,8 +51,8 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
       { name: "Value ($)", value: "donations.value", type: "number" },
       { name: "Total ($)", value: "donations.total", type: "number" },
     ];
-    
-  
+
+
 
   const [filterRows, setFilterRows] = useState([
       {
@@ -71,7 +71,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
         if (row.field !== "" && row.operator !== "" && row.value !== "") {
           if (row.operator === "contains") {
             return `${row.selector} ${row.field} ILIKE '%${row.value}%'`;
-          } 
+          }
           else if (row.operator === "=") {
             return `${row.selector} ${row.field} ILIKE '%${row.value}%'`;
           }
@@ -106,11 +106,11 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
       },
     ]);
     setNextId(nextId + 1);
-    
+
   };
 
   const removeRow = (id: number) => {
-    
+
     if (filterRows.length > 1) {
       setFilterRows((prevRows) => {
         const updatedRows = prevRows.filter(row => row.id !== id);
@@ -132,7 +132,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
             selector: index === 0 ? "" : row.selector,
         }));
     });
-      
+
     }
     else {
         setFilterRows([
@@ -212,7 +212,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
                      <option value="OR">or</option>
                   </Select>
                 )}
-                
+
 
                   <Select
                     placeholder="Select Field"
@@ -227,7 +227,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
                         })
                     }
                   </Select>
-                 
+
                      {(() => {
                         const selectedColumn = columns.find((col) => col.value === row.field);
                         const fieldType: string = selectedColumn?.type || "string";
@@ -251,7 +251,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
                             { value: "=", label: "equals" },
                           ];
                         }
-                        
+
                         return (
                           <>
                              <Select
@@ -297,15 +297,15 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
                             )}
                           </>
                         )
-               
+
                       })()}
-              
+
                   <Button onClick={() => removeRow(row.id)} variant='outline' borderLeftRadius="0">
                     <Icon
                         as={MdOutlineDelete}
                     />
                   </Button>
-                  
+
                 </HStack>
               </Box>
             ))}
