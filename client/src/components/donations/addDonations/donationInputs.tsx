@@ -4,15 +4,15 @@ import { CardBody, Text, Input, InputGroup, InputRightAddon, InputLeftAddon } fr
 
 
 export interface DonationSub {
-    date: Date, 
-    category: string, 
+    date: Date,
+    category: string,
     weight: number,
     value: number,
 }
 
-function DonationInputs({ subDonation, index, onChange }: { 
-    subDonation: DonationSub; 
-    index: number; 
+function DonationInputs({ subDonation, index, onChange }: {
+    subDonation: DonationSub;
+    index: number;
     onChange: (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
     }) {
         const [totalValue, setTotalValue] = useState<number>(0);
@@ -20,7 +20,7 @@ function DonationInputs({ subDonation, index, onChange }: {
             const weight = subDonation?.weight || 0;
             const value = subDonation?.value || 0;
             setTotalValue(weight * value);
-    
+
         }, [subDonation]);
 
         return (
@@ -32,27 +32,23 @@ function DonationInputs({ subDonation, index, onChange }: {
                   type="date"
                   value={subDonation.date instanceof Date ? subDonation.date.toISOString().split('T')[0] : ''}
                   onChange={(e) => {
-                    // Create a new date object from the input value
                     const newDate = new Date(e.target.value);
-                    
-                    // Create a custom event with the new date
+
                     const customEvent = {
                       target: {
                         name: 'date',
                         value: newDate,
-                        // Add other required properties to match ChangeEvent
                         checked: false,
                         type: 'date',
                         validity: {} as ValidityState,
-                        // Add other properties as needed
                       }
                     } as unknown as React.ChangeEvent<HTMLInputElement>;
-                    
+
                     onChange(index, customEvent);
                   }}
                 />
               </CardBody>
-          
+
               <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
                 <Text>Category</Text>
                 <Select
@@ -66,7 +62,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                   <option value="client">Client</option>
                 </Select>
               </CardBody>
-          
+
               <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
                 <Text>Total Weight (lbs)</Text>
                 <InputGroup>
@@ -80,7 +76,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                   <InputRightAddon>lbs</InputRightAddon>
                 </InputGroup>
               </CardBody>
-          
+
               <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
                 <Text>Value per lbs ($)</Text>
                 <InputGroup>
@@ -94,19 +90,19 @@ function DonationInputs({ subDonation, index, onChange }: {
                   />
                 </InputGroup>
               </CardBody>
-          
+
               <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
                 <Text>Total Value ($)</Text>
                 <Text fontWeight="bold">
-                  {(subDonation.value === -1 || subDonation.weight === -1) 
-                    ? "$00.00" 
+                  {(subDonation.value === -1 || subDonation.weight === -1)
+                    ? "$00.00"
                     : `$${totalValue.toFixed(2)}`
                   }
                 </Text>
               </CardBody>
             </CardBody>
           );
-          
+
   }
 
   export default DonationInputs;

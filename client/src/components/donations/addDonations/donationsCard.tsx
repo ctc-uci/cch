@@ -22,7 +22,6 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
     const [donors, setDonors] = useState<string[]>([]);
     const [newDonor, setNewDonor] = useState<string>("");
 
-    // Fetch donors when component mounts
     useEffect(() => {
         const fetchDonors = async () => {
             try {
@@ -36,7 +35,7 @@ function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation,
                 console.error('Error fetching donors:', error);
             }
         };
-        
+
         fetchDonors();
     }, [backend]);
 
@@ -67,25 +66,19 @@ const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputEl
   const { name, value } = e.target;
   setDonation((prevDonation) => {
     const newSubDonations = [...prevDonation.sub];
-    
-    // Make a copy of the current sub donation to modify
+
     const currentSub = { ...newSubDonations[index] };
-    
-    // Handle different field types appropriately
+
     if (name === 'date') {
-      // Handle date specifically
       currentSub.date = typeof value === 'object' ? value as Date : new Date(value as string);
     } else if (name === 'weight' || name === 'value') {
-      // Handle numeric fields
       currentSub[name] = parseFloat(value as string) || -1;
     } else if (name === 'category') {
-      // Handle category field
       currentSub.category = value as string;
     }
-    
-    // Update the sub donation at the specified index
+
     newSubDonations[index] = currentSub;
-    
+
     const updatedDonation = { ...prevDonation, sub: newSubDonations };
     onSubmit(updatedDonation);
     return updatedDonation;
@@ -94,14 +87,13 @@ const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputEl
 
 const handleAddDonation = () => {
     setDonation((prevDonation) => {
-      // Create a new sub donation with all required fields initialized
-      const newSubDonation: DonationSub = { 
-        date: new Date(), 
-        category: '', 
-        weight: -1, 
-        value: -1 
+      const newSubDonation: DonationSub = {
+        date: new Date(),
+        category: '',
+        weight: -1,
+        value: -1
       };
-      
+
       return {
         ...prevDonation,
         sub: [...prevDonation.sub, newSubDonation],
