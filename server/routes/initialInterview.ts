@@ -109,6 +109,19 @@ initialInterviewRouter.get("/commentForm/:id", async (req, res) => {
   }
 });
 
+initialInterviewRouter.get("/get-interview/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const data = await db.query(
+      `SELECT * FROM initial_interview WHERE id = $1;`,
+      [id]
+    );
+    res.status(200).json(keysToCamel(data));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 initialInterviewRouter.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -180,8 +193,7 @@ initialInterviewRouter.post("/", async (req, res) => {
       prevInCch,
       whenPrevInCch,
       childName,
-      childDOB,
-      city,
+      childDob,
       custodyOfChild,
       fatherName,
       nameSchoolChildrenAttend,
@@ -194,7 +206,6 @@ initialInterviewRouter.post("/", async (req, res) => {
       currentlyEmployed,
       lastEmployer,
       lastEmployedDate,
-      childrenAge,
       educationHistory,
       transportation,
       legalResident,
@@ -224,13 +235,82 @@ initialInterviewRouter.post("/", async (req, res) => {
       whatCouldPreventHomeless,
     } = req.body;
 
-    const query = `INSERT INTO initial_interview(applicantType, name, age, date, phoneNumber, maritalStatus, dateOfBirth, email, ssnLastFour, ethnicity, veteran, disabled, currentAddress, lastPermAddress, reasonForLeavingPermAddress, whereResideLastNight, currentlyHomeless, eventLeadingToHomelessness, howLongExperiencingHomelessness, prevAppliedToCch, whenPrevAppliedToCch, prevInCch, whenPrevInCch, childName, childDOB, city, custodyOfChild, fatherName, nameSchoolChildrenAttend, cityOfSchool, howHearAboutCch, programsBeenInBefore, monthlyIncome, sourcesOfIncome,
-monthlyBills, currentlyEmployed, lastEmployer, lastEmployedDate, childrenAge, educationHistory, transportation, legalResident, medical, medicalCity, medicalInsurance, medications, domesticViolenceHistory, socialWorker, socialWorkerTelephone, socialWorkerOfficeLocation, lengthOfSobriety, lastDrugUse, lastAlcoholUse, timeUsingDrugsAlcohol, beenConvicted, convictedReasonAndTime, presentWarrantExist, warrantCounty, probationParoleOfficer, probationParoleOfficerTelephone,
-personalReferences, personalReferenceTelephone, futurePlansGoals, lastPermanentResidenceHouseholdComposition, whyNoLongerAtLastResidence, whatCouldPreventHomeless
-) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34,
-$35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61, $62, $63, $64,
-$65, $66, $67
-)`;
+    const query = `
+      INSERT INTO initial_interview (
+        applicant_type,
+        name,
+        age,
+        date,
+        phone_number,
+        marital_status,
+        date_of_birth,
+        email,
+        ssn_last_four,
+        ethnicity,
+        veteran,
+        disabled,
+        current_address,
+        last_perm_address,
+        reason_for_leaving_perm_address,
+        where_reside_last_night,
+        currently_homeless,
+        event_leading_to_homelessness,
+        how_long_experiencing_homelessness,
+        prev_applied_to_cch,
+        when_prev_applied_to_cch,
+        prev_in_cch,
+        when_prev_in_cch,
+        child_name,
+        child_dob,
+        custody_of_child,
+        father_name,
+        name_school_children_attend,
+        city_of_school,
+        how_hear_about_cch,
+        programs_been_in_before,
+        monthly_income,
+        sources_of_income,
+        monthly_bills,
+        currently_employed,
+        last_employer,
+        last_employed_date,
+        education_history,
+        transportation,
+        legal_resident,
+        medical,
+        medical_city,
+        medical_insurance,
+        medications,
+        domestic_violence_history,
+        social_worker,
+        social_worker_telephone,
+        social_worker_office_location,
+        length_of_sobriety,
+        last_drug_use,
+        last_alcohol_use,
+        time_using_drugs_alcohol,
+        been_convicted,
+        convicted_reason_and_time,
+        present_warrant_exist,
+        warrant_county,
+        probation_parole_officer,
+        probation_parole_officer_telephone,
+        personal_references,
+        personal_reference_telephone,
+        future_plans_goals,
+        last_permanent_residence_household_composition,
+        why_no_longer_at_last_residence,
+        what_could_prevent_homeless
+      ) VALUES (
+                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                 $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+                 $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
+                 $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
+                 $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
+                 $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
+                 $61, $62, $63, $64
+               );
+    `;
 
     const res = await db.query(query, [
       applicantType,
@@ -257,8 +337,7 @@ $65, $66, $67
       prevInCch,
       whenPrevInCch,
       childName,
-      childDOB,
-      city,
+      childDob,
       custodyOfChild,
       fatherName,
       nameSchoolChildrenAttend,
@@ -271,7 +350,6 @@ $65, $66, $67
       currentlyEmployed,
       lastEmployer,
       lastEmployedDate,
-      childrenAge,
       educationHistory,
       transportation,
       legalResident,
