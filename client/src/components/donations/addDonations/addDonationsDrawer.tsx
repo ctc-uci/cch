@@ -7,7 +7,6 @@ import {
   DrawerHeader,
   DrawerOverlay,
   DrawerContent,
-  DrawerCloseButton,
   Button,
   useToast,
   Modal,
@@ -20,7 +19,12 @@ import {
 import DonationCard, {Donation} from './donationsCard'
 
 import { useBackendContext } from '../../../contexts/hooks/useBackendContext';
-function DonationsDrawer() {
+
+interface AddDonationsDrawerProps {
+  refresh: () => void
+}
+
+function AddDonationsDrawer({refresh}: AddDonationsDrawerProps) {
   const { isOpen: isDrawerOpen, onOpen: openDrawer, onClose: closeDrawer } = useDisclosure();
   const { isOpen: isModalOpen, onOpen: openModal, onClose: closeModal } = useDisclosure();
   //const { isOpen, onOpen, onClose } = useDisclosure();
@@ -32,7 +36,6 @@ function DonationsDrawer() {
   const btnRef = React.useRef()
   const { backend } = useBackendContext();
   const toast = useToast();
-
 
   const handleAddDonor = () => {
     setDonations((prevDonations) => [
@@ -52,64 +55,14 @@ function DonationsDrawer() {
 
   const handleSubmitAllDonations = async () => {
     for (const donation of donations) {
-      if (donation.donor === "costco") {
-        for (const sub of donation.sub) {
-          try {
-            const Costco = {
-              date: sub.date.toISOString().split("T")[0], // Convert to string
-              amount: sub.value,
-              category: sub.category
-            };
-            if (Costco.amount === - 1 || Costco.category === "") {
-              toast({
-                title: "Missing Information",
-                description: "There was missing information.",
-                status: "warning",
-                duration: 5000,
-                isClosable: true,
-              });
-            } else {
-              await backend.post("/costcoDonations", Costco);
-              const currentTime = new Date();
-              let hours = currentTime.getHours();
-              let minutes = currentTime.getMinutes();
-              const ampm = hours >= 12 ? 'PM' : 'AM';
-
-              hours = hours % 12;
-              hours = hours ? hours : 12;
-              minutes = minutes < 10 ? 0 + minutes : minutes;
-              const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split('T')[0]}`;
-              toast({
-                title: "Donation Added",
-                description: `The donation has been successfully added into the database at ${formattedTime}.`,
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-              });
-              closeDrawer();
-            }
-
-          } catch (err) {
-            toast({
-              title: "Donation Not Added",
-              description: "There was something wrong that happened and the donation was not added.",
-              status: "error",
-              duration: 5000,
-              isClosable: true,
-            });
-            closeDrawer();
-            console.error(err);
-          }
-        }
-
-      } else {
-        for (const sub of donation.sub) {
+      for (const sub of donation.sub)
           try {
             const Food = {
               date: sub.date,
               weight: sub.weight,
               value: sub.value,
-              category: donation.donor
+              category: sub.category,
+              donor: donation.donor
             };
             if (Food.weight === - 1 || Food.value === -1 || Food.category === "") {
               toast({
@@ -120,7 +73,7 @@ function DonationsDrawer() {
                 isClosable: true,
               });
             } else {
-              await backend.post("/foodDonations", Food);
+              await backend.post("/donations", Food);
               const currentTime = new Date();
               let hours = currentTime.getHours();
               let minutes = currentTime.getMinutes();
@@ -139,6 +92,7 @@ function DonationsDrawer() {
                 isClosable: true,
               });
               closeDrawer();
+              refresh();
             }
 
           } catch (err) {
@@ -150,20 +104,19 @@ function DonationsDrawer() {
               isClosable: true,
             });
             closeDrawer();
+            refresh();
             console.error(err);
         }
         }
 
-      }
-    }
-  };
+      };
   const resetData = () => {
     setDonations([{donor: '', sub: [{ date: new Date(), category: '', weight: -1, value: -1 }],}])
   }
   return (
     <>
-      <Button ref={btnRef} colorScheme="blue" onClick={openDrawer} sx={{ width: "250px", padding: "12px 24px" }}>
-        Add Donation
+      <Button ref={btnRef} colorScheme="blue" onClick={openDrawer} sx={{ width: "45px", padding: "12px 24px" }}>
+        Add
       </Button>
       <Drawer isOpen={isDrawerOpen} placement="right" onClose={closeDrawer} closeOnOverlayClick={false} size="xl">
         <DrawerOverlay />
@@ -205,7 +158,7 @@ function DonationsDrawer() {
             <Button variant="outline" mr={3} onClick={closeModal}>
               Cancel
             </Button>
-            <Button colorScheme="blue" mr={3} onClick={() => {resetData(); closeModal(); closeDrawer();}}>
+            <Button colorScheme="blue" mr={3} onClick={() => {resetData(); closeModal(); closeDrawer(); refresh();}}>
               Yes
             </Button>
           </ModalFooter>
@@ -214,4 +167,4 @@ function DonationsDrawer() {
     </>
   );
 }
-export default DonationsDrawer;
+export default AddDonationsDrawer;
