@@ -45,7 +45,6 @@ donationRouter.get("/", async (req, res) => {
     const donations = await db.query(queryStr);
     res.status(200).json(keysToCamel(donations));
   } catch (err) {
-    console.log(err.message);
     res.status(500).send(err.message);
   }
 });
@@ -343,7 +342,6 @@ donationRouter.get("/yearfilter/", async (req, res) => {
 donationRouter.post("/", async (req, res) => {
   try {
     const { date, weight, value, donor, category } = req.body;
-    //console.log(donor);
     const data = await db.query(
       `SELECT id FROM donors WHERE name = $1`,
       [donor]
@@ -357,7 +355,6 @@ donationRouter.post("/", async (req, res) => {
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
     res.status(500).send(err.message);
-    //console.log(err);
   }
 });
 

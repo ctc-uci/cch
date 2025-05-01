@@ -387,8 +387,8 @@ export const Donations = () => {
               freq === "yearly" ?
                 `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
-           
-        if (freq !== "monthly" && freq !== "yearly") {    
+
+        if (freq !== "monthly" && freq !== "yearly") {
           if (filterQuery.length > 0 && searchKey.length > 0) {
             allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
           }
@@ -565,7 +565,7 @@ export const Donations = () => {
                 }}
                 onFormSubmitSuccess={refreshPage}
               /> */}
-              <AddDonationsDrawer/>
+              <AddDonationsDrawer refresh={refreshPage}/>
           </HStack>
         </HStack>
         <HStack w="100%" justifyContent="flex-start">
@@ -612,9 +612,9 @@ export const Donations = () => {
             width="100%"
             maxHeight="100%"
             paddingBottom="10"
-            borderRadius="lg" 
-            overflow="hidden" 
-            boxShadow="sm" 
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="sm"
             sx={{
               overflowX: "auto",
               overflowY: "auto",
