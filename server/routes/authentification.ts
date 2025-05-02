@@ -1,25 +1,26 @@
+import dotenv from "dotenv";
 import { Router } from "express";
-import { transporter, emailSender, sendEmail } from "../common/transporter";
+
+import { emailSender, sendEmail, transporter } from "../common/transporter";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
-
-import dotenv from "dotenv";
 dotenv.config();
 // export const emailRouter = Router();
 
 export const authentificationRouter = Router();
 
-// Get auth code by email
-authentificationRouter.get("/email", async (req, res) => {
+// Check if inputted code and email combo exist in our DB
+authentificationRouter.post("/verify", async (req, res) => {
   try {
-    const { email } = req.query;
-    const data = await db.query(`SELECT a.code
-                                 FROM auth_codes AS a
-                                    JOIN users AS u ON u.email = a.email
-                                 WHERE a.email = $1`, [email]
+    const { email, code } = req.query;
+    const data = await db.query(
+          ` SELECT 1
+        FROM auth_codes AS a
+        JOIN users AS u ON u.email = a.email
+        WHERE a.email = $1 AND a.code = $2;`,
+          [email, code]
     );
-
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
@@ -30,9 +31,12 @@ authentificationRouter.get("/email", async (req, res) => {
 authentificationRouter.delete("/email", async (req, res) => {
   try {
     const { email } = req.query;
-    const data = await db.query(`DELETE FROM auth_codes AS a
+    const data = await db.query(
+      `DELETE FROM auth_codes AS a
                                 USING users u
-                                WHERE a.email = u.email AND a.email = $1;`, [email])
+                                WHERE a.email = u.email AND a.email = $1;`,
+      [email]
+    );
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     console.log(err);
@@ -58,7 +62,6 @@ authentificationRouter.post("/", async (req, res) => {
 });
 
 authentificationRouter.post("/email", (req, res) => {
-
   const { email, message } = req.body;
 
   if (!email || !message) {
@@ -70,14 +73,14 @@ authentificationRouter.post("/email", (req, res) => {
     to: email,
     subject: "Your Two-Factor Authentication Code",
     text: message,
-  }
+  };
 
   transporter.sendMail(mail, (err) => {
     if (err) {
-        console.log(err.message);
-        res.status(500).send(err.message);
-      } else {
-        res.status(200).json(keysToCamel(emailSender));
-      }
+      console.log(err.message);
+      res.status(500).send(err.message);
+    } else {
+      res.status(200).json(keysToCamel(emailSender));
+    }
   });
-})
+});
