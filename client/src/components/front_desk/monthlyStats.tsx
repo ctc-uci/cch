@@ -7,7 +7,7 @@ interface MonthlyStats {
   id: number;
   totalOfficeVisits: number;
   totalCalls: number;
-  totalUnduplicatedCalles: number;
+  totalUnduplicatedCalls: number;
   totalVisitsToPantryAndDonationsRoom: number;
   totalNumberOfPeopleServedInPantry: number;
   totalVisitsToPlacentiaPantry: number;
@@ -40,13 +40,13 @@ export const FrontDeskMonthlyStats = () => {
       fetchData();
       setRefreshStatus(false);
     }
-    
+
   }, [refreshStatus]);
 
   const handleFormSubmitSuccess = () => {
     setRefreshStatus(true);
   };
-  return ( 
+  return (
     <div>
       <FormFrontDesk onFormSubmitSuccess={handleFormSubmitSuccess} />
     </div>
