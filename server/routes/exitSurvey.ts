@@ -8,9 +8,94 @@ export const exitSurveyRouter = Router();
 
 exitSurveyRouter.get("/", async (req, res) => {
   try {
-    const data = await db.any("SELECT * FROM exit_survey");
-    res.status(200).json({ data });
+    const success = await db.query(`SELECT * FROM exit_survey`);
+    res.status(200).json(keysToCamel(success));
   } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+exitSurveyRouter.get("/table-data", async (req, res) => {
+  try {
+    const success = await db.query(`
+      SELECT
+        es.id AS id, 
+        cm.first_name AS cm_first_name,
+        cm.last_name AS cm_last_name,
+        l.name AS location,
+        es.program_date_completion,
+        es.cch_rating,
+        es.cch_could_be_improved,
+        es.cch_like_most,
+        es.life_skills_rating,
+        es.life_skills_helpful_topics,
+        es.life_skills_offer_topics_in_the_future,
+        es.cm_rating,
+        es.cm_rating,
+        es.cm_change_about,
+        es.cm_most_beneficial,
+        es.experience_takeaway,
+        es.experience_accomplished,
+        es.experience_extra_notes
+      FROM exit_survey AS es
+      INNER JOIN locations AS l ON es.site = l.id
+      INNER JOIN case_managers AS cm ON es.cm_id = cm.id
+      `);
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+exitSurveyRouter.get("/search-filter", async (req, res) => {
+  try {
+    const { search, page, filter } = req.query;
+    let queryStr = `
+      SELECT es.*, cm.first_name AS cm_first_name, cm.last_name AS cm_last_name, l.name AS location
+      FROM exit_survey AS es
+      INNER JOIN case_managers AS cm ON es.cm_id = cm.id
+      INNER JOIN locations AS l ON es.site = l.id
+      WHERE 1=1
+    `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      queryStr += ` 
+      AND (es.id::TEXT ILIKE ${stringSearch}
+        OR es.program_date_completion::TEXT ILIKE ${stringSearch}
+        OR es.cch_rating::TEXT ILIKE ${stringSearch}
+        OR es.cch_could_be_improved::TEXT ILIKE ${stringSearch}
+        OR es.cch_like_most::TEXT ILIKE ${stringSearch}
+        OR es.life_skills_rating::TEXT ILIKE ${stringSearch}
+        OR es.life_skills_helpful_topics::TEXT ILIKE ${stringSearch}
+        OR es.life_skills_offer_topics_in_the_future::TEXT ILIKE ${stringSearch}
+        OR es.cm_rating::TEXT ILIKE ${stringSearch}
+        OR es.cm_change_about::TEXT ILIKE ${stringSearch}
+        OR es.cm_most_beneficial::TEXT ILIKE ${stringSearch}
+        OR es.experience_takeaway::TEXT ILIKE ${stringSearch}
+        OR es.experience_accomplished::TEXT ILIKE ${stringSearch}
+        OR es.experience_extra_notes::TEXT ILIKE ${stringSearch}
+        OR cm.first_name::TEXT ILIKE ${stringSearch}
+        OR cm.last_name::TEXT ILIKE ${stringSearch}
+        OR l.name::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+    
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY es.id ASC";
+
+    if (page) {
+      queryStr += ` LIMIT ${page}`;
+    }
+
+    const success_story = await db.query(queryStr);
+    res.status(200).json(keysToCamel(success_story));
+  } catch (err) {
+    console.log(err.message);
     res.status(500).send(err.message);
   }
 });

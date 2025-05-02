@@ -524,3 +524,15 @@ clientsRouter.put("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
+
+// Delete a client
+clientsRouter.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query("DELETE FROM clients WHERE id = $1", [id]);
+    res.status(200).json();
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});

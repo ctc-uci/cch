@@ -22,4 +22,6 @@ export type FormType =
     data: Form[];
   }
 
-
+export type TableType = {
+  type: string; 
+};

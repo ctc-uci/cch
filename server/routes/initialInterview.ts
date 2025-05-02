@@ -59,6 +59,103 @@ initialInterviewRouter.get(
   }
 );
 
+
+initialInterviewRouter.get("/search-filter", async (req, res) => {
+  try {
+    const { search, page, filter } = req.query;
+    let queryStr = `
+      SELECT initial_interview.*
+      FROM initial_interview
+      WHERE 1=1
+    `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      queryStr += ` 
+      AND (initial_interview.id::TEXT ILIKE ${stringSearch}
+        OR initial_interview.applicant_type::TEXT ILIKE ${stringSearch}
+        OR initial_interview.name::TEXT ILIKE ${stringSearch}
+        OR initial_interview.age::TEXT ILIKE ${stringSearch}
+        OR initial_interview.date::TEXT ILIKE ${stringSearch}
+        OR initial_interview.phone_number::TEXT ILIKE ${stringSearch}
+        OR initial_interview.marital_status::TEXT ILIKE ${stringSearch}
+        OR initial_interview.date_of_birth::TEXT ILIKE ${stringSearch}
+        OR initial_interview.email::TEXT ILIKE ${stringSearch}
+        OR initial_interview.ssn_last_four::TEXT ILIKE ${stringSearch}
+        OR initial_interview.ethnicity::TEXT ILIKE ${stringSearch}
+        OR initial_interview.disabled::TEXT ILIKE ${stringSearch}
+        OR initial_interview.current_address::TEXT ILIKE ${stringSearch}
+        OR initial_interview.last_perm_address::TEXT ILIKE ${stringSearch}
+        OR initial_interview.reason_for_leaving_perm_address::TEXT ILIKE ${stringSearch}
+        OR initial_interview.where_reside_last_night::TEXT ILIKE ${stringSearch}
+        OR initial_interview.currently_homeless::TEXT ILIKE ${stringSearch}
+        OR initial_interview.event_leading_to_homelessness::TEXT ILIKE ${stringSearch}
+        OR initial_interview.how_long_experiencing_homelessness::TEXT ILIKE ${stringSearch}
+        OR initial_interview.prev_applied_to_cch::TEXT ILIKE ${stringSearch}
+        OR initial_interview.when_prev_applied_to_cch::TEXT ILIKE ${stringSearch}
+        OR initial_interview.prev_in_cch::TEXT ILIKE ${stringSearch}
+        OR initial_interview.child_name::TEXT ILIKE ${stringSearch}
+        OR initial_interview.child_dob::TEXT ILIKE ${stringSearch}
+        OR initial_interview.custody_of_child::TEXT ILIKE ${stringSearch}
+        OR initial_interview.father_name::TEXT ILIKE ${stringSearch}
+        OR initial_interview.name_school_children_attend::TEXT ILIKE ${stringSearch}
+        OR initial_interview.city_of_school::TEXT ILIKE ${stringSearch}
+        OR initial_interview.how_hear_about_cch::TEXT ILIKE ${stringSearch}
+        OR initial_interview.programs_been_in_before::TEXT ILIKE ${stringSearch}
+        OR initial_interview.monthly_income::TEXT ILIKE ${stringSearch}
+        OR initial_interview.sources_of_income::TEXT ILIKE ${stringSearch}
+        OR initial_interview.monthly_bills::TEXT ILIKE ${stringSearch}
+        OR initial_interview.currently_employed::TEXT ILIKE ${stringSearch}
+        OR initial_interview.last_employer::TEXT ILIKE ${stringSearch}
+        OR initial_interview.last_employed_date::TEXT ILIKE ${stringSearch}
+        OR initial_interview.education_history::TEXT ILIKE ${stringSearch}
+        OR initial_interview.transportation::TEXT ILIKE ${stringSearch}
+        OR initial_interview.legal_resident::TEXT ILIKE ${stringSearch}
+        OR initial_interview.medical::TEXT ILIKE ${stringSearch}
+        OR initial_interview.medical_city::TEXT ILIKE ${stringSearch}
+        OR initial_interview.medical_insurance::TEXT ILIKE ${stringSearch}
+        OR initial_interview.medications::TEXT ILIKE ${stringSearch}
+        OR initial_interview.domestic_violence_history::TEXT ILIKE ${stringSearch}
+        OR initial_interview.social_worker::TEXT ILIKE ${stringSearch}
+        OR initial_interview.social_worker_telephone::TEXT ILIKE ${stringSearch}
+        OR initial_interview.social_worker_office_location::TEXT ILIKE ${stringSearch}
+        OR initial_interview.length_of_sobriety::TEXT ILIKE ${stringSearch}
+        OR initial_interview.last_drug_use::TEXT ILIKE ${stringSearch}
+        OR initial_interview.time_using_drugs_alcohol::TEXT ILIKE ${stringSearch}
+        OR initial_interview.been_convicted::TEXT ILIKE ${stringSearch}
+        OR initial_interview.convicted_reason_and_time::TEXT ILIKE ${stringSearch}
+        OR initial_interview.present_warrant_exist::TEXT ILIKE ${stringSearch}
+        OR initial_interview.warrant_county::TEXT ILIKE ${stringSearch}
+        OR initial_interview.probation_parole_officer::TEXT ILIKE ${stringSearch}
+        OR initial_interview.personal_references::TEXT ILIKE ${stringSearch}
+        OR initial_interview.personal_reference_telephone::TEXT ILIKE ${stringSearch}
+        OR initial_interview.future_plans_goals::TEXT ILIKE ${stringSearch}
+        OR initial_interview.last_permanent_residence_household_composition::TEXT ILIKE ${stringSearch}
+        OR initial_interview.why_no_longer_at_last_residence::TEXT ILIKE ${stringSearch}
+        OR initial_interview.what_could_prevent_homeless::TEXT ILIKE ${stringSearch}
+        OR initial_interview.client_id::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY initial_interview.id ASC";
+
+    if (page) {
+      queryStr += ` LIMIT ${page}`;
+    }
+
+    const initial_interview = await db.query(queryStr);
+    res.status(200).json(keysToCamel(initial_interview));
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
 initialInterviewRouter.get("/", async (req, res) => {
   try {
     const data = await db.query(`SELECT * FROM initial_interview;`);

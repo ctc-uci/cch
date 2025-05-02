@@ -29,33 +29,23 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-
-import { useAuthContext } from "../../contexts/hooks/useAuthContext";
-import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { Client } from "../../types/client";
-import { formatDateString } from "../../utils/dateUtils";
-import { downloadCSV } from "../../utils/downloadCSV";
-import { UpdateClients } from "../admin/UpdateClient";
-import { ClientListFilter } from "../clientlist/ClientListFilter";
-import { DeleteRowModal } from "../deleteRow/deleteRowModal";
-import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-import { LoadingWheel } from ".././loading/loading.tsx"
+import { useAuthContext } from "../../../contexts/hooks/useAuthContext";
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
+import type { Client } from "../../../types/client";
+import { formatDateString } from "../../../utils/dateUtils";
+import { downloadCSV } from "../../../utils/downloadCSV";
+import { UpdateClients } from "../../admin/UpdateClient";
+import { DeleteRowModal } from "../../deleteRow/deleteRowModal";
+import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox";
+import { LoadingWheel } from "../.././loading/loading.tsx"
+import { FilterTemplate } from "./FilterTemplate.tsx";
 
 
-interface ClientListProps {
-  admin?: boolean;
-}
 
-export const ClientList = ({ admin }: ClientListProps) => {
+export const AllFormTable = () => {
   const headers = [
-    "First Name",
-    "Last Name",
-    "Phone Number",
-    "E-mail",
-    "Entrance Date",
-    "Exit Date",
-    "Birthday",
+    "age","attendingSchoolUponEntry","attendingSchoolUponExit","bedNights","bedNightsChildren","caseManagerFirstName","caseManagerLastName","chronicallyHomeless","cityOfLastPermanentResidence","comments","createdBy","dateOfBirth","destinationCity","disabledChildren","email","emergencyContactName","emergencyContactPhoneNumber","employementGained","entranceDate","estimatedExitDate","ethnicity","exitDate","firstName","grant","homelessnessLength","id","lastName","locationName","medical","phoneNumber","pregnantUponEntry","priorLiving","priorLivingCity","race","reasonForLeaving","reunified","savingsAmount","shelterInLastFiveYears","specificDestination","specificReasonForLeaving","status","successfulCompletion","unitId"
+
   ];
 
   const { currentUser } = useAuthContext();
@@ -291,15 +281,51 @@ export const ClientList = ({ admin }: ClientListProps) => {
     const selectedClients = clients.filter((client) =>
       selectedRowIds.includes(client.id)
     );
-
+    
     const data = selectedClients.map((client) => ({
-      "First Name": client.firstName,
-      "Last Name": client.lastName,
-      "Phone Number": client.phoneNumber,
-      "E-mail": client.email,
-      "Entrance Date": client.entranceDate,
-      "Exit Date": client.exitDate,
-      Birthday: client.dateOfBirth,
+      "age": client.age,
+"attendingSchoolUponEntry": client.attendingSchoolUponEntry,
+"attendingSchoolUponExit": client.attendingSchoolUponExit,
+"bedNights": client.bedNights,
+"bedNightsChildren": client.bedNightsChildren,
+"caseManagerFirstName": client.caseManagerFirstName,
+"caseManagerLastName": client.caseManagerLastName,
+"chronicallyHomeless": client.chronicallyHomeless,
+"cityOfLastPermanentResidence": client.cityOfLastPermanentResidence,
+"comments": client.comments,
+"createdBy": client.createdBy,
+"dateOfBirth": client.dateOfBirth,
+"destinationCity": client.destinationCity,
+"disabledChildren": client.disabledChildren,
+"email": client.email,
+"emergencyContactName": client.emergencyContactName,
+"emergencyContactPhoneNumber": client.emergencyContactPhoneNumber,
+"employementGained": client.employementGained,
+"entranceDate": client.entranceDate,
+"estimatedExitDate": client.estimatedExitDate,
+"ethnicity": client.ethnicity,
+"exitDate": client.exitDate,
+"firstName": client.firstName,
+"grant": client.grant,
+"homelessnessLength": client.homelessnessLength,
+"id": client.id,
+"lastName": client.lastName,
+"locationName": client.locationName,
+"medical": client.medical,
+"phoneNumber": client.phoneNumber,
+"pregnantUponEntry": client.pregnantUponEntry,
+"priorLiving": client.priorLiving,
+"priorLivingCity": client.priorLivingCity,
+"race": client.race,
+"reasonForLeaving": client.reasonForLeaving,
+"reunified": client.reunified,
+"savingsAmount": client.savingsAmount,
+"shelterInLastFiveYears": client.shelterInLastFiveYears,
+"specificDestination": client.specificDestination,
+"specificReasonForLeaving": client.specificReasonForLeaving,
+"status": client.status,
+"successfulCompletion": client.successfulCompletion,
+"unitId": client.unitId,
     }));
 
     downloadCSV(headers, data, `clients.csv`);
@@ -363,22 +389,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
   return (
     <VStack
-      spacing={2}
       align="start"
-      sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
+      sx={{ maxWidth: "100%", marginX: "auto" }}
     >
-      <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
-      <HStack width="100%">
-        <Heading size="md">My Complete Client Table</Heading>
-        <Heading
-          size="sm"
-          paddingLeft="10%"
-        >
-          Last Updated: {lastUpdated}
-        </Heading>
-      </HStack>
-      {admin && <UpdateClients />}
-      <VStack></VStack>
       <HStack
         width="100%"
         justifyContent="space-between"
@@ -390,7 +403,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <ClientListFilter setFilterQuery={setFilterQuery} />
+        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} />
         <HStack
           width="55%"
           justifyContent="space-between"
@@ -423,88 +436,95 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </HStack>
         </HStack>
       </HStack>
-      {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
       <Box
-        width = {'100%'}
+        width={"100%"}
         justifyContent={"center"}
       >
-      {loading ?
-      <LoadingWheel/> : 
-      <TableContainer
-        maxHeight="calc(100vh - 20px)"
-        sx={{
-          overflowX: "auto",
-          overflowY: "auto",
-          maxWidth: "100%",
-          border: "1px solid gray",
-        }}
-      >
-        <Table variant="striped">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th
-                    key={header.id}
-                    cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {header.column.getCanSort() && (
-                      <Box
-                        display="inline-block"
-                        ml={1}
+        {loading ? (
+          <LoadingWheel />
+        ) : (
+          <TableContainer
+            maxHeight="calc(100vh - 20px)"
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxWidth: "100%",
+              border: "1px solid gray",
+            }}
+          >
+            <Table variant="striped">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {header.column.getIsSorted() === "asc" ? (
-                          <TriangleUpIcon />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <TriangleDownIcon />
-                        ) : null}
-                      </Box>
-                    )}
-                  </Th>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row, index) => (
-              <Tr
-                key={row.id}
-                cursor="pointer"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <Td
-                    key={cell.id}
-                    fontSize="14px"
-                    fontWeight="500px"
-                    onClick={(e) => {
-                      if (cell.column.id === "rowNumber") {
-                        e.stopPropagation();
-                      }
-                    }}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    cursor="pointer"
                   >
-                    {cell.column.id === "rowNumber" ? (
-                      <HoverCheckbox
-                        id={row.original.id}
-                        isSelected={selectedRowIds.includes(row.original.id)}
-                        onSelectionChange={handleRowSelect}
-                        index={index}
-                      />
-                    ) : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
-                  </Td>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedRowIds.includes(
+                              row.original.id
+                            )}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-      }
+              </Tbody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
@@ -514,3 +534,4 @@ export const ClientList = ({ admin }: ClientListProps) => {
     </VStack>
   );
 };
+

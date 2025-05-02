@@ -19,3 +19,23 @@ export type exitSurvey = {
   experience_accomplished: string;
   experience_extra_notes: string;
 };
+
+export type ExitSurvey = {
+  id: number;
+  location: string;
+  cmFirstName: string;
+  cmLastName: string;
+  programDateCompletion: Date;
+  cchRating: string;
+  cchLikeMost: string;
+  cchCouldBeImproved: string;
+  lifeSkillsRating: string;
+  lifeSkillsHelpfulTopics: string;
+  lifeSkillsOfferTopicsInTheFuture: string;
+  cmRating: string;
+  cmChangeAbout: string;
+  cmMostBeneficial: string;
+  experienceTakeaway: string;
+  experienceAccomplished: string;
+  experienceExtraNotes: string;
+}
