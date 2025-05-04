@@ -14,7 +14,7 @@ import { ViewPage } from "./components/clientPage/ViewPage";
 import { LandingPage } from "./components/login/LandingPage";
 import { ChooseLogin } from "./components/login/ChooseLogin";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
-import { AdminPin } from "./components/authentification/AdminPin";
+import { Authentification } from "./components/authentification/authentification";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
@@ -59,7 +59,7 @@ const App = () => {
     currentRoute === 'choose-login' ||
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
-    currentRoute === 'admin-pin'
+    currentRoute === 'authentification'
   );
 
   return (
@@ -91,16 +91,16 @@ const App = () => {
                 element={<ForgotPassword />}
               />
                 <Route
-                path="/admin-pin/:userType?"
-                element={<AdminPin />}
+                path="/authentification/:userType?"
+                element={<Authentification />}
               />
               <Route
                 path="/exit-survey"
-                element={<ExitSurvey />}
+                element={<ProtectedRoute element={<ExitSurvey />}/>}
               />
               <Route
                 path="/success-story"
-                element={<SuccessStory />}
+                element={<ProtectedRoute element={<SuccessStory />}/>}
               />
               <Route
                 path="/settings"
@@ -112,7 +112,7 @@ const App = () => {
               />
               <Route
                 path="/client-interview-screening"
-                element={<ClientInterviewScreening />}
+                element={<ProtectedRoute element={<ClientInterviewScreening />} />}
               />
               <Route
                 path="/monthly-statistics"
@@ -120,15 +120,15 @@ const App = () => {
               />
               <Route
                 path="/forms-hub"
-                element={<FormsHub />}
+                element={<ProtectedRoute element={<FormsHub />}/>}
               />
               <Route
                   path="/start-form"
-                  element={<StartForms />}
+                  element={<ProtectedRoute element={<StartForms />} />}
                 />
               <Route
                 path="/admin-client-list"
-                element={<AdminClientList />}
+                element={<ProtectedRoute element ={<AdminClientList />} />}
               />
               <Route
                 path="/accounts"
@@ -141,17 +141,17 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ClientList />}
+                element={<ProtectedRoute element = {<ClientList />} />}
               />
 
               <Route
                 path="/clientdata"
-                element={<ClientData />}
+                element={<ProtectedRoute element={<ClientData />} />}
               />
 
                 <Route
                   path = "/donations"
-                  element = {<Donations />}
+                  element = {<ProtectedRoute element={<Donations />} />}
                 />
                 <Route
                   path = "/volunteer-tracking"
@@ -163,47 +163,47 @@ const App = () => {
                 />
                 <Route
                   path="/ViewClient/:id"
-                  element={<ViewPage />}
+                  element={<ProtectedRoute element = {<ViewPage />} />}
                 />
                 <Route
                   path="/casemanager"
-                  element={<CaseManager />}
+                  element={<ProtectedRoute element={<CaseManager />} />}
                 />
                 <Route
                   path="/random-client-survey"
-                  element={<RandomClientSurvey />}
+                  element={<ProtectedRoute element={<RandomClientSurvey />} />}
                 />
                 <Route
-                  path ="/frontDesk"
-                  element ={<FrontDeskMonthlyStats/>}
+                  path ="/frontDesk" 
+                  element ={<ProtectedRoute element={<FrontDeskMonthlyStats/>}/>}
                 />
                 <Route
                   path ="/intakeStats"
-                  element ={<IntakeStats/>}
+                  element ={<ProtectedRoute element= {<IntakeStats/>} />}
                 />
                   <Route
                     path ="/personal"
-                    element ={<PersonalInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/financial"
-                    element ={<FinancialInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} />}
                   />
                   <Route
                     path ="/health"
-                    element ={<HealthSocialInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/additional"
-                    element ={<AdditionalInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/review"
-                    element ={<ReviewInformation/>}
+                    element ={<ProtectedRoute element={<ReviewInformation/>}/>}
                   />
                   <Route
                     path ="/success"
-                    element ={<Success/>}
+                    element ={<ProtectedRoute element={<Success/>} />}
                   />
                   <Route path="/playground" element={<Playground/>}/>
                   <Route
