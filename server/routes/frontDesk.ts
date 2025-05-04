@@ -23,9 +23,10 @@ frontDeskRouter.get("/:id", async (req, res) => {
   try {
     // Query database
     const { id } = req.params;
-    const data = await db.query(`SELECT * FROM front_desk_monthly where id = $1 `,
-    [id]
-  );
+    const data = await db.query(
+      `SELECT * FROM front_desk_monthly where id = $1 `,
+      [id]
+    );
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {
@@ -48,10 +49,11 @@ frontDeskRouter.get("/:date", async (req, res) => {
   }
 });
 
-frontDeskRouter.get('/stats/:year', async (req, res) => {
+frontDeskRouter.get("/stats/:year", async (req, res) => {
   try {
-      const { year } = req.params;
-      const data = await db.query(`
+    const { year } = req.params;
+    const data = await db.query(
+      `
           SELECT
               DATE_TRUNC('month', date) AS month,
               DATE_TRUNC('year', date) AS year,
@@ -70,10 +72,12 @@ frontDeskRouter.get('/stats/:year', async (req, res) => {
           WHERE EXTRACT(YEAR FROM date) = $1
           GROUP BY DATE_TRUNC('month', date), DATE_TRUNC('year', date)
           ORDER BY month;
-      `,[year]);
-      res.status(200).json(keysToCamel(data));
+      `,
+      [year]
+    );
+    res.status(200).json(keysToCamel(data));
   } catch (err) {
-      res.status(500).send(err.message);
+    res.status(500).send(err.message);
   }
 });
 
@@ -84,7 +88,6 @@ frontDeskRouter.post("/", async (req, res) => {
       date,
       total_office_visits,
       total_calls,
-      number_of_people,
       total_unduplicated_calls,
       total_visits_hb_donations_room,
       total_served_hb_donations_room,
@@ -93,11 +96,12 @@ frontDeskRouter.post("/", async (req, res) => {
       total_visits_placentia_pantry,
       total_served_placentia_pantry,
       total_visits_placentia_neighborhood,
-      total_served_placentia_neighborhood
+      total_served_placentia_neighborhood,
+      number_of_people,
     } = req.body;
     // Do something with request body
     const data = await db.query(
-      `INSERT INTO front_desk_monthly (date, total_office_visits, total_calls, number_of_people, total_unduplicated_calls, total_visits_hb_donations_room, total_served_hb_donations_room, total_visits_hb_pantry, total_served_hb_pantry, total_visits_placentia_pantry, total_served_placentia_pantry, total_visits_placentia_neighborhood, total_served_placentia_neighborhood) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
+      `INSERT INTO front_desk_monthly (date, total_office_visits, total_calls, number_of_people, total_unduplicated_calls, total_visits_hb_donations_room, total_served_hb_donations_room, total_visits_hb_pantry, total_served_hb_pantry, total_visits_placentia_pantry, total_served_placentia_pantry, total_visits_placentia_neighborhood, total_served_placentia_neighborhood, number_of_people) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id`,
       [
         date,
         total_office_visits,
@@ -111,7 +115,7 @@ frontDeskRouter.post("/", async (req, res) => {
         total_visits_placentia_pantry,
         total_served_placentia_pantry,
         total_visits_placentia_neighborhood,
-        total_served_placentia_neighborhood
+        total_served_placentia_neighborhood,
       ]
     );
 
@@ -127,34 +131,50 @@ frontDeskRouter.put("/:id", async (req, res) => {
       total_office_visits,
       total_calls,
       total_unduplicated_calls,
-      total_visits_to_pantry_and_donations_room,
-      total_number_of_people_served_in_pantry,
-      total_visits_to_placentia_pantry,
-      total_number_of_people_served_in_placentia_pantry,
+      total_visits_hb_donations_room,
+      total_served_hb_donations_room,
+      total_visits_hb_pantry,
+      total_served_hb_pantry,
+      total_visits_placentia_pantry,
+      total_served_placentia_pantry,
+      total_visits_placentia_neighborhood,
+      total_served_placentia_neighborhood,
+      number_of_people,
     } = req.body;
+
     const { id } = req.params;
 
     const data = await db.query(
       `UPDATE front_desk_monthly SET
-    total_office_visits = COALESCE($2, total_office_visits),
-    total_calls = COALESCE($3, total_calls),
-    total_unduplicated_calles = COALESCE($4, total_unduplicated_calles),
-    total_visits_to_pantry_and_donations_room = COALESCE($5, total_visits_to_pantry_and_donations_room),
-    total_number_of_people_served_in_pantry = COALESCE($6, total_number_of_people_served_in_pantry),
-    total_visits_to_placentia_pantry = COALESCE($7, total_visits_to_placentia_pantry),
-    total_number_of_people_served_in_placentia_pantry = COALESCE($8, total_number_of_people_served_in_placentia_pantry)  WHERE id = $9 RETURNING id`,
+      total_office_visits = COALESCE($1, total_office_visits),
+      total_calls = COALESCE($2, total_calls),
+      total_unduplicated_calls = COALESCE($3, total_unduplicated_calls),
+      total_visits_hb_donations_room = COALESCE($4, total_visits_hb_donations_room),
+      total_served_hb_donations_room = COALESCE($5, total_served_hb_donations_room),
+      total_visits_hb_pantry = COALESCE($6, total_visits_hb_pantry),
+      total_served_hb_pantry = COALESCE($7, total_served_hb_pantry),
+      total_visits_placentia_pantry = COALESCE($8, total_visits_placentia_pantry),
+      total_served_placentia_pantry = COALESCE($9, total_served_placentia_pantry),
+      total_visits_placentia_neighborhood = COALESCE($10, total_visits_placentia_neighborhood),
+      total_served_placentia_neighborhood = COALESCE($11, total_served_placentia_neighborhood),
+      number_of_people = COALESCE($12, number_of_people)
+      WHERE id = $13 RETURNING id`,
       [
         total_office_visits,
         total_calls,
         total_unduplicated_calls,
-        total_visits_to_pantry_and_donations_room,
-        total_number_of_people_served_in_pantry,
-        total_visits_to_placentia_pantry,
-        total_number_of_people_served_in_placentia_pantry,
+        total_visits_hb_donations_room,
+        total_served_hb_donations_room,
+        total_visits_hb_pantry,
+        total_served_hb_pantry,
+        total_visits_placentia_pantry,
+        total_served_placentia_pantry,
+        total_visits_placentia_neighborhood,
+        total_served_placentia_neighborhood,
+        number_of_people,
         id,
       ]
     );
-    // console.log(data[0]);
     res.status(200).json(keysToCamel(data[0]["id"]));
   } catch (err) {
     res.status(400).send(err.message);

@@ -7,14 +7,13 @@ interface FormsHubProps {
   admin?: boolean;
 }
 
-export const FormsHub = ({admin}: FormsHubProps) => {
+export const FormsHub = ({ admin }: FormsHubProps) => {
   return (
-
     <VStack
       overflowX="hidden"
-      w="100vw"
       spacing={8}
       align="stretch"
+      width="100%"
     >
       <Box>
         <Heading

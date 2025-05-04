@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Button,
   Center,
@@ -35,19 +35,54 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export const AdminPin = () => {
+export const Authentification = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType } = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
 
-  const { resetPassword, handleRedirectResult } = useAuthContext();
+  const { handleRedirectResult, createCode, authenticate } = useAuthContext();
   const { backend } = useBackendContext();
-    // update when 2FA is integrated
-  const handlePinSubmit = () => {
-    navigate("/casemanager")
-  }
+  const [pin, setPin] = useState("");
 
+  const handlePinChange = (value: string) => {
+    setPin(value);
+  };
+  
+  const handlePinSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    try {
+      await authenticate({code: Number(pin)});
+      if (userType === "Case Manager") {
+        navigate("/clientlist");
+      }
+      else if (userType === "Admin") {
+        navigate("/admin-client-list");
+      }
+    } catch (error) {
+      toast({
+        title: "Authentication Failed",
+        description: "The entered PIN is incorrect. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      setPin("");
+    }
+  };
+
+  useEffect( () => {
+    const generateCode = async () => {
+      try {
+        await createCode();
+      } catch (err) {
+        console.error('Error posting code: ', err);
+      }
+    };
+    generateCode();
+  }, [createCode]);
 
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);
@@ -100,7 +135,7 @@ export const AdminPin = () => {
               
               <FormControl w={"100%"} >
                 <HStack justify="center" m={3}>
-                <PinInput size="lg">
+                <PinInput size="lg" value={pin} onChange={handlePinChange}>
                     <PinInputField size="lg" />
                     <PinInputField size="lg" />
                     <PinInputField size="lg" />
@@ -111,7 +146,7 @@ export const AdminPin = () => {
                 </HStack>
                
               </FormControl>
-              <Text fontWeight="light" fontSize="sm" textAlign="center" mb={5}>Admin pins are sent to admins for confirmation. After pin is entered, a request is sent to that admin to verify your account. </Text>
+              <Text fontWeight="light" fontSize="sm" textAlign="center" mb={5}>An email has been sent with a 2FA code. Please input it here. </Text>
  
               <Button
                 type="submit"
@@ -122,7 +157,7 @@ export const AdminPin = () => {
                 mx={"auto"}
                 mb={4}
               >
-                Send Request
+                Confirm Code
               </Button>
             </Stack>
           </form>

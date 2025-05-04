@@ -5,12 +5,14 @@ CREATE TYPE client_grant AS ENUM('Bridge', 'Non-Funded')
 DROP TABLE IF EXISTS intake_statistics_form;
 CREATE TABLE intake_statistics_form (
     id SERIAL PRIMARY KEY,
+    date DATE NOT NULL,
     month TEXT NOT NULL,
     case_manager TEXT NOT NULL,
     cm_id INT NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     ethnicity ethnicity NOT NULL,
+    race race NOT NULL,
     birthday DATE NOT NULL,
     age INT NOT NULL,
     phone_number VARCHAR(20),

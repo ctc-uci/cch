@@ -40,6 +40,8 @@ import { UpdateClients } from "../admin/UpdateClient";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { LoadingWheel } from ".././loading/loading.tsx"
+
 
 import {AddClientForm} from "../clientlist/AddClientForm";
 
@@ -73,6 +75,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [loading, setLoading] = useState(true);
+
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
 
@@ -257,7 +261,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         },
       },
       {
-        accessorKey: "employmentGained",
+        accessorKey: "employementGained",
         header: "Employment Gained",
       },
       {
@@ -330,8 +334,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
     }
   };
   
-
-
   const fetchData = async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
@@ -345,17 +347,17 @@ export const ClientList = ({ admin }: ClientListProps) => {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
       } else {
         clientsRequest = backend.get("/clients");
+        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+  
+        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+        setLastUpdated(date.toLocaleString());
+        setClients(clientsResponse.data);
+  
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
-
-      const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-
-      const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-      setLastUpdated(date.toLocaleString());
-      setClients(clientsResponse.data);
-
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
   };
 
   useEffect(() => {
@@ -428,6 +430,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         </HStack>
       </HStack>
       {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
+      <Box
+        width = {'100%'}
+        justifyContent={"center"}
+      >
+      {loading ?
+      <LoadingWheel/> : 
       <TableContainer
         maxHeight="calc(100vh - 20px)"
         sx={{
@@ -502,6 +510,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </Tbody>
         </Table>
       </TableContainer>
+      }
+      </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
