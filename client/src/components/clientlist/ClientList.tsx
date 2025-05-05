@@ -333,7 +333,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       console.error("Error deleting clients", error);
     }
   };
-  
+
   const fetchData = async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
@@ -348,11 +348,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
       } else {
         clientsRequest = backend.get("/clients");
         const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-  
+
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setClients(clientsResponse.data);
-  
+
+      }
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -363,7 +364,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   useEffect(() => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
-  
+
 
   return (
     <VStack
@@ -377,7 +378,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         <Heading size="md">My Complete Client Table</Heading>
         <Heading
           size="sm"
-          paddingLeft="10%"             
+          paddingLeft="10%"
         >
           Last Updated: {lastUpdated}
         </Heading>
@@ -419,7 +420,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
               delete
             </Button>
             {/* <Button fontSize="12px">add</Button> */}
-            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert}>a</AddClientForm>
+            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert} />
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -435,7 +436,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         justifyContent={"center"}
       >
       {loading ?
-      <LoadingWheel/> : 
+      <LoadingWheel/> :
       <TableContainer
         maxHeight="calc(100vh - 20px)"
         sx={{
