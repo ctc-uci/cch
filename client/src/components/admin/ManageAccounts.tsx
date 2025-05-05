@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 // import { Navbar } from "../Navbar";
-
+import { EditIcon } from "@chakra-ui/icons";
+import  EditClient  from "../userSettings/EditClient";
 import {
   Table,
   TableContainer,
@@ -17,6 +18,7 @@ import {
   Textarea,
   Spacer,
   Box,
+  Flex,
   IconButton,
   FormControl,
   FormHelperText,
@@ -79,6 +81,9 @@ export const ManageAccounts = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [add, setAdd] = useState<boolean>(true);
   const toast = useToast();
+
+  const [clientModalOpened, setClientModalOpened] = useState(false)
+  const [clientModalID, setClientModalID] = useState('')
 
 
   const columns = useMemo<ColumnDef<Person>[]>(
@@ -164,6 +169,19 @@ export const ManageAccounts = () => {
             </>
           </>
         );
+      case "clients":
+        return (
+          <>
+            <Text>{data.firstName} {data.lastName}</Text>
+            <Text>{data.email}</Text>
+            <Text>Client</Text>
+            <Text>{data.location}</Text>
+            <br></br>
+            <Text>Notes</Text>
+            <Textarea size="md"/>
+            <br></br>
+          </>
+        );
       default:
         return <></>;
     }
@@ -176,8 +194,12 @@ export const ManageAccounts = () => {
           const response = await backend.get("/admin/admins");
           setData(response.data);
         }
-        else {
+        else if (view === "cms"){
           const response = await backend.get("/admin/caseManagers");
+          setData(response.data);
+        }
+        else{
+          const response = await backend.get("/admin/clients");
           setData(response.data);
         }
         if (open && view === "cms") {
@@ -222,32 +244,31 @@ export const ManageAccounts = () => {
   };
 
   return (
-      <HStack alignItems="flex-start" width = "100%" height="100%">
-      {add ? (
+
+    <HStack justifyContent="space-between">
       <VStack
       justifyContent = "flex-start"
       alignItems = "flex-start"
       width = "60%"
       marginLeft="5%"
       >
-
-        <Heading>Manage Accounts</Heading>
+        <Heading>Manage Acounts</Heading>
         <HStack width="100%">
           <HStack width = "55%" justifyContent="space-between">
-          <Tabs index={view === "admin" ? 0 : 1} onChange={(index) => setView(index === 0 ? "admin" : "cms")}>
-            <TabList>
-              <Tab>Admins</Tab>
-              <Tab>Case Managers</Tab>
-            </TabList>
-          </Tabs>
+            <Tabs>
+              <TabList>
+                <Tab onClick={() => setView("admin")}>Admins</Tab>
+                <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
+                <Tab  onClick={() => setView("clients")}>Clients</Tab>
+              </TabList>
+            </Tabs>
           </HStack>
           <Spacer/>
           <Button >Delete</Button>
-          <Button colorScheme="blue" onClick={() => {
-    setAdd(false);
-  }}>Add</Button>
+          <Button colorScheme="blue">Add</Button>
 
         </HStack>
+        {view !== "clients"  &&
         <TableContainer
         width = "100%"
         sx={{
@@ -313,7 +334,48 @@ export const ManageAccounts = () => {
             ))}
           </Tbody>
         </Table>
-      </TableContainer>
+        </TableContainer>
+        }
+        <Flex wrap='wrap' gap='4'>
+          {view === "clients" ? data.map((person, id) => (
+            <Box key={id}>
+              <Box p={5}
+                borderRadius="md"
+                boxShadow="sm"
+                bg="white"
+                borderColor="gray.100"
+                borderWidth="1px" >
+                <Flex direction={'row'} justify="space-between" gap={'4'}>
+                  <Text textColor={'gray'} fontWeight={'bold'}>EMAIL</Text>
+                  <Text textColor={'gray'}>{person.email}</Text>
+                </Flex>
+                <Flex direction={'row'} justify="space-between" gap={'4'}>
+                  <Text textColor={'gray'} fontWeight={'bold'}>PASSWORD</Text>
+                  <Text textColor={'gray'}>{"*******************"}</Text>
+                </Flex>
+              </Box>
+              <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2} onClick={() => {
+                setClientModalID(person.email)
+                setClientModalOpened(true)
+              }}>
+                <EditIcon />
+                <Text>Edit Profile</Text>
+              </Flex>
+            </Box>
+          )) : <></>}
+
+        </Flex>
+        <Modal isOpen={clientModalOpened} onClose={() => setClientModalOpened(false)}>
+          <ModalOverlay/>
+          <ModalContent>
+            <ModalHeader>Settings</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <EditClient email={clientModalID} />
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+
       <Modal isOpen={open} onClose={() => setOpen(!open)}>
         <ModalOverlay />
         <ModalContent>
@@ -329,61 +391,8 @@ export const ManageAccounts = () => {
             <Button colorScheme="blue">Save</Button>
           </ModalFooter>
         </ModalContent>
-        </Modal> 
+      </Modal>
       </VStack>
-      ) :  (
-        
-      <Box width="100%"
-      height="100%"
-      p="5"
-      border="1px solid"
-      borderColor="gray.200"
-      borderRadius="md">
-        <IconButton
-        variant='ghost'
-        aria-label='Go Back'
-        size ='lg'
-        fontSize='20px'
-        icon={<ChevronLeftIcon />}
-        onClick={() => {
-          setAdd(true);
-        }}
-      />
-      <form  onSubmit={handleSubmit}>
-        <FormControl isRequired>
-        <Box width="98%"
-          p="6"
-          m="6"
-          border="1px solid"
-          borderColor="gray.200"
-          borderRadius="md">
-          <Heading size="md">Invite New {view === 'admin' ? "Admin" : "Case Manager"} User</Heading>
-          <Box width="100%"
-          p="6"
->
-        
-            <HStack alignItems="center" gap="20%">
-              <Text fontWeight="semibold" color="gray.500">EMAIL</Text>
-              <VStack  alignItems="flex-start">
-                <FormHelperText fontWeight="semibold">Email</FormHelperText>
-                <Input minWidth="400px " type='email' name='email' required/>
-              </VStack>
-                
-            </HStack>
-              
-            
-         
-          </Box>
-
-        </Box>
-        <Box display="flex" justifyContent="flex-end">
-        <Button type="submit" textColor="White" minWidth="200px" minHeight={"40px"} bg={"brand.Blue 500"}>Invite User</Button>
-      </Box>
-      </FormControl>
-      </form>
-      </Box>
-    )}
-     
     </HStack>
   );
 };

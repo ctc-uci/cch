@@ -155,7 +155,7 @@ const UserSettingsPreview = ({
             onClick={hideEditProfile}
             style={{ cursor: "pointer" }}
           >
-            <Flex>
+            <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2}  >
               <EditIcon />
               <Text>Edit Profile</Text>
             </Flex>

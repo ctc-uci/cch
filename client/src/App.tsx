@@ -45,7 +45,7 @@ import UserSettings from "./components/userSettings/UserSettings";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
-import {AdminFormsHub} from "./components/adminClientForms/AdminFormsHub"
+import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
 import { Playground } from "./themes/play";
 
 const App = () => {
@@ -90,45 +90,45 @@ const App = () => {
                 path="/forgot-password/:userType?"
                 element={<ForgotPassword />}
               />
-                <Route
+              <Route
+                path="/exit-survey"
+                element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
+              />
+              <Route
+                path="/success-story"
+                element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+              />
+              <Route
                 path="/authentification/:userType?"
                 element={<Authentification />}
               />
               <Route
-                path="/exit-survey"
-                element={<ProtectedRoute element={<ExitSurvey />}/>}
-              />
-              <Route
-                path="/success-story"
-                element={<ProtectedRoute element={<SuccessStory />}/>}
-              />
-              <Route
                 path="/settings"
-                element={<ProtectedRoute element={<UserSettings />} />}
+                element={<ProtectedRoute element={<UserSettings />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/dashboard"
-                element={<ProtectedRoute element={<Dashboard />} />}
+                element={<ProtectedRoute element={<Dashboard />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/client-interview-screening"
-                element={<ProtectedRoute element={<ClientInterviewScreening />} />}
+                element={<ProtectedRoute element={<ClientInterviewScreening />} allowedRoles={['client']} />}
               />
               <Route
                 path="/monthly-statistics"
-                element={<ProtectedRoute element={<CaseManagerMonthlyStats />} />}
+                element={<ProtectedRoute element={<CaseManagerMonthlyStats />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                 path="/forms-hub"
-                element={<ProtectedRoute element={<FormsHub />}/>}
+                element={<ProtectedRoute element={<FormsHub />} allowedRoles={['admin', 'user']} />}
               />
               <Route
                   path="/start-form"
-                  element={<ProtectedRoute element={<StartForms />} />}
+                  element={<ProtectedRoute element={<StartForms />} allowedRoles={['admin', 'user']} />}
                 />
               <Route
                 path="/admin-client-list"
-                element={<ProtectedRoute element ={<AdminClientList />} />}
+                element={<ProtectedRoute element={<AdminClientList />} allowedRoles={['admin' , 'user']} />}
               />
               <Route
                 path="/accounts"
@@ -141,17 +141,17 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ProtectedRoute element = {<ClientList />} />}
+                element={<ProtectedRoute element={<ClientList/>} allowedRoles={['admin', 'user']} />}
               />
 
               <Route
                 path="/clientdata"
-                element={<ProtectedRoute element={<ClientData />} />}
+                element={<ProtectedRoute element={<ClientData />} allowedRoles={['admin', 'user']} />}
               />
 
                 <Route
                   path = "/donations"
-                  element = {<ProtectedRoute element={<Donations />} />}
+                  element={<ProtectedRoute element={<Donations />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path = "/volunteer-tracking"
@@ -163,23 +163,23 @@ const App = () => {
                 />
                 <Route
                   path="/ViewClient/:id"
-                  element={<ProtectedRoute element = {<ViewPage />} />}
+                  element={<ProtectedRoute element={<ViewPage />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path="/casemanager"
-                  element={<ProtectedRoute element={<CaseManager />} />}
+                  element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path="/random-client-survey"
-                  element={<ProtectedRoute element={<RandomClientSurvey />} />}
+                  element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={["client"]}/>}
                 />
                 <Route
-                  path ="/frontDesk" 
-                  element ={<ProtectedRoute element={<FrontDeskMonthlyStats/>}/>}
+                  path ="/frontDesk"
+                  element={<ProtectedRoute element={<FrontDeskMonthlyStats />} allowedRoles={['admin', 'user']} />}
                 />
                 <Route
                   path ="/intakeStats"
-                  element ={<ProtectedRoute element= {<IntakeStats/>} />}
+                  element={<ProtectedRoute element={<IntakeStats />} allowedRoles={['admin', 'user']} />}
                 />
                   <Route
                     path ="/personal"
@@ -214,7 +214,7 @@ const App = () => {
                     path = "/comment-form/:id"
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
-                  
+
                 <Route
                   path="/"
                   element={
@@ -231,7 +231,7 @@ const App = () => {
                     replace
                   />}
                 />
-                
+
               </Routes>
             </FormProvider>
           </RoleProvider>

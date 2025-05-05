@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
 
 import { CreateToastFnReturn, Spinner } from "@chakra-ui/react";
-
+import { Navigate } from "react-router-dom";
 import { AxiosInstance } from "axios";
 import {
   createUserWithEmailAndPassword,
@@ -23,6 +23,8 @@ import { useBackendContext } from "./hooks/useBackendContext";
 interface AuthContextProps {
   currentUser: User | null;
   currentUserRole: string | null;
+  loading: boolean;
+  initialized: boolean;
   signup: ({
     email,
     password,
@@ -69,6 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [authCredential, setAuthCredential] =
     useState<EmailAuthCredential | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -120,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userCredential;
   };
 
-  const login = ({ email, password }: EmailPassword) => {
+  const login = async ({ email, password }: EmailPassword) => {
     if (currentUser) {
       signOut(auth);
     }
@@ -159,7 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           This code will expire in 24 hours. If you did not request this code, please ignore this email or contact our support team immediately.
 
           Stay secure,
-          
+
           Collete's Children's Home
           `,
         });
@@ -186,7 +189,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    <Navigate to={"/landing-page"} />
     return signOut(auth);
+
   };
 
   const resetPassword = ({ email }: Pick<EmailPassword, "email">) => {
@@ -243,6 +248,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       setLoading(false);
+      setInitialized(true);
     });
 
     return unsubscribe;
@@ -253,6 +259,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         currentUser,
         currentUserRole,
+        loading,
+        initialized,
         signup,
         login,
         createCode,
