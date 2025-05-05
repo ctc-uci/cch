@@ -14,7 +14,7 @@ import { ViewPage } from "./components/clientPage/ViewPage";
 import { LandingPage } from "./components/login/LandingPage";
 import { ChooseLogin } from "./components/login/ChooseLogin";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
-import { AdminPin } from "./components/authentification/AdminPin";
+import { Authentification } from "./components/authentification/authentification";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
@@ -45,6 +45,7 @@ import UserSettings from "./components/userSettings/UserSettings";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
+import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
 import { Playground } from "./themes/play";
 
 const App = () => {
@@ -58,7 +59,7 @@ const App = () => {
     currentRoute === 'choose-login' ||
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
-    currentRoute === 'admin-pin'
+    currentRoute === 'authentification'
   );
 
   return (
@@ -87,11 +88,7 @@ const App = () => {
               />
               <Route
                 path="/forgot-password/:userType?"
-                element={<ForgotPassword />} 
-              />
-                <Route
-                path="/admin-pin/:userType?"
-                element={<ProtectedRoute element={<AdminPin />} allowedRoles={['admin', 'user']} />}
+                element={<ForgotPassword />}
               />
               <Route
                 path="/exit-survey"
@@ -100,6 +97,10 @@ const App = () => {
               <Route
                 path="/success-story"
                 element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+              />
+              <Route
+                path="/authentification/:userType?"
+                element={<Authentification />}
               />
               <Route
                 path="/settings"
@@ -140,7 +141,7 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ProtectedRoute element={<ClientList />} allowedRoles={['admin', 'user']} />}
+                element={<ProtectedRoute element={<ClientList/>} allowedRoles={['admin', 'user']} />}
               />
 
               <Route
@@ -158,7 +159,7 @@ const App = () => {
                 />
                 <Route
                   path = "/admin-client-forms"
-                  element = {<ProtectedRoute element={<FormsHub admin />} allowedRoles={["admin"]}/>}
+                  element = {<ProtectedRoute element={<AdminFormsHub/>} allowedRoles={["admin"]}/>}
                 />
                 <Route
                   path="/ViewClient/:id"
@@ -182,27 +183,27 @@ const App = () => {
                 />
                   <Route
                     path ="/personal"
-                    element ={<PersonalInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/financial"
-                    element ={<FinancialInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} />}
                   />
                   <Route
                     path ="/health"
-                    element ={<HealthSocialInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/additional"
-                    element ={<AdditionalInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/review"
-                    element ={<ReviewInformation/>}
+                    element ={<ProtectedRoute element={<ReviewInformation/>}/>}
                   />
                   <Route
                     path ="/success"
-                    element ={<Success/>}
+                    element ={<ProtectedRoute element={<Success/>} />}
                   />
                   <Route path="/playground" element={<Playground/>}/>
                   <Route
@@ -213,7 +214,7 @@ const App = () => {
                     path = "/comment-form/:id"
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
-                  
+
                 <Route
                   path="/"
                   element={
@@ -230,7 +231,7 @@ const App = () => {
                     replace
                   />}
                 />
-                
+
               </Routes>
             </FormProvider>
           </RoleProvider>

@@ -78,7 +78,6 @@ export const SuccessStory = () => {
     const form = event.currentTarget;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData);
-    console.log("CONSETN!!!", data.consent);
 
     try {
       await backend.post("/successStory", data);

@@ -16,6 +16,94 @@ randomSurveyRouter.get("/", async (req, res) => {
   }
 });
 
+randomSurveyRouter.get("/table-data", async (req, res) => {
+  try {
+    const success = await db.query(`
+      SELECT
+        rs.id AS id, 
+        cm.first_name AS cm_first_name,
+        cm.last_name AS cm_last_name,
+        rs.date,
+        rs.cch_qos,
+        rs.cm_qos,
+        rs.courteous,
+        rs.informative,
+        rs.prompt_and_helpful,
+        rs.entry_quality,
+        rs.unit_quality,
+        rs.clean,
+        rs.overall_experience,
+        rs.case_meeting_frequency,
+        rs.lifeskills,
+        rs.recommend,
+        rs.recommend_reasoning,
+        rs.make_cch_more_helpful,
+        rs.cm_feedback,
+        rs.other_comments
+      FROM random_survey_table AS rs
+      INNER JOIN case_managers AS cm ON rs.cm_id = cm.id
+      `);
+    res.status(200).json(keysToCamel(success));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+randomSurveyRouter.get("/search-filter", async (req, res) => {
+  try {
+    const { search, page, filter } = req.query;
+    let queryStr = `
+      SELECT rs.*, cm.first_name AS cm_first_name, cm.last_name AS cm_last_name
+      FROM random_survey_table AS rs
+      INNER JOIN case_managers AS cm ON rs.cm_id = cm.id
+      WHERE 1=1
+    `;
+
+    const stringSearch = "'%" + String(search) + "%'";
+
+    if (search) {
+      queryStr += ` 
+      AND (rs.id::TEXT ILIKE ${stringSearch}
+        OR rs.date::TEXT ILIKE ${stringSearch}
+        OR rs.cch_qos::TEXT ILIKE ${stringSearch}
+        OR rs.cm_qos::TEXT ILIKE ${stringSearch}
+        OR rs.courteous::TEXT ILIKE ${stringSearch}
+        OR rs.informative::TEXT ILIKE ${stringSearch}
+        OR rs.prompt_and_helpful::TEXT ILIKE ${stringSearch}
+        OR rs.entry_quality::TEXT ILIKE ${stringSearch}
+        OR rs.unit_quality::TEXT ILIKE ${stringSearch}
+        OR rs.clean::TEXT ILIKE ${stringSearch}
+        OR rs.overall_experience::TEXT ILIKE ${stringSearch}
+        OR rs.case_meeting_frequency::TEXT ILIKE ${stringSearch}
+        OR rs.lifeskills::TEXT ILIKE ${stringSearch}
+        OR rs.recommend::TEXT ILIKE ${stringSearch}
+        OR rs.recommend_reasoning::TEXT ILIKE ${stringSearch}
+        OR rs.make_cch_more_helpful::TEXT ILIKE ${stringSearch}
+        OR rs.cm_feedback::TEXT ILIKE ${stringSearch}
+        OR rs.other_comments::TEXT ILIKE ${stringSearch}
+        OR cm.first_name::TEXT ILIKE ${stringSearch}
+        OR cm.last_name::TEXT ILIKE ${stringSearch}
+      )`;
+    }
+    
+    if (filter) {
+      queryStr += `AND ${filter}`;
+    }
+
+    queryStr += " ORDER BY rs.id ASC";
+
+    if (page) {
+      queryStr += ` LIMIT ${page}`;
+    }
+
+    const success_story = await db.query(queryStr);
+    res.status(200).json(keysToCamel(success_story));
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
+});
+
 randomSurveyRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;

@@ -152,7 +152,7 @@ clientsRouter.post("/", async (req, res) => {
       reunified,
       successful_completion,
       destination_city,
-      comments,
+      comments
     } = req.body;
 
     const data = await db.query(
@@ -195,9 +195,9 @@ clientsRouter.post("/", async (req, res) => {
           reunified,
           successful_completion,
           destination_city,
-          comments,
+          comments
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $27,
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
           $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
         )
         RETURNING id;
@@ -242,7 +242,7 @@ clientsRouter.post("/", async (req, res) => {
         reunified,
         successful_completion,
         destination_city,
-        comments,
+        comments
       ]
     );
 
@@ -532,6 +532,18 @@ clientsRouter.put("/:id", async (req, res) => {
     ]);
 
     res.status(200).json({ id: data[0].id });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+
+// Delete a client
+clientsRouter.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.query("DELETE FROM clients WHERE id = $1", [id]);
+    res.status(200).json();
   } catch (err) {
     res.status(500).send(err.message);
   }

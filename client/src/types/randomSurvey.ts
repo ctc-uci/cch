@@ -1,0 +1,22 @@
+export type RandomSurvey = {
+    id: number;
+    date: Date;
+    cchQos: number;
+    cmQos: number;
+    courteous: boolean;
+    informative: boolean;
+    promptAndHelpful: boolean;
+    entryQuality: number;
+    unitQuality: number;
+    clean: number;
+    overallExperience: number;
+    caseMeetingFrequency: string;
+    lifeskills: boolean;
+    recommend: boolean;
+    recommendReasoning: string;
+    makeCchMoreHelpful: string;
+    cmFirstName: string;
+    cmLastName: string;
+    cmFeedback: string;
+    otherComments: string;
+};

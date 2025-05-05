@@ -1,6 +1,6 @@
 import {Button} from "@chakra-ui/react";
 
-const CSVButton = ( { data }: any ) => {
+const CSVButton = ( { data } ) => {
 
    
     const headers = [
@@ -47,16 +47,20 @@ const CSVButton = ( { data }: any ) => {
     
     
     const convertToCSV = () => {
-        const csvRows:string [] = [];
+        const csvRows = [];
         csvRows.push(headers.join(","));
-        
-        const values = headers.map(header => {
-            return `${data[header]}`; // Encapsulate in quotes to handle commas in data
+        console.log(csvRows);
+        data.forEach(row => {
+            console.log(row);
+            const values = headers.map(header => {
+                console.log(row[header]);
+                //const escaped = ('' + row[header]).replace(/"/g, '\\"'); // Escape double quotes
+                return `${row[header]}`; // Encapsulate in quotes to handle commas in data
+            });
+            console.log(values);
+            csvRows.push(values.join(','));
         });
-
-        csvRows.push(values.join(','));
-    
-       
+        console.log(csvRows);
         const csvString = csvRows.join('\n');
         const blob = new Blob([csvString], { type: 'text/csv' });
     

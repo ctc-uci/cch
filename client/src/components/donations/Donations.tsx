@@ -9,6 +9,13 @@ import {
   Heading,
   HStack,
   Input,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
   Select,
   Stat,
   StatLabel,
@@ -21,6 +28,7 @@ import {
   Th,
   Thead,
   Tr,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 
@@ -33,6 +41,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FaBalanceScale, FaDollarSign } from "react-icons/fa";
+import { MdFileUpload, MdOutlineManageSearch } from "react-icons/md";
+
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {
   formatDateString,
@@ -40,9 +51,16 @@ import {
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import EditDrawer from "./editDonationDrawer";
 import { Donation } from "./types";
-import { all } from "axios";
+import { downloadCSV } from "../../utils/downloadCSV";
+import { LoadingWheel } from ".././loading/loading.tsx";
+import { DonationFilter } from "./DonationFilter.tsx";
+import { DonationListFilter } from "./DonationListFilter.tsx";
+import AddDonationsDrawer from "./addDonations/addDonationsDrawer.tsx"
+
 
 export const Donations = () => {
+  const toast = useToast();
+
   const { backend } = useBackendContext();
 
   const [donor, setDonor] = useState<string>("");
@@ -65,6 +83,22 @@ export const Donations = () => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
 
   const [freq, setFreq] = useState<string>("");
+
+  const [loading, setLoading] = useState(true);
+  const [donors, setDonors] = useState<string[]>([]);
+  const [newDonor, setNewDonor] = useState<string>("");
+
+  const [filterQuery, setFilterQuery] = useState<string[]>([]);
+  const [searchKey, setSearchKey] = useState("");
+
+  const [showSearch, setShowSearch] = useState(false);
+
+
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
 
   const columnsReg = useMemo<ColumnDef<Donation>[]>(
     () => [
@@ -178,6 +212,27 @@ export const Donations = () => {
     setEndDate(new Date(dateValue));
   };
 
+  const handleAddDonor = async () => {
+    try {
+      await backend.post("/donations/donors", {
+        name: newDonor,
+      });
+      setDonors((prev) => [...prev, newDonor]);
+      setNewDonor("");
+    } catch (error) {
+      console.error("Error adding donor:", error);
+    }
+  }
+
+  const handleReset = () => {
+    setDonor("");
+    setFreq("");
+    setColumns(columnsReg);
+    setStartDate(null);
+    setEndDate(null);
+    refreshPage();
+  };
+
   // const handleCheckboxChange = (id: number) =>
   //   (event: React.ChangeEvent<HTMLInputElement>) => {
   //     const checked = event.target.checked;
@@ -209,18 +264,35 @@ export const Donations = () => {
       refreshPage();
     } catch (error) {
       console.error("Error deleting users:", error);
+      toast({
+        title: 'Donation(s) Not Deleted',
+        description: "There was something wrong that happened and the donation(s) were not deleted.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
     }
     setSelectedRowIds([]);
+    toast({
+      title: 'Selected Donation(s) Deleted',
+      description: "The donation(s) have successfully been deleted from the database.",
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
   };
 
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
   };
 
-  
+  const filteredDonations = useMemo(() => {
+    if (!donor) return allDonations;
+    return allDonations.filter(d => d.donor === donor);
+  }, [allDonations, donor]);
 
   const table = useReactTable({
-    data: allDonations,
+    data: filteredDonations,
     columns,
     state: {
       sorting,
@@ -247,46 +319,125 @@ export const Donations = () => {
     }
   };
 
+  const onPressCSVButton = () => {
+      let headers, data;
+      if (freq !== "yearly" && freq !== "monthly") {
+        headers = [
+          "ID",
+          "Date",
+          "Donor",
+          "Category",
+          "Weight (lb)",
+          "Value ($)",
+          "Total"
+        ];
+
+        data = allDonations.map((donation) => ({
+          "ID": donation.id,
+          "Date": donation.date,
+          "Donor": donation.donor,
+          "Category": donation.category,
+          "Weight (lb)": donation.weight,
+          "Value ($)": donation.value,
+          "Total": donation.total,
+        }));
+
+      } else {
+        headers = [
+          "Date",
+          "Donor",
+          "Category",
+          "Total Weight (lb)",
+          "Total Value ($)"
+        ];
+        data = allDonations.map((donation) => ({
+          "Date": donation.monthYear,
+          "Donor": donation.donor,
+          "Category": donation.category,
+          "Total Weight (lb)": donation.totalWeight,
+          "Total Value ($)": donation.totalValue,
+        }));
+      }
+      const now = new Date();
+      const date = now.toLocaleDateString();
+      const time = now.toLocaleTimeString();
+      const success = "Donation Data " + date + " " + time;
+
+      downloadCSV(headers, data, `clients.csv`);
+      toast({
+        title: 'Successfully Exported',
+        description: success,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    };
+
   useEffect(() => {
     const fetchData = async () => {
 
       try {
         const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
         const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
-        const allDonationsQuery =
-          freq === "monthly" ? 
+        let allDonationsQuery =
+          freq === "monthly" ?
             `/donations/monthfilter?donor=${donor}&startDate=${start}&endDate=${end}`
             :
               freq === "yearly" ?
                 `/donations/yearfilter?donor=${donor}&startDate=${start}&endDate=${end}`
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
-        
-        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse] = await Promise.all([
+
+        if (freq !== "monthly" && freq !== "yearly") {
+          if (filterQuery.length > 0 && searchKey.length > 0) {
+            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
+          }
+          else if (searchKey.length > 0) {
+            allDonationsQuery = `/donations?filter=&search=${searchKey}`;
+          }
+          else if (filterQuery.length > 0) {
+            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=`;
+          }
+        } else {
+          if (filterQuery.length > 0 && searchKey.length > 0) {
+            allDonationsQuery += `&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
+          }
+          else if (searchKey.length > 0) {
+            allDonationsQuery += `&filter=&search=${searchKey}`;
+          }
+          else if (filterQuery.length > 0) {
+            allDonationsQuery += `&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`;
+          }
+        }
+
+        const [valuesResponse, weightResponse, donationsResponse, lastUpdatedResponse, donorResponse] = await Promise.all([
           backend.get(`/donations/valueSum?donor=${donor}&startDate=${start}&endDate=${end}`),
           backend.get(`/donations/weightSum?donor=${donor}&startDate=${start}&endDate=${end}`),
           backend.get(allDonationsQuery),
-          backend.get(`/lastUpdated/donations`)
+          backend.get(`/lastUpdated/donations`),
+          backend.get(`/donations/donors`)
         ]);
-  
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
-  
+        setDonors(donorResponse.data.map((donor: { name: string }) => donor.name));
+
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-  
+
       } catch (error) {
         console.error("Error fetching value sum:", error);
+      }finally {
+        setLoading(false);
       }
     };
-  
+
     fetchData();
-  }, [donor, startDate, endDate, toggleRefresh, backend]);
+  }, [donor, startDate, endDate, toggleRefresh, freq, filterQuery, searchKey, backend]);
 
   return (
     <HStack
       w="100%"
-      h="100%"
+      maxHeight="100%"
     >
       <VStack
         w="25vw"
@@ -345,171 +496,260 @@ export const Donations = () => {
         w="69vw"
         h="95vh"
       >
+        <HStack>
         <HStack
           w="90%"
           spacing={4}
           align="center"
         >
-          <Select
-            id="donorSelect"
-            placeholder="Select Donor"
-            w="50%"
-            onChange={handleDonorChange}
-          >
-            <option value="panera">Panera</option>
-            <option value="sprouts">Sprouts</option>
-            <option value="copia">Copia</option>
-            <option value="mcdonalds">Mcdonalds</option>
-            <option value="pantry">Pantry</option>
-            <option value="grand theater">Grand Theater</option>
-            <option value="costco">Costco</option>
-          </Select>
+          <DonationFilter
+          donors={donors}
+        donor={donor}
+        setDonor={setDonor}
+        newDonor={newDonor}
+        setNewDonor={setNewDonor}
+        handleAddDonor={handleAddDonor}
+        />
 
-          <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange}>
-            <option value='monthly'>Monthly</option>
-            <option value='yearly'>Yearly</option>
-          </Select>
+            <Select placeholder='Select Frequency' w='50%' onChange={handleFreqChange} value={freq}>
+              <option value='monthly'>Monthly</option>
+              <option value='yearly'>Yearly</option>
+            </Select>
 
-          <Text>From:</Text>
-          <Input
-            type="date"
-            name="startDate"
-            w="40%"
-            onChange={handleStartDateChange}
-          />
-          <Text>To:</Text>
-          <Input
-            type="date"
-            name="endDate"
-            w="40%"
-            onChange={handleEndDateChange}
-          />
-
+            <Text>From:</Text>
+            <Input
+              type="date"
+              name="startDate"
+              w="40%"
+              value={startDate ? startDate.toISOString().split("T")[0] : ""}
+              onChange={handleStartDateChange}
+            />
+            <Text>To:</Text>
+            <Input
+              type="date"
+              name="endDate"
+              w="40%"
+              value={endDate ? endDate.toISOString().split("T")[0] : ""}
+              onChange={handleEndDateChange}
+            />
+          </HStack>
+          <HStack
+            align="right">
+            <Button
+                ml="auto"
+                color = "gray.500"
+                background={"white"}
+                border={"0.5px solid"}
+                borderColor={"gray.300"}
+                onClick={onDeleteOpen}
+              >
+                Delete
+              </Button>
+              {/* <Button
+                ml="auto"
+                background={"#4397CD"}
+                color="white"
+                onClick={() => {
+                  setSelectedDonation(null);
+                  onOpen();
+                }}
+              >
+                Add
+              </Button>
+              <EditDrawer
+                isOpen={isOpen}
+                onClose={() => {
+                  onClose();
+                  setSelectedDonation(null);
+                }}
+                onFormSubmitSuccess={refreshPage}
+              /> */}
+              <AddDonationsDrawer refresh={refreshPage}/>
+          </HStack>
+        </HStack>
+        <HStack w="100%" justifyContent="flex-start">
           <Button
-            ml="auto"
-            onClick={onDelete}
+            variant = "link"
+            color="#4397CD"
+            size="sm"
+            onClick={handleReset}
+          >
+            Reset All Dropdowns
+          </Button> could move to be inline with filter button?
+        </HStack>
+        {loading ?
+        <LoadingWheel/> :
+        <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
+          <HStack padding="5px">
+            <DonationListFilter setFilterQuery={setFilterQuery}/>
+            <HStack width="100%" justifyContent={"right"}>
+              <Input maxWidth="20%" placeholder="search" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} display={showSearch ? 'block' : 'none'}></Input>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => {setShowSearch(!showSearch); setSearchKey("")}}
+              >
+                <MdOutlineManageSearch size="24px" />
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => onPressCSVButton()}
+              >
+                <MdFileUpload size="16px" />
+                <Text ml="8px">Export</Text>
+              </Box>
+            </HStack>
+          </HStack>
+          <TableContainer
+            width="100%"
+            maxHeight="100%"
+            paddingBottom="10"
+            borderRadius="lg"
+            overflow="hidden"
+            boxShadow="sm"
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxWidth: "100%",
+            }}
+          >
+            <Table
+              variant="striped"
+              border="1px solid gray"
+              borderRadius="lg"
+              sx={{
+                borderCollapse: "separate",
+                borderSpacing: "0",
+                width: "100%",
+              }}
+            >
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    onClick={() => handleRowClick(row.original)}
+                    cursor="pointer"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedRowIds.includes(row.original.id)}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {selectedDonation && (
+              <EditDrawer
+                isOpen={isOpen}
+                onClose={() => {
+                  onClose();
+                  setSelectedDonation(null);
+                  refreshPage();
+                }}
+                existingDonation={selectedDonation}
+                onFormSubmitSuccess={refreshPage}
+              />
+            )}
+          </TableContainer>
+        </Box>
+        }
+      </VStack>
+
+      <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Delete Donation</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          Are you sure? You can't undo this action afterwards.
+        </ModalBody>
+
+        <ModalFooter>
+          <Button
+            color="gray.500"
+            background="white"
+            border="0.5px solid"
+            borderColor="gray.300"
+            mr={3}
+            onClick={onDeleteClose}
+          >
+            Cancel
+          </Button>
+          <Button
+            color="white"
+            background="#4397CD"
+            onClick={() => {
+              onDelete();
+              onDeleteClose();
+            }}
           >
             Delete
           </Button>
-          <Button
-            ml="auto"
-            onClick={() => {
-              setSelectedDonation(null);
-              onOpen();
-            }}
-          >
-            Add
-          </Button>
-          <EditDrawer
-            isOpen={isOpen}
-            onClose={() => {
-              onClose();
-              setSelectedDonation(null);
-            }}
-            onFormSubmitSuccess={refreshPage}
-          />
-        </HStack>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
 
-        <TableContainer
-          width="100%"
-          maxHeight="75%"
-          sx={{
-            overflowX: "auto",
-            overflowY: "auto",
-            maxWidth: "100%",
-          }}
-        >
-          <Table
-            variant="striped"
-            sx={{
-              borderCollapse: "collapse",
-              border: "1px solid gray",
-              width: "100%",
-            }}
-          >
-            <Thead>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={
-                        header.column.getCanSort() ? "pointer" : "default"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {table.getRowModel().rows.map((row, index) => (
-                <Tr
-                  key={row.id}
-                  onClick={() => handleRowClick(row.original)}
-                  cursor="pointer"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      fontSize="14px"
-                      fontWeight="500px"
-                      onClick={(e) => {
-                        if (cell.column.id === "rowNumber") {
-                          e.stopPropagation();
-                        }
-                      }}
-                    >
-                      {cell.column.id === "rowNumber" ? (
-                        <HoverCheckbox
-                          id={row.original.id}
-                          isSelected={selectedRowIds.includes(row.original.id)}
-                          onSelectionChange={handleRowSelect}
-                          index={index}
-                        />
-                      ) : (
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )
-                      )}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-          {selectedDonation && (
-            <EditDrawer
-              isOpen={isOpen}
-              onClose={() => {
-                onClose();
-                setSelectedDonation(null);
-                refreshPage();
-              }}
-              existingDonation={selectedDonation}
-              onFormSubmitSuccess={refreshPage}
-            />
-          )}
-        </TableContainer>
-      </VStack>
     </HStack>
   );
 };

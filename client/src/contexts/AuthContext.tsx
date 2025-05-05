@@ -5,8 +5,11 @@ import { Navigate } from "react-router-dom";
 import { AxiosInstance } from "axios";
 import {
   createUserWithEmailAndPassword,
+  EmailAuthCredential,
+  EmailAuthProvider,
   getRedirectResult,
   sendPasswordResetEmail,
+  signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
   User,
@@ -22,9 +25,18 @@ interface AuthContextProps {
   currentUserRole: string | null;
   loading: boolean;
   initialized: boolean;
-  signup: ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => Promise<UserCredential>;
-  login: ({ email, password }: EmailPassword) => Promise<UserCredential>;
+  signup: ({
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    role,
+  }: SignupInfo) => Promise<UserCredential>;
+  login: ({ email, password }: EmailPassword) => Promise<EmailAuthCredential>;
+  createCode: () => Promise<void>;
   logout: () => Promise<void>;
+  authenticate: ({ code }: Authenticate) => Promise<UserCredential | void>;
   resetPassword: ({ email }: Pick<EmailPassword, "email">) => Promise<void>;
   handleRedirectResult: (
     backend: AxiosInstance,
@@ -34,6 +46,10 @@ interface AuthContextProps {
 }
 
 export const AuthContext = createContext<AuthContextProps | null>(null);
+
+interface Authenticate {
+  code: number;
+}
 
 interface EmailPassword {
   email: string;
@@ -56,10 +72,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const signup = async ({ email, password, firstName, lastName, phoneNumber, role }: SignupInfo) => {
+  const [authCredential, setAuthCredential] =
+    useState<EmailAuthCredential | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+
+  const signup = async ({
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    role,
+  }: SignupInfo) => {
     if (currentUser) {
       signOut(auth);
     }
+    const existingUser = await backend.get(`/users/email/${email}`);
+
+    if (existingUser.data.length === 0) {
+      throw new Error(
+        `Unauthorized email to create ${role === "user" ? "Case Manager" : "Admin"} account`
+      );
+    }
+
+    if (existingUser.data[0].firebaseUid) {
+      throw new Error("Email already in use");
+    }
+
+    if (existingUser.data[0].role !== role) {
+      throw new Error("Not authorized to create this type of user");
+    }
+
+    await backend.delete(`users/email/${email}`);
 
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -79,18 +123,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return userCredential;
   };
 
-  const login = ({ email, password }: EmailPassword) => {
+  const login = async ({ email, password }: EmailPassword) => {
     if (currentUser) {
       signOut(auth);
     }
+    const authCredential = EmailAuthProvider.credential(email, password);
+    setAuthCredential(authCredential);
+    setEmail(email);
+    return authCredential;
+  };
 
-    return signInWithEmailAndPassword(auth, email, password);
+  const createCode = async () => {
+    if (authCredential && email) {
+      try {
+        // Delete all the stale codes associated with this email
+        await backend.delete(`authentification/email?email=${email}`);
+
+        // Create new code for them
+        const now = new Date();
+        const validUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const authData = await backend.post("/authentification", {
+          email: email,
+          validUntil: validUntil,
+        });
+        const code = authData?.data[0]?.code;
+
+        // Send the code to the user via email
+
+        await backend.post("/authentification/email", {
+          email: email,
+          message: `
+          Hi,
+
+          Your two-factor authentication (2FA) code is:
+
+          ${code}
+
+          This code will expire in 24 hours. If you did not request this code, please ignore this email or contact our support team immediately.
+
+          Stay secure,
+
+          Collete's Children's Home
+          `,
+        });
+
+        return;
+      } catch (error) {
+        console.error("Error signing in with credential:", error);
+      }
+    }
+  };
+
+  const authenticate = async ({ code }: Authenticate) => {
+    if (authCredential && email) {
+      const response = await backend.post(`/authentification/verify?email=${email}&code=${code}`);
+      if (response.data.length == 0) {
+        throw new Error("Invalid code. Try again.");
+      }
+
+      const userCredential = await signInWithCredential(auth, authCredential);
+      setAuthCredential(null);
+      setEmail(null);
+      return userCredential;
+    }
   };
 
   const logout = () => {
     <Navigate to={"/landing-page"} />
     return signOut(auth);
-    
+
   };
 
   const resetPassword = ({ email }: Pick<EmailPassword, "email">) => {
@@ -139,10 +240,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchRole = async (user: User) => {
       const data = await backend.get(`/users/${user.uid}`);
       setCurrentUserRole(data.data.role);
-    }
+    };
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setCurrentUser(user);
-      if(user){
+      if (user) {
         fetchRole(user);
       }
 
@@ -158,9 +259,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         currentUser,
         currentUserRole,
+        loading,
+        initialized,
         signup,
         login,
+        createCode,
         logout,
+        authenticate,
         resetPassword,
         handleRedirectResult,
       }}

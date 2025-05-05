@@ -68,16 +68,9 @@ export const Signup = () => {
   });
 
   const handleSignup = async (data: SignupFormValues) => {
-    console.log("submitted");
+
     try {
-      console.log({
-        email: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
-      });
+
       const user = await signup({
         email: data.email,
         password: data.password,
@@ -86,9 +79,8 @@ export const Signup = () => {
         phoneNumber: data.phoneNumber,
         role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
       });
-      console.log(user);
       if (user) {
-        navigate(`/admin-pin/${userType}`);
+        navigate(`/clientlist`);
       }
     } catch (err) {
       if (err instanceof Error) {

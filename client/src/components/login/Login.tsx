@@ -76,7 +76,7 @@ export const Login = () => {
       });
       if (userType === "Case Manager") navigate("/clientlist");
       else if (userType === "Admin") {
-  
+
         navigate("/admin-client-list");
       }
       else if (userType === "Client") navigate("/client-landing-page");
@@ -210,7 +210,7 @@ export const Login = () => {
                 <Text as="u" display="inline">Create account</Text>
               </ChakraLink>
             </Text>
-            } 
+            }
 
           </Stack>
         </form>

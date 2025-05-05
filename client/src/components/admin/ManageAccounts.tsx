@@ -18,7 +18,12 @@ import {
   Textarea,
   Spacer,
   Box,
-  Flex
+  Flex,
+  IconButton,
+  FormControl,
+  FormHelperText,
+  Input,
+  useToast
 } from "@chakra-ui/react";
 import { Tabs, TabList, Tab } from '@chakra-ui/react'
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -40,8 +45,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
-import EditSettings from "../userSettings/EditSettings";
+import { TriangleDownIcon, TriangleUpIcon, ChevronLeftIcon } from "@chakra-ui/icons";
 interface Person {
   id: string;
   firstName: string;
@@ -75,6 +79,8 @@ export const ManageAccounts = () => {
   });
   const [clientData, setClientData] = useState<Person[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [add, setAdd] = useState<boolean>(true);
+  const toast = useToast();
 
   const [clientModalOpened, setClientModalOpened] = useState(false)
   const [clientModalID, setClientModalID] = useState('')
@@ -207,156 +213,186 @@ export const ManageAccounts = () => {
     fetchData();
   }, [view, backend, open, selectedData]);
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+    const email = data.email;
+    const role = view === "admin" ? "admin" : "user";
+    try {
+      await backend.post("/users/invite", {
+        email: email,
+        role: role,
+      });
+      await backend.post("/email", {
+        email: email,
+        message: "Sign up"
+      });
+      toast({
+        title: `${view === 'admin' ? "Admin" : "Case Manager"} User invited!`,
+        description: `Thank you!`,
+        status: "success",
+      });
+    } catch (e) {
+      toast({
+        title: "An error occurred",
+        description: `User was not invited: ${e.message}`,
+        status: "error",
+      });
+    }
+  };
+
   return (
 
-      <HStack justifyContent="space-between">
-        <VStack
-        justifyContent = "flex-start"
-        alignItems = "flex-start"
-        width = "60%"
-        marginLeft="5%"
-        >
-          <Heading>Manage Acounts</Heading>
-          <HStack width="100%">
-            <HStack width = "55%" justifyContent="space-between">
-              <Tabs>
-                <TabList>
-                  <Tab onClick={() => setView("admin")}>Admins</Tab>
-                  <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
-                  <Tab  onClick={() => setView("clients")}>Clients</Tab>
-                </TabList>
-              </Tabs>
-            </HStack>
-            <Spacer/>
-            <Button >Delete</Button>
-            <Button colorScheme="blue">Add</Button>
-
+    <HStack justifyContent="space-between">
+      <VStack
+      justifyContent = "flex-start"
+      alignItems = "flex-start"
+      width = "60%"
+      marginLeft="5%"
+      >
+        <Heading>Manage Acounts</Heading>
+        <HStack width="100%">
+          <HStack width = "55%" justifyContent="space-between">
+            <Tabs>
+              <TabList>
+                <Tab onClick={() => setView("admin")}>Admins</Tab>
+                <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
+                <Tab  onClick={() => setView("clients")}>Clients</Tab>
+              </TabList>
+            </Tabs>
           </HStack>
-          {view !== "clients"  && 
-          <TableContainer
-          width = "100%"
-          sx={{
-            overflowX: "auto",
-            maxWidth: "100%",
-            border: "1px solid gray"
-          }}
-        >
-          <Table variant="striped">
-            <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-                <Tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <Th
-                      key={header.id}
-                      cursor={header.column.getCanSort() ? "pointer" : "default"}
-                      onClick={header.column.getToggleSortingHandler()}
-                      textAlign="center"
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {header.column.getCanSort() && (
-                        <Box
-                          display="inline-block"
-                          ml={1}
-                        >
-                          {header.column.getIsSorted() === "asc" ? (
-                            <TriangleUpIcon />
-                          ) : header.column.getIsSorted() === "desc" ? (
-                            <TriangleDownIcon />
-                          ) : null}
-                        </Box>
-                      )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Thead>
-            <Tbody>
-              {table.getRowModel().rows.map((row) => (
-                <Tr
-                  key={row.id}
-                  onClick={() => handleRowClick(row.original)}
-                  cursor="pointer"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Td
-                      key={cell.id}
-                      fontSize="14px"
-                      fontWeight="500px"
-                      onClick={(e) => {
-                        if (cell.column.id === "id") {
-                          e.stopPropagation();
-                        }
-                      }}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </Td>
-                  ))}
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-          </TableContainer>
-          } 
-          <Flex wrap='wrap' gap='4'>
-            {view === "clients" ? data.map((person, id) => (
-              <Box key={id}>
-                <Box p={5}
-                  borderRadius="md"
-                  boxShadow="sm"
-                  bg="white"
-                  borderColor="gray.100"
-                  borderWidth="1px" >
-                  <Flex direction={'row'} justify="space-between" gap={'4'}>
-                    <Text textColor={'gray'} fontWeight={'bold'}>EMAIL</Text>
-                    <Text textColor={'gray'}>{person.email}</Text>
-                  </Flex>
-                  <Flex direction={'row'} justify="space-between" gap={'4'}>
-                    <Text textColor={'gray'} fontWeight={'bold'}>PASSWORD</Text>
-                    <Text textColor={'gray'}>{"*******************"}</Text>
-                  </Flex>
-                </Box>
-                <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2} onClick={() => {
-                  setClientModalID(person.email)
-                  setClientModalOpened(true)
-                }}>
-                  <EditIcon />
-                  <Text>Edit Profile</Text>
+          <Spacer/>
+          <Button >Delete</Button>
+          <Button colorScheme="blue">Add</Button>
+
+        </HStack>
+        {view !== "clients"  &&
+        <TableContainer
+        width = "100%"
+        sx={{
+          overflowX: "auto",
+          maxWidth: "100%",
+          border: "1px solid gray"
+        }}
+      >
+        <Table variant="striped">
+          <Thead>
+          {table.getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <Th
+                    key={header.id}
+                    cursor={header.column.getCanSort() ? "pointer" : "default"}
+                    onClick={header.column.getToggleSortingHandler()}
+                    textAlign="center"
+                  >
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                    {header.column.getCanSort() && (
+                      <Box
+                        display="inline-block"
+                        ml={1}
+                      >
+                        {header.column.getIsSorted() === "asc" ? (
+                          <TriangleUpIcon />
+                        ) : header.column.getIsSorted() === "desc" ? (
+                          <TriangleDownIcon />
+                        ) : null}
+                      </Box>
+                    )}
+                  </Th>
+                ))}
+              </Tr>
+            ))}
+          </Thead>
+          <Tbody>
+            {table.getRowModel().rows.map((row) => (
+              <Tr
+                key={row.id}
+                onClick={() => handleRowClick(row.original)}
+                cursor="pointer"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <Td
+                    key={cell.id}
+                    fontSize="14px"
+                    fontWeight="500px"
+                    onClick={(e) => {
+                      if (cell.column.id === "id") {
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </Td>
+                ))}
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+        </TableContainer>
+        }
+        <Flex wrap='wrap' gap='4'>
+          {view === "clients" ? data.map((person, id) => (
+            <Box key={id}>
+              <Box p={5}
+                borderRadius="md"
+                boxShadow="sm"
+                bg="white"
+                borderColor="gray.100"
+                borderWidth="1px" >
+                <Flex direction={'row'} justify="space-between" gap={'4'}>
+                  <Text textColor={'gray'} fontWeight={'bold'}>EMAIL</Text>
+                  <Text textColor={'gray'}>{person.email}</Text>
+                </Flex>
+                <Flex direction={'row'} justify="space-between" gap={'4'}>
+                  <Text textColor={'gray'} fontWeight={'bold'}>PASSWORD</Text>
+                  <Text textColor={'gray'}>{"*******************"}</Text>
                 </Flex>
               </Box>
-            )) : <></>}
+              <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2} onClick={() => {
+                setClientModalID(person.email)
+                setClientModalOpened(true)
+              }}>
+                <EditIcon />
+                <Text>Edit Profile</Text>
+              </Flex>
+            </Box>
+          )) : <></>}
 
-          </Flex>
-          <Modal isOpen={clientModalOpened} onClose={() => setClientModalOpened(false)}>
-            <ModalOverlay/>
-            <ModalContent>
-              <ModalHeader>Settings</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                <EditClient email={clientModalID} />
-              </ModalBody>
-            </ModalContent>
-          </Modal>
-
-        <Modal isOpen={open} onClose={() => setOpen(!open)}>
-          <ModalOverlay />
+        </Flex>
+        <Modal isOpen={clientModalOpened} onClose={() => setClientModalOpened(false)}>
+          <ModalOverlay/>
           <ModalContent>
-            <ModalHeader>Create your account</ModalHeader>
+            <ModalHeader>Settings</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              {selectedData ? outputDrawerData(selectedData, view) : null}
+              <EditClient email={clientModalID} />
             </ModalBody>
-            <ModalFooter>
-              <Button variant="outline" mr={3} onClick={() => setOpen(!open)}>
-                Cancel
-              </Button>
-              <Button colorScheme="blue">Save</Button>
-            </ModalFooter>
           </ModalContent>
         </Modal>
-        </VStack>
-      </HStack>
+
+      <Modal isOpen={open} onClose={() => setOpen(!open)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create your account</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedData ? outputDrawerData(selectedData, view) : null}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" mr={3} onClick={() => setOpen(!open)}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue">Save</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      </VStack>
+    </HStack>
   );
 };

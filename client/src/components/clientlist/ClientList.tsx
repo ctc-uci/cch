@@ -40,6 +40,12 @@ import { UpdateClients } from "../admin/UpdateClient";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+import { LoadingWheel } from ".././loading/loading.tsx"
+
+
+import {AddClientForm} from "../clientlist/AddClientForm";
+
+import { UnfinishedClientAlert } from "./UnfinishedClientAlert";
 
 interface ClientListProps {
   admin?: boolean;
@@ -69,6 +75,10 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [loading, setLoading] = useState(true);
+
+
+  const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -251,7 +261,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         },
       },
       {
-        accessorKey: "employmentGained",
+        accessorKey: "employementGained",
         header: "Employment Gained",
       },
       {
@@ -323,23 +333,20 @@ export const ClientList = ({ admin }: ClientListProps) => {
       console.error("Error deleting clients", error);
     }
   };
+  
+  const fetchData = async () => {
+    try {
+      const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-  
-        let clientsRequest;
-        if (searchKey && filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
-        } else if (searchKey) {
-          clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
-        } else if (filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
-        } else {
-          clientsRequest = backend.get("/clients");
-        }
-  
+      let clientsRequest;
+      if (searchKey && filterQuery.length > 1) {
+        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
+      } else if (searchKey) {
+        clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
+      } else if (filterQuery.length > 1) {
+        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
+      } else {
+        clientsRequest = backend.get("/clients");
         const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
   
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
@@ -348,9 +355,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
   
       } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
-    };
-  
+  };
+
+  useEffect(() => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
   
@@ -361,12 +371,13 @@ export const ClientList = ({ admin }: ClientListProps) => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
+      {showUnfinishedAlert && <UnfinishedClientAlert/>}
       <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
       <HStack width="100%">
         <Heading size="md">My Complete Client Table</Heading>
         <Heading
           size="sm"
-          paddingLeft="10%"
+          paddingLeft="10%"             
         >
           Last Updated: {lastUpdated}
         </Heading>
@@ -407,7 +418,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            {/* <Button fontSize="12px">add</Button> */}
+            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert}>a</AddClientForm>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -418,6 +430,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         </HStack>
       </HStack>
       {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
+      <Box
+        width = {'100%'}
+        justifyContent={"center"}
+      >
+      {loading ?
+      <LoadingWheel/> : 
       <TableContainer
         maxHeight="calc(100vh - 20px)"
         sx={{
@@ -492,6 +510,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </Tbody>
         </Table>
       </TableContainer>
+      }
+      </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
