@@ -65,6 +65,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
+  const navigate = useNavigate();
+
   const [clients, setClients] = useState<
     (Client & { isChecked: boolean; isHovered: boolean })[]
   >([]);
@@ -76,6 +78,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  // const [displayName, setDisplayName] = useState("");
 
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
@@ -401,15 +404,15 @@ export const ClientList = ({ admin }: ClientListProps) => {
           width="55%"
           justifyContent="space-between"
         >
-          <Text fontSize="12px">
+          {/* <Text fontSize="12px">
             showing {clients.length} results on this page
-          </Text>
+          </Text> */}
           <HStack>
-            <Button></Button>
-            <Text fontSize="12px">
+            {/* <Button></Button> */}
+            {/* <Text fontSize="12px">
               page {} of {Math.ceil(clients.length / 20)}
-            </Text>
-            <Button></Button>
+            </Text> */}
+            {/* <Button></Button> */}
           </HStack>
           <HStack>
             <Button
@@ -482,6 +485,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
               <Tr
                 key={row.id}
                 cursor="pointer"
+                onClick={
+                  () => navigate(`/ViewClient/2`)
+                }
               >
                 {row.getVisibleCells().map((cell) => (
                   <Td

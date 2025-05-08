@@ -103,7 +103,7 @@ export const AdminFormsHub = () => {
           >
             Form History
           </Text>
-          <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
+          {/* <Text fontSize="12pt">Last Updated: {lastUpdated}</Text> */}
           {/* <Text fontSize="12pt">Last Updated: {lastUpdated}</Text> */}
 
           <Tabs

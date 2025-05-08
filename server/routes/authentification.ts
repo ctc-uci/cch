@@ -55,6 +55,7 @@ authentificationRouter.post("/", async (req, res) => {
       `INSERT INTO auth_codes (code, email, valid_until) VALUES ($1, $2, $3) RETURNING code;`,
       [code, email, validUntil]
     );
+    console.log('code: ', code);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
