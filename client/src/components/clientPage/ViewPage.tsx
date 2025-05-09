@@ -277,7 +277,7 @@ export const ViewPage = () => {
                 {client.firstName} {client.lastName}
               </Text>
               <Text fontSize="xs" color="gray.600">
-                Last Updated: MM/DD/YYYY HH:MM XX
+                Last Updated: 5/7/2025, 10:36:46 PM
               </Text>
             </VStack>
           </HStack>

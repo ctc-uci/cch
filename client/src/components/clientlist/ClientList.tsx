@@ -378,7 +378,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {showUnfinishedAlert && <UnfinishedClientAlert/>}
       <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
       <HStack width="100%">
-        <Heading size="md">My Complete Client Table</Heading>
+        <Heading size="md">{admin ? 'Client Tracking Statistics' : 'My Complete Client Table'}</Heading>
         <Heading
           size="sm"
           paddingLeft="10%"

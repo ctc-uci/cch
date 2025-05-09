@@ -290,29 +290,22 @@ export const RandomClientTable = () => {
       <HStack
         width="100%"
         justifyContent="space-between"
+        alignItems="center"
       >
-        <Input
+        <HStack
+          width = "100%">
+          <Input
           fontSize="12px"
           width="20%"
           height="30px"
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"randomSurvey"} />
+        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} /></HStack>
+        
         <HStack
-          width="55%"
           justifyContent="space-between"
         >
-          <Text fontSize="12px">
-            showing {randomData.length} results on this page
-          </Text>
-          <HStack>
-            <Button></Button>
-            <Text fontSize="12px">
-              page {} of {Math.ceil(randomData.length / 20)}
-            </Text>
-            <Button></Button>
-          </HStack>
           <HStack>
             <Button
               fontSize="12px"
