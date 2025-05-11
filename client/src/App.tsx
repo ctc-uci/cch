@@ -165,9 +165,13 @@ const App = () => {
                   path="/ViewClient/:id"
                   element={<ProtectedRoute element={<ViewPage />} allowedRoles={['admin', 'user']} />}
                 />
-                <Route
+                {/* <Route
                   path="/casemanager"
                   element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
+                /> */}
+                <Route
+                  path="/casemanager"
+                  element={<CaseManager/>}
                 />
                 <Route
                   path="/random-client-survey"

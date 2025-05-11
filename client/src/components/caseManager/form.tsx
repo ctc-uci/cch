@@ -1,24 +1,24 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Input, Select, Text, VStack, Heading, Divider, SimpleGrid } from "@chakra-ui/react";
+import { Box, Button, Input, Select, Text, VStack, Heading, Divider, SimpleGrid, Stack, Flex, useToast } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../../contexts/hooks/useAuthContext";
-
+import { caseManagerForm, caseManagers } from "../../types/caseManagerForm";
 interface FormCMProps {
   onFormSubmitSuccess: () => void;
 }
 
 
 function FormCM({ onFormSubmitSuccess }: FormCMProps) {
-  const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
   const navigate = useNavigate();
+  const toast = useToast();
 
-  const userEmail = currentUser?.email
-  const [cmId, setCmId] = useState({});
-  const [formData, setFormData] = useState({
-    date: "",
-    // cm_id: "",
+  const [empty, setEmpty] = useState(true);
+  const [pos, setPos] = useState(false);
+  const [formData, setFormData] = useState<caseManagerForm>({
+    month: "",
+    cm_id: "",
+    year: "",
     total_number_of_contacts: "",
     women_birthdays: "",
     kid_birthdays: "",
@@ -45,36 +45,14 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
     number_of_others: "",
     number_of_interviews_accpeted: "",
   });
+  const [cm, setCm] = useState<caseManagers[]>([]);
+  const [selectedCm, setSelectedCm] = useState("");
 
-  const fields = [
-    { name: "date", label: "Date" },
-    //{ name: "cm_id", label: "CM ID" },
-    { name: "total_number_of_contacts", label: "Total Number of Contacts" },
-    { name: "women_birthdays", label: "Women's Birthdays" },
-    { name: "kid_birthdays", label: "Kid's Birthdays" },
-    { name: "birthday_cards", label: "Birthday Cards" },
-    { name: "birthday_cards_value", label: "Birthday Cards Value" },
-    { name: "food_cards", label: "Food Cards" },
-    { name: "food_cards_value", label: "Food Cards Value" },
-    { name: "bus_passes", label: "Bus Passes" },
-    { name: "bus_passes_value", label: "Bus Passes Value" },
-    { name: "gas_cards", label: "Gas Cards" },
-    { name: "gas_cards_value", label: "Gas Cards Value" },
-    { name: "women_healthcare_referrals", label: "Women Healthcare Referrals" },
-    { name: "kid_healthcare_referrals", label: "Kid Healthcare Referrals" },
-    { name: "women_counseling_referrals", label: "Women Counseling Referrals" },
-    { name: "kid_counseling_referrals", label: "Kid Counseling Referrals" },
-    { name: "babies_born", label: "Babies Born" },
-    { name: "women_degrees_earned", label: "Women Degrees Earned" },
-    { name: "women_enrolled_in_school", label: "Women Enrolled in School" },
-    { name: "women_licenses_earned", label: "Women Licenses Earned" },
-    { name: "reunifications", label: "Reunifications" },
-    { name: "number_of_interviews_conducted", label: "Number of Interviews Conducted" },
-    { name: "number_of_positive_tests", label: "Number of Positive Tests" },
-    { name: "number_of_ncns", label: "Number of No Call No Shows (NCNs)" },
-    { name: "number_of_others", label: "Number of Other" },
-    { name: "number_of_interviews_accpeted", label: "Number of Interviews Accepted" },
-  ];
+  const handleCmChange = (event) => {
+    setSelectedCm(event.target.value);
+    setFormData((prevState) => ({ ...prevState, ['cm_id']: event.target.value }));
+    
+  }
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -84,12 +62,13 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
   useEffect(() => {
     const getData = async () => {
       try {
-        const idResponse = await backend.get(
-          `/caseManagers/id-by-email/${userEmail}`
+        const response = await backend.get(
+          `/caseManagers/names`
         );
-        // console.log(monthlyStatsResponse.data);
-        console.log(idResponse.data)
-        setCmId(idResponse.data[0]["id"])
+        console.log(response.data);
+        setCm(response.data);
+        setFormData((prevState) => ({ ...prevState, ['cm_id']: response.data[0].id }));
+        setSelectedCm(response.data[0]); //set default to first cm
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -97,13 +76,33 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
     getData();
     
   }, []);
+
+  useEffect(() => {
+    setEmpty(!(Object.values(formData).filter((val) => val !== "").length === 28));
+    setPos(Object.values(formData).every((val) => parseInt(val) >= 0));
+  }, [formData]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
+      const month = parseInt(formData.month, 10);
+      const year = parseInt(formData.year, 10);
+      if (year > new Date().getFullYear()) {
+        throw new Error("Year cannot be in the future");
+      }
+      if (month < 1 || month > 12) {
+        throw new Error("Month must be between 1 and 12");
+      }
+      if (empty) {
+        throw new Error("Please fill out all required information before submitting.");
+      }
+      if (!pos) {
+        throw new Error("Please make sure all values are positive numbers.");
+      }
       const monthlyStatData = {
-        date: formData.date,
-        cm_id: cmId,
+        date: new Date( year, month - 1),  
+        cm_id: parseInt(formData.cm_id, 10),
         total_number_of_contacts: parseInt(formData.total_number_of_contacts, 10),
         women_birthdays: parseInt(formData.women_birthdays, 10),
         kid_birthdays: parseInt(formData.kid_birthdays, 10),
@@ -130,44 +129,77 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         number_of_others: parseInt(formData.number_of_others, 10),
         number_of_interviews_accpeted: parseInt(formData.number_of_interviews_accpeted, 10),
       };
-      console.log(monthlyStatData);
+      
       await backend.post("/caseManagerMonthlyStats", monthlyStatData);
       onFormSubmitSuccess();
+      toast({
+        title: 'Successfully Submitted Form',
+        position: 'bottom-right',
+        description: 'Case Manager Monthly Statistics Form.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      })
       navigate("/forms-hub"); // Redirect after success
     } catch (error) {
-      console.error("Error creating monthly stat:", error);
+      toast({
+        title: 'Missing Information',
+        position: 'bottom-right',
+        description: error.message,
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      console.error("Error creating monthly stat for case manager:", error);
     }
   };
   
   return (
     <VStack spacing={4} align="stretch" maxW="800px" mx="auto" py={6}>
-      <Heading textAlign="center">Case Manager Monthly Statistics Form</Heading>
+      <Heading textAlign="center" mb={10}>Case Manager Monthly Statistics Form</Heading>
 
       {/* Month, Year, Case Manager */}
-      <SimpleGrid columns={3} spacing={4}>
+      <SimpleGrid columns={3} spacing={4} mb={6}>
         <Box>
-          <Text fontWeight="bold">Date</Text>
+          <Text fontWeight="bold" mb={2}>Month</Text>
           <Input
-            type = "date"
-            width='100%'
-            height="30px"
-            name="date"
+            placeholder="Type Here"
+            type="number"
+            name="month"
             // value={formData[name]}
             onChange={handleChange}
+            size="md"
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+            
+          />    
+        </Box>
+
+        <Box>
+          <Text fontWeight="bold" mb={2}>Year</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="year"
+            // value={formData[name]}
+            onChange={handleChange}
+            size="md"
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
           />        
         </Box>
         <Box>
-          {/* This is for the dropdown showing choices for case managers, 
-          should this still be here even if we are automatically supplying cm id 
-          from the logged in uesr? */}
+          
 
-          {/* <Text fontWeight="bold">Case Manager</Text>
-          <Select name="case_manager" value={formData.case_manager} onChange={handleChange}>
-            <option value="">Select</option>
-            <option value="Sarah">Sarah</option>
-            <option value="John">John</option>
-            <option value="Emily">Emily</option>
-          </Select> */}
+          <Text fontWeight="bold" mb={2}>Case Manager</Text>
+          <Select name="case_manager" value={selectedCm} onChange={handleCmChange}>
+            {cm.map((data) => {
+              return(
+                <option key={data.id} value={data.id} >{data.firstName} {data.lastName}</option>
+              )
+            })}
+            
+          </Select>
         </Box>
       </SimpleGrid>
 
@@ -175,78 +207,373 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
 
       {/* Contacts */}
       <Box>
-        <Text fontSize="lg" fontWeight="bold">Contacts</Text>
-        <Input type="number" name="total_number_of_contacts" value={formData.total_number_of_contacts} onChange={handleChange} />
+        <Text fontSize="lg" fontWeight="bold" mb={2}>Contacts</Text>
+        <Flex align="center" gap={5}>
+          <Text w="250px">Total Number of Contacts (Email, Phone, In-Person)</Text>
+          <Input
+          placeholder="Type Here"
+          type="number"
+          name="total_number_of_contacts"
+          value={formData.total_number_of_contacts}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          // isInvalid={formData.total_number_of_contacts === ""}
+        />    
+        </Flex>
       </Box>
 
       <Divider />
 
       {/* Interview Questions */}
-      <Text fontSize="lg" fontWeight="bold">Interview Questions</Text>
-      <SimpleGrid columns={1} spacing={4}>
-        <Input placeholder="Interviews Conducted" type="number" name="number_of_interviews_conducted" value={formData.number_of_interviews_conducted} onChange={handleChange} />
-        <Input placeholder="Positive Tests" type="number" name="number_of_positive_tests" value={formData.number_of_positive_tests} onChange={handleChange} />
-        <Input placeholder="No Call No Shows" type="number" name="number_of_ncns" value={formData.number_of_ncns} onChange={handleChange} />
-        <Input placeholder="Other" type="number" name="number_of_others" value={formData.number_of_others} onChange={handleChange} />
-        <Input placeholder="Number of Interviews Conducted" type="number" name="number_of_interviews_conducted" value={formData.number_of_interviews_conducted} onChange={handleChange} />
-        <Input placeholder="Number of Interviews Accepted" type="number" name="number_of_interviews_accpeted" value={formData.number_of_interviews_accpeted} onChange={handleChange} />
-      </SimpleGrid>
+      <Text fontSize="lg" fontWeight="bold" mb={2}>Interview Questions</Text>
+      <Stack spacing={4}>
+        <Flex align="center" gap={5}>
+          <Text w="250px"># Interviews Conducted</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_interviews_conducted"
+            value={formData.number_of_interviews_conducted}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+
+        <Flex align="center" gap={5}>
+          <Text w="250px"># of Positive Tests</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_positive_tests"
+            value={formData.number_of_positive_tests}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+
+        <Flex align="center" gap={5}>
+          <Text w="250px"># of No Call No Shows</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_ncns"
+            value={formData.number_of_ncns}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+
+        <Flex align="center" gap={5}>
+          <Text w="250px"># of "Other"</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_others"
+            value={formData.number_of_others}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+
+        <Flex align="center" gap={5}>
+          <Text w="250px">Total Interviews Scheduled</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_interviews_scheduled"
+            value={formData.number_of_interviews_conducted}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+
+        <Flex align="center" gap={5}>
+          <Text w="250px"># of Interviewees Accepted</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="number_of_interviews_accpeted"
+            value={formData.number_of_interviews_accpeted}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+      </Stack>
 
       <Divider />
 
       {/* Birthdays */}
-      <Text fontSize="lg" fontWeight="bold">Birthdays</Text>
-      <SimpleGrid columns={1} spacing={4}>
-        <Input placeholder="Women's Birthdays" type="number" name="women_birthdays" value={formData.women_birthdays} onChange={handleChange} />
-        <Input placeholder="Kid's Birthdays" type="number" name="kid_birthdays" value={formData.kid_birthdays} onChange={handleChange} />
-      </SimpleGrid>
+      <Text fontSize="lg" fontWeight="bold" mb={2}>Birthdays</Text>
+      <Stack spacing={3}>
+        <Flex align="center" gap={5}>
+          <Text w="250px">Women's Birthdays Celebrated</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="women_birthdays"
+            value={formData.women_birthdays}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
 
-      {/* Birthday Cards & Total Value in Same Row */}
-      <Box display="flex" alignItems="center" gap={4}>
-        <Input placeholder="Birthday Cards" type="number" name="birthday_cards" value={formData.birthday_cards} onChange={handleChange} />
-        <Text fontWeight="bold">Total Value:</Text>
-        <Input placeholder="Total Value" type="number" name="birthday_cards_value" value={formData.birthday_cards_value} onChange={handleChange} />
-      </Box>
+        <Flex align="center" gap={5}>
+          <Text w="250px">Kid's Birthdays Celebrated</Text>
+          <Input
+            placeholder="Type Here"
+            type="number"
+            name="kid_birthdays"
+            value={formData.kid_birthdays}
+            onChange={handleChange}
+            width="150px"
+            onWheel={(e) => (e.target as HTMLInputElement).blur()}
+          />
+        </Flex>
+      </Stack>
 
+      <Flex align="center" mt={4} gap={5}>
+        <Text w="250px"># of Birthday Cards Given Out</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="birthday_cards"
+          value={formData.birthday_cards}
+          onChange={handleChange}
+          width="150px"
+          mr={8}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+        <Text w="150px">Total Value</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="birthday_cards_value"
+          value={formData.birthday_cards_value}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+   
       <Divider />
 
       {/* Food and Bus */}
-      <Text fontSize="lg" fontWeight="bold">E&TH Food and Bus</Text>
-      {["food_cards", "bus_passes", "gas_cards"].map((field) => (
-        <Box key={field} display="flex" alignItems="center" gap={4}>
-          <Input placeholder={field.replace("_", " ")} type="number" name={field} value={formData[field]} onChange={handleChange} />
-          <Text fontWeight="bold">Total Value:</Text>
-          <Input placeholder="Total Value" type="number" name={`${field}_value`} value={formData[`${field}_value`]} onChange={handleChange} />
-        </Box>
-      ))}
+      <Text fontSize="lg" fontWeight="bold"  mb={2}>E&TH Food and Bus</Text>
+
+      {/* Food Cards */}
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px"># of Food Cards</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="food_cards"
+          value={formData.food_cards}
+          onChange={handleChange}
+          width="150px"
+          mr={8}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+        <Text w="150px">Total Value</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="food_cards_value"
+          value={formData.food_cards_value}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      {/* Bus Passes */}
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px"># of Bus Passes</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="bus_passes"
+          value={formData.bus_passes}
+          onChange={handleChange}
+          width="150px"
+          mr={8}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+        <Text w="150px">Total Value</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="bus_passes_value"
+          value={formData.bus_passes_value}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      {/* Gas Cards */}
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px"># of Gas Giftcards</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="gas_cards"
+          value={formData.gas_cards}
+          onChange={handleChange}
+          width="150px"
+          mr={8}
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+        <Text w="150px">Total Value</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="gas_cards_value"
+          value={formData.gas_cards_value}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
 
       <Divider />
 
       {/* Referrals */}
-      <Text fontSize="lg" fontWeight="bold">Referrals</Text>
-      <SimpleGrid columns={1} spacing={4}>
-        <Input placeholder="Healthcare Referrals for Women" type="number" name="women_healthcare_referrals" value={formData.women_healthcare_referrals} onChange={handleChange} />
-        <Input placeholder="Counseling Referrals for Women" type="number" name="women_counseling_referrals" value={formData.women_counseling_referrals} onChange={handleChange} />
-        <Input placeholder="Healthcare Referrals for Kids" type="number" name="kid_healthcare_referrals" value={formData.kid_healthcare_referrals} onChange={handleChange} />
-        <Input placeholder="Counseling Referrals for Kids" type="number" name="kid_counseling_referrals" value={formData.kid_counseling_referrals} onChange={handleChange} />
-      </SimpleGrid>
-    
-      <Divider />
+      <Text fontSize="lg" fontWeight="bold" mb={2}>Referrals</Text>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Healthcare Referrals for Women</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="women_healthcare_referrals"
+          value={formData.women_healthcare_referrals}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Counseling Referrals for Women</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="women_counseling_referrals"
+          value={formData.women_counseling_referrals}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Healthcare Referrals for Kids</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="kid_healthcare_referrals"
+          value={formData.kid_healthcare_referrals}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Counseling Referrals for Kids</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="kid_counseling_referrals"
+          value={formData.kid_counseling_referrals}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
 
       {/* Miscellaneous */}
-      <Text fontSize="lg" fontWeight="bold">Miscellaneous</Text>
-      <SimpleGrid columns = {1} spacing = {4}>
-        <Input placeholder="Babies Born" type="number" name="babies_born" value={formData.babies_born} onChange={handleChange} />
-        <Input placeholder="Women who earn a GED or Diploma while in CCH" type="number" name="women_degrees_earned" value={formData.women_degrees_earned} onChange={handleChange} />
-        <Input placeholder="Women who enroll in School or a trade program while in CCH" type="number" name="women_enrolled_in_school" value={formData.women_enrolled_in_school} onChange={handleChange} />
-        <Input placeholder="Women who get a drivers license while in the program" type="number" name="women_licenses_earned" value={formData.women_licenses_earned} onChange={handleChange} />
-        <Input placeholder="Reunifications" type="number" name="reunifications" value={formData.reunifications} onChange={handleChange} />
-      </SimpleGrid>
+      <Text fontSize="lg" fontWeight="bold" mb={2}>Miscellaneous</Text>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Babies Born</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="babies_born"
+          value={formData.babies_born}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Women who earn a GED or Diploma while in CCH</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="women_degrees_earned"
+          value={formData.women_degrees_earned}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Women who enroll in School or a trade program while in CCH</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="women_enrolled_in_school"
+          value={formData.women_enrolled_in_school}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Women who get a driver’s license while in the program</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="women_licenses_earned"
+          value={formData.women_licenses_earned}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
+
+      <Flex align="center" mb={3} gap={5}>
+        <Text w="250px">Reunifications</Text>
+        <Input
+          placeholder="Type Here"
+          type="number"
+          name="reunifications"
+          value={formData.reunifications}
+          onChange={handleChange}
+          width="150px"
+          onWheel={(e) => (e.target as HTMLInputElement).blur()}
+        />
+      </Flex>
 
       {/* Submit/Cancel */}
-      <Box display="flex" justifyContent="space-between" mt={4}>
-        <Button colorScheme="red" onClick={() => navigate("/forms-hub")}>Cancel</Button>
-        <Button colorScheme="blue" type="submit" onClick={handleSubmit}>Submit</Button>
+      <Box display="flex" justifyContent="flex-end" mt={4}>
+        <Box display="flex" gap={5}>
+          <Button background="#EDF2F7" color="#2D3748" colorScheme="blue" variant="delete" onClick={() => navigate("/forms-hub")}>Cancel</Button>
+          <Button colorScheme="blue" type="submit" onClick={handleSubmit}>Submit</Button>
+        </Box>
       </Box>
     </VStack>
   );
