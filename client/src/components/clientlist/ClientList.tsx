@@ -12,6 +12,7 @@ import {
   Table,
   TableContainer,
   Tbody,
+  Flex,
   Td,
   Text,
   Th,
@@ -29,6 +30,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+import { MdOutlineManageSearch } from "react-icons/md";
+
 import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -76,9 +79,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
+
+  const [showSearch, setShowSearch] = useState(false);
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -347,13 +353,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
       } else {
         clientsRequest = backend.get("/clients");
-        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-
-        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString());
-        setClients(clientsResponse.data);
-
       }
+      const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+
+      const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+      setLastUpdated(date.toLocaleString());
+      setClients(clientsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -365,159 +370,186 @@ export const ClientList = ({ admin }: ClientListProps) => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
-
   return (
     <VStack
-      spacing={2}
+      spacing={6}
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
-      {showUnfinishedAlert && <UnfinishedClientAlert/>}
-      <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
-      <HStack width="100%">
-        <Heading size="md">My Complete Client Table</Heading>
-        <Heading
-          size="sm"
-          paddingLeft="10%"
-        >
-          Last Updated: {lastUpdated}
-        </Heading>
-      </HStack>
-      {admin && <UpdateClients />}
-      <VStack></VStack>
-      <HStack
-        width="100%"
-        justifyContent="space-between"
-      >
-        <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <ClientListFilter setFilterQuery={setFilterQuery} />
-        <HStack
-          width="55%"
-          justifyContent="space-between"
-        >
-          <Text fontSize="12px">
-            showing {clients.length} results on this page
+      <VStack width='100%'>
+        {showUnfinishedAlert && <UnfinishedClientAlert/>}
+        <Flex width="100%" flexDirection="column" justifyContent="flex-start">
+        <Heading fontWeight="none" fontSize="24px" color={"#3182CE"} mb="25px">Welcome, {currentUser?.displayName}</Heading>
+        <Heading fontSize="30px" mb="10px">Complete Client Table</Heading>
+        <Text
+            fontSize="14px"
+          >
+            Last Updated: {lastUpdated}
           </Text>
-          <HStack>
-            <Button></Button>
-            <Text fontSize="12px">
-              page {} of {Math.ceil(clients.length / 20)}
+          </Flex>
+        {admin && <UpdateClients />}
+        {/* im ded bruh what is this vstack */}
+        <VStack></VStack> 
+        <Flex
+          width="100%"
+          justifyContent="flex-end"
+        >
+          
+            {/* <Text fontSize="12px">
+              showing {clients.length} results on this page
             </Text>
-            <Button></Button>
-          </HStack>
-          <HStack>
-            <Button
-              fontSize="12px"
-              onClick={() => setDeleteModalOpen(true)}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              delete
-            </Button>
-            {/* <Button fontSize="12px">add</Button> */}
-            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert} />
-            <IconButton
-              aria-label="Download CSV"
-              onClick={() => onPressCSVButton()}
-            >
-              <FiUpload />
-            </IconButton>
-          </HStack>
-        </HStack>
-      </HStack>
-      {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
+            <HStack>
+              <Button></Button>
+              <Text fontSize="12px">
+                page {} of {Math.ceil(clients.length / 20)}
+              </Text>
+              <Button></Button>
+            </HStack> */}
+            <HStack>
+              <Button
+                onClick={() => setDeleteModalOpen(true)}
+                isDisabled={selectedRowIds.length === 0}
+              >
+                Delete
+              </Button>
+              {/* <Button fontSize="12px">add</Button> */}
+              <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert} />
+            </HStack>
+          
+        </Flex>
+        {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
+      </VStack>
       <Box
         width = {'100%'}
         justifyContent={"center"}
       >
       {loading ?
       <LoadingWheel/> :
-      <TableContainer
-        maxHeight="calc(100vh - 20px)"
-        sx={{
-          overflowX: "auto",
-          overflowY: "auto",
-          maxWidth: "100%",
-          border: "1px solid gray",
-        }}
-      >
-        <Table variant="striped">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th
-                    key={header.id}
-                    cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {header.column.getCanSort() && (
-                      <Box
-                        display="inline-block"
-                        ml={1}
-                      >
-                        {header.column.getIsSorted() === "asc" ? (
-                          <TriangleUpIcon />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <TriangleDownIcon />
-                        ) : null}
-                      </Box>
-                    )}
-                  </Th>
-                ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row, index) => (
-              <Tr
-                key={row.id}
-                cursor="pointer"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <Td
-                    key={cell.id}
-                    fontSize="14px"
-                    fontWeight="500px"
-                    onClick={(e) => {
-                      if (cell.column.id === "rowNumber") {
-                        e.stopPropagation();
-                      }
-                    }}
-                  >
-                    {cell.column.id === "rowNumber" ? (
-                      <HoverCheckbox
-                        id={row.original.id}
-                        isSelected={selectedRowIds.includes(row.original.id)}
-                        onSelectionChange={handleRowSelect}
-                        index={index}
-                      />
-                    ) : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-      }
-      </Box>
-      <DeleteRowModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-      />
+      <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
+        <HStack padding="5px">
+          <ClientListFilter setFilterQuery={setFilterQuery} />
+          <HStack width="100%" justifyContent={"right"}>
+            {/* <Input
+              fontSize="12px"
+              width="20%"
+              height="30px"
+              placeholder="search"
+              onChange={(e) => setSearchKey(e.target.value)}
+            /> */}
+            <Input maxWidth="20%" placeholder="search" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} display={showSearch ? 'block' : 'none'}></Input>
+            <Box
+              display="flex"
+              alignItems="center"
+              paddingX="16px"
+              paddingY="8px"
+              cursor="pointer"
+              onClick={() => {setShowSearch(!showSearch); setSearchKey("")}}
+            >
+              <Button background={"white"}>
+                <MdOutlineManageSearch size="24px" />
+              </Button>
+            </Box>
+            <Box
+              display="flex"
+              alignItems="center"
+              paddingX="16px"
+              paddingY="8px"
+              cursor="pointer"
+              onClick={() => onPressCSVButton()}
+            >
+              <Button background={"white"}>
+                <FiUpload size="16px" />
+                <Text ml="8px">Export</Text>
+              </Button>
+            </Box>
+          </HStack>
+        </HStack>
+        <TableContainer
+          maxHeight="calc(100vh - 20px)"
+          borderRadius="lg"
+          boxShadow="sm"
+          sx={{
+            overflowX: "auto",
+            overflowY: "auto",
+            maxWidth: "100%",
+            border: "1px solid gray",
+          }}
+        >
+          <Table variant="striped">
+            <Thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <Tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <Th
+                      key={header.id}
+                      cursor={header.column.getCanSort() ? "pointer" : "default"}
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {header.column.getCanSort() && (
+                        <Box
+                          display="inline-block"
+                          ml={1}
+                        >
+                          {header.column.getIsSorted() === "asc" ? (
+                            <TriangleUpIcon />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <TriangleDownIcon />
+                          ) : null}
+                        </Box>
+                      )}
+                    </Th>
+                  ))}
+                </Tr>
+              ))}
+            </Thead>
+            <Tbody>
+              {table.getRowModel().rows.map((row, index) => (
+                <Tr
+                  key={row.id}
+                  cursor="pointer"
+                  onClick={() => {navigate(`/ViewClient/${row.original.id}`)}}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <Td
+                      key={cell.id}
+                      fontSize="14px"
+                      fontWeight="500px"
+                      onClick={(e) => {
+                        if (cell.column.id === "rowNumber") {
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      {cell.column.id === "rowNumber" ? (
+                        <HoverCheckbox
+                          id={row.original.id}
+                          isSelected={selectedRowIds.includes(row.original.id)}
+                          onSelectionChange={handleRowSelect}
+                          index={index}
+                        />
+                      ) : (
+                        flexRender(cell.column.columnDef.cell, cell.getContext())
+                      )}
+                    </Td>
+                  ))}
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
+        </Box>
+        }
+        </Box>
+        <DeleteRowModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          onConfirm={handleDelete}
+        />
+      
     </VStack>
   );
 };
