@@ -148,6 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           validUntil: validUntil,
         });
         const code = authData?.data[0]?.code;
+        console.log(authData?.data[0]?.code);
 
         // Send the code to the user via email
 
@@ -193,7 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAuthCredential(null);
       setEmail(null);
       return userCredential;
-    } 
+    }
   };
 
   const logout = () => {
