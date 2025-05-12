@@ -96,7 +96,8 @@ const App = () => {
               />
               <Route
                 path="/success-story"
-                element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+                //element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+                element={<SuccessStory />}
               />
               <Route
                 path="/authentification/:userType?"
