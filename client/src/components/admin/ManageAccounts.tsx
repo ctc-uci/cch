@@ -23,6 +23,7 @@ import {
   FormControl,
   FormHelperText,
   Input,
+  Slide,
   useToast
 } from "@chakra-ui/react";
 import { Tabs, TabList, Tab } from '@chakra-ui/react'
@@ -81,6 +82,7 @@ export const ManageAccounts = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [add, setAdd] = useState<boolean>(true);
   const toast = useToast();
+  const [editDrawerOpened, setEditDrawerOpened] = useState(false);
 
   const [clientModalOpened, setClientModalOpened] = useState(false)
   const [clientModalID, setClientModalID] = useState('')
@@ -129,7 +131,8 @@ export const ManageAccounts = () => {
 
   const handleRowClick = (datum : Person) => {
     setSelectedData(datum);
-    setOpen(true);
+    setEditDrawerOpened(true);
+
   };
 
   const outputDrawerData = (data : Person, view : string) => {
@@ -137,23 +140,110 @@ export const ManageAccounts = () => {
       case "admin":
         return (
           <>
+            <HStack 
+                spacing={8}
+                display="flex"
+                width="100%"
+                padding="20px"
+                align="center"
+                gap="8px"
+                borderRadius="12px"
+                border="1px solid var(--gray-200, #E2E8F0)"
+                backgroundColor="var(--white, #FFF)"    
+              >
+                <VStack align="flex-start" width="150px" color="#2D3748"
+                  fontSize="14px"
+                  fontWeight="700"
+                  lineHeight="20px">
+                  <Text>NAME</Text>
+                  <Text>EMAIL</Text>
+                  <Text>ROLE</Text>
+                  <Text>LOCATION</Text>
+                </VStack>
+                <VStack align="flex-start" color="#2D3748"
+                  fontSize="14px"
+                  fontWeight="400"
+                  lineHeight="20px">
             <Text>{data.firstName} {data.lastName}</Text>
             <Text>{data.email}</Text>
             <Text>Administrator</Text>
             <Text>{data.location}</Text>
-            <br></br>
-            <Text>Notes</Text>
-            <Textarea size="md"/>
+            </VStack>
+              </HStack>
+              <Flex 
+                height="24px"
+                px="8px"
+                align="center"
+                gap="6px"
+                justify="center"
+                color="#3182CE"
+                width="100%"
+                margin="16px"
+                >
+                <EditIcon/>
+                <Text   
+                  fontSize="12px"
+                  fontStyle="normal"
+                  fontWeight="600"
+                  lineHeight="16px">
+                  Edit Admin Email
+                </Text>
+              </Flex>
           </>
         );
       case "cms":
 
         return (
           <>
+            <HStack 
+                spacing={8}
+                display="flex"
+                width="100%"
+                padding="20px"
+                align="center"
+                gap="8px"
+                borderRadius="12px"
+                border="1px solid var(--gray-200, #E2E8F0)"
+                backgroundColor="var(--white, #FFF)"    
+              >
+                <VStack align="flex-start" width="150px" color="#2D3748"
+                  fontSize="14px"
+                  fontWeight="700"
+                  lineHeight="20px">
+                  <Text>NAME</Text>
+                  <Text>EMAIL</Text>
+                  <Text>ROLE</Text>
+                  <Text>LOCATION</Text>
+                </VStack>
+                <VStack align="flex-start" color="#2D3748"
+                  fontSize="14px"
+                  fontWeight="400"
+                  lineHeight="20px">
             <Text>{data.firstName} {data.lastName}</Text>
             <Text>{data.email}</Text>
-            <Text>Case Manager</Text>
+            <Text>Administrator</Text>
             <Text>{data.location}</Text>
+            </VStack>
+              </HStack>
+              <Flex 
+                height="24px"
+                px="8px"
+                align="center"
+                gap="6px"
+                justify="center"
+                color="#3182CE"
+                width="100%"
+                margin="16px"
+                >
+                <EditIcon/>
+                <Text   
+                  fontSize="12px"
+                  fontStyle="normal"
+                  fontWeight="600"
+                  lineHeight="16px">
+                  Edit Case Manager Email
+                </Text>
+              </Flex>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
@@ -245,39 +335,84 @@ export const ManageAccounts = () => {
 
   return (
 
-    <HStack justifyContent="space-between">
+    <HStack justifyContent="space-between" height="100%">
       <VStack
       justifyContent = "flex-start"
       alignItems = "flex-start"
-      width = "60%"
+      width = "100%"
       marginLeft="5%"
+      height="100%"
+      overflowX="hidden"
       >
-        <Heading>Manage Acounts</Heading>
-        <HStack width="100%">
-          <HStack width = "55%" justifyContent="space-between">
+        <HStack width="100%" overflow="hidden">
+          <HStack width = "100%" justifyContent="space-between" display="inline-flex" align-items="flex-start">
             <Tabs>
               <TabList>
-                <Tab onClick={() => setView("admin")}>Admins</Tab>
-                <Tab  onClick={() => setView("cms")}>Case Managers</Tab>
-                <Tab  onClick={() => setView("clients")}>Clients</Tab>
+                <Tab onClick={() => { setView("admin"); setEditDrawerOpened(false);}}>Admins</Tab>
+                <Tab  onClick={() => { setView("cms"); setEditDrawerOpened(false);}}>Case Managers</Tab>
+                <Tab  onClick={() => { setView("clients"); setEditDrawerOpened(false);}}>Clients</Tab>
               </TabList>
             </Tabs>
           </HStack>
           <Spacer/>
-          <Button >Delete</Button>
-          <Button colorScheme="blue">Add</Button>
+          <Button position="relative" right="14px">Delete</Button>
+          <Button colorScheme="blue" position="relative" right="0">Add</Button>
 
         </HStack>
         {view !== "clients"  &&
         <TableContainer
         width = "100%"
+        height="100%"
         sx={{
           overflowX: "auto",
           maxWidth: "100%",
-          border: "1px solid gray"
+          border: "1px solid #E2E8F0",
+          borderRadius: "12px",
+          position: "relative"
         }}
       >
-        <Table variant="striped">
+        <Slide
+          direction="right"
+          in={editDrawerOpened}
+          style={{ position: "absolute", top: 0, right: 0, zIndex: 10}}
+        >
+          <Box
+            position="absolute"
+            width="100%"
+            height="100%"
+            bg="white"
+            boxShadow="md"
+            p={4}
+          >
+            <IconButton
+              aria-label="Back"
+              icon={<ChevronLeftIcon />}
+              color="black"
+              backgroundColor="white"
+              variant="ghost"
+              _hover={{
+                background: "transparent",
+                color: "inherit"
+              }}
+              width="24px"
+              height="24px"
+              flex-shrink="0"
+              onClick={() => setEditDrawerOpened(false)}
+            />
+            <VStack
+            align="flex-start" 
+            margin="76px"
+            maxWidth="400px"  
+            >
+              <Text>
+                Last Updated:
+              </Text>
+                  {selectedData ? outputDrawerData(selectedData, view) : null}
+            </VStack>
+            
+          </Box>
+        </Slide>
+        <Table>
           <Thead>
           {table.getHeaderGroups().map((headerGroup) => (
               <Tr key={headerGroup.id}>
@@ -375,23 +510,6 @@ export const ManageAccounts = () => {
             </ModalBody>
           </ModalContent>
         </Modal>
-
-      <Modal isOpen={open} onClose={() => setOpen(!open)}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Create your account</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            {selectedData ? outputDrawerData(selectedData, view) : null}
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="outline" mr={3} onClick={() => setOpen(!open)}>
-              Cancel
-            </Button>
-            <Button colorScheme="blue">Save</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
       </VStack>
     </HStack>
   );
