@@ -12,7 +12,6 @@ import {
   Tr,
   Text,
   Button,
-  Heading,
   HStack,
   VStack,
   Textarea,
@@ -36,6 +35,7 @@ import {
   ModalFooter,
   ModalBody,
   ModalCloseButton,
+  useDisclosure,
 } from '@chakra-ui/react'
 
 import {
@@ -70,6 +70,11 @@ export const ManageAccounts = () => {
   const [data, setData] = useState<Person[]>([]);
   const [view, setView] = useState<RoleKey>("admin"); // "admin" | "cms" | "clients"
   const [open, setOpen] = useState(false);
+  const {
+    isOpen: isModalOpen,
+    onOpen: openModal,
+    onClose: closeModal
+  } = useDisclosure();
   const [selectedData, setSelectedData] = useState<Person>({
     id: "",
     firstName: "",
@@ -155,6 +160,44 @@ export const ManageAccounts = () => {
       }
     };
         return (
+        <>
+        <Modal isOpen={isModalOpen} onClose={closeModal}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Changes</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+          <HStack
+                width="100%"
+                >
+                  <Text
+                    margin="20px"
+                    mr="40px"
+                  >
+                    EMAIL
+                  </Text>
+                  <VStack
+                    width="100%"
+                    alignItems="flex-start"
+                  >
+                    <Text>
+                      {data.email}
+                    </Text>
+                  </VStack>
+                </HStack>
+          </ModalBody>
+          <ModalFooter>
+            <Flex justifyContent="space-between" width="100%">
+            <Button onClick={closeModal} width="45%">
+              Back
+            </Button>
+            <Button colorScheme="blue" width="45%" onClick={(e) => {closeModal(); handleSubmitEmailChange(e)}}>
+              Submit
+            </Button>
+            </Flex>
+          </ModalFooter>
+        </ModalContent>
+        </Modal>
         <Slide
           direction="right"
           in={editEmailDrawerOpened}
@@ -225,9 +268,13 @@ export const ManageAccounts = () => {
               </VStack>
                   
             </VStack>
-            <Button onClick={handleSubmitEmailChange}>Confirm Changes</Button>
+            <Flex width="100%" justifyContent="flex-end">
+              <Button colorScheme="blue" onClick={openModal}>Confirm Changes</Button>
+            </Flex>
+            
           </Box>
         </Slide>
+        </>
         );
   }
   const outputDrawerData = (data : Person, view : string) => {
@@ -365,9 +412,6 @@ export const ManageAccounts = () => {
                 </Button>
                 
               </Flex>
-              <br></br>
-              <Text>Notes</Text>
-              <Textarea size="md"/>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
