@@ -69,7 +69,6 @@ export const ExitSurvey = () => {
     event.preventDefault();
     if (onReview) {
       try {
-        console.log(formData);
         await backend.post("/exitSurvey", formData);
         toast({
           title: "Form submitted",
