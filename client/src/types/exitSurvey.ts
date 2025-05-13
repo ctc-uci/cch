@@ -43,7 +43,7 @@ export type ExitSurvey = {
 export type ExitSurveyForm = {
   name: string;
   cmId: number;
-  location: string;
+  site: number;
   programDateCompletion: string;
   cchRating: string;
   cchLikeMost: string;

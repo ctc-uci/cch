@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 
 import {
   Box,
@@ -34,13 +34,41 @@ type ExitSurveyFormProps = {
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   setFormData: React.Dispatch<React.SetStateAction<ExitSurveyFormType>>;
   onReview: boolean;
+  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+type NavButtonsProps = {
+  onReview: boolean;
+  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const NavButtons: React.FC<NavButtonsProps> = ({ onReview, setOnReview }) => {
+  if (!onReview) {
+    return (
+      <Flex
+        justifyContent={"flex-end"}
+        width={"100%"}
+      >
+        <Button
+          type="submit"
+          size={"lg"}
+          colorScheme="blue"
+        >
+          Next
+        </Button>
+      </Flex>
+    );
+  } else {
+    return <div></div>;
+  }
 };
 
 export const ExitSurveyForm = ({
   formData,
-  setFormData,
   handleSubmit,
+  setFormData,
   onReview,
+  setOnReview,
 }: ExitSurveyFormProps) => {
   type CaseManager = {
     id: number;
@@ -157,18 +185,18 @@ export const ExitSurveyForm = ({
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>2. Where is your site?</FormLabel>
+              <FormLabel>3. What was your site?</FormLabel>
               <Select
-                name="location"
+                name="site"
                 placeholder="Select Location"
                 onChange={handleChange}
-                value={formData.location}
+                value={formData.site}
                 isDisabled={onReview}
               >
                 {locations.map((loc) => (
                   <option
                     key={loc.id}
-                    value={loc.id.toString()}
+                    value={loc.id}
                   >
                     {loc.name}
                   </option>
@@ -226,7 +254,9 @@ export const ExitSurveyForm = ({
           </Text>
 
           <FormControl isRequired>
-            <FormLabel>1. How helpful were the Life Skills Meetings?</FormLabel>
+            <FormLabel>
+              1. How would you rate Colette's Children's Home overall?
+            </FormLabel>
             <RadioGroup
               name="cchRating"
               value={formData.cchRating}
@@ -287,10 +317,12 @@ export const ExitSurveyForm = ({
               value={formData.lifeSkillsRating}
             >
               <HStack spacing={6}>
-                <Radio value="Unsatisfactory">Unsatisfactory</Radio>
-                <Radio value="Fair">Fair</Radio>
-                <Radio value="Good">Good</Radio>
-                <Radio value="Excellent">Excellent</Radio>
+                <Radio value="not very helpful at all">
+                  Not Very Helpful At All
+                </Radio>
+                <Radio value="not very helpful">Not Very Helpful</Radio>
+                <Radio value="helpful">Helpful</Radio>
+                <Radio value="very helpful">Very Helpful</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
@@ -338,10 +370,12 @@ export const ExitSurveyForm = ({
               value={formData.cmRating}
             >
               <HStack spacing={6}>
-                <Radio value="Unsatisfactory">Unsatisfactory</Radio>
-                <Radio value="Fair">Fair</Radio>
-                <Radio value="Good">Good</Radio>
-                <Radio value="Excellent">Excellent</Radio>
+                <Radio value="not very helpful at all">
+                  Not Very Helpful At All
+                </Radio>
+                <Radio value="not very helpful">Not Very Helpful</Radio>
+                <Radio value="helpful">Helpful</Radio>
+                <Radio value="very helpful">Very Helpful</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
@@ -420,20 +454,20 @@ export const ExitSurveyForm = ({
 
           <Spacer />
 
-          <Flex
-            justifyContent={"flex-end"}
-            width={"100%"}
-          >
-            <Button
-              type="submit"
-              size={"lg"}
-              colorScheme="blue"
-
-              // isDisabled={Object.keys(errors).length > 0}
+          {!onReview && (
+            <Flex
+              justifyContent="flex-end"
+              width="100%"
             >
-              Next
-            </Button>
-          </Flex>
+              <Button
+                type="submit"
+                size="lg"
+                colorScheme="blue"
+              >
+                Next
+              </Button>
+            </Flex>
+          )}
         </VStack>
       </form>
     </Box>

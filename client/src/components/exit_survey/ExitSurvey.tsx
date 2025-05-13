@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 import {
   Box,
@@ -36,7 +36,7 @@ import { ProgressSteps } from "./ProgressSteps.tsx";
 const initialFormData = {
   name: "",
   cmId: 0,
-  location: "",
+  site: 0,
   programDateCompletion: "",
   cchRating: "",
   cchLikeMost: "",
@@ -61,11 +61,15 @@ export const ExitSurvey = () => {
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (
+    event:
+      | React.FormEvent<HTMLFormElement>
+      | React.MouseEvent<HTMLButtonElement>
+  ) => {
     event.preventDefault();
     if (onReview) {
       try {
-        console.log(formData)
+        console.log(formData);
         await backend.post("/exitSurvey", formData);
         toast({
           title: "Form submitted",
@@ -86,16 +90,77 @@ export const ExitSurvey = () => {
   };
 
   return (
-    <Box 
-    bg={onReview ? "#E7F0F4" : "transparent"} 
-    p={4}>
-      <ProgressSteps onReview={onReview} />
-      <ExitSurveyForm
-        formData={formData}
-        handleSubmit={handleSubmit}
-        setFormData={setFormData}
-        onReview={onReview}
-      />
+    <Box
+      bg={onReview ? "#E7F0F4" : "transparent"}
+      p={4}
+      minH="100vh"
+    >
+      <Box
+        width="60%"
+        justifyContent={"center"}
+        mx="auto"
+      >
+        <ProgressSteps onReview={onReview} />
+        {onReview && (
+          <Text
+            fontSize="4xl"
+            color="blue.400"
+            pl={4}
+            mx="auto"
+            fontWeight="normal"
+          >
+            Review
+          </Text>
+        )}
+        <VStack
+          spacing={4}
+          align="stretch"
+        >
+          <Spacer />
+          <Box
+            maxH={onReview ? "100vh" : "auto"}
+            overflowY={onReview ? "auto" : "visible"}
+            bg={onReview ? "white" : "transparent"}
+            borderRadius={onReview ? "xl" : "none"}
+            boxShadow={onReview ? "sm" : "none"}
+            p={onReview ? 8 : 0}
+            mx={onReview ? "auto" : 0}
+            maxW={onReview ? "800px" : "auto"}
+          >
+            <ExitSurveyForm
+              formData={formData}
+              handleSubmit={handleSubmit}
+              setFormData={setFormData}
+              onReview={onReview}
+              setOnReview={setOnReview}
+            />
+          </Box>
+
+          {onReview && (
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              width="100%"
+            >
+              <Button
+                onClick={() => setOnReview(false)}
+                bg="#C4C4C4"
+                size="lg"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                size="lg"
+                colorScheme="blue"
+                onClick={handleSubmit}
+              >
+                Submit
+              </Button>
+            </Flex>
+          )}
+        </VStack>
+      </Box>
     </Box>
   );
 };
