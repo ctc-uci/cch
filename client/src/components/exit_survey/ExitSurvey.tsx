@@ -32,6 +32,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
 import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
 import { ProgressSteps } from "./ProgressSteps.tsx";
+import { SuccessScreen } from "./SuccessScreen.tsx";
 
 const initialFormData = {
   name: "",
@@ -58,6 +59,7 @@ export const ExitSurvey = () => {
   const [formData, setFormData] = useState<ExitSurveyFormType>(initialFormData);
   const { backend } = useBackendContext();
   const toast = useToast();
+  const [submitted, setSubmitted] = useState<boolean>(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -75,6 +77,7 @@ export const ExitSurvey = () => {
           description: `Thanks for your feedback!`,
           status: "success",
         });
+        setSubmitted(true);
       } catch (e) {
         console.error(e);
         toast({
@@ -87,6 +90,10 @@ export const ExitSurvey = () => {
       setOnReview(true);
     }
   };
+
+  if (submitted) {
+    return <SuccessScreen />;
+  }
 
   return (
     <Box
@@ -152,7 +159,10 @@ export const ExitSurvey = () => {
               <Button
                 size="lg"
                 colorScheme="blue"
-                onClick={handleSubmit}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }}
               >
                 Submit
               </Button>
