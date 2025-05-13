@@ -107,8 +107,8 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
 
   return (
     <>
-        <Box maxW="700px" marginX={"20%"}>
-            <Text justifySelf="center" fontSize={30} paddingBottom={"100px"}>
+        <Box maxW="100%" marginX={"20%"} justifyContent={"center"} >
+            <Text justifySelf="center" text-align="center" fontSize={30} paddingBottom={"50px"}>
                 <b>Front Desk Monthly Statistics Form</b>
             </Text>
             {generalFields.map(({ name, label }) => (
@@ -131,7 +131,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 />
                 </Box>
             ))}
-            <Text fontWeight={"bold"} p={2}>
+            <Text fontWeight={"bold"} p={2} paddingTop={"30px"} >
                 Huntington Beach (HB)
             </Text>
             {hbFields.map(({ name, label }) => (
@@ -154,7 +154,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 />
                 </Box>
             ))}
-            <Text fontWeight={"bold"} p={2}>
+            <Text fontWeight={"bold"} p={2}  paddingTop={"30px"}> 
                 Placentia
             </Text>
             {placentiaFields.map(({ name, label }) => (
