@@ -83,9 +83,10 @@ export const ManageAccounts = () => {
   const [add, setAdd] = useState<boolean>(true);
   const toast = useToast();
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);
-
+  const [editEmailDrawerOpened, setEditEmailDrawerOpened] = useState(false);
   const [clientModalOpened, setClientModalOpened] = useState(false)
   const [clientModalID, setClientModalID] = useState('')
+  const [email, setEmail] = useState("");
 
 
   const columns = useMemo<ColumnDef<Person>[]>(
@@ -134,7 +135,147 @@ export const ManageAccounts = () => {
     setEditDrawerOpened(true);
 
   };
-
+  
+  const emailDrawer = (data: Person, view: string) => {
+    const handleSubmitAdminEmailChange = async (e) => {
+      e.preventDefault(); 
+      try {
+        console.log(data.id);
+        await backend.put(`/caseManagers/${data.id}`, {
+          role: null,
+          firstName: null,
+          lastName: null,
+          phoneNumber: null,
+          email: email,
+        });
+        data.email= email;
+        setEditEmailDrawerOpened(false);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    switch (view) {
+      case "admin":
+        return (
+        <Slide
+          direction="right"
+          in={editEmailDrawerOpened}
+          style={{ position: "absolute", top: 0, right: 0, zIndex: 10}}
+        >
+          <Box
+            position="absolute"
+            width="100%"
+            height="100%"
+            bg="white"
+            boxShadow="md"
+            p={4}
+          >
+            <IconButton
+              aria-label="Back"
+              icon={<ChevronLeftIcon />}
+              color="black"
+              variant="ghost"
+              _hover={{
+                background: "transparent",
+                color: "inherit"
+              }}
+              width="24px"
+              height="24px"
+              flex-shrink="0"
+              onClick={() => {setEditEmailDrawerOpened(false); setEmail(data.email)}}
+            />
+            <VStack
+            align="flex-start" 
+            position="relative" 
+            margin="40px"
+            >
+              <VStack
+              borderRadius="12px"
+              border="1px solid"
+              borderColor="gray.200"
+              width="100%"
+              align="flex-start" 
+              padding="30px"
+              >
+                <Text>About</Text>
+                <HStack
+                width="100%"
+                >
+                  <Text
+                    margin="20px"
+                    mr="40px"
+                  >
+                    EMAIL
+                  </Text>
+                  <VStack
+                    width="100%"
+                    alignItems="flex-start"
+                  >
+                    <Text
+                    width="100%"
+                    textAlign="left"
+                    >
+                      Email
+                    </Text>
+                    <Input
+                    width="80%"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    ></Input>
+                  </VStack>
+                </HStack>
+              </VStack>
+                  
+            </VStack>
+            <Button onClick={handleSubmitAdminEmailChange}>Confirm Changes</Button>
+          </Box>
+        </Slide>
+        );
+      case "cms":
+        return (
+          <Slide
+          direction="right"
+          in={editEmailDrawerOpened}
+          style={{ position: "absolute", top: 0, right: 0, zIndex: 10}}
+        >
+          <Box
+            position="absolute"
+            width="100%"
+            height="100%"
+            bg="white"
+            boxShadow="md"
+            p={4}
+          >
+            <IconButton
+              aria-label="Back"
+              icon={<ChevronLeftIcon />}
+              color="black"
+              variant="ghost"
+              _hover={{
+                background: "transparent",
+                color: "inherit"
+              }}
+              width="24px"
+              height="24px"
+              flex-shrink="0"
+              onClick={() => setEditEmailDrawerOpened(false)}
+            />
+            <VStack
+            align="flex-start" 
+            margin="76px"
+            maxWidth="400px"  
+            >
+              <Text>
+                CASE MANAGER
+              </Text>
+                  
+            </VStack>
+            
+          </Box>
+        </Slide>
+        );
+    }
+  }
   const outputDrawerData = (data : Person, view : string) => {
     switch (view) {
       case "admin":
@@ -180,15 +321,30 @@ export const ManageAccounts = () => {
                 width="100%"
                 margin="16px"
                 >
-                <EditIcon/>
-                <Text   
-                  fontSize="12px"
-                  fontStyle="normal"
-                  fontWeight="600"
-                  lineHeight="16px">
-                  Edit Admin Email
-                </Text>
+                <Button
+                color="var(--blue-500, #3182CE)"
+                variant="ghost"
+                _hover={{
+                  background: "transparent",
+                  color: "inherit"
+                }}
+                onClick={() => {setEditEmailDrawerOpened(true); setEmail(data.email);}}
+                >
+                  <EditIcon/>
+                  <Text   
+                    fontSize="12px"
+                    fontStyle="normal"
+                    fontWeight="600"
+                    lineHeight="16px">
+                    Edit Admin Email
+                  </Text>
+                </Button>
+                
               </Flex>
+              <br></br>
+              <Text>Notes</Text>
+              <Textarea size="md"/>
+            <br></br>
           </>
         );
       case "cms":
@@ -235,14 +391,24 @@ export const ManageAccounts = () => {
                 width="100%"
                 margin="16px"
                 >
-                <EditIcon/>
-                <Text   
-                  fontSize="12px"
-                  fontStyle="normal"
-                  fontWeight="600"
-                  lineHeight="16px">
-                  Edit Case Manager Email
-                </Text>
+                <Button
+                color="var(--blue-500, #3182CE)"
+                variant="ghost"
+                _hover={{
+                  background: "transparent",
+                  color: "inherit"
+                }}
+                onClick={() => setEditEmailDrawerOpened(true)}
+                >
+                  <EditIcon/>
+                  <Text   
+                    fontSize="12px"
+                    fontStyle="normal"
+                    fontWeight="600"
+                    lineHeight="16px">
+                    Edit Case Manager Email
+                  </Text>
+                </Button>
               </Flex>
             <br></br>
             <Text>Notes</Text>
@@ -282,6 +448,7 @@ export const ManageAccounts = () => {
       try {
         if (view === "admin") {
           const response = await backend.get("/admin/admins");
+          console.log(response);
           setData(response.data);
         }
         else if (view === "cms"){
@@ -301,7 +468,7 @@ export const ManageAccounts = () => {
       }
     };
     fetchData();
-  }, [view, backend, open, selectedData]);
+  }, [view, backend, open, selectedData, editEmailDrawerOpened]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -348,9 +515,9 @@ export const ManageAccounts = () => {
           <HStack width = "100%" justifyContent="space-between" display="inline-flex" align-items="flex-start">
             <Tabs>
               <TabList>
-                <Tab onClick={() => { setView("admin"); setEditDrawerOpened(false);}}>Admins</Tab>
-                <Tab  onClick={() => { setView("cms"); setEditDrawerOpened(false);}}>Case Managers</Tab>
-                <Tab  onClick={() => { setView("clients"); setEditDrawerOpened(false);}}>Clients</Tab>
+                <Tab onClick={() => { setView("admin"); setEditDrawerOpened(false); setEditEmailDrawerOpened(false);}}>Admins</Tab>
+                <Tab  onClick={() => { setView("cms"); setEditDrawerOpened(false); setEditEmailDrawerOpened(false);}}>Case Managers</Tab>
+                <Tab  onClick={() => { setView("clients"); setEditDrawerOpened(false); setEditEmailDrawerOpened(false);}}>Clients</Tab>
               </TabList>
             </Tabs>
           </HStack>
@@ -411,7 +578,8 @@ export const ManageAccounts = () => {
             </VStack>
             
           </Box>
-        </Slide>
+          </Slide>
+          {emailDrawer(selectedData, view)}
         <Table>
           <Thead>
           {table.getHeaderGroups().map((headerGroup) => (
