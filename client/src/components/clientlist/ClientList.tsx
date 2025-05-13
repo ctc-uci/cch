@@ -29,7 +29,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
+import { MdFileUpload } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
 
 import { useNavigate } from "react-router-dom";
@@ -388,23 +388,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </Text>
           </Flex>
         {admin && <UpdateClients />}
-        {/* im ded bruh what is this vstack */}
-        <VStack></VStack> 
+       
         <Flex
           width="100%"
           justifyContent="flex-end"
         >
-          
-            {/* <Text fontSize="12px">
-              showing {clients.length} results on this page
-            </Text>
-            <HStack>
-              <Button></Button>
-              <Text fontSize="12px">
-                page {} of {Math.ceil(clients.length / 20)}
-              </Text>
-              <Button></Button>
-            </HStack> */}
+        
             <HStack>
               <Button
                 onClick={() => setDeleteModalOpen(true)}
@@ -412,12 +401,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
               >
                 Delete
               </Button>
-              {/* <Button fontSize="12px">add</Button> */}
+              
               <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert} />
             </HStack>
           
         </Flex>
-        {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
       </VStack>
       <Box
         width = {'100%'}
@@ -428,19 +416,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
       <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
         <HStack padding="5px">
           <ClientListFilter setFilterQuery={setFilterQuery} />
-          <HStack width="100%" justifyContent={"right"}>
-            {/* <Input
-              fontSize="12px"
-              width="20%"
-              height="30px"
-              placeholder="search"
-              onChange={(e) => setSearchKey(e.target.value)}
-            /> */}
+          <HStack width="100%" justifyContent={"right"} gap={"0"}>
             <Input maxWidth="20%" placeholder="search" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} display={showSearch ? 'block' : 'none'}></Input>
             <Box
               display="flex"
               alignItems="center"
-              paddingX="16px"
+              paddingX="8px"
               paddingY="8px"
               cursor="pointer"
               onClick={() => {setShowSearch(!showSearch); setSearchKey("")}}
@@ -452,13 +433,13 @@ export const ClientList = ({ admin }: ClientListProps) => {
             <Box
               display="flex"
               alignItems="center"
-              paddingX="16px"
+              paddingX="8px"
               paddingY="8px"
               cursor="pointer"
               onClick={() => onPressCSVButton()}
             >
               <Button background={"white"}>
-                <FiUpload size="16px" />
+                <MdFileUpload  size="16px" />
                 <Text ml="8px">Export</Text>
               </Button>
             </Box>
