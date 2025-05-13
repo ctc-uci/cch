@@ -137,7 +137,7 @@ export const ManageAccounts = () => {
   };
   
   const emailDrawer = (data: Person, view: string) => {
-    const handleSubmitAdminEmailChange = async (e) => {
+    const handleSubmitEmailChange = async (e) => {
       e.preventDefault(); 
       try {
         console.log(data.id);
@@ -154,8 +154,6 @@ export const ManageAccounts = () => {
         console.error(error);
       }
     };
-    switch (view) {
-      case "admin":
         return (
         <Slide
           direction="right"
@@ -227,54 +225,10 @@ export const ManageAccounts = () => {
               </VStack>
                   
             </VStack>
-            <Button onClick={handleSubmitAdminEmailChange}>Confirm Changes</Button>
+            <Button onClick={handleSubmitEmailChange}>Confirm Changes</Button>
           </Box>
         </Slide>
         );
-      case "cms":
-        return (
-          <Slide
-          direction="right"
-          in={editEmailDrawerOpened}
-          style={{ position: "absolute", top: 0, right: 0, zIndex: 10}}
-        >
-          <Box
-            position="absolute"
-            width="100%"
-            height="100%"
-            bg="white"
-            boxShadow="md"
-            p={4}
-          >
-            <IconButton
-              aria-label="Back"
-              icon={<ChevronLeftIcon />}
-              color="black"
-              variant="ghost"
-              _hover={{
-                background: "transparent",
-                color: "inherit"
-              }}
-              width="24px"
-              height="24px"
-              flex-shrink="0"
-              onClick={() => setEditEmailDrawerOpened(false)}
-            />
-            <VStack
-            align="flex-start" 
-            margin="76px"
-            maxWidth="400px"  
-            >
-              <Text>
-                CASE MANAGER
-              </Text>
-                  
-            </VStack>
-            
-          </Box>
-        </Slide>
-        );
-    }
   }
   const outputDrawerData = (data : Person, view : string) => {
     switch (view) {
@@ -351,7 +305,7 @@ export const ManageAccounts = () => {
 
         return (
           <>
-            <HStack 
+             <HStack 
                 spacing={8}
                 display="flex"
                 width="100%"
@@ -398,7 +352,7 @@ export const ManageAccounts = () => {
                   background: "transparent",
                   color: "inherit"
                 }}
-                onClick={() => setEditEmailDrawerOpened(true)}
+                onClick={() => {setEditEmailDrawerOpened(true); setEmail(data.email);}}
                 >
                   <EditIcon/>
                   <Text   
@@ -409,7 +363,11 @@ export const ManageAccounts = () => {
                     Edit Case Manager Email
                   </Text>
                 </Button>
+                
               </Flex>
+              <br></br>
+              <Text>Notes</Text>
+              <Textarea size="md"/>
             <br></br>
             <Text>Notes</Text>
             <Textarea size="md"/>
