@@ -13,12 +13,8 @@ import { User } from "../types/user";
 export const Navbar = () => {
   const { role } = useRoleContext();
   const { logout } = useAuthContext();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState('home')
-  const logoutNavigate = () => { 
-    navigate("/");
-    logout();
-  };
   const makeNavTabs = (pageName: string, path: string) => {
     return (
       <Link
@@ -71,7 +67,7 @@ export const Navbar = () => {
         </HStack>
         <HStack spacing={5}>
           {createTabs(role ?? "user")}
-          <Button onClick={logoutNavigate}>Sign Out</Button>
+          <Button onClick={logout}>Sign Out</Button>
         </HStack>
       </HStack>
     </Box>

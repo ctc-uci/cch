@@ -132,7 +132,7 @@ donationRouter.get("/valueSum", async (req, res) => {
 donationRouter.get("/weightSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(ROUND(CAST(weight * value AS DECIMAL), 2)) FROM donations`;
+    let query = `SELECT SUM(ROUND(CAST(weight AS DECIMAL), 2)) FROM donations`;
     if (donor || startDate || endDate) {
       query += " WHERE";
     }
