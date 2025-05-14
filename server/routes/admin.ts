@@ -9,7 +9,7 @@ export const adminRouter = Router();
 adminRouter.get("/admins", async (req, res) => {
   try {
     const data = await db.query(`
-      SELECT cm.first_name, cm.last_name, cm.email, cm.id, locs.name AS location FROM case_managers AS cm
+      SELECT cm.first_name, cm.last_name, cm.phone_number, cm.email, cm.id, cm.notes, locs.name AS location FROM case_managers AS cm
       LEFT JOIN locations AS locs ON cm.id = locs.cm_id
       WHERE cm.role = 'superadmin' OR cm.role = 'admin';
     `);
@@ -36,7 +36,7 @@ adminRouter.get("/clients", async (req, res) => {
 adminRouter.get("/caseManagers", async (req, res) => {
   try {
     const data = await db.query(`
-        SELECT cm.id, cm.first_name, cm.last_name, cm.email, locs.name AS location FROM case_managers AS cm
+        SELECT cm.id, cm.first_name, cm.last_name, cm.phone_number, cm.email, cm.notes, locs.name AS location FROM case_managers AS cm
         LEFT JOIN locations AS locs ON cm.id = locs.cm_id
         WHERE cm.role = 'case manager';`);
 
