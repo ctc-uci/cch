@@ -32,18 +32,28 @@ const UserSettingsPreview = ({
 
   return (
     <Box
-      maxW="600px"
-      minW="33%"
-      mx="auto"
-      p={5}
-      borderRadius="md"
-      boxShadow="md"
-      bg="#EBF8FF"
+      position="absolute"
+      top="200px"
+      left="54px"
+      width="396px"
+      height="756px"
+      borderRadius="12px"
+      pt="80px"
+      pr="32px"
+      pb="100px"
+      pl="32px"
+      gap="40px"
+      backgroundColor="#EBF8FF"
     >
       <Flex
         justify="center"
         align="center"
         height="30vh"
+        display="inline-flex"
+        flexDirection="column"
+        alignItems="center"
+        padding="80px 32px 100px 32px"
+        gap="40px"
       >
         <Circle
           size="200px"

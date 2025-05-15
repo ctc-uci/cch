@@ -22,15 +22,7 @@ export const ProtectedRoute = ({
 
   const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
   const isValidRole = getIsValidRole(roles, role);
-  
-  if (currentUser && isValidRole) {
-    console.log(role)
-    console.log('validated to ' + element)
-  } else {
-    console.log(role)
-    console.log(currentUser)
-    console.log('blocked to ' + element)
-  }
+
   if (!initialized && (loading || role === undefined)) { 
     return <Spinner/>;
   }

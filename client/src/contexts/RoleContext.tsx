@@ -21,6 +21,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRole] = useState<DbUserRole | undefined>();
   const [loading, setLoading] = useState(true);
 
+  // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       try {
