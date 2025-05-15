@@ -59,7 +59,8 @@ const App = () => {
     currentRoute === 'choose-login' ||
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
-    currentRoute === 'authentification'
+    currentRoute === 'authentification' ||
+    currentRoute === 'success-story'
   );
 
   return (
@@ -184,7 +185,8 @@ const App = () => {
                 />
                   <Route
                     path ="/personal"
-                    element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
+                    // element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
+                    element = {<PersonalInformation hidden={false}/>}
                   />
                   <Route
                     path ="/financial"
