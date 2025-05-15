@@ -148,7 +148,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           validUntil: validUntil,
         });
         const code = authData?.data[0]?.code;
-        console.log(authData?.data[0]?.code);
 
         // Send the code to the user via email
 
