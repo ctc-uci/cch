@@ -5,6 +5,7 @@ import {
   Input,
   Text,
   useToast,
+  Card,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -165,7 +166,8 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
 
   return (
     <>
-        <Box maxW="100%" marginX={"20%"} justifyContent={"center"} >
+    <Box backgroundColor={"gray.100"} width={"100vw"} zIndex={-1} top={0} left={0} pt={10} pb={10} >
+        <Card maxW="100%" marginX={"20%"} justifyContent={"center"} backgroundColor={"white"} padding={10}>
           
             <Text justifySelf="center" text-align="center" fontSize={30} paddingBottom={"50px"}>
                 <b>Front Desk Monthly Statistics Form</b>
@@ -304,8 +306,8 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 </Button>
             </Box>
             </form>
+        </Card>
         </Box>
-
 
     </>
   );
