@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { IoMdLock, IoMdClose } from "react-icons/io";
 import {
   Button,
   Center,
@@ -16,9 +17,16 @@ import {
   Text,
   HStack,
   Image,
-  IconButton,
   PinInput,
-  PinInputField
+  PinInputField,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalBody,
+  IconButton
 } from "@chakra-ui/react";
 import { MdOutlineArrowBackIos } from "react-icons/md";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -39,6 +47,7 @@ export const Authentification = () => {
   const navigate = useNavigate();
   const toast = useToast();
   const { userType } = useParams<{ userType: string }>();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
 
   const { handleRedirectResult, createCode, authenticate } = useAuthContext();
@@ -61,14 +70,7 @@ export const Authentification = () => {
         navigate("/admin-client-list");
       }
     } catch (error) {
-      toast({
-        title: "Authentication Failed",
-        description: "The entered PIN is incorrect. Please try again.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-
+      onOpen();
       setPin("");
     }
   };
@@ -161,6 +163,50 @@ export const Authentification = () => {
               </Button>
             </Stack>
           </form>
+          <Modal isOpen={isOpen} onClose={onClose} isCentered>
+            <ModalOverlay />
+            <ModalContent
+              borderRadius={'6px'}
+              boxShadow={'0px 10px 15px -3px rgba(0, 0, 0, 0.10), 0px 4px 6px -2px rgba(0, 0, 0, 0.05)'}
+              minWidth={'450px'}
+              minHeight={'200px'}
+            >
+              <ModalHeader display={'flex'} justifyContent={'space-between'}>
+                <Box display={'flex'} alignItems={'center'} gap="10px">
+                  <IoMdLock size={'27px'} style={{ marginBottom: "5px" }}/>
+                  <Text fontFamily={'Inter'} fontSize={'18px'} fontWeight={'700'}>Authorization Failed</Text>
+                </Box>
+                <IconButton 
+                  icon={<IoMdClose />} 
+                  aria-label="Close" 
+                  fontSize={'20px'} 
+                  variant={'ghost'}  
+                  height='auto' 
+                  minW='auto' 
+                  style={{ marginBottom: '12px' }}
+                  _hover={{ backgroundColor: "transparent" }}
+                  onClick={onClose}
+                />
+              </ModalHeader>
+              <ModalBody>
+                <Text
+                  fontFamily={'Inter'}
+                  fontSize={'16px'}
+                  fontStyle={'normal'}
+                  fontWeight={'400'}
+                  lineHeight={'24px'}
+                  color={'var(--gray-700, #2D3748)'}
+                >
+                  Authorization failed due to incorrect code or timeout error.
+                </Text>
+              </ModalBody>
+              <ModalFooter
+                display={'flex'}
+              >
+                <Button width={'100%'} backgroundColor={'#3182CE'} color={'white'} onClick={() => navigate(`/login/${userType}`)}>Return to login</Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
         </VStack>
       </Center>
     </Grid>
