@@ -240,7 +240,7 @@ export const FormTable = () => {
           })
         );
 
-        const exitSurveyForms: Form[] = await exitSurveyResponse.data.data.map(
+        const exitSurveyForms: Form[] = await exitSurveyResponse.data.data?.map(
           (form: Form) => ({
             id: form.id,
             hashedId: form.id,

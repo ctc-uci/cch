@@ -53,6 +53,7 @@ export const FrontDeskMonthlyTableBody =  ({
       </Tr>
       <Tr>
         <Td fontSize="medium">Total # of Unduplicated Calls</Td>
+
         <Td>
           <NumberInputComponent
             name="totalUnduplicatedCalls"

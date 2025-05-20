@@ -14,11 +14,11 @@ import { BrowserRouter as Router } from "react-router-dom";
 // const theme = extendTheme({ colors });
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <ChakraProvider theme={theme}>
       <Router>
         <App />
       </Router>
     </ChakraProvider>
-  </StrictMode>
+  // </StrictMode>
 );

@@ -193,7 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAuthCredential(null);
       setEmail(null);
       return userCredential;
-    }
+    } 
   };
 
   const logout = () => {
