@@ -70,6 +70,13 @@ export const Authentification = () => {
         navigate("/admin-client-list");
       }
     } catch (error) {
+      // toast({
+      //   title: "Authentication Failed",
+      //   description: "The entered PIN is incorrect. Please try again.",
+      //   status: "error",
+      //   duration: 5000,
+      //   isClosable: true,
+      // });
       onOpen();
       setPin("");
     }
