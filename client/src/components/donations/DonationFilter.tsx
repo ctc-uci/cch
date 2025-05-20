@@ -131,7 +131,7 @@ export function DonationFilter({
               value={newDonor}
               onChange={(e) => setNewDonor(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleAdd();
+                if (e.key === "Enter") handleAddDonor();
                 if (e.key === "Escape") onAddClose();
               }}
             />

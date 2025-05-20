@@ -15,7 +15,7 @@ emailRouter.post("/", (req, res) => {
     from: sendEmail,
     to: email,
     subject: "Create your account now!",
-    message: message
+    text: message
   }
 
   transporter.sendMail(mail, (err) => {

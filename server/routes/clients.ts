@@ -98,6 +98,18 @@ clientsRouter.get("/", async (req, res) => {
   }
 });
 
+clientsRouter.get("/email/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const clients = await db.query(`SELECT * FROM clients WHERE email = $1`, [
+      email,
+    ]);
+    res.status(200).json(keysToCamel(clients));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Creates new client based on key values provided into request body.
 clientsRouter.post("/", async (req, res) => {
   try {
@@ -140,7 +152,7 @@ clientsRouter.post("/", async (req, res) => {
       reunified,
       successful_completion,
       destination_city,
-      comments,
+      comments
     } = req.body;
 
     const data = await db.query(
@@ -183,9 +195,9 @@ clientsRouter.post("/", async (req, res) => {
           reunified,
           successful_completion,
           destination_city,
-          comments,
+          comments
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $27,
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
           $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
         )
         RETURNING id;
@@ -230,7 +242,7 @@ clientsRouter.post("/", async (req, res) => {
         reunified,
         successful_completion,
         destination_city,
-        comments,
+        comments
       ]
     );
 

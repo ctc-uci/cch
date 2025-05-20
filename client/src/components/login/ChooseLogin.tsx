@@ -6,7 +6,6 @@ export const ChooseLogin = () => {
 
     const handleUserSelection = (userType: string) => {
         navigate(`/login/${userType}`);
-        console.log("user type: ", userType);
     };
 
     return (
@@ -32,6 +31,15 @@ export const ChooseLogin = () => {
                         </Circle>
                         <Text mt={5} fontSize="200%" fontWeight="medium">
                             Case Manager
+                        </Text>
+                    </Flex>
+
+                    <Flex direction="column" align="center" cursor="pointer" onClick={() => handleUserSelection("Client")}>
+                        <Circle size="250px" bg="#63B3ED" color="black" fontSize="210%">
+                            CL
+                        </Circle>
+                        <Text mt={5} fontSize="200%" fontWeight="medium">
+                            Client
                         </Text>
                     </Flex>
                 </Flex>
