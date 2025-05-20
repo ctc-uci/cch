@@ -45,7 +45,7 @@ import UserSettings from "./components/userSettings/UserSettings";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
-import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
+import {AdminFormsHub} from "./components/adminClientForms/AdminFormsHub"
 import { Playground } from "./themes/play";
 
 const App = () => {

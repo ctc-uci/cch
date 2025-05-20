@@ -109,7 +109,7 @@ export const AdminFormsHub = () => {
             isFitted
             w="full"
           >
-
+            {/* maybe use some onClick to change some variable to the name of the current panel to do the last updated stuff */}
             <TabList whiteSpace="nowrap"> 
               <Tab>Initial Screeners</Tab>
               <Tab>Success Stories</Tab>
