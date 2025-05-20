@@ -68,6 +68,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
+  const navigate = useNavigate();
+
   const [clients, setClients] = useState<
     (Client & { isChecked: boolean; isHovered: boolean })[]
   >([]);
@@ -530,7 +532,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
           onClose={() => setDeleteModalOpen(false)}
           onConfirm={handleDelete}
         />
-      
     </VStack>
   );
 };

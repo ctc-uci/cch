@@ -74,10 +74,10 @@ export const Login = () => {
         email: data.email,
         password: data.password,
       });
-      if (userType === "Case Manager") navigate("/clientlist");
+      if (userType === "Case Manager") navigate("/authentification/Case Manager");
       else if (userType === "Admin") {
 
-        navigate("/admin-client-list");
+        navigate("/authentification/Admin");
       }
       else if (userType === "Client") navigate("/client-landing-page");
     } catch (err) {

@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useEffect, useState } from "react";
 
 import { CreateToastFnReturn, Spinner } from "@chakra-ui/react";
-import { Navigate } from "react-router-dom";
+
 import { AxiosInstance } from "axios";
 import {
   createUserWithEmailAndPassword,
@@ -15,7 +15,7 @@ import {
   User,
   UserCredential,
 } from "firebase/auth";
-import { NavigateFunction } from "react-router-dom";
+import { Navigate, NavigateFunction } from "react-router-dom";
 
 import { auth } from "../utils/auth/firebase";
 import { useBackendContext } from "./hooks/useBackendContext";
@@ -130,6 +130,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const authCredential = EmailAuthProvider.credential(email, password);
     setAuthCredential(authCredential);
     setEmail(email);
+
     return authCredential;
   };
 
@@ -176,22 +177,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const authenticate = async ({ code }: Authenticate) => {
     if (authCredential && email) {
-      const response = await backend.post(`/authentification/verify?email=${email}&code=${code}`);
+      const response = await backend.post(
+        `/authentification/verify?email=${email}&code=${code}`
+      );
       if (response.data.length == 0) {
         throw new Error("Invalid code. Try again.");
       }
 
       const userCredential = await signInWithCredential(auth, authCredential);
+
+      // we have to update the currnet user role BEFORE we sign in or else the app won't know what role we are currently
+      const userData = await backend.get(`/users/${userCredential.user.uid}`);
+      setCurrentUserRole(userData.data[0]?.role);
+
       setAuthCredential(null);
       setEmail(null);
       return userCredential;
-    }
+    } 
   };
 
   const logout = () => {
-    <Navigate to={"/landing-page"} />
+    <Navigate to={"/landing-page"} />;
     return signOut(auth);
-
   };
 
   const resetPassword = ({ email }: Pick<EmailPassword, "email">) => {

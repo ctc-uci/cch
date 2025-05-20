@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Box,
   Button,
   Input,
   Text,
+  useToast,
+  Card,
 } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-
+import {
+  SelectInputComponent,
+} from "./formComponents.tsx";
 interface FormFrontDeskProps {
   onFormSubmitSuccess: () => void;
 } 
@@ -15,8 +19,14 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
   const { backend } = useBackendContext();
   const [error, setError] = useState<string | null>(null);
+  const [month, setMonth] = useState<string>("");
+  const [year, setYear] = useState<string>("");
+  const [cms, setCms] = useState<
+  { id: string; firstName: string; lastName: string; role: string }[]
+>([]);
+
   const [formData, setFormData] = useState({
-    date: "",
+    case_manager: "",
     total_office_visits: "",
     total_calls: "",
     total_unduplicated_calls: "",
@@ -28,12 +38,13 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
     total_visits_placentia_pantry: "",
     total_served_placentia_neighborhood: "",
     total_served_placentia_pantry: "",
+    
   });
   const navigate = useNavigate();
-
-
+  const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
   const generalFields = [
-    { name: "date", label: "Date", subtitle: "" },
+
     { name: "total_office_visits", label: "Total Office Visits", subtitle: ""},
     { name: "total_calls", label: "Total # of Calls", subtitle: "(including children in custody)" },
     { name: "total_unduplicated_calls", label: "Total # of unduplicated calls", subtitle: "(including children in custody)" },
@@ -54,17 +65,39 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
   ]
   
 
-  const handleChange = (event) => {
+  const handleChange = (event: { target: { name: any; value: any; }; }) => {
     const name = event.target.name;
     const value = event.target.value;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
+    if (name === "month") {
+      setMonth(value);
+    } else if (name === "year"){
+      setYear(value);
+    }
+    else
+      setFormData((prevState) => ({ ...prevState, [name]: value }));
+  
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    for (const key in formData) {
+      if (formData[key] === "") {
+        toast({
+          title: "Missing Information",
+          description: "Please fill out all required fields before submitting.",
+          status: "warning",
+          duration: 9000,
+          isClosable: true,
+        });
+        return;
+      }
+    }
+
     try {
       const monthlyStatData = {
-          date: formData.date,
+          date: `${year}-${('0' + month).slice(-2)}-01`,
+          case_manager: formData.case_manager,
           total_office_visits: parseInt(formData.total_office_visits || "0", 10),
           total_calls: parseInt(formData.total_calls || "0", 10),
           //This one isn't in the figma but its in the schema, idk what its supposed to be, just placeholder for now
@@ -80,10 +113,17 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
           total_served_placentia_pantry: parseInt(formData.total_served_placentia_pantry || "0", 10),
           
       };
-
+    
       await backend.post("/frontDesk", monthlyStatData);
+      toast({
+        title: "Successfully submitted form",
+        description: `Intake Statistics Form - ${new Date().toLocaleString()}`,
+        status: "success",
+        duration: 9000,
+        isClosable: true,
+      });
       setFormData({
-        date: "",
+        case_manager: "",
         total_office_visits: "",
         total_calls: "",
         total_unduplicated_calls: "",
@@ -102,15 +142,95 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
     } catch (error) {
       console.error("Error submitting form:", error);
       setError("Failed to submit form. Please try again.");
+      toast({
+        title: "Submission failed",
+        description: error.message || "An unexpected error occurred.",
+        status: "error",
+        duration: 9000,
+        isClosable: true,
+      });
     }
   };
 
+  useEffect(() => {
+    const fetchCaseManagers = async () => {
+      try {
+        const response = await backend.get("/casemanagers");
+        setCms(response.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchCaseManagers();
+  }, [backend]);
+
   return (
     <>
-        <Box maxW="700px" marginX={"20%"}>
-            <Text justifySelf="center" fontSize={30} paddingBottom={"100px"}>
+    <Box backgroundColor={"gray.100"} width={"100vw"} zIndex={-1} top={0} left={0} pt={10} pb={10} >
+        <Card maxW="100%" marginX={"20%"} justifyContent={"center"} backgroundColor={"white"} padding={10}>
+          
+            <Text justifySelf="center" text-align="center" fontSize={30} paddingBottom={"50px"}>
                 <b>Front Desk Monthly Statistics Form</b>
             </Text>
+            <form
+                  ref={formRef}
+                  onSubmit={handleSubmit}
+            >
+            <Box key="date" display="flex"  flexDirection="row"  gap="20px"  p={2}>
+              <Box key="month" display="flex"  flexDirection="column"  gap="20px"  p={2}>
+                <Text width="100%">Month</Text>
+                <Input
+                        type = "number"
+                        width='100%'
+                        height="30px"
+                        name="month"
+                        value={month}
+                        onChange={handleChange}
+                        placeholder="Type Here"
+                        maxLength={2}
+                    />
+              </Box>
+              <Box key="year" display="flex"  flexDirection="column"  gap="20px"  p={2}>
+                <Text width="100%">Year</Text>
+                <Input
+                      type = "number"
+                      width='100%'
+                      height="30px"
+                      name="year"
+                      value={year}
+                      onChange={handleChange}
+                      placeholder="Type Here"
+                      maxLength={4}
+                  />
+              </Box>
+           
+                
+              <SelectInputComponent
+                label="Case Manager"
+                name="caseManager"
+                value={formData.case_manager || ""}
+                onChange={(e) => {
+                  const selectedCaseManager = cms.find(
+                    (user) => `${user.firstName} ${user.lastName}` === e.target.value
+                  );
+                  setFormData((prev) => ({
+                    ...prev,
+                    case_manager: e.target.value, // Set the case manager's name
+                    cmId: selectedCaseManager?.id || null, // Set the case manager's ID
+                  }));
+                }}
+                options={cms
+                  .filter((user) => user.role === "case manager")
+                  .map((user) => ({
+                    key: user.id,
+                    label: `${user.firstName} ${user.lastName}`,
+                    value: `${user.firstName} ${user.lastName}`,
+                  }))}
+                placeholder="Select Case Manager"
+                width="70%"
+              />
+            </Box>
+
             {generalFields.map(({ name, label }) => (
                 <Box 
                 key={name}
@@ -121,7 +241,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 >
                 <Text width="50%">{label}</Text>
                 <Input
-                    type = {name === "date" ? "date" : "number"}
+                    type = "number"
                     width='50%'
                     height="30px"
                     name={name}
@@ -131,7 +251,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 />
                 </Box>
             ))}
-            <Text fontWeight={"bold"} p={2}>
+            <Text fontWeight={"bold"} p={2} paddingTop={"30px"} >
                 Huntington Beach (HB)
             </Text>
             {hbFields.map(({ name, label }) => (
@@ -154,7 +274,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 />
                 </Box>
             ))}
-            <Text fontWeight={"bold"} p={2}>
+            <Text fontWeight={"bold"} p={2}  paddingTop={"30px"}> 
                 Placentia
             </Text>
             {placentiaFields.map(({ name, label }) => (
@@ -181,12 +301,13 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
                 <Button colorScheme="gray" mr={3} onClick={() => navigate("/forms-hub")}>
                     Cancel
                 </Button>
-                <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+                <Button colorScheme="blue" mr={3} type="submit">
                     Submit
                 </Button>
             </Box>
+            </form>
+        </Card>
         </Box>
-
 
     </>
   );

@@ -6,11 +6,8 @@ import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 dotenv.config();
-// export const emailRouter = Router();
-
 export const authentificationRouter = Router();
 
-// Check if inputted code and email combo exist in our DB
 authentificationRouter.post("/verify", async (req, res) => {
   try {
     const { email, code } = req.query;
@@ -27,7 +24,6 @@ authentificationRouter.post("/verify", async (req, res) => {
   }
 });
 
-// Delete auth code by email
 authentificationRouter.delete("/email", async (req, res) => {
   try {
     const { email } = req.query;
@@ -44,7 +40,6 @@ authentificationRouter.delete("/email", async (req, res) => {
   }
 });
 
-// Insert new auth pin
 authentificationRouter.post("/", async (req, res) => {
   try {
     const { email, validUntil } = req.body;
