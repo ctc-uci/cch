@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Link as ChakraLink,
+  Checkbox,
   Divider,
   Flex,
   FormControl,
@@ -32,7 +33,6 @@ export const SuccessStoryForm = ({
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onReview: boolean;
 }) => {
-  const [ClientStatus, setStatus] = useState("");
   const [locations, setLocations] = useState([]);
   const [caseManagers, setCaseManagers] = useState([]);
 
@@ -100,7 +100,7 @@ export const SuccessStoryForm = ({
           >
             <FormControl isRequired>
               <FormLabel>1. What is your first name?</FormLabel>
-              <Input name="name" />
+              <Input name="name" isDisabled={onReview} />
             </FormControl>
 
             <FormControl isRequired>
@@ -108,6 +108,7 @@ export const SuccessStoryForm = ({
               <Select
                 name="site"
                 placeholder="Select your site"
+                isDisabled={onReview}
               >
                 {locations.map((location: Location) => (
                   <option
@@ -132,6 +133,7 @@ export const SuccessStoryForm = ({
                 name="cm_id"
                 placeholder="Select your case manager"
                 maxW="530px"
+                isDisabled={onReview}
               >
                 {caseManagers.map((manager: CaseManager) => (
                   <option
@@ -150,6 +152,7 @@ export const SuccessStoryForm = ({
                 name="entrance_date"
                 type="date"
                 placeholder="Date"
+                isDisabled={onReview}
               />
             </FormControl>
           </Stack>
@@ -165,6 +168,7 @@ export const SuccessStoryForm = ({
                 name="exit_date"
                 type="date"
                 placeholder="Date"
+                isDisabled={onReview}
               />
             </FormControl>
 
@@ -174,6 +178,7 @@ export const SuccessStoryForm = ({
                 name="date"
                 type="date"
                 placeholder="Date"
+                isDisabled={onReview}
               />
             </FormControl>
           </Stack>
@@ -190,15 +195,16 @@ export const SuccessStoryForm = ({
 
           <FormControl isRequired>
             <FormLabel>
-              1. Please tell us your situation before entering Colette’s
-              Children’s Home. Please give as many details as you are
+              1. Please tell us your situation before entering Colette's
+              Children's Home. Please give as many details as you are
               comfortable with about your story, how long you were homeless,
               what led to homelessness, etc. We want to help people understand
-              what being homeless is like. 
+              what being homeless is like.
             </FormLabel>
             <Textarea
               name="previous_situation"
               placeholder="Enter your response..."
+              isDisabled={onReview}
             />
           </FormControl>
 
@@ -211,6 +217,7 @@ export const SuccessStoryForm = ({
             <Textarea
               name="cch_impact"
               placeholder="Enter your response..."
+              isDisabled={onReview}
             />
           </FormControl>
 
@@ -223,6 +230,7 @@ export const SuccessStoryForm = ({
             <Textarea
               name="where_now"
               placeholder="Enter your response..."
+              isDisabled={onReview}
             />
           </FormControl>
 
@@ -235,6 +243,7 @@ export const SuccessStoryForm = ({
             <Textarea
               name="tell_donors"
               placeholder="Enter your response..."
+              isDisabled={onReview}
             />
           </FormControl>
 
@@ -246,7 +255,26 @@ export const SuccessStoryForm = ({
             <Textarea
               name="quote"
               placeholder="Enter your response..."
+              isDisabled={onReview}
             />
+          </FormControl>
+
+          <FormControl>
+            <HStack
+              spacing={2}
+              alignItems="center"
+            >
+              <Checkbox 
+                name="consent"
+                mt={1}
+                isDisabled={onReview}
+              />
+              <FormLabel>
+                By checking the box, I consent to letting Colette's Children's
+                Home use all or part of my story in their marketing materials,
+                such as website, newsletter, brochures, videos, etc.
+              </FormLabel>
+            </HStack>
           </FormControl>
 
           {!onReview && (
@@ -266,7 +294,7 @@ export const SuccessStoryForm = ({
         </VStack>
       </form>
     </Box>
-    
+
     // <VStack
     //   spacing={8}
     //   sx={{ width: "90%", marginX: "5%", marginY: 100 }}
