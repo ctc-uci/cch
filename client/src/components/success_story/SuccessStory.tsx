@@ -43,6 +43,7 @@ export type Location = {
 export const SuccessStory = () => {
   const { backend } = useBackendContext();
   const toast = useToast();
+  const [onReview, setOnReview] = useState<boolean>(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

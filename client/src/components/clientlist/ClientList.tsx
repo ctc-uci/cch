@@ -81,7 +81,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
