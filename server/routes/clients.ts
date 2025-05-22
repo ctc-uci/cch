@@ -89,7 +89,6 @@ clientsRouter.get("/", async (req, res) => {
     if (page) {
       queryStr += ` LIMIT ${page}`;
     }
-
     const clients = await db.query(queryStr);
     res.status(200).json(keysToCamel(clients));
   } catch (err) {
