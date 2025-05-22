@@ -45,7 +45,7 @@ export type Location = {
 };
 
 
-export const SuccessStory = () => {
+export const SuccessStory = ({spanish} : {spanish: boolean}) => {
   const { backend } = useBackendContext();
   const toast = useToast();
   const [onReview, setOnReview] = useState<boolean>(false);
