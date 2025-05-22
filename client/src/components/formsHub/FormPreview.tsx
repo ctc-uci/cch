@@ -60,6 +60,8 @@ const FormPreview = ({
     date: formItemDate,
   } = clickedFormItem;
 
+  console.log(`preview ${clickedFormItem}`)
+
   const toast = useToast();
 
   const [formData, setFormData] = useState({});
@@ -134,7 +136,8 @@ const FormPreview = ({
 
     const getData = async () => {
       let endpoint = "";
-
+      console.log(formItemId)
+      console.log(formItemTitle)
       switch (formItemTitle) {
         case "Initial Screeners":
           endpoint = `/initialInterview/get-interview/${formItemId}`;

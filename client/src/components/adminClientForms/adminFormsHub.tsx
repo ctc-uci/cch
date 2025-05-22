@@ -1,4 +1,4 @@
-import { Heading, VStack } from "@chakra-ui/react";
+import { Heading, VStack, useDisclosure } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
@@ -26,11 +26,15 @@ import { SuccessStoryTable } from "./FormTables/SuccessStoryTable.tsx";
 import { ExitSurveyTable } from "./FormTables/ExitSurveyTable.tsx";
 import { RandomClientTable } from "./FormTables/RandomClientTable.tsx";
 import { AllFormTable } from "./FormTables/AllFormTable.tsx";
+import FormPreview from "../formsHub/FormPreview.tsx";
 
 
 export const AdminFormsHub = () => {
     const { backend } = useBackendContext();
     const [lastUpdated, setLastUpdated] = useState<string>("");
+    const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [refreshTable, setRefreshTable] = useState(false);
   
 
 
@@ -77,6 +81,12 @@ export const AdminFormsHub = () => {
   
     fetchData();
   }, [backend]);
+  
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
 
   return (
     <VStack
@@ -135,6 +145,18 @@ export const AdminFormsHub = () => {
               </TabPanel>
             </TabPanels>
           </Tabs>
+          {clickedFormItem && (
+            <FormPreview
+              clickedFormItem={clickedFormItem}
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setClickedFormItem(null);
+              }}
+              refreshTable={refreshTable}
+              setRefreshTable={setRefreshTable}
+            />
+          )}
         </Box>
       </Box>
     </VStack>
