@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Collapse,
+  VStack,
   Table,
   TableContainer,
   Tbody,
@@ -11,19 +12,32 @@ import {
   Th,
   Thead,
   Tr,
+  Text,
   useDisclosure,
+  HStack,
+  Checkbox,
 } from "@chakra-ui/react";
 
 import { FaAngleDown, FaAngleUp } from "react-icons/fa";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
+
+interface IdMap {
+  [key: number]: boolean;
+}
 
 export const UpdateClients = () => {
   const { backend } = useBackendContext();
   const [updateRequests, setUpdateRequests] = useState<any[]>([]);
   const { currentUser } = useAuthContext();
   const { isOpen, onToggle } = useDisclosure();
+  const [ allIds, setAllIds ] = useState<number[]>([]);
+  const [ selectedIds, setSelectedIds ] = useState<IdMap>({});
+  const [ allSelected, setAllSelected] = useState<boolean>(false);
+  const [refresh, setRefresh] = useState<boolean>(false);
+  const [disabled, setDisabled] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,33 +48,81 @@ export const UpdateClients = () => {
       }
     };
     fetchData();
-  }, [backend]);
+  }, [backend, refresh]);
 
   const fillTable = async () => {
     const requests = await backend.get("/request/activeRequests");
-    setUpdateRequests(requests.data);
+    setUpdateRequests(requests.data.requests);
+    setAllIds(requests.data.ids.map((id: any) => id.id));
+    setSelectedIds(requests.data.ids.reduce((acc: IdMap, id: number) => { acc[id] = false; return acc; }, {}))
   };
 
-  const handleClick = async (status, request_id) => {
-    try {
-      const res = await backend.put(`/request/${request_id}`, {
-        status,
-        admin: { uid: currentUser.uid },
+  const handleComplete = async () => {
+    try{
+      setDisabled(true);
+      const selectedIdsArray = Object.keys(selectedIds).filter((id) => selectedIds[Number(id)]);
+      if (selectedIdsArray.length === 0) {
+        return;
+      }
+      // console.log("Selected IDs:", selectedIdsArray);
+      await backend.put("/request", {
+        ids: selectedIdsArray,
+        status: "approved",
+        admin: currentUser,
       });
-      fillTable();
-    } catch (e) {
-      console.log(e);
+      setAllSelected(false);
+      setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = false; return acc; }, {}))
+      setRefresh((prev) => !prev);
+    }catch(err){
     }
   };
 
+  const handleSelectAll = () => {
+    if(Object.values(selectedIds).every((value) => value === true)) {
+      setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = false; return acc; }, {}))
+      setAllSelected(false)
+    } else {
+      setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = true; return acc; }, {}))
+      setAllSelected(true)
+    }
+    
+  }
+
+  const handleCheckbox = (id: number) => {
+    const newSelectedIds = { ...selectedIds, [id]: !selectedIds[id] };
+    setSelectedIds(newSelectedIds);
+    if (allSelected) {
+      setAllSelected(false);
+    } else {
+      const allTrue = Object.values(newSelectedIds).every((value) => value === true);
+      setAllSelected(allTrue);
+    }
+    const allFalse = Object.values(newSelectedIds).every((value) => value === false);
+    if (allFalse) {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }
+
   return (
-    <>
-      <Button
-        rightIcon={isOpen ? <FaAngleUp /> : <FaAngleDown />}
-        onClick={onToggle}
-      >
-        Edit Requests
-      </Button>
+    <VStack alignItems={'start'} width={'100%'}>
+      <HStack width={'100%'} justifyContent={'space-between'}>
+        <Button
+          rightIcon={isOpen ? <FaAngleUp /> : <FaAngleDown />}
+          onClick={onToggle}
+          variant={'ghost'}
+          _hover={'ghost'}
+          _active={'ghost'}
+          size={'lg'}
+        >
+          Edit Requests
+        </Button>
+        {isOpen &&
+          <Button size={'lg'} onClick={handleComplete} isDisabled={disabled}>Complete</Button>
+        }
+      </HStack>
+      
       <Box width="full">
         <Collapse
           in={isOpen}
@@ -84,19 +146,23 @@ export const UpdateClients = () => {
                 background={"white"}
               >
                 <Tr>
-                  <Th>Id</Th>
+                  <Th><Checkbox onChange={handleSelectAll} isChecked={allSelected}></Checkbox></Th>
                   <Th>Time and Date Submitted</Th>
                   <Th>Case Manager</Th>
                   <Th>Name</Th>
                   <Th>Request to Edit</Th>
-                  <Th>Action</Th>
                 </Tr>
               </Thead>
               <Tbody>
                 {updateRequests
-                  ? updateRequests.map((approvals) => (
+                  ? updateRequests.map((approvals, index) => (
                       <Tr key={approvals.id}>
-                        <Td>{approvals.id}</Td>
+                        <Td><HoverCheckbox
+                          id={approvals.id}
+                          isSelected={selectedIds[approvals.id] || false}
+                          onSelectionChange={handleCheckbox}
+                          index={index}
+                        /></Td>
                         <Td>
                           {new Date(approvals.created_at).toLocaleString(
                             "en-GB",
@@ -110,22 +176,6 @@ export const UpdateClients = () => {
                           {approvals.first_name} {approvals.last_name}
                         </Td>
                         <Td>{approvals.comments}</Td>
-                        <Td>
-                          <Button
-                            onClick={() =>
-                              handleClick("approved", approvals.id)
-                            }
-                          >
-                            Approve
-                          </Button>
-                          <Button
-                            onClick={() =>
-                              handleClick("rejected", approvals.id)
-                            }
-                          >
-                            Deny
-                          </Button>
-                        </Td>
                       </Tr>
                     ))
                   : null}
@@ -134,6 +184,6 @@ export const UpdateClients = () => {
           </TableContainer>
         </Collapse>
       </Box>
-    </>
+    </VStack>
   );
 };
