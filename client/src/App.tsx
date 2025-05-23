@@ -60,7 +60,8 @@ const App = () => {
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
     currentRoute === 'authentification' ||
-    currentRoute === 'success-story'
+    currentRoute === 'success-story' ||
+    currentRoute === 'random-client-survey'
   );
 
   return (
