@@ -321,6 +321,10 @@ export const Donations = () => {
 
   const onPressCSVButton = () => {
       let headers, data;
+      const selectedDonations = allDonations.filter((donation) => selectedRowIds.includes(donation.id));
+
+      const donationsToExport = selectedRowIds.length > 0 ? selectedDonations : allDonations;
+
       if (freq !== "yearly" && freq !== "monthly") {
         headers = [
           "ID",
@@ -332,7 +336,7 @@ export const Donations = () => {
           "Total"
         ];
 
-        data = allDonations.map((donation) => ({
+        data = donationsToExport.map((donation) => ({
           "ID": donation.id,
           "Date": donation.date,
           "Donor": donation.donor,
@@ -350,7 +354,7 @@ export const Donations = () => {
           "Total Weight (lb)",
           "Total Value ($)"
         ];
-        data = allDonations.map((donation) => ({
+        data = donationsToExport.map((donation) => ({
           "Date": donation.monthYear,
           "Donor": donation.donor,
           "Category": donation.category,
@@ -358,15 +362,20 @@ export const Donations = () => {
           "Total Value ($)": donation.totalValue,
         }));
       }
-      const now = new Date();
-      const date = now.toLocaleDateString();
-      const time = now.toLocaleTimeString();
-      const success = "Donation Data " + date + " " + time;
 
-      downloadCSV(headers, data, `clients.csv`);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString().replace(/\//g, '-');
+      const timeStr = now.toLocaleTimeString().replace(/:/g, '-');
+      
+      // Create descriptive filename
+      const freqStr = freq ? `_${freq}` : '';
+      const donorStr = donor ? `_${donor}` : '';
+      const filename = `donations${freqStr}${donorStr}_${dateStr}_${timeStr}.csv`;
+
+      downloadCSV(headers, data, filename);
       toast({
         title: 'Successfully Exported',
-        description: success,
+        description: `Donation data exported to ${filename}`,
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -416,11 +425,18 @@ export const Donations = () => {
           backend.get(`/lastUpdated/donations`),
           backend.get(`/donations/donors`)
         ]);
+
+        if (!donationsResponse.data[0].id) {
+          donationsResponse.data = donationsResponse.data.map((donation: any, index: number) => ({
+            ...donation,
+            id: index + 1
+          }));
+        }
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
         setDonors(donorResponse.data.map((donor: { name: string }) => donor.name));
-
+      
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
 
