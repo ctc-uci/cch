@@ -18,6 +18,7 @@ import {
   Thead,
   Tr,
   VStack,
+  useDisclosure
 } from "@chakra-ui/react";
 
 import {
@@ -40,6 +41,8 @@ import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
+
 
 export const InitialScreenerTable = () => {
   // still gotta do this -- but I'll do it later
@@ -57,7 +60,9 @@ export const InitialScreenerTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [refreshTable, setRefreshTable] = useState(false);
  
 
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
@@ -491,6 +496,12 @@ export const InitialScreenerTable = () => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
+
   return (
     <VStack
       align="start"
@@ -601,6 +612,11 @@ export const InitialScreenerTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
+                            console.log(`cliocked ${cell.id}`);
+                            (row.original as { [key: string]: any }).title = "Initial Screeners";
+                            setClickedFormItem(row.original);
+                            console.log(row.original)
+                            onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -629,6 +645,18 @@ export const InitialScreenerTable = () => {
             </Table>
           </TableContainer>
         )}
+                          {clickedFormItem && (
+            <FormPreview
+              clickedFormItem={clickedFormItem}
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setClickedFormItem(null);
+              }}
+              refreshTable={refreshTable}
+              setRefreshTable={setRefreshTable}
+            />
+          )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}

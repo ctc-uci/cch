@@ -17,6 +17,7 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
   VStack,
 } from "@chakra-ui/react";
 
@@ -37,14 +38,26 @@ import type { SuccessStory } from "../../../types/successStory.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
 
 export const SuccessStoryTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["cchImpact","cmFirstName","cmLastName","entranceDate","exitDate","id","location","previousSituation","quote","tellDonors","whereNow"
-];
+  const headers = [
+    "cchImpact",
+    "cmFirstName",
+    "cmLastName",
+    "entranceDate",
+    "exitDate",
+    "id",
+    "location",
+    "previousSituation",
+    "quote",
+    "tellDonors",
+    "whereNow",
+  ];
 
   const [successData, setSuccessData] = useState<
     (SuccessStory & { isChecked: boolean; isHovered: boolean })[]
@@ -57,6 +70,9 @@ export const SuccessStoryTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [refreshTable, setRefreshTable] = useState(false);
 
   const columns = useMemo<ColumnDef<SuccessStory>[]>(
     () => [
@@ -153,17 +169,17 @@ export const SuccessStoryTable = () => {
     );
     console.log(selectedTableData);
     const data = selectedTableData.map((row) => ({
-      "cchImpact": row.cchImpact,
-"cmFirstName": row.cmFirstName,
-"cmLastName": row.cmLastName,
-"entranceDate": row.entranceDate,
-"exitDate": row.exitDate,
-"id": row.id,
-"location": row.location,
-"previousSituation": row.previousSituation,
-"quote": row.quote,
-"tellDonors": row.tellDonors,
-"whereNow": row.whereNow,
+      cchImpact: row.cchImpact,
+      cmFirstName: row.cmFirstName,
+      cmLastName: row.cmLastName,
+      entranceDate: row.entranceDate,
+      exitDate: row.exitDate,
+      id: row.id,
+      location: row.location,
+      previousSituation: row.previousSituation,
+      quote: row.quote,
+      tellDonors: row.tellDonors,
+      whereNow: row.whereNow,
     }));
 
     downloadCSV(headers, data, `success-stories.csv`);
@@ -235,6 +251,12 @@ export const SuccessStoryTable = () => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
+
   return (
     <VStack
       align="start"
@@ -251,7 +273,10 @@ export const SuccessStoryTable = () => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"successStory"} />
+        <FilterTemplate
+          setFilterQuery={setFilterQuery}
+          type={"successStory"}
+        />
         <HStack
           width="55%"
           justifyContent="space-between"
@@ -345,6 +370,12 @@ export const SuccessStoryTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
+                          console.log(`cliocked ${cell.id}`);
+                          (row.original as { [key: string]: any }).title =
+                            "Success Stories";
+                          setClickedFormItem(row.original);
+                          console.log(row.original);
+                          onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -372,6 +403,18 @@ export const SuccessStoryTable = () => {
               </Tbody>
             </Table>
           </TableContainer>
+        )}
+        {clickedFormItem && (
+          <FormPreview
+            clickedFormItem={clickedFormItem}
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setClickedFormItem(null);
+            }}
+            refreshTable={refreshTable}
+            setRefreshTable={setRefreshTable}
+          />
         )}
       </Box>
       <DeleteRowModal
