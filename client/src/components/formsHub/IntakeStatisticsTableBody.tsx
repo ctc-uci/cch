@@ -50,7 +50,6 @@ const clientGrantOptions = [
 ];
 
 
-
 export const IntakeStatisticsTableBody =  ({
   formData,
   handleChange,
@@ -73,7 +72,7 @@ export const IntakeStatisticsTableBody =  ({
         </Td>
       </Tr>
       <Tr>
-        <Td fontSize="medium">Montadadadh</Td>
+        <Td fontSize="medium">Month</Td>
         <Td>
           <TextInputComponent
             name="month"
