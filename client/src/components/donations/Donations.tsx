@@ -425,11 +425,18 @@ export const Donations = () => {
           backend.get(`/lastUpdated/donations`),
           backend.get(`/donations/donors`)
         ]);
+
+        if (!donationsResponse.data[0].id) {
+          donationsResponse.data = donationsResponse.data.map((donation: any, index: number) => ({
+            ...donation,
+            id: index + 1
+          }));
+        }
         setValueSum(valuesResponse.data[0]?.sum || 0);
         setWeightSum(weightResponse.data[0]?.sum || 0);
         setAllDonations(donationsResponse.data);
         setDonors(donorResponse.data.map((donor: { name: string }) => donor.name));
-
+      
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
 
