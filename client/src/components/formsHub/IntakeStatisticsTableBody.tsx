@@ -49,6 +49,8 @@ const clientGrantOptions = [
   { label: "Non-Funded", value: "Non-Funded" },
 ];
 
+
+
 export const IntakeStatisticsTableBody =  ({
   formData,
   handleChange,
@@ -71,7 +73,7 @@ export const IntakeStatisticsTableBody =  ({
         </Td>
       </Tr>
       <Tr>
-        <Td fontSize="medium">Month</Td>
+        <Td fontSize="medium">Montadadadh</Td>
         <Td>
           <TextInputComponent
             name="month"
