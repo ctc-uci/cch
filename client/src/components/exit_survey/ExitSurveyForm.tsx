@@ -34,41 +34,14 @@ type ExitSurveyFormProps = {
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   setFormData: React.Dispatch<React.SetStateAction<ExitSurveyFormType>>;
   onReview: boolean;
-  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-type NavButtonsProps = {
-  onReview: boolean;
-  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const NavButtons: React.FC<NavButtonsProps> = ({ onReview, setOnReview }) => {
-  if (!onReview) {
-    return (
-      <Flex
-        justifyContent={"flex-end"}
-        width={"100%"}
-      >
-        <Button
-          type="submit"
-          size={"lg"}
-          colorScheme="blue"
-        >
-          Next
-        </Button>
-      </Flex>
-    );
-  } else {
-    return <div></div>;
-  }
-};
 
 export const ExitSurveyForm = ({
   formData,
   handleSubmit,
   setFormData,
-  onReview,
-  setOnReview,
+  onReview
 }: ExitSurveyFormProps) => {
   type CaseManager = {
     id: number;

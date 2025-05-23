@@ -13,10 +13,11 @@ import {
 } from "./formComponents.tsx";
 interface FormFrontDeskProps {
   onFormSubmitSuccess: () => void;
+  spanish: boolean
 } 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
+function FormFrontDesk({ onFormSubmitSuccess, spanish }: FormFrontDeskProps) {
   const { backend } = useBackendContext();
   const [error, setError] = useState<string | null>(null);
   const [month, setMonth] = useState<string>("");
@@ -43,26 +44,53 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement>(null);
   const toast = useToast();
-  const generalFields = [
 
-    { name: "total_office_visits", label: "Total Office Visits", subtitle: ""},
-    { name: "total_calls", label: "Total # of Calls", subtitle: "(including children in custody)" },
-    { name: "total_unduplicated_calls", label: "Total # of unduplicated calls", subtitle: "(including children in custody)" },
-  ]
+  const fields = {
+    english: {
+      generalFields:[
+        { name: "total_office_visits", label: "Total Office Visits", subtitle: ""},
+        { name: "total_calls", label: "Total # of Calls", subtitle: "(including children in custody)" },
+        { name: "total_unduplicated_calls", label: "Total # of unduplicated calls", subtitle: "(including children in custody)" },
+      ],
 
-  const hbFields = [
-    { name: "total_visits_hb_pantry", label: "HB pantry room (total # of visits)" },
-    { name: "total_visits_hb_donations_room", label: "HB donation room (total # of visits)" },
-    { name: "total_served_hb_pantry", label: "HB pantry room (total # of people served)" },
-    { name: "total_served_hb_donations_room", label: "HB donation room (total # of people served)" },
-  ]
+      hbFields :[
+        { name: "total_visits_hb_pantry", label: "HB pantry room (total # of visits)" },
+        { name: "total_visits_hb_donations_room", label: "HB donation room (total # of visits)" },
+        { name: "total_served_hb_pantry", label: "HB pantry room (total # of people served)" },
+        { name: "total_served_hb_donations_room", label: "HB donation room (total # of people served)" },
+      ],
 
-  const placentiaFields = [
-    { name: "total_visits_placentia_neighborhood", label: "Placentia neighborhood (total # of visits)" },
-    { name: "total_visits_placentia_pantry", label: "Placentia pantry room (total # of visits)" },
-    { name: "total_served_placentia_neighborhood", label: "Placentia neighborhood (total # of people served)" },
-    { name: "total_served_placentia_pantry", label: "Placentia pantry room (total # of people served)" },
-  ]
+      placentiaFields:[
+        { name: "total_visits_placentia_neighborhood", label: "Placentia neighborhood (total # of visits)" },
+        { name: "total_visits_placentia_pantry", label: "Placentia pantry room (total # of visits)" },
+        { name: "total_served_placentia_neighborhood", label: "Placentia neighborhood (total # of people served)" },
+        { name: "total_served_placentia_pantry", label: "Placentia pantry room (total # of people served)" },
+      ]
+    },
+    spanish: {
+      generalFields: [
+        { name: "total_office_visits", label: "Total de Visitas a la Oficina", subtitle: "" },
+        { name: "total_calls", label: "Total de Llamadas", subtitle: "(incluyendo niños bajo custodia)" },
+        { name: "total_unduplicated_calls", label: "Total de Llamadas No Duplicadas", subtitle: "(incluyendo niños bajo custodia)" }
+      ],
+
+      hbFields: [
+        { name: "total_visits_hb_pantry", label: "Sala de Despensa HB (total de visitas)" },
+        { name: "total_visits_hb_donations_room", label: "Sala de Donaciones HB (total de visitas)" },
+        { name: "total_served_hb_pantry", label: "Sala de Despensa HB (total de personas atendidas)" },
+        { name: "total_served_hb_donations_room", label: "Sala de Donaciones HB (total de personas atendidas)" }
+      ],
+
+      placentiaFields: [
+        { name: "total_visits_placentia_neighborhood", label: "Vecindario de Placentia (total de visitas)" },
+        { name: "total_visits_placentia_pantry", label: "Sala de Despensa de Placentia (total de visitas)" },
+        { name: "total_served_placentia_neighborhood", label: "Vecindario de Placentia (total de personas atendidas)" },
+        { name: "total_served_placentia_pantry", label: "Sala de Despensa de Placentia (total de personas atendidas)" }
+      ]
+    }
+  }
+  const language = spanish ? "spanish" : "english"
+
   
 
   const handleChange = (event: { target: { name: any; value: any; }; }) => {
@@ -231,7 +259,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
               />
             </Box>
 
-            {generalFields.map(({ name, label }) => (
+            {fields[language]["generalFields"].map(({ name, label }) => (
                 <Box 
                 key={name}
                 display="flex"
@@ -254,7 +282,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
             <Text fontWeight={"bold"} p={2} paddingTop={"30px"} >
                 Huntington Beach (HB)
             </Text>
-            {hbFields.map(({ name, label }) => (
+            {fields[language]["hbFields"].map(({ name, label }) => (
                 <Box 
                 key={name}
                 display="flex"
@@ -277,7 +305,7 @@ function FormFrontDesk({ onFormSubmitSuccess }: FormFrontDeskProps) {
             <Text fontWeight={"bold"} p={2}  paddingTop={"30px"}> 
                 Placentia
             </Text>
-            {placentiaFields.map(({ name, label }) => (
+            {fields[language]["placentiaFields"].map(({ name, label }) => (
                 <Box 
                 key={name}
                 display="flex"
