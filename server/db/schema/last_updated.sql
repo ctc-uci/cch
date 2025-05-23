@@ -58,3 +58,23 @@ CREATE TRIGGER update_case_managers_last_updated
 AFTER INSERT OR UPDATE OR DELETE ON case_managers
 FOR EACH STATEMENT
 EXECUTE FUNCTION update_last_updated_timestamp();
+
+CREATE TRIGGER update_screener_comment_last_updated
+AFTER INSERT OR UPDATE OR DELETE ON screener_comment
+FOR EACH STATEMENT
+EXECUTE FUNCTION update_last_updated_timestamp();
+
+CREATE TRIGGER update_success_story_last_updated
+AFTER INSERT OR UPDATE OR DELETE ON success_story
+FOR EACH STATEMENT
+EXECUTE FUNCTION update_last_updated_timestamp();
+
+CREATE TRIGGER update_exit_survey_last_updated
+AFTER INSERT OR UPDATE OR DELETE ON exit_survey
+FOR EACH STATEMENT
+EXECUTE FUNCTION update_last_updated_timestamp();
+
+CREATE TRIGGER update_random_survey_table_last_updated
+AFTER INSERT OR UPDATE OR DELETE ON random_survey_table
+FOR EACH STATEMENT
+EXECUTE FUNCTION update_last_updated_timestamp();

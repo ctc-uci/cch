@@ -98,8 +98,7 @@ const App = () => {
               />
               <Route
                 path="/success-story"
-                //element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
-                element={<SuccessStory />}
+                element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
               />
               <Route
                 path="/authentification/:userType?"
@@ -162,20 +161,16 @@ const App = () => {
                 />
                 <Route
                   path = "/admin-client-forms"
-                  element = {<ProtectedRoute element={<AdminFormsHub/>} allowedRoles={["admin"]}/>}
+                  element ={<ProtectedRoute element={<AdminFormsHub/>}allowedRoles={["admin"]}/>} 
                 />
                 <Route
                   path="/ViewClient/:id"
                   element={<ProtectedRoute element={<ViewPage />} allowedRoles={['admin', 'user']} />}
                 />
-                {/* <Route
-                  path="/casemanager"
-                  element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
-                /> */}
                 <Route
                   path="/casemanager"
-                  element={<CaseManager/>}
-                />
+                  element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
+
                 <Route
                   path="/random-client-survey"
                   element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={["client"]}/>}
@@ -190,8 +185,7 @@ const App = () => {
                 />
                   <Route
                     path ="/personal"
-                    // element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
-                    element = {<PersonalInformation hidden={false}/>}
+                    element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
                   />
                   <Route
                     path ="/financial"

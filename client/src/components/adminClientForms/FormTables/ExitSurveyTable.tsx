@@ -18,6 +18,7 @@ import {
   Thead,
   Tr,
   VStack,
+  useDisclosure
 } from "@chakra-ui/react";
 
 import {
@@ -40,12 +41,13 @@ import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
+import { useNavigate } from "react-router-dom";
 
-export const ExitSurveyTable = () => {
+export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) => void}) => {
   // still gotta do this -- but I'll do it later
   const headers = ["cchCouldBeImproved","cchLikeMost","cchRating","cmChangeAbout","cmFirstName","cmLastName","cmMostBeneficial","cmRating","experienceAccomplished","experienceExtraNotes","experienceTakeaway","id","lifeSkillsHelpfulTopics","lifeSkillsOfferTopicsInTheFuture","lifeSkillsRating","location","programDateCompletion"
 ];
-
   const [exitData, setExitData] = useState<
     (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
   >([]);
@@ -57,6 +59,10 @@ export const ExitSurveyTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [refreshTable, setRefreshTable] = useState(false);
+  const navigate = useNavigate();
 
   const columns = useMemo<ColumnDef<ExitSurvey>[]>(
     () => [
@@ -266,6 +272,12 @@ export const ExitSurveyTable = () => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+    useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
+
   return (
     <VStack
       align="start"
@@ -305,7 +317,7 @@ export const ExitSurveyTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => {navigate('/exit-survey')}}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -342,6 +354,7 @@ export const ExitSurveyTable = () => {
                           header.column.getCanSort() ? "pointer" : "default"
                         }
                         onClick={header.column.getToggleSortingHandler()}
+                        
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -376,6 +389,11 @@ export const ExitSurveyTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
+                          console.log(`cliocked ${cell.id}`);
+                          (row.original as { [key: string]: any }).title = "Exit Surveys";
+                          setClickedFormItem(row.original);
+                          console.log(row.original)
+                          onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -404,6 +422,18 @@ export const ExitSurveyTable = () => {
             </Table>
           </TableContainer>
         )}
+                  {clickedFormItem && (
+            <FormPreview
+              clickedFormItem={clickedFormItem}
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setClickedFormItem(null);
+              }}
+              refreshTable={refreshTable}
+              setRefreshTable={setRefreshTable}
+            />
+          )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
