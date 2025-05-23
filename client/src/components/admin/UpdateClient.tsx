@@ -130,12 +130,12 @@ export const UpdateClients = () => {
         >
           <TableContainer
             width="100%"
-            height="40vh"
             sx={{
               overflowX: "auto",
               overflowY: "auto",
               maxWidth: "100%",
               border: "1px solid gray",
+              borderRadius: "8px",
             }}
           >
             <Table variant="striped">
@@ -146,11 +146,10 @@ export const UpdateClients = () => {
                 background={"white"}
               >
                 <Tr>
-                  <Th><Checkbox onChange={handleSelectAll} isChecked={allSelected}></Checkbox></Th>
+                  <Th width={12}><Box flexDirection={'row'} alignItems={'center'} justifyContent={'center'} width={'100%'}><Checkbox onChange={handleSelectAll} isChecked={allSelected}></Checkbox></Box></Th>
                   <Th>Time and Date Submitted</Th>
-                  <Th>Case Manager</Th>
                   <Th>Name</Th>
-                  <Th>Request to Edit</Th>
+                  <Th width={'60%'}>Request to Edit</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -165,12 +164,13 @@ export const UpdateClients = () => {
                         /></Td>
                         <Td>
                           {new Date(approvals.created_at).toLocaleString(
-                            "en-GB",
-                            { timeZone: "America/Los_Angeles" }
+                            "en-US",
+                            { timeZone: "America/Los_Angeles", hour: '2-digit',
+                              minute: '2-digit',
+                              year: '2-digit',
+                              month: '2-digit', 
+                              day: 'numeric',}
                           )}
-                        </Td>
-                        <Td>
-                          {approvals.cm_first_name} {approvals.cm_last_name}
                         </Td>
                         <Td>
                           {approvals.first_name} {approvals.last_name}
