@@ -1,489 +1,149 @@
 import { useEffect, useState } from "react";
-
-import {
-  Button,
-  FormControl,
-  FormLabel,
-  Heading,
-  HStack,
-  Input,
-  Radio,
-  RadioGroup,
-  Select,
-  Text,
-  Textarea,
-  useToast,
-  VStack,
-} from "@chakra-ui/react";
-
+import { ClientReviewPage } from "./ClientReviewPage";
+import { ReviewPage } from "./ReviewPage";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { useToast } from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import { RandomSurveyConfirmation } from "./RandomSurveyConfirmation";
 
 type CaseManager = {
   id: number;
-  role: string; // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
+  role: string;
   firstName: string;
   lastName: string;
   phone_number: string;
   email: string;
 };
 
-export const RandomClientSurvey = () => {
-  const { backend } = useBackendContext();
-  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
-  const toast = useToast();
+type SurveyData = {
+  date: string | Date;
+  cch_qos: number;
+  cm_qos: number;
+  courteous?: boolean;
+  informative?: boolean;
+  prompt_and_helpful?: boolean;
+  entry_quality: number;
+  unit_quality: number;
+  clean: number;
+  overall_experience: number;
+  case_meeting_frequency: string;
+  lifeskills?: boolean;
+  recommend?: boolean;
+  recommend_reasoning: string;
+  make_cch_more_helpful: string;
+  cm_id: number;
+  cm_feedback: string;
+  other_comments: string;
+};
 
-  useEffect(() => {
-    const getCaseManagers = async () => {
+export const RandomClientSurvey = () => {
+    const [page, setPage] = useState(1);
+    const { backend } = useBackendContext();
+    const toast = useToast();
+
+    const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
+    const navigate = useNavigate();
+
+
+    
+
+      const [errors, setErrors] = useState({
+        qualityQuestions: false,
+        courteous: false,
+        informative: false,
+        prompt_and_helpful: false,
+        case_meeting_frequency: false,
+        lifeskills: false,
+        recommend: false,
+        recommend_reasoning: false,
+        date: false,
+        cm_id: false,
+    });
+
+    const initialEmptySurveyData: SurveyData = {
+      date: "",
+      cch_qos: 0,
+      cm_qos: 0,
+      courteous: undefined,
+      informative: undefined,
+      prompt_and_helpful: undefined,
+      entry_quality: 0,
+      unit_quality: 0,
+      clean: 0,
+      overall_experience: 0,
+      case_meeting_frequency: "",
+      lifeskills: undefined,
+      recommend: undefined,
+      recommend_reasoning: "",
+      make_cch_more_helpful: "",
+      cm_id: 0,
+      cm_feedback: "",
+      other_comments: "",
+    };
+
+    const [surveyData, setSurveyData] = useState<SurveyData>(initialEmptySurveyData);
+
+    useEffect(() => {
+        const fetchCaseManagers = async () => {
+            try {
+            const res = await backend.get("/caseManagers");
+            setCaseManagers(res.data);
+            } catch (error) {
+            console.error("Failed to fetch case managers:", error.message);
+            }
+        };
+
+        fetchCaseManagers();
+    }, []);
+
+    const handleCancel = () => {
+      setSurveyData(initialEmptySurveyData);
+      setPage(1);
+    };
+    
+    const handleSubmit = async () => {
       try {
-        const response = await backend.get("/caseManagers");
-        setCaseManagers(response.data);
+        await backend.post("/randomSurvey", surveyData);
+        toast({
+          title: "Survey submitted successfully",
+          description: "Thank you for your feedback!",
+          status: "success",
+        });
+
+        setPage(3);
       } catch (error) {
-        console.log("error retrieving case managers: ", error.message);
+        toast({
+          title: "An error occurred",
+          description: `Random survey response was not created: ${error.message}`,
+          status: "error",
+        });
+        navigate("/landing-page");
       }
     };
-    getCaseManagers();
-  }, []);
+    
+    return (
+        <>
+            {page === 1 && (
+                <ClientReviewPage
+                surveyData={surveyData}
+                setSurveyData={setSurveyData}
+                errors={errors}
+                setErrors={setErrors}
+                onNext={() => setPage(2)}
+                caseManagers={caseManagers}
+                />
+            )}
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+            {page === 2 && (
+                <ReviewPage
+                surveyData={surveyData}
+                caseManagers={caseManagers}
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                />
+            )}
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-
-    const data = Object.fromEntries(formData);
-
-    const surveyData = {
-      date: data.date,
-      cch_qos: Number(data.cch_qos),
-      cm_qos: Number(data.cm_qos),
-      courteous: data.courteous === "yes",
-      informative: data.informative === "yes",
-      prompt_and_helpful: data.prompt_and_helpful === "yes",
-      entry_quality: Number(data.entry_quality),
-      unit_quality: Number(data.unit_quality),
-      clean: Number(data.clean),
-      overall_experience: Number(data.overall_experience),
-      case_meeting_frequency: data.case_meeting_frequency,
-      lifeskills: data.lifeskill === "yes",
-      recommend: data.recommend === "yes",
-      recommend_reasoning: data.recommend_reasoning,
-      make_cch_more_helpful: data.make_cch_more_helpful,
-      cm_id: data.cm_id,
-      cm_feedback: data.cm_feedback,
-      other_comments: data.other_comments,
-    };
-
-    try {
-      await backend.post("/randomSurvey", surveyData);
-      toast({
-        title: "Survey submitted successfully",
-        description: "Thank you for your feedback!",
-        status: "success",
-      });
-
-      form.reset();
-    } catch (error) {
-      toast({
-        title: "An error occurred",
-        description: `Random survey response was not created: ${error.message}`,
-        status: "error",
-      });
-    }
-  };
-
-  return (
-    <VStack
-      spacing={5}
-      sx={{ width: 800, marginX: "auto", padding: "20px" }}
-    >
-      <Heading textAlign={"center"}>
-        Colette’s Children’s Home <br />
-        Random Client Survey
-      </Heading>
-      <Text style={{ fontWeight: "bold", color: "blue" }}>
-        How are we doing?
-      </Text>
-      <Text style={{ fontWeight: "bold" }}>
-        We are committed to providing you with the best help possible, so we
-        welcome your comments. Please fill out this questionnaire. Thank you.
-      </Text>
-      <form
-        style={{ width: "100%" }}
-        onSubmit={handleSubmit}
-      >
-        <VStack spacing={6}>
-          <FormControl isRequired>
-            <FormLabel>
-              Please rate the quality of the service in the CCH program.
-            </FormLabel>
-            <RadioGroup name="cch_qos">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              Please rate the quality of the service you received from your case
-              manager.
-            </FormLabel>
-            <RadioGroup name="cm_qos">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Is your case manager...</FormLabel>
-            <VStack
-              align="start"
-              spacing={4}
-            >
-              <HStack>
-                <Text>Courteous?</Text>
-                <RadioGroup name="courteous">
-                  <HStack spacing={4}>
-                    <Radio value="yes">Yes</Radio>
-                    <Radio value="no">No</Radio>
-                  </HStack>
-                </RadioGroup>
-              </HStack>
-
-              <HStack>
-                <Text>Informative?</Text>
-                <RadioGroup name="informative">
-                  <HStack spacing={4}>
-                    <Radio value="yes">Yes</Radio>
-                    <Radio value="no">No</Radio>
-                  </HStack>
-                </RadioGroup>
-              </HStack>
-
-              <HStack>
-                <Text>Prompt and helpful?</Text>
-                <RadioGroup name="prompt_and_helpful">
-                  <HStack spacing={4}>
-                    <Radio value="yes">Yes</Radio>
-                    <Radio value="no">No</Radio>
-                  </HStack>
-                </RadioGroup>
-              </HStack>
-            </VStack>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              Please rate the quality of your entrance into the CCH program.
-            </FormLabel>
-            <RadioGroup name="entry_quality">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Please rate the quality of your unit.</FormLabel>
-            <RadioGroup name="unit_quality">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Is the SITE clean?</FormLabel>
-            <RadioGroup name="clean">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Please rate your overall experience at CCH.</FormLabel>
-            <RadioGroup name="overall_experience">
-              <HStack spacing={4}>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Radio
-                    key={value}
-                    value={`${value}`}
-                  >
-                    {value}
-                  </Radio>
-                ))}
-              </HStack>
-              <HStack
-                justify="space-between"
-                w="31%"
-                mt={1}
-                px={4}
-              >
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                  ml="-6%"
-                >
-                  Disappointing
-                </Text>
-                <Text
-                  fontSize="xs"
-                  color="gray.500"
-                >
-                  Helpful
-                </Text>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>How frequently do you have case meetings?</FormLabel>
-            <RadioGroup name="case_meeting_frequency">
-              <HStack spacing={10}>
-                <Radio value="2-3_times_per_week">2-3 times per week</Radio>
-                <Radio value="1-2_times_per_month">1-2 times per month</Radio>
-              </HStack>
-              <HStack
-                spacing={10}
-                mt={4}
-              >
-                <Radio value="once_every_week">Once every week</Radio>
-                <Radio value="other">Other</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              Were the Lifeskills classes beneficial to you?
-            </FormLabel>
-            <RadioGroup name="lifeskills">
-              <HStack spacing={4}>
-                <Radio value="yes">Yes</Radio>
-                <Radio value="no">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Would you recommend CCH to a friend?</FormLabel>
-            <RadioGroup name="recommend">
-              <HStack spacing={4}>
-                <Radio value="yes">Yes</Radio>
-                <Radio value="no">No</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Why or why not?</FormLabel>
-            <Textarea
-              name="recommend_reasoning"
-              placeholder="Enter your response..."
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              If you entered our program because of a referral, how might we
-              have made CCH more helpful?
-            </FormLabel>
-            <Textarea
-              name="make_cch_more_helpful"
-              placeholder="Enter your response..."
-            />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Who is your case manager?</FormLabel>
-            <Select
-              name="cm_id"
-              placeholder="Select your case manager"
-            >
-              {caseManagers.map((manager: CaseManager) => (
-                <option
-                  key={manager.id}
-                  value={manager.id}
-                >
-                  {manager.firstName} {manager.lastName}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              What feedback would you like your case manager to know?
-            </FormLabel>
-            <Textarea
-              name="cm_feedback"
-              placeholder="Enter your response..."
-            />
-          </FormControl>
-
-          <FormControl>
-            <FormLabel>
-              Please share any additional comments or suggestions.
-            </FormLabel>
-            <Textarea
-              name="other_comments"
-              placeholder="Enter your response..."
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>Date of Program Completion</FormLabel>
-            <Input
-              name="date"
-              type="date"
-              placeholder="Date"
-            />
-          </FormControl>
-
-          <Button
-            type="submit"
-            color="blue"
-          >
-            Submit
-          </Button>
-        </VStack>
-      </form>
-    </VStack>
-  );
+            {page === 3 && <RandomSurveyConfirmation onExit={() => navigate("/")} />}
+        </>
+    );
 };
