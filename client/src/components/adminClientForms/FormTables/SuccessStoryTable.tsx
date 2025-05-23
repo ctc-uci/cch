@@ -215,7 +215,7 @@ export const SuccessStoryTable = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/successStory`);
+        const lastUpdatedRequest = backend.get(`/lastUpdated/success_story`);
 
         let tableDataRequest;
         if (searchKey && filterQuery.length > 1) {
@@ -240,6 +240,8 @@ export const SuccessStoryTable = () => {
         ]);
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
+        console.log("i")
+        console.log(lastUpdated);
         setSuccessData(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);

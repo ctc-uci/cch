@@ -33,6 +33,7 @@ export const InitialScreenerTable = () => {
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [isInputVisible, setIsInputVisible] = useState(false);
+  const [lastUpdated, setLastUpdated ] = useState(""); 
 
   const handleIconClick = () => {
     setIsInputVisible(true); 
@@ -72,6 +73,22 @@ export const InitialScreenerTable = () => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await backend.get("/lastUpdated/initial_interview");
+        const date = new Date(response.data[0]["lastUpdatedAt"]);
+        const formattedDate = date.toLocaleString();
+        console.log(formattedDate); 
+        console.log("set time");
+        setLastUpdated(formattedDate);
+      } catch (error) {
+        console.error("Error getting time:", error)
+      }
+    }
+    fetchData();
+  }, [backend])
+
   return (
     <VStack
       spacing={2}
@@ -86,7 +103,7 @@ export const InitialScreenerTable = () => {
             size="sm"
             marginBottom={"1%"}
             >
-          Last Updated: MM/DD/YYYY HH:MM XX {}
+          Last Updated: {lastUpdated}
         </Text>
         <Heading fontSize="md" lineHeight="6" fontWeight="semibold" marginBottom={"0.5%"}> Choose a Screener</Heading>
 
