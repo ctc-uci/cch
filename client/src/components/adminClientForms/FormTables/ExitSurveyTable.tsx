@@ -42,12 +42,12 @@ import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
 import FormPreview from "../../formsHub/FormPreview.tsx";
+import { useNavigate } from "react-router-dom";
 
 export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) => void}) => {
   // still gotta do this -- but I'll do it later
   const headers = ["cchCouldBeImproved","cchLikeMost","cchRating","cmChangeAbout","cmFirstName","cmLastName","cmMostBeneficial","cmRating","experienceAccomplished","experienceExtraNotes","experienceTakeaway","id","lifeSkillsHelpfulTopics","lifeSkillsOfferTopicsInTheFuture","lifeSkillsRating","location","programDateCompletion"
 ];
-
   const [exitData, setExitData] = useState<
     (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
   >([]);
@@ -62,7 +62,7 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
-  
+  const navigate = useNavigate();
 
   const columns = useMemo<ColumnDef<ExitSurvey>[]>(
     () => [
@@ -317,7 +317,7 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => {navigate('/exit-survey')}}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}

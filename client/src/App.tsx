@@ -161,7 +161,7 @@ const App = () => {
                 />
                 <Route
                   path = "/admin-client-forms"
-                  element = {<ProtectedRoute element={<AdminFormsHub/>} allowedRoles={["admin"]}/>}
+                  element = {<AdminFormsHub/>}
                 />
                 <Route
                   path="/ViewClient/:id"
@@ -210,7 +210,7 @@ const App = () => {
                   />
                   <Route
                     path ="/success"
-                    element ={<ProtectedRoute element={<Success/>} />}
+                    element ={<Success/>} 
                   />
                   <Route path="/playground" element={<Playground/>}/>
                   <Route

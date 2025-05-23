@@ -42,6 +42,7 @@ import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
+import { useNavigate } from "react-router-dom";
 
 export const SuccessStoryTable = () => {
   // still gotta do this -- but I'll do it later
@@ -74,6 +75,7 @@ export const SuccessStoryTable = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
 
+  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<SuccessStory>[]>(
     () => [
       {
@@ -301,7 +303,7 @@ export const SuccessStoryTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => {navigate('/success-story')}}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}

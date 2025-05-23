@@ -34,6 +34,8 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
+import { useNavigate } from "react-router-dom";
+
 import type { InitialInterview } from "../../../types/initialScreener.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
@@ -64,7 +66,7 @@ export const InitialScreenerTable = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
  
-
+  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
     () => [
       {
@@ -502,6 +504,7 @@ export const InitialScreenerTable = () => {
     }
   }, [clickedFormItem, onOpen]);
 
+
   return (
     <VStack
       align="start"
@@ -541,7 +544,7 @@ export const InitialScreenerTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => navigate('/personal')}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
