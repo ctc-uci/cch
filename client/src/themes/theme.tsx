@@ -2,6 +2,13 @@ import { extendTheme } from "@chakra-ui/react"
 
 const theme = extendTheme({
     components: {
+        Td: {
+            defaultProps: {
+                border: '1px solid',
+                borderColor: "#CBD5E0",
+
+            }
+        },
         Button: {
 
             variants: {

@@ -82,6 +82,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
 
+
+
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
 
   const [showSearch, setShowSearch] = useState(false);
@@ -343,7 +345,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const fetchData = async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-
       let clientsRequest;
       if (searchKey && filterQuery.length > 1) {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);

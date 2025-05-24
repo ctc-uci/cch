@@ -131,7 +131,7 @@ const App = () => {
                 />
               <Route
                 path="/admin-client-list"
-                element={<ProtectedRoute element={<AdminClientList />} allowedRoles={['admin' , 'user']} />}
+                element={<AdminClientList />}
               />
               <Route
                 path="/accounts"
