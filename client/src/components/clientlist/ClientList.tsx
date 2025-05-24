@@ -7,7 +7,6 @@ import {
   Checkbox,
   Heading,
   HStack,
-  IconButton,
   Input,
   Table,
   TableContainer,
@@ -81,6 +80,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [displayName, setDisplayName] = useState("");
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
 
@@ -370,6 +370,21 @@ export const ClientList = ({ admin }: ClientListProps) => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+  useEffect(() => {
+    if (!currentUser?.email) return;
+
+    const getUserName = async () => {
+      try {
+        const res = await backend.get(`/users/email/${currentUser.email}`);
+        setDisplayName(`${res.data[0].firstName} ${res.data[0].lastName}`);
+      } catch (err) {
+        console.error("Failed to fetch user name", err);
+      }
+    };
+
+    getUserName();
+  }, []);
+
   return (
     <VStack
       spacing={6}
@@ -379,7 +394,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
       <VStack width='100%'>
         {showUnfinishedAlert && <UnfinishedClientAlert/>}
         <Flex width="100%" flexDirection="column" justifyContent="flex-start">
-        <Heading fontWeight="none" fontSize="24px" color={"#3182CE"} mb="25px">Welcome, {currentUser?.displayName}</Heading>
+        {/* <Heading fontWeight="none" fontSize="24px" color={"#3182CE"} mb="25px">Welcome, {currentUser?.displayName}</Heading> */}
+        <Heading fontWeight="none" fontSize="24px" color={"#3182CE"} mb="25px">Welcome, {displayName}</Heading>
         <Heading fontSize="30px" mb="10px">Complete Client Table</Heading>
         <Text
             fontSize="14px"

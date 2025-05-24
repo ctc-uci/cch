@@ -53,6 +53,12 @@ AFTER INSERT OR UPDATE OR DELETE ON front_desk_monthly
 FOR EACH STATEMENT
 EXECUTE FUNCTION update_last_updated_timestamp();
 
+-- last updated trigger for intake_statistics_form
+CREATE TRIGGER update_intake_statistics_form
+AFTER INSERT OR UPDATE OR DELETE ON intake_statistics_form
+FOR EACH STATEMENT
+EXECUTE FUNCTION update_last_updated_timestamp();
+
 -- last updated trigger for case_managers
 CREATE TRIGGER update_case_managers_last_updated
 AFTER INSERT OR UPDATE OR DELETE ON case_managers

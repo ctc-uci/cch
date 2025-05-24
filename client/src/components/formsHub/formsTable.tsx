@@ -49,42 +49,6 @@ import PrintForm from "../printForm/PrintForm";
 import FormPreview from "./FormPreview";
 import { FormsListFilter } from "./FormListFilter.tsx";
 
-// const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = []): Form[] => {
-//   return data.filter((form) => {
-//     return filterRows.reduce<boolean>((acc, row, index) => {
-//       if (!row.field || !row.operator || !row.value) return acc;
-
-//       const fieldValue = form[row.field as keyof Form];
-//       const fieldType = row.field === "date" ? "date" : typeof fieldValue;
-//       let result = true;
-
-//       if (fieldType === "date" && typeof fieldValue === "string") {
-//         const value = row.value;
-//         const normalized = fieldValue.slice(0, 10);
-//         result = row.operator === "contains"
-//           ? normalized.includes(value)
-//           : row.operator === "="
-//           ? normalized === value
-//           : normalized !== value;
-//       } else if (typeof fieldValue === "string") {
-//         const value = row.value.toLowerCase();
-//         const lower = fieldValue.toLowerCase();
-//         result = row.operator === "contains"
-//           ? lower.includes(value)
-//           : row.operator === "="
-//           ? lower === value
-//           : lower !== value;
-//       }
-
-//       if (index === 0 || row.selector === "AND") {
-//         return acc && result;
-//       } else {
-//         return acc || result;
-//       }
-//     }, true);
-//   });
-// };
-
 const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = [], searchKey: string = ""): Form[] => {
   return data.filter((form) => {
     const filterMatch = filterRows.reduce<boolean>((acc, row, index) => {
@@ -152,39 +116,28 @@ export const FormTable = () => {
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [lastUpdated, setLastUpdated] = useState<string>("");
   const [showSearch, setShowSearch] = useState(false);
   const [searchKey, setSearchKey] = useState("");
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
   const [filterRows, setFilterRows] = useState<FormFilter[]>([
     { id: 1, field: "", operator: "", value: "" },
   ]);
-  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
-    null
-  );
+  const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(null);
   const [frontDeskDate, setFrontDeskDate] = useState<Date | null>(null);
   const [cmMonthlyDate, setCMMonthlyDate] = useState<Date | null>(null);
   const [exitSurveyDate, setExitSurveyDate] = useState<Date | null>(null);
   const [successStoryDate, setSuccessStoryDate] = useState<Date | null>(null);
   const [randomClientSurveyDate, setRandomClientSurveyDate] = useState<Date | null>(null);
-
+  const [intakeStatisticsDate, setIntakeStatisticsDate] = useState<Date | null>(null);
   const [mostRecentDate, setMostRecentDate] = useState<Date | null>(null);
   const [initialScreeners, setInitialScreeners] = useState<Form[]>([]);
   const [intakeStatistics, setIntakeStatistics] = useState<Form[]>([]);
   const [frontDeskStatistics, setFrontDeskStatistics] = useState<Form[]>([]);
-  const [caseManagerStatistics, setCaseManagerStatistics] = useState<Form[]>(
-    []
-  );
-  const [exitSurvey, setExitSurvey] = useState<Form[]>(
-    []
-  );
-  const [successStory, setSuccessStory] = useState<Form[]>(
-    []
-  );
-  const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>(
-    []
-  );
-
+  const [caseManagerStatistics, setCaseManagerStatistics] = useState<Form[]>([]);
+  const [exitSurvey, setExitSurvey] = useState<Form[]>([]);
+  const [successStory, setSuccessStory] = useState<Form[]>([]);
+  const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
@@ -299,6 +252,7 @@ export const FormTable = () => {
           lastUpdatedExitSurveyResponse,
           lastUpdatedSuccessStoryResponse,
           lastUpdatedRandomSurveyResponse,
+          lastUpdateIntakeStatsResponse,
         ] = await Promise.all([
           backend.get(`/initialInterview`),
           backend.get(`/frontDesk`),
@@ -314,6 +268,7 @@ export const FormTable = () => {
           backend.get(`/lastUpdated/exit_survey`),
           backend.get(`/lastUpdated/success_story`),
           backend.get(`/lastUpdated/random_survey_table`),
+          backend.get("/lastUpdated/intake_statistics_form"),
         ]);
 
         const initialScreeners: Form[] = await screenerResponse.data.map(
@@ -398,8 +353,6 @@ export const FormTable = () => {
         setSuccessStory(successStoryForms);
         setRandomClientSurvey(randomSurveyForms);
 
-        // const getDate = (date) =>
-        //   date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
         const getDate = (date: { lastUpdatedAt?: string }[] | undefined) =>
           date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
 
@@ -410,19 +363,22 @@ export const FormTable = () => {
         setExitSurveyDate(getDate(lastUpdatedExitSurveyResponse.data));
         setSuccessStoryDate(getDate(lastUpdatedSuccessStoryResponse.data));
         setRandomClientSurveyDate(getDate(lastUpdatedRandomSurveyResponse.data));
+        setIntakeStatisticsDate(getDate(lastUpdateIntakeStatsResponse.data));
 
         const mostRecent = new Date(
           Math.max(
-            initialScreenerDate?.getTime() || 0,
-            frontDeskDate?.getTime() || 0,
-            cmMonthlyDate?.getTime() || 0,
-            exitSurveyDate?.getTime() || 0,
-            successStoryDate?.getTime() || 0,
-            randomClientSurveyDate?.getTime() || 0
+            getDate(initialScreenerResponse.data)?.getTime() || 0,
+            getDate(lastUpdateIntakeStatsResponse.data)?.getTime() || 0,
+            getDate(frontDeskMonthlyStatsResponse.data)?.getTime() || 0,
+            getDate(cmMonthlyStatsResponse.data)?.getTime() || 0,
+            getDate(lastUpdatedExitSurveyResponse.data)?.getTime() || 0,
+            getDate(lastUpdatedSuccessStoryResponse.data)?.getTime() || 0,
+            getDate(lastUpdatedRandomSurveyResponse.data)?.getTime() || 0
           )
         );
+        
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
-        setLastUpdated(mostRecent.toLocaleString());
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -576,6 +532,22 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const getLastUpdatedForTab = () => {
+  const dateMap = [
+    mostRecentDate,
+    initialScreenerDate,
+    intakeStatisticsDate,
+    frontDeskDate,
+    cmMonthlyDate,
+    exitSurveyDate,
+    successStoryDate,
+    randomClientSurveyDate,
+  ];
+
+  const selectedDate = dateMap[selectedTabIndex];
+  return selectedDate ? selectedDate.toLocaleString() : "MM/DD/YYYY 00:00:00 AM";
+};
 
   const renderTable = (
     tableInstance: ReturnType<typeof useReactTable<Form>>,
@@ -849,11 +821,12 @@ export const FormTable = () => {
       >
         Form History
       </Text>
-      <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
+      <Text fontSize="12pt">Last Updated: {getLastUpdatedForTab()}</Text>
 
       <Tabs
         isFitted
         w="full"
+        onChange={(index) => setSelectedTabIndex(index)}
       >
         <TabList whiteSpace="nowrap">
           <Tab>All Forms</Tab>

@@ -1,4 +1,4 @@
-import { Box, Flex, Link, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 
 import { Link as RouterLink } from "react-router-dom";
 
@@ -36,35 +36,31 @@ export const StartForms = () => {
         p={4}
         gap="6rem"
       >
-        {cards.map((card, index) => (
-          <Box
-            key={index}
-            flex="1"
-            h="90%"
-            minW="150px"
-            display="flex"
-            backgroundColor="white"
-            borderWidth="1px"
-            borderRadius="lg"
-            flexDirection="column"
-            justifyContent="flex-end"
-            p={6}
-            textAlign="center"
+        {cards.map((card) => (
+          <Button
+            as={RouterLink}
+            to={card.route}
+            display={"flex"}
+            flexDirection={"column"}
+            width={"200px"}
+            height={"200px"}
+            padding={"12px"}
+            justifyContent={"center"}
+            alignItems={"center"}
+            flexShrink={"0"}
+            backgroundColor={"white"}
+            borderRadius={"8px"}
+            // boxShadow={"0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06"}
+            boxShadow="0px 1px 4px rgba(0, 0, 0, 0.1)"
           >
-            <Text
-              fontWeight="bold"
-              fontSize="md"
-            >
-              <Link
-                as={RouterLink}
-                to={card.route}
-                color="#3182CE"
-              >
+            <Text whiteSpace={"normal"} textAlign={"center"}>
+              <Box as={"span"} color={"blue.500"}>
                 Start
-              </Link>{" "}
+              </Box>
+              {" "}
               {card.label}
             </Text>
-          </Box>
+          </Button>
         ))}
       </Flex>
     </Flex>
