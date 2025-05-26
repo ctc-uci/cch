@@ -17,6 +17,7 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
   VStack,
 } from "@chakra-ui/react";
 
@@ -33,18 +34,40 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
-import type { RandomSurvey } from "../../../types/randomSurvey.ts"; 
+import type { RandomSurvey } from "../../../types/randomSurvey.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
+import { useNavigate } from "react-router-dom";
 
 export const RandomClientTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["caseMeetingFrequency","cchQos","clean","cmFeedback","cmFirstName","cmLastName","cmQos","courteous","date","entryQuality","id","informative","lifeskills","makeCchMoreHelpful","otherComments","overallExperience","promptAndHelpful","recommend","recommendReasoning","unitQuality"
-];
+  const headers = [
+    "caseMeetingFrequency",
+    "cchQos",
+    "clean",
+    "cmFeedback",
+    "cmFirstName",
+    "cmLastName",
+    "cmQos",
+    "courteous",
+    "date",
+    "entryQuality",
+    "id",
+    "informative",
+    "lifeskills",
+    "makeCchMoreHelpful",
+    "otherComments",
+    "overallExperience",
+    "promptAndHelpful",
+    "recommend",
+    "recommendReasoning",
+    "unitQuality",
+  ];
 
   const [randomData, setRandomData] = useState<
     (RandomSurvey & { isChecked: boolean; isHovered: boolean })[]
@@ -57,7 +80,12 @@ export const RandomClientTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [refreshTable, setRefreshTable] = useState(false);
 
+  const navigate = useNavigate();
+  
   const columns = useMemo<ColumnDef<RandomSurvey>[]>(
     () => [
       {
@@ -84,59 +112,59 @@ export const RandomClientTable = () => {
       },
       {
         accessorKey: "cchQos",
-        header: "Quality of Service: CCH"
+        header: "Quality of Service: CCH",
       },
       {
         accessorKey: "cmQos",
-        header: "Quality of Service: Case Management"
+        header: "Quality of Service: Case Management",
       },
       {
         accessorKey: "courteous",
-        header: "CM: Courteous"
+        header: "CM: Courteous",
       },
       {
         accessorKey: "informative",
-        header: "CM: Informative"
+        header: "CM: Informative",
       },
       {
         accessorKey: "promptAndHelpful",
-        header: "CM: Prompt and HelpfuL"
+        header: "CM: Prompt and HelpfuL",
       },
       {
         accessorKey: "entryQuality",
-        header: "Quality of CCH Entrance"
+        header: "Quality of CCH Entrance",
       },
       {
         accessorKey: "unitQuality",
-        header: "Quality of Unit"
+        header: "Quality of Unit",
       },
       {
         accessorKey: "clean",
-        header: "Site Cleanliness"
+        header: "Site Cleanliness",
       },
       {
         accessorKey: "overallExperience",
-        header: "Overall Experience"
+        header: "Overall Experience",
       },
       {
         accessorKey: "caseMeetingFrequency",
-        header: "Case Meeting Frequency"
+        header: "Case Meeting Frequency",
       },
       {
         accessorKey: "lifeskills",
-        header: "Life Skills Classes Beneficial?"
+        header: "Life Skills Classes Beneficial?",
       },
       {
         accessorKey: "recommend",
-        header: "Recommend CCH"
+        header: "Recommend CCH",
       },
       {
         accessorKey: "recommendReasoning",
-        header: "Why or why not?"
+        header: "Why or why not?",
       },
       {
         accessorKey: "makeCchMoreHelpful",
-        header: "How make CCH more helpful?"
+        header: "How make CCH more helpful?",
       },
       {
         header: "Case Manager",
@@ -154,11 +182,11 @@ export const RandomClientTable = () => {
       },
       {
         accessorKey: "cmFeedback",
-        header: "Case Manager Feedback"
+        header: "Case Manager Feedback",
       },
       {
         accessorKey: "otherComments",
-        header: "Additional Comments/Suggestions"
+        header: "Additional Comments/Suggestions",
       },
     ],
     [selectedRowIds, randomData]
@@ -190,26 +218,26 @@ export const RandomClientTable = () => {
       selectedRowIds.includes(row.id)
     );
     const data = selectedTableData.map((row) => ({
-      "caseMeetingFrequency": row.caseMeetingFrequency,
-"cchQos": row.cchQos,
-"clean": row.clean,
-"cmFeedback": row.cmFeedback,
-"cmFirstName": row.cmFirstName,
-"cmLastName": row.cmLastName,
-"cmQos": row.cmQos,
-"courteous": row.courteous,
-"date": row.date,
-"entryQuality": row.entryQuality,
-"id": row.id,
-"informative": row.informative,
-"lifeskills": row.lifeskills,
-"makeCchMoreHelpful": row.makeCchMoreHelpful,
-"otherComments": row.otherComments,
-"overallExperience": row.overallExperience,
-"promptAndHelpful": row.promptAndHelpful,
-"recommend": row.recommend,
-"recommendReasoning": row.recommendReasoning,
-"unitQuality": row.unitQuality,
+      caseMeetingFrequency: row.caseMeetingFrequency,
+      cchQos: row.cchQos,
+      clean: row.clean,
+      cmFeedback: row.cmFeedback,
+      cmFirstName: row.cmFirstName,
+      cmLastName: row.cmLastName,
+      cmQos: row.cmQos,
+      courteous: row.courteous,
+      date: row.date,
+      entryQuality: row.entryQuality,
+      id: row.id,
+      informative: row.informative,
+      lifeskills: row.lifeskills,
+      makeCchMoreHelpful: row.makeCchMoreHelpful,
+      otherComments: row.otherComments,
+      overallExperience: row.overallExperience,
+      promptAndHelpful: row.promptAndHelpful,
+      recommend: row.recommend,
+      recommendReasoning: row.recommendReasoning,
+      unitQuality: row.unitQuality,
     }));
 
     downloadCSV(headers, data, `random-client-surveys.csv`);
@@ -228,8 +256,8 @@ export const RandomClientTable = () => {
   const handleDelete = async () => {
     try {
       await Promise.all(
-        selectedRowIds.map(
-          (row_id) => backend.delete(`/randomSurvey/${row_id}`)
+        selectedRowIds.map((row_id) =>
+          backend.delete(`/randomSurvey/${row_id}`)
         )
       );
       setRandomData(
@@ -271,7 +299,7 @@ export const RandomClientTable = () => {
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setRandomData(tableDataResponse.data);
-        // console.log(tableDataResponse.data);
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -281,6 +309,12 @@ export const RandomClientTable = () => {
 
     fetchData();
   }, [backend, searchKey, filterQuery]);
+
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
 
   return (
     <VStack
@@ -298,7 +332,10 @@ export const RandomClientTable = () => {
           placeholder="search"
           onChange={(e) => setSearchKey(e.target.value)}
         />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"randomSurvey"} />
+        <FilterTemplate
+          setFilterQuery={setFilterQuery}
+          type={"randomSurvey"}
+        />
         <HStack
           width="55%"
           justifyContent="space-between"
@@ -321,7 +358,7 @@ export const RandomClientTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => {navigate('/random-client-survey')}}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -392,6 +429,11 @@ export const RandomClientTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
+
+                          (row.original as { [key: string]: any }).title =
+                            "Random Client Surveys";
+                          setClickedFormItem(row.original);
+                          onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -419,6 +461,18 @@ export const RandomClientTable = () => {
               </Tbody>
             </Table>
           </TableContainer>
+        )}
+        {clickedFormItem && (
+          <FormPreview
+            clickedFormItem={clickedFormItem}
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setClickedFormItem(null);
+            }}
+            refreshTable={refreshTable}
+            setRefreshTable={setRefreshTable}
+          />
         )}
       </Box>
       <DeleteRowModal

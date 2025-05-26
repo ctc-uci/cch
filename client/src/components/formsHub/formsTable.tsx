@@ -175,7 +175,6 @@ export const FormTable = () => {
   };
 
   useEffect(() => {
-    console.log("forms table logging");
     const fetchData = async () => {
       try {
         const [

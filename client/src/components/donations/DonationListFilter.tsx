@@ -92,7 +92,6 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
             duration: 3000,
             isClosable: true,
           });
-          console.log(filterRows[filterRows.length - 1]);
         return;
     }
     setFilterRows([

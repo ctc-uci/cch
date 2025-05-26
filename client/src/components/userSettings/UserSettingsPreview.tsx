@@ -25,7 +25,6 @@ const UserSettingsPreview = ({
   location: string;
 }) => {
   const { currentUser } = useAuthContext();
-  console.log(location);
   const hideEditProfile = () => {
     setEditing(true);
   };

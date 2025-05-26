@@ -78,3 +78,22 @@ screenerCommentRouter.patch("/:id", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+screenerCommentRouter.get("/interview/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const query = `SELECT id FROM screener_comment WHERE initial_interview_id = ${id}`;
+    const result = await db.query(query);
+
+
+    res.status(200).json({
+      message: "Sucessfully found id",
+      result: result,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});

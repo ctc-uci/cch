@@ -198,7 +198,6 @@ export const IntakeStats = () => {
     }));
 
     if (!(formRef.current && formRef.current.checkValidity())) {
-      console.log(formRef)
       toast({
         title: "Missing Information",
         description: "Please fill out all required fields before submitting.",
