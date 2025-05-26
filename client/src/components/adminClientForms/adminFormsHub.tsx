@@ -55,19 +55,14 @@ export const AdminFormsHub = () => {
           backend.get(`/lastUpdated/random_survey_table`),
           backend.get(`/lastUpdated/clients`),
         ]);
-        console.log("Initial:", initialResponse.data[0]);
 
         const initial = new Date(initialResponse.data[0].lastUpdatedAt);
         const sucess = new Date(sucessResponse.data[0].lastUpdatedAt);
-        console.log("Success:", sucessResponse.data[0], sucess);
         const exit = new Date(exitResponse.data[0].lastUpdatedAt);
 
-        console.log("Exit:", exitResponse.data[0], exit);
         const random = new Date(randomResponse.data[0].lastUpdatedAt);
-        console.log("Random:", randomResponse.data[0], random);
         const clients = new Date(clientsResponse.data[0].lastUpdatedAt);
 
-        console.log("Clients:", clientsResponse.data[0], clients);
 
         const mostRecent = new Date(
           Math.max(
@@ -80,7 +75,6 @@ export const AdminFormsHub = () => {
         );
 
         if (mostRecent.getTime() === 0) {
-          console.log("ran through");
           setLastUpdated("N/A");
         } else {
           const formattedDate = mostRecent.toLocaleString();

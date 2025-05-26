@@ -299,7 +299,7 @@ export const RandomClientTable = () => {
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setRandomData(tableDataResponse.data);
-        // console.log(tableDataResponse.data);
+
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -429,11 +429,10 @@ export const RandomClientTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
-                          console.log(`cliocked ${cell.id}`);
+
                           (row.original as { [key: string]: any }).title =
                             "Random Client Surveys";
                           setClickedFormItem(row.original);
-                          console.log(row.original);
                           onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();

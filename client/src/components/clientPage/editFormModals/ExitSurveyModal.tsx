@@ -102,7 +102,6 @@ export default function ExitSurveyModal({
       .finally(() => setLoading(false));
 
   }, [isOpen, form.id, backend, toast]);
-  console.log(surveyData);
   const handleEditToggle = () => {
     if (isEditing) setEdits({});
     setIsEditing(!isEditing);

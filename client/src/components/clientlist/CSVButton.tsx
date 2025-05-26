@@ -49,18 +49,13 @@ const CSVButton = ( { data } ) => {
     const convertToCSV = () => {
         const csvRows = [];
         csvRows.push(headers.join(","));
-        console.log(csvRows);
         data.forEach(row => {
-            console.log(row);
             const values = headers.map(header => {
-                console.log(row[header]);
                 //const escaped = ('' + row[header]).replace(/"/g, '\\"'); // Escape double quotes
                 return `${row[header]}`; // Encapsulate in quotes to handle commas in data
             });
-            console.log(values);
             csvRows.push(values.join(','));
         });
-        console.log(csvRows);
         const csvString = csvRows.join('\n');
         const blob = new Blob([csvString], { type: 'text/csv' });
     

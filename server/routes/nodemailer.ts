@@ -23,7 +23,6 @@ emailRouter.post("/", (req, res) => {
         console.log(err.message);
         res.status(500).send(err.message);
       } else {
-        console.log("success");
         res.status(200).json(keysToCamel(emailSender));
       }
   });

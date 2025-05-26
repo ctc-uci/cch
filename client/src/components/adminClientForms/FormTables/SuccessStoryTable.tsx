@@ -169,7 +169,6 @@ export const SuccessStoryTable = () => {
     const selectedTableData = successData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-    console.log(selectedTableData);
     const data = selectedTableData.map((row) => ({
       cchImpact: row.cchImpact,
       cmFirstName: row.cmFirstName,
@@ -242,8 +241,6 @@ export const SuccessStoryTable = () => {
         ]);
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
-        console.log("i")
-        console.log(lastUpdated);
         setSuccessData(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -374,11 +371,9 @@ export const SuccessStoryTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
-                          console.log(`cliocked ${cell.id}`);
                           (row.original as { [key: string]: any }).title =
                             "Success Stories";
                           setClickedFormItem(row.original);
-                          console.log(row.original);
                           onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();

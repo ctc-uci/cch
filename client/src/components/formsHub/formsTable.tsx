@@ -175,7 +175,6 @@ export const FormTable = () => {
   };
 
   useEffect(() => {
-    console.log("forms table logging");
     const fetchData = async () => {
       try {
         const [
@@ -528,8 +527,6 @@ export const FormTable = () => {
                     onClick={() => {
                       setClickedFormItem(row.original);
                       onOpen();
-                      console.log("forms table");
-                      console.log(row.original.title);
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { useNavigate } from "react-router-dom";
+
 import { ChevronRightIcon } from "@chakra-ui/icons";
 import {
   Button,
@@ -37,6 +39,7 @@ import { RandomSurveyTableBody } from "./RandomSurveyTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 import { SuccessStoryTableBody } from "./SuccessStoryTableBody.tsx";
 
+
 const FormPreview = ({
   clickedFormItem,
   isOpen,
@@ -60,8 +63,6 @@ const FormPreview = ({
     date: formItemDate,
   } = clickedFormItem;
 
-  console.log(`preview ${clickedFormItem}`)
-
   const toast = useToast();
 
   const [formData, setFormData] = useState({});
@@ -71,6 +72,25 @@ const FormPreview = ({
   const [formattedFormData, setFormattedFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitial, setIsInitial] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCommentForm = async () => {
+    const commentId = await backend.get(`/screenerComment/interview/${formItemId}`)
+    const result = commentId.data?.['result']?.[0];
+    if (!result || typeof result.id === "undefined") {
+      toast({
+        title: "Comment Form Not Found",
+        description: "No comment form is associated with this interview.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    navigate(`/comment-form/${result}`)
+  }
 
   const renderTableBody = () => {
     switch (formItemTitle) {
@@ -134,10 +154,9 @@ const FormPreview = ({
     setIsEditing(false);
     setIsLoading(true);
 
+    setIsInitial(formItemTitle === "Initial Screeners");
     const getData = async () => {
       let endpoint = "";
-      console.log(formItemId)
-      console.log(formItemTitle)
       switch (formItemTitle) {
         case "Initial Screeners":
           endpoint = `/initialInterview/get-interview/${formItemId}`;
@@ -175,7 +194,7 @@ const FormPreview = ({
           normalData = response.data;
         }
 
-        console.log(normalData);
+
 
         const data = formatDataWithLabels(normalData, formItemTitle);
         setFormData(normalData);
@@ -273,7 +292,7 @@ const FormPreview = ({
       !isNaN(Date.parse(value))
     );
   };
-
+  
   return (
     <Drawer
       isOpen={isOpen}
@@ -354,6 +373,18 @@ const FormPreview = ({
                   >
                     Edit Form
                   </Button>
+                  {isInitial ? (
+                    <Button
+                      colorScheme="blue"
+                      variant="outline"
+                      size="lg"
+                      onClick={() => handleCommentForm()}
+                    >
+                      Open Comment Form
+                    </Button>
+                  ) : (
+                    <></>
+                  )}
                   <Button
                     colorScheme="blue"
                     float="right"

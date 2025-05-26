@@ -615,10 +615,8 @@ export const InitialScreenerTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
-                            console.log(`cliocked ${cell.id}`);
                             (row.original as { [key: string]: any }).title = "Initial Screeners";
                             setClickedFormItem(row.original);
-                            console.log(row.original)
                             onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();

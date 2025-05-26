@@ -39,7 +39,6 @@ export default function EditClient({ email, setClientModal }) {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        console.log(`/clients/email/${email}`);
         const response = await backend.get(`/clients/email/${email}`);
 
         setUser(response.data[0]);
@@ -110,10 +109,10 @@ export default function EditClient({ email, setClientModal }) {
       await handlePasswordChange();
     }
     try {
-      console.log("Sending request: ", {
-        ...formData,
-        firebaseUid: user.firebaseUid,
-      });
+      // console.log("Sending request: ", {
+      //   ...formData,
+      //   firebaseUid: user.firebaseUid,
+      // });
       const response = await backend.put("/users/update", {
         ...formData,
         firebaseUid: user.firebaseUid,

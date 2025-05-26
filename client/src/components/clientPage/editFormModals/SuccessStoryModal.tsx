@@ -109,7 +109,6 @@ export default function SuccessStoryModal({
       payload[toSnake(key)] = (updated as any)[key];
     }
 
-    console.log(payload);
 
     try {
       await backend.put(`/successStory/${storyData.id}`, payload);

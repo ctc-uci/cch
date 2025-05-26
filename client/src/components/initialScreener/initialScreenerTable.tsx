@@ -79,8 +79,6 @@ export const InitialScreenerTable = () => {
         const response = await backend.get("/lastUpdated/initial_interview");
         const date = new Date(response.data[0]["lastUpdatedAt"]);
         const formattedDate = date.toLocaleString();
-        console.log(formattedDate); 
-        console.log("set time");
         setLastUpdated(formattedDate);
       } catch (error) {
         console.error("Error getting time:", error)
