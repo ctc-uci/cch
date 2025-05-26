@@ -60,7 +60,8 @@ const App = () => {
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
     currentRoute === 'authentification' ||
-    currentRoute === 'success-story'
+    currentRoute === 'success-story' ||
+    currentRoute === 'random-client-survey'
   );
 
   return (
@@ -129,7 +130,7 @@ const App = () => {
                 />
               <Route
                 path="/admin-client-list"
-                element={<ProtectedRoute element={<AdminClientList />} allowedRoles={['admin' , 'user']} />}
+                element={<AdminClientList />}
               />
               <Route
                 path="/accounts"
