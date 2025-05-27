@@ -12,6 +12,7 @@ import {
   Table,
   TableContainer,
   Tbody,
+  Flex,
   Td,
   Text,
   Th,
@@ -28,7 +29,9 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
+import { MdFileUpload } from "react-icons/md";
+import { MdOutlineManageSearch } from "react-icons/md";
+
 import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -82,6 +85,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
+
+  const [showSearch, setShowSearch] = useState(false);
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -350,13 +355,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
       } else {
         clientsRequest = backend.get("/clients");
-        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-
-        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString());
-        setClients(clientsResponse.data);
-
       }
+      const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+
+      const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
+      setLastUpdated(date.toLocaleString());
+      setClients(clientsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -368,10 +372,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
-
   return (
     <VStack
-      spacing={2}
+      spacing={6}
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
@@ -433,7 +436,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </HStack>
         </HStack>
       </HStack>
-      {/* If you want to have a fixed bottom height I'd prob have to change the css of this whole thing no? */}
       <Box
         width = {'100%'}
         justifyContent={"center"}

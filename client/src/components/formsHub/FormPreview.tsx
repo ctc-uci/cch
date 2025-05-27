@@ -29,13 +29,13 @@ import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { CaseManagerMonthlyTableBody } from "./CaseManagerMonthlyTableBody.tsx";
 import { formatDataWithLabels } from "./DataFormatter.tsx";
+import { ExitSurveyTableBody } from "./ExitSurveyTableBody.tsx";
 import { FrontDeskMonthlyTableBody } from "./FrontDeskTableBody.tsx";
 import { InitialScreenerTableBody } from "./InitialScreenerTableBody.tsx";
 import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
+import { RandomSurveyTableBody } from "./RandomSurveyTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
-import {ExitSurveyTableBody} from "./ExitSurveyTableBody.tsx";
-import {SuccessStoryTableBody} from "./SuccessStoryTableBody.tsx";
-import {RandomSurveyTableBody} from "./RandomSurveyTableBody.tsx";
+import { SuccessStoryTableBody } from "./SuccessStoryTableBody.tsx";
 
 const FormPreview = ({
   clickedFormItem,
@@ -105,7 +105,7 @@ const FormPreview = ({
           <ExitSurveyTableBody
             formData={newFormData}
             handleChange={handleChange}
-            />
+          />
         );
       case "Success Stories":
         return (
@@ -166,7 +166,7 @@ const FormPreview = ({
         const response = await backend.get(endpoint);
         let normalData = response.data[0];
 
-        if(formItemTitle === "Exit Surveys") {
+        if (formItemTitle === "Exit Surveys") {
           normalData = response.data.data[0];
         } else if (formItemTitle === "Random Client Surveys") {
           normalData = response.data;

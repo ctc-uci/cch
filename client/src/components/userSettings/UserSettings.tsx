@@ -48,8 +48,10 @@ const UserSettings = () => {
         style={{
           marginTop: "2%",
           marginLeft: "2%",
-          fontSize: "24px",
+          fontSize: "30px",
           fontWeight: "bold",
+          position: "relative",
+          left: "20px",
         }}
       >
         Settings
@@ -58,11 +60,13 @@ const UserSettings = () => {
         w="100vw"
         p={8}
         mt={10}
+        height="848px"
       >
         <Flex
           justify="space-between"
           w="100%"
           gap={8}
+          height="100%"
         >
           <Box flex="1">
             <UserSettingsPreview
@@ -75,8 +79,8 @@ const UserSettings = () => {
           </Box>
 
           {!editing && role !== "user" && (
-            <Box flex="2">
-              <ManageAccounts />
+            <Box flex="2" height="100%">
+              <ManageAccounts/>
             </Box>
           )}
 

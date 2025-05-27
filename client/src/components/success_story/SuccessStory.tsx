@@ -1,247 +1,193 @@
 import { useEffect, useState } from "react";
 
 import {
+  Box,
   Button,
   Link as ChakraLink,
+  Flex,
   FormControl,
   FormLabel,
   Heading,
+  HStack,
   Input,
   Radio,
   RadioGroup,
   Select,
+  Spacer,
   Stack,
+  Text,
   Textarea,
   useToast,
   VStack,
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { ProgressSteps } from "../ProgressSteps";
+import { SuccessScreen } from "../SuccessScreen";
+import { SuccessStoryForm } from "./SuccessStoryForm";
+import type { SuccessStoryForm as SuccessStoryFormType} from "../../types/successStory";
 
-export const SuccessStory = () => {
-  type CaseManager = {
-    id: number;
-    role: string;
-    firstName: string;
-    lastName: string;
-    phone_number: string;
-    email: string;
-  };
+export type CaseManager = {
+  id: number;
+  role: string;
+  firstName: string;
+  lastName: string;
+  phone_number: string;
+  email: string;
+};
 
-  type Location = {
-    id: number;
-    cm_id: number; // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
-    name: string;
-    date: Date;
-    caloptima_funded: boolean;
-  };
+export type Location = {
+  id: number;
+  cm_id: number; // Adjust the type for 'role' as per your actual data type (e.g., 'admin', 'user', etc.)
+  name: string;
+  date: Date;
+  caloptima_funded: boolean;
+};
 
-  const [ClientStatus, setStatus] = useState("1");
-  const [locations, setLocations] = useState([]);
-  const [caseManagers, setCaseManagers] = useState([]);
 
+export const SuccessStory = ({spanish} : {spanish: boolean}) => {
   const { backend } = useBackendContext();
   const toast = useToast();
-
-  useEffect(() => {
-    const getLocations = async () => {
-      try {
-        const response = await backend.get("/locations");
-        setLocations(response.data);
-      } catch (e) {
-        toast({
-          title: "An error occurred",
-          description: `Locations were not fetched: ${e.message}`,
-          status: "error",
-        });
-      }
-    };
-
-    const getCaseManagers = async () => {
-      try {
-        const response = await backend.get("/caseManagers");
-        setCaseManagers(response.data);
-      } catch (e) {
-        toast({
-          title: "An error occurred",
-          description: `Case Managers were not fetched: ${e.message}`,
-          status: "error",
-        });
-      }
-    };
-    getLocations();
-    getCaseManagers();
-  }, [backend, toast]);
+  const [onReview, setOnReview] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
+  const [formData, setFormData] = useState<SuccessStoryFormType>({
+    name: "",
+    site: 0,
+    cm_id: 0,
+    entrance_date: new Date(),
+    exit_date: new Date(),
+    date: new Date(),
+    previous_situation: "",
+    cch_impact: "",
+    where_now: "",
+    tell_donors: "",
+    quote: "",
+    consent: false,
+    client_id: null,
+  });
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData);
 
-    try {
-      await backend.post("/successStory", data);
-      toast({
-        title: "Form submitted",
-        description: `Thanks for your feedback!`,
-        status: "success",
-      });
-    } catch (e) {
-      toast({
-        title: "An error occurred",
-        description: `Success story response was not created: ${e.message}`,
-        status: "error",
-      });
+    if (!onReview) {
+      const form = event.currentTarget;
+      const formDataObj = new FormData(form);
+      const data = Object.fromEntries(formDataObj);
+      const typedFormData: SuccessStoryFormType = {
+        name: String(data.name || ""),
+        site: Number(data.site || 0),
+        cm_id: Number(data.cm_id || 0),
+        entrance_date: new Date(data.entrance_date as string),
+        exit_date: new Date(data.exit_date as string),
+        date: new Date(data.date as string),
+        previous_situation: String(data.previous_situation || ""),
+        cch_impact: String(data.cch_impact || ""),
+        where_now: String(data.where_now || ""),
+        tell_donors: String(data.tell_donors || ""),
+        quote: String(data.quote || ""),
+        consent: formDataObj.has("consent"),
+        client_id: null,
+      };
+      setFormData(typedFormData);
+      setOnReview(true);
+    } else {
+      try {
+        await backend.post("/successStory", formData);
+        toast({
+          title: "Form submitted",
+          description: `Thanks for your feedback!`,
+          status: "success",
+        });
+        setSubmitted(true);
+      } catch (error) {
+        console.error("Error submitting success story:", error);
+        toast({
+          title: "An error occurred",
+          description: `Success story response was not created: ${error.message}`,
+          status: "error",
+        });
+      }
     }
   };
-  return (
-    <VStack
-      spacing={8}
-      sx={{ width: 300, marginX: "auto" }}
-    >
-      <Heading>Success Story</Heading>
 
-      <form
-        style={{ width: "100%" }}
-        onSubmit={handleSubmit}
+  if (submitted) {
+    return <SuccessScreen />;
+  }
+
+  return (
+    <Box
+      bg={onReview ? "#E7F0F4" : "transparent"}
+      p={4}
+      minH="100vh"
+    >
+      <Box
+        width="60%"
+        justifyContent={"center"}
+        mx="auto"
       >
-        <Stack spacing={2}>
-          <FormControl isRequired>
-            <FormLabel>Client Name</FormLabel>
-            <Input
-              name="name"
-              placeholder="First name"
-            />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Case Manager</FormLabel>
-            <Select
-              name="cm_id"
-              placeholder="Select your case manager"
-            >
-              {caseManagers.map((manager: CaseManager) => (
-                <option
-                  key={manager.id}
-                  value={manager.id}
-                >
-                  {manager.firstName} {manager.lastName}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Site</FormLabel>
-            <Select
-              name="site"
-              placeholder="Site"
-            >
-              {locations.map((location: Location) => (
-                <option
-                  key={location.id}
-                  value={location.id}
-                >
-                  {location.name}
-                </option>
-              ))}
-            </Select>
-          </FormControl>
-          <RadioGroup
-            onChange={setStatus}
-            value={ClientStatus}
+        <ProgressSteps onReview={onReview} />
+        {onReview && (
+          <Text
+            fontSize="4xl"
+            color="blue.400"
+            pl={4}
+            mx="auto"
+            fontWeight="normal"
           >
-            <Stack direction="row">
-              <Radio value="CurrentClient">Current Client</Radio>
-              <Radio value="Graduate">Graduate</Radio>
-            </Stack>
-          </RadioGroup>
-          <FormControl isRequired>
-            <FormLabel>Entrance Date to CCH</FormLabel>
-            <Input
-              name="entrance_date"
-              type="date"
-            />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Exit Date to CCH</FormLabel>
-            <Input
-              name="exit_date"
-              type="date"
-            />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>
-              Please tell us your situation before entering Colette’s Children’s
-              Home. Please give as many details as you are comfortable with
-              about your story, how long you were homeless, what led to
-              homelessness, etc. We want to help people understand what being
-              homeless is like.{" "}
-            </FormLabel>
-            <Textarea name="previous_situation" />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>
-              Tell us about your time in CCH and how CCH was part of the
-              solution to your situation and the impact it had on you and and/or
-              your children. What was most helpful, what you learned, etc.{" "}
-            </FormLabel>
-            <Textarea name="cch_impact" />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>
-              Tell us where you are now. If you are graduating where are you
-              moving, are you working, how are your children doing, etc. Tell us
-              a finish to your story.{" "}
-            </FormLabel>
-            <Textarea name="where_now" />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>
-              If you had the opportunity to tell one of our donors what it meant
-              to you to be at CCH or how important it is to provide our services
-              to other women, what would you say?
-            </FormLabel>
-            <Textarea name="tell_donors" />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>
-              Please give a 1 to 2 sentence quote of what the CCH experience
-              meant to you?{" "}
-            </FormLabel>
-            <Textarea name="quote" />
-          </FormControl>
-          I consent to letting Colette’s Children’s Home se all or part of my
-          story in their marketing materials, such as website, newsletter,
-          brochures, videos, etc.
-          <FormControl isRequired>
-            <FormLabel>Consent </FormLabel>
-            <Radio
-              type="radio"
-              name="consent"
-              value="true"
-            >
-              Yes
-            </Radio>
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Client Signature:</FormLabel>
-            <Input />
-          </FormControl>
-          <FormControl isRequired>
-            <FormLabel>Date:</FormLabel>
-            <Input
-              name="date"
-              type="date"
-            />
-          </FormControl>
-          <Button
-            type="submit"
-            size={"lg"}
-            sx={{ width: "100%" }}
+            Review
+          </Text>
+        )}
+        <VStack
+          spacing={4}
+          align="stretch"
+        >
+          <Spacer />
+          <Box
+            maxH={onReview ? "100vh" : "auto"}
+            overflowY={onReview ? "auto" : "visible"}
+            bg={onReview ? "white" : "transparent"}
+            borderRadius={onReview ? "xl" : "none"}
+            boxShadow={onReview ? "sm" : "none"}
+            p={onReview ? 8 : 0}
+            mx={onReview ? "auto" : 0}
+            maxW={onReview ? "800px" : "auto"}
           >
-            Submit
-          </Button>
-        </Stack>
-      </form>
-    </VStack>
+            <SuccessStoryForm
+              onSubmit={handleSubmit}
+              onReview={onReview}
+            />
+          </Box>
+
+          {onReview && (
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              width="100%"
+            >
+              <Button
+                onClick={() => setOnReview(false)}
+                bg="#C4C4C4"
+                size="lg"
+              >
+                Cancel
+              </Button>
+
+              <Button
+                size="lg"
+                colorScheme="blue"
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.preventDefault();
+                  handleSubmit(
+                    e as unknown as React.FormEvent<HTMLFormElement>
+                  );
+                }}
+              >
+                Submit
+              </Button>
+            </Flex>
+          )}
+        </VStack>
+      </Box>
+    </Box>
   );
 };

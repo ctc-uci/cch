@@ -65,6 +65,7 @@ const App = () => {
     currentRoute === 'choose-form' ||
     currentRoute === 'random-client-survey' ||
     currentRoute === 'personal'
+    currentRoute === 'success-story'
   );
 
   return (
@@ -101,7 +102,8 @@ const App = () => {
               />
               <Route
                 path="/success-story"
-                element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+                //element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
+                element={<SuccessStory />}
               />
               <Route
                 path="/authentification/:userType?"
@@ -148,7 +150,7 @@ const App = () => {
                 path="/clientlist"
                 element={<ProtectedRoute element={<ClientList/>} allowedRoles={['admin', 'user']} />}
               />
-
+      
               <Route
                 path="/clientdata"
                 element={<ProtectedRoute element={<ClientData />} allowedRoles={['admin', 'user']} />}
@@ -170,9 +172,13 @@ const App = () => {
                   path="/ViewClient/:id"
                   element={<ProtectedRoute element={<ViewPage />} allowedRoles={['admin', 'user']} />}
                 />
-                <Route
+                {/* <Route
                   path="/casemanager"
                   element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
+                /> */}
+                <Route
+                  path="/casemanager"
+                  element={<CaseManager/>}
                 />
                 <Route
                   path="/random-client-survey"
@@ -188,7 +194,7 @@ const App = () => {
                 />
                   <Route
                     path ="/personal"
-                    element ={<PersonalInformation hidden={false}/>}
+                    element = {<PersonalInformation hidden={false}/>}
                   />
                   <Route
                     path ="/financial"
