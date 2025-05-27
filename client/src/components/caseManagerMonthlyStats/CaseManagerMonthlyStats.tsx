@@ -71,7 +71,6 @@ export const CaseManagerMonthlyStats = () => {
   
 
   const buttonStyle = {
-    variant: "outline",
     colorScheme: "blue",
   };
 
@@ -90,7 +89,7 @@ export const CaseManagerMonthlyStats = () => {
 
       <HStack alignSelf="end">
         <ButtonGroup size="sm">
-        <Button
+        {/* <Button
             {...buttonStyle}
             onClick={() => navigate('/frontDesk')}
           >
@@ -101,6 +100,12 @@ export const CaseManagerMonthlyStats = () => {
             onClick={() => navigate('/casemanager')}
           >
             Start Case Manager Form
+          </Button> */}
+          <Button
+            {...buttonStyle}
+            onClick={() => navigate('/casemanager')}
+          >
+            Export
           </Button>
         </ButtonGroup>
         <Select

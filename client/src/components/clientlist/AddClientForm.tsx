@@ -204,7 +204,7 @@ export const AddClientForm = ({ onClientAdded, setShowUnfinishedAlert}: AddClien
       <>
         <Button ref={btnRef} colorScheme='blue' onClick={onOpen}>
           {!formInProgress && <Text>Add</Text>}
-          {formInProgress && <Text>Edit</Text>}
+          {formInProgress && <Text>Edit New Client</Text>}
         </Button>
         <Drawer
           isOpen={isOpen}

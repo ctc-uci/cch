@@ -1,4 +1,4 @@
-import { Input, Radio, RadioGroup, Stack, Button } from '@chakra-ui/react';
+import { Input, Radio, RadioGroup, Stack, Button, Box } from '@chakra-ui/react';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,8 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: 
 
   return (
     <>
+    <Box width={'70%'} margin={'auto'} marginTop={16} padding={4} borderRadius={8} boxShadow="0 0 10px 1px grey" backgroundColor="white">
+      <Box width={'90%'} margin={'auto'} marginTop={4} padding={4} borderRadius={8}  backgroundColor="white">
         {!hidden && <StepperComponent step_index={1} />}
       <h1 style={{fontSize: "28px", color: "#3182CE"}}>Personal Information</h1>
       <div className="personal-information-form">
@@ -230,6 +232,8 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: 
 
       </div>
       {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/financial")}}>Next</Button>}
+      </Box>
+    </Box>
     </>
   );
 };

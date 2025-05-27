@@ -44,6 +44,15 @@ export function DonationFilter({
   handleAddDonor: () => void;
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const donorMap: {[key: string]: string} = {
+    "panera": "Panera",
+    "mcdonalds": "McDonald's",
+    "grand theater": "Grand Theater",
+    "pantry": "Pantry",
+    "copia": "Copia",
+    "costco": "Costco",
+    "sprouts": "Sprouts",
+  }
   const {
     isOpen: isAddOpen,
     onOpen: onAddOpen,
@@ -102,7 +111,7 @@ export function DonationFilter({
         <VStack align="stretch" spacing={0} maxH="100vh" overflowY="auto">
           {filtered.map((d) => (
             <MenuItem key={d} onClick={() => selectDonor(d)}>
-              {d}
+              {donorMap[d]}
             </MenuItem>
           ))}
           {filtered.length === 0 && (

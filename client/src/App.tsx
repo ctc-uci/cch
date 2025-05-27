@@ -47,6 +47,7 @@ import { InitialScreenerTable } from "./components/initialScreener/initialScreen
 import CommentForm from "./components/initialScreener/commentForm";
 import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
 import { Playground } from "./themes/play";
+import { ClientLandingPage, ChooseForm } from "./components/clientLandingPage/ClientLandingPage";
 
 const App = () => {
 
@@ -60,6 +61,10 @@ const App = () => {
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
     currentRoute === 'authentification' ||
+    currentRoute === 'client-landing-page' ||
+    currentRoute === 'choose-form' ||
+    currentRoute === 'random-client-survey' ||
+    currentRoute === 'personal'
     currentRoute === 'success-story'
   );
 
@@ -177,7 +182,7 @@ const App = () => {
                 />
                 <Route
                   path="/random-client-survey"
-                  element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={["client"]}/>}
+                  element={<RandomClientSurvey/>}
                 />
                 <Route
                   path ="/frontDesk"
@@ -189,7 +194,6 @@ const App = () => {
                 />
                   <Route
                     path ="/personal"
-                    // element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
                     element = {<PersonalInformation hidden={false}/>}
                   />
                   <Route
@@ -221,6 +225,12 @@ const App = () => {
                     path = "/comment-form/:id"
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
+                  <Route
+                    path = "/client-landing-page"
+                    element = {<ClientLandingPage />} />
+                     <Route
+                    path = "/choose-form"
+                    element = {<ChooseForm />} />
 
                 <Route
                   path="/"

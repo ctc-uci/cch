@@ -70,6 +70,7 @@ export const Login = () => {
 
   const handleLogin = async (data: SigninFormValues) => {
     try {
+      if(userType === "Client") {navigate("/choose-form");}
       await login({
         email: data.email,
         password: data.password,
@@ -79,7 +80,7 @@ export const Login = () => {
 
         navigate("/authentification/Admin");
       }
-      else if (userType === "Client") navigate("/client-landing-page");
+      //else if (userType === "Client") navigate("/client-landing-page");
     } catch (err) {
       const errorCode = err.code;
       const firebaseErrorMsg = err.message;

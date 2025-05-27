@@ -250,14 +250,14 @@ const VolunteersTable = ({
         justify="space-between"
         align="left"
       >
-        <HStack spacing="12px">
+        <HStack spacing="12px" width="60%">
           <Select
             placeholder="Select Event Type"
             value={eventTypeFilter}
             onChange={(e) => {
               setEventTypeFilter(e.target.value);
             }}
-            width="auto"
+            width="100%"
           >
             {eventTypes.map((eventType) => (
               <option
@@ -272,14 +272,14 @@ const VolunteersTable = ({
           <Input
             type="date"
             name="startDate"
-            w="40%"
+            w="60%"
             onChange={handleStartDateChange}
           />
           <Text>To:</Text>
           <Input
             type="date"
             name="endDate"
-            w="40%"
+            w="60%"
             onChange={handleEndDateChange}
           />
         </HStack>
