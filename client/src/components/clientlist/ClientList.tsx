@@ -31,6 +31,7 @@ import {
 } from "@tanstack/react-table";
 import { MdFileUpload } from "react-icons/md";
 import { MdOutlineManageSearch } from "react-icons/md";
+import { FiUpload } from "react-icons/fi";
 
 import { useNavigate } from "react-router-dom";
 
