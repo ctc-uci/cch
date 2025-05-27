@@ -49,7 +49,6 @@ const clientGrantOptions = [
   { label: "Non-Funded", value: "Non-Funded" },
 ];
 
-
 export const IntakeStatisticsTableBody =  ({
   formData,
   handleChange,
