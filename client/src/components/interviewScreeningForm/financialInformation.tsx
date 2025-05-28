@@ -64,14 +64,14 @@ const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
                 <Stack className="financial-information-form" spacing={4} paddingTop={5}>
                     <Stack direction="row" spacing={8}>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>1.</strong> What is your estimate monthly income?</label>
+                            <label><strong>1.</strong> {fields[language].monthlyIncome}</label>
                             <Input
                                 value={formData.monthlyIncome}
                                 onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })}
                             />
                         </Stack>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>2.</strong> What are your sources of income?</label>
+                            <label><strong>2.</strong> {fields[language].sourcesOfIncome}</label>
                             <Input
                                 value={formData.sourcesOfIncome}
                                 onChange={(e) => setFormData({ ...formData, sourcesOfIncome: e.target.value })}
@@ -81,14 +81,14 @@ const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
 
                     <Stack direction="row" spacing={8}>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>3.</strong> What are your monthly bills</label>
+                            <label><strong>3.</strong> {fields[language].monthlyBills}</label>
                             <Input
                                 value={formData.monthlyBills}
                                 onChange={(e) => setFormData({ ...formData, monthlyBills: e.target.value })}
                             />
                         </Stack>
                         <Stack spacing={4} flex={1}>
-                            <label>Estimated amount</label>
+                            <label>{fields[language].estimateAmountBills}</label>
                             <Input
                                 type='number'
                                 value={formData.estimateAmountBills}
@@ -99,18 +99,18 @@ const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
 
                     <Stack direction="row" spacing={8}>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>4.</strong> Are you currently employed?</label>
+                            <label><strong>4.</strong> {fields[language].currentlyEmployed}</label>
                             <Select
                                 value={formData.currentlyEmployed}
                                 onChange={(e) => setFormData({ ...formData, currentlyEmployed: e.target.value })}
-                                placeholder='Select Option'
+                                placeholder={language === 'spanish' ? 'Seleccione una opción' : 'Select Option'}
                             >
-                                <option value='yes'>Yes</option>
-                                <option value='no'>No</option>
+                                <option value='yes'>{language === 'spanish' ? 'Sí' : 'Yes'}</option>
+                                <option value='no'>{language === 'spanish' ? 'No' : 'No'}</option>
                             </Select>
                         </Stack>
                         <Stack spacing={4} flex={2}>
-                            <label><strong>5.</strong> Last employer</label>
+                            <label><strong>5.</strong> {fields[language].lastEmployer}</label>
                             <Input
                                 value={formData.lastEmployer}
                                 onChange={(e) => setFormData({ ...formData, lastEmployer: e.target.value })}
@@ -119,14 +119,14 @@ const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
                     </Stack>
                     <Stack direction="row" spacing={8}>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>6.</strong> Education History</label>
+                            <label><strong>6.</strong> {fields[language].educationHistory}</label>
                             <Input
                                 value={formData.educationHistory}
                                 onChange={(e) => setFormData({ ...formData, educationHistory: e.target.value })}
                             />
                         </Stack>
                         <Stack spacing={4} flex={1}>
-                            <label><strong>7.</strong> Date of Education</label>
+                            <label><strong>7.</strong> {fields[language].dateOfEducation}</label>
                             <Input
                                 placeholder='mm/dd/yyyy'
                                 type='date'
@@ -137,23 +137,23 @@ const FinancialInformation = ({ hidden }: InterviewScreeningFormProps) => {
                     </Stack>
 
                     <Stack spacing={4}>
-                        <label><strong>8.</strong> Are you a legal U.S. resident?</label>
+                        <label><strong>8.</strong> {fields[language].legalResident}</label>
                         <RadioGroup
                             value={formData.legalResident}
                             onChange={(value) => setFormData({ ...formData, legalResident: value })}
                             colorScheme="blue"
                         >
                             <Stack direction="row" spacing={6}>
-                                <Radio size="md" value="yes">Yes</Radio>
-                                <Radio size="md" value="no">No</Radio>
-                                <Radio size="md" value="unsure">Unsure</Radio>
+                                <Radio size="md" value="yes">{language === 'spanish' ? 'Sí' : 'Yes'}</Radio>
+                                <Radio size="md" value="no">{language === 'spanish' ? 'No' : 'No'}</Radio>
+                                <Radio size="md" value="unsure">{language === 'spanish' ? 'No estoy seguro' : 'Unsure'}</Radio>
                             </Stack>
                         </RadioGroup>
                     </Stack>
                 </Stack>
             </Box>
             <Box marginTop={5} display="flex" justifyContent="flex-end">
-                {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/health")}}>Next</Button>}
+                {!hidden && <Button colorScheme="blue" onClick={() => {navigate(`/health/${language}`)}}>Next</Button>}
             </Box>
         </Box>
     );

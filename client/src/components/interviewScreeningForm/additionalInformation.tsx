@@ -1,4 +1,3 @@
-import { Button, Textarea } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Textarea, IconButton } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
@@ -51,7 +50,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                 <h1 style={{fontSize: "28px", color: "#3182CE"}}>Additional Information</h1>
                 <Box className="additional-information-form" paddingTop={5}>
                     <Box marginBottom={6}>
-                        <label><strong>1.</strong> What are your future plans and goals</label>
+                        <label>{fields[language].futurePlansGoals}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.futurePlansGoals}
@@ -59,7 +58,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>2.</strong> Last permanent resident household composition</label>
+                        <label>{fields[language].lastPermanentResidentHouseholdComposition}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.lastPermanentResidentHouseholdComposition}
@@ -67,7 +66,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>3.</strong> Reason why you're not there</label>
+                        <label>{fields[language].whyNoLongerAtLastResidence}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.whyNoLongerAtLastResidence}
@@ -75,7 +74,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>4.</strong> What could've prevented you from being homeless?</label>
+                        <label>{fields[language].whatCouldPreventHomeless}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.whatCouldPreventHomeless}
@@ -85,7 +84,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                 </Box>
             </Box>
             <Box marginTop={5} display="flex" justifyContent="flex-end">
-                {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/review")}}>Next</Button>}
+                {!hidden && <Button colorScheme="blue" onClick={() => {navigate(`/review/${language}`)}}>Next</Button>}
             </Box>
         </Box>
     );
