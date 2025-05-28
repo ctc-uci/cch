@@ -69,7 +69,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [clients, setClients] = useState<
     (Client & { isChecked: boolean; isHovered: boolean })[]
@@ -82,7 +82,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-  // const [displayName, setDisplayName] = useState("");
 
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
@@ -346,7 +345,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const fetchData = async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-
       let clientsRequest;
       if (searchKey && filterQuery.length > 1) {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);

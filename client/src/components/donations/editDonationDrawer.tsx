@@ -75,7 +75,6 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
         const fetchData = async () => {
             try {
                 const response = await backend.get<Donor[]>('/donations/donors');
-                console.log(response.data);
                 setDonors(response.data);
             } catch (error) {
                 console.error("Error fetching donors:", error);
@@ -105,7 +104,6 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
               await backend.put(`/donations/${donation.id}`, donation);
           }
           else{
-              console.log({...donation, donor});
               await backend.post('/donations', {...donation, donor});
           }
           toast({

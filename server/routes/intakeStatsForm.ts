@@ -199,7 +199,6 @@ intakeStatsFormRouter.post("/", async (req, res) => {
       convictedCrime,
     ];
     const result = await db.query(query, values);
-    console.log(result);
     res.status(201).json({ id: result[0].id });
   } catch (err) {
     res.status(500).send(err.message);

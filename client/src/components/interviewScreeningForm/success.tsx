@@ -17,16 +17,21 @@ const Success = () => {
     type Language = keyof typeof text;
     const language = (params.language as Language) || "english";
     return(
-
-        <Box minH={"100vh"} w={"100%"} display={'flex'} justifyContent={'center'} flexDir={'column'} alignItems={'center'}>
-            <Text fontSize={'6xl'}>{text[language].title}</Text>
-            <MdCheckCircle size={100} color="green"/>
-            <Text fontSize={'3xl'}>{text[language].message}</Text>
+        <Box margin={40} marginTop={10}>
+            <Box 
+                minH="calc(100vh - 80px)" 
+                display="flex" 
+                flexDirection="column" 
+                justifyContent="center" 
+                alignItems="center" 
+                gap={8}
+            >
+                <Text fontSize="6xl" color="#3182CE">{text[language].title}</Text>
+                <MdCheckCircle size={100} color="#38A169"/>
+                <Text fontSize="3xl">{text[language].message}</Text>
+            </Box>
         </Box>
-
-
-
-    )
+    );
 };
 
 export default Success;

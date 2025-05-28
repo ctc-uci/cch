@@ -18,6 +18,7 @@ import {
   Thead,
   Tr,
   VStack,
+  useDisclosure
 } from "@chakra-ui/react";
 
 import {
@@ -33,6 +34,8 @@ import { FiUpload } from "react-icons/fi";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
+import { useNavigate } from "react-router-dom";
+
 import type { InitialInterview } from "../../../types/initialScreener.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
@@ -40,6 +43,8 @@ import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
+
 
 export const InitialScreenerTable = () => {
   // still gotta do this -- but I'll do it later
@@ -57,9 +62,11 @@ export const InitialScreenerTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-
+  const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [refreshTable, setRefreshTable] = useState(false);
  
-
+  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
     () => [
       {
@@ -491,6 +498,13 @@ export const InitialScreenerTable = () => {
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
+  useEffect(() => {
+    if (clickedFormItem) {
+      onOpen();
+    }
+  }, [clickedFormItem, onOpen]);
+
+
   return (
     <VStack
       align="start"
@@ -523,7 +537,7 @@ export const InitialScreenerTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px">add</Button>
+            <Button fontSize="12px" onClick={() => navigate('/personal')}>add</Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -594,6 +608,9 @@ export const InitialScreenerTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
+                            (row.original as { [key: string]: any }).title = "Initial Screeners";
+                            setClickedFormItem(row.original);
+                            onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -622,6 +639,18 @@ export const InitialScreenerTable = () => {
             </Table>
           </TableContainer>
         )}
+                          {clickedFormItem && (
+            <FormPreview
+              clickedFormItem={clickedFormItem}
+              isOpen={isOpen}
+              onClose={() => {
+                onClose();
+                setClickedFormItem(null);
+              }}
+              refreshTable={refreshTable}
+              setRefreshTable={setRefreshTable}
+            />
+          )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}

@@ -131,7 +131,6 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
         const response = await backend.get(
           `/caseManagers/names`
         );
-        console.log(response.data);
         setCm(response.data);
         setFormData((prevState) => ({ ...prevState, ['cm_id']: response.data[0].id }));
         setSelectedCm(response.data[0]); //set default to first cm
