@@ -2,11 +2,26 @@ import { VStack, Image, Text, Button, ButtonGroup, Box, HStack } from "@chakra-u
 import { Tabs, TabList, TabPanels, Tab} from '@chakra-ui/react';
 import { useState } from "react";
 import cch from "../../../public/cch_logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const ClientLandingPage = () => {
     const [language, setLanguage] = useState<string | null>(null);
     const navigate = useNavigate();
+    const params = useParams();
+    const handleContinue = () => {
+      const formSelected = params.form;
+      if (formSelected === 'rcs'){
+        navigate(`random-client-survey/${language}`)
+      } else if (formSelected === 'isf'){
+        navigate(`initial-screener-form/${language}`)
+      } else if (formSelected === 'es'){
+        navigate(`exit-survey/${language}`)
+      }
+      else if (formSelected === 'ss'){
+        navigate(`success-story/${language}`)
+      }
+    }
+
     return (
         <VStack
             justifyContent="center"
@@ -25,12 +40,11 @@ const ClientLandingPage = () => {
             {language && (<>
                 <Text fontSize="lg" marginTop={4} width={380} textAlign="center">
                 This survey helps us understand your needs so we can provide the best support possible. Your answers are confidential, and we’re here to assist if you need anything.</Text>
-                <Button variant={"solid"} colorScheme="blue" size="lg" marginTop={4} onClick={() => {
-                    navigate('/personal')}} >
+                <Button variant={"solid"} colorScheme="blue" size="lg" marginTop={4} onClick={handleContinue}>
                     Continue
                 </Button>
             </>)}
-            
+
         </VStack>
 )};
 
@@ -71,15 +85,15 @@ const ChooseForm = () => {
                 </VStack>
                 </ButtonGroup>
             {selected && (<>
-                
-                
+
+
                 <Button variant={"outline"} colorScheme="blue" size="lg" marginTop={4} onClick={() => {
-                            navigate('/client-landing-page')}} >
+                            navigate(`/client-landing-page/${selected}`)}} >
                             Continue
                         </Button>
-                
+
             </>)}
-            
+
         </VStack>
     )
 }

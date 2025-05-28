@@ -1,22 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Box,
   Button,
-  Link as ChakraLink,
   Flex,
-  FormControl,
-  FormLabel,
-  Heading,
-  HStack,
-  Input,
-  Radio,
-  RadioGroup,
-  Select,
   Spacer,
-  Stack,
   Text,
-  Textarea,
   useToast,
   VStack,
 } from "@chakra-ui/react";
@@ -26,6 +15,7 @@ import { ProgressSteps } from "../ProgressSteps";
 import { SuccessScreen } from "../SuccessScreen";
 import { SuccessStoryForm } from "./SuccessStoryForm";
 import type { SuccessStoryForm as SuccessStoryFormType} from "../../types/successStory";
+import { useParams } from "react-router-dom";
 
 export type CaseManager = {
   id: number;
@@ -45,11 +35,13 @@ export type Location = {
 };
 
 
-export const SuccessStory = ({spanish} : {spanish: boolean}) => {
+export const SuccessStory = () => {
   const { backend } = useBackendContext();
   const toast = useToast();
   const [onReview, setOnReview] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const params = useParams();
+  const language = params.language || "english";
   const [formData, setFormData] = useState<SuccessStoryFormType>({
     name: "",
     site: 0,
@@ -155,6 +147,7 @@ export const SuccessStory = ({spanish} : {spanish: boolean}) => {
             <SuccessStoryForm
               onSubmit={handleSubmit}
               onReview={onReview}
+              spanish={language === "spanish"}
             />
           </Box>
 

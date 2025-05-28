@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   Box,
@@ -15,6 +15,7 @@ import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurve
 import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
 import { ProgressSteps } from "../ProgressSteps.tsx";
 import { SuccessScreen } from "../SuccessScreen.tsx";
+import { useParams } from "react-router-dom";
 
 const initialFormData = {
   name: "",
@@ -41,6 +42,8 @@ export const ExitSurvey = () => {
   const { backend } = useBackendContext();
   const toast = useToast();
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const params = useParams();
+  const language = params.language || "english";
 
   const handleSubmit = async (
     event:
@@ -117,6 +120,7 @@ export const ExitSurvey = () => {
               handleSubmit={handleSubmit}
               setFormData={setFormData}
               onReview={onReview}
+              spanish={language === "spanish"}
             />
           </Box>
 

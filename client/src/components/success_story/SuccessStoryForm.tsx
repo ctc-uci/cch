@@ -3,19 +3,14 @@ import { useEffect, useState } from "react";
 import {
   Box,
   Button,
-  Link as ChakraLink,
   Checkbox,
   Divider,
   Flex,
   FormControl,
   FormLabel,
-  Heading,
   HStack,
   Input,
-  Radio,
-  RadioGroup,
   Select,
-  Spacer,
   Stack,
   Text,
   Textarea,
@@ -42,7 +37,8 @@ export const SuccessStoryForm = ({
   const toast = useToast();
   const language = spanish ? "spanish" : "english"
   const fields = {
-    english: {title:"Exit Survey",
+    english: {
+              title:"Success Story",
               subtitle: "We are committed to providing you the best help possible, so we welcome your comments. Please fill out the questionnaire. Thank you!",
               first_name: "What is your first name?",
               site: "What was your site?",
@@ -56,9 +52,14 @@ export const SuccessStoryForm = ({
               where_now : "Tell us where you are now. If you are graduating where are you moving, are you working, how are your children doing, etc. Tell us a finish to your story.",
               tell_donors: "If you had the opportunity to tell one of our donors what it meant to you to be at CCH or how important it is to provide our services to other women, what would you say?",
               quote: "Please give a 1 to 2 sentence quote of what the CCH experience meant to you?",
-              consent: "By checking the box, I consent to letting Colette's Children's Home use all or part of my story in their marketing materials, such as website, newsletter, brochures, videos, etc."
+              consent: "By checking the box, I consent to letting Colette's Children's Home use all or part of my story in their marketing materials, such as website, newsletter, brochures, videos, etc.",
+              type_here: "Enter your response...",
+              date_placeholder: "Date",
+              site_placeholder: "Select your site",
+              cm_placeholder: "Select your case manager",
     },
-    spanish: {title:"Encuesta de salida",
+    spanish: {
+              title:"Encuesta de Éxito",
               subtitle: "Estamos comprometidos a brindarle la mejor ayuda posible, por lo que agradecemos sus comentarios. Por favor, rellene el cuestionario. ¡Gracias!",
               first_name: "¿Cuál es tu primer nombre?",
               site: "¿Cuál fue su sitio?",
@@ -72,7 +73,11 @@ export const SuccessStoryForm = ({
               where_now : "Dinos dónde estás ahora. Si te estás graduando, ¿dónde te mudas, estás trabajando, cómo te van tus hijos, etc. Cuéntanos un final para tu historia.",
               tell_donors: "Si tuviera la oportunidad de decirle a uno de nuestros donantes lo que significa para usted estar en CCH o lo importante que es proporcionar nuestros servicios a otras mujeres, ¿qué diría?",
               quote: "Por favor, dé una cita de 1 a 2 frases de lo que significó para usted la experiencia de CCH?",
-              consent: "Al marcar la casilla, doy mi consentimiento para permitir que Colette's Children's Home use todo o parte de mi historia en sus materiales de marketing, tales como sitio web, boletín informativo, folletos, videos, etc."
+              consent: "Al marcar la casilla, doy mi consentimiento para permitir que Colette's Children's Home use todo o parte de mi historia en sus materiales de marketing, tales como sitio web, boletín informativo, folletos, videos, etc.",
+              type_here: "Escribe su respuesta aquí...",
+              date_placeholder: "Fecha",
+              site_placeholder: "Seleccione su sitio",
+              cm_placeholder: "Seleccione su administrador de casos",
     }
   }
 
@@ -142,7 +147,7 @@ export const SuccessStoryForm = ({
               <FormLabel>2. {fields[language]["site"]} </FormLabel>
               <Select
                 name="site"
-                placeholder="Select your site"
+                placeholder={fields[language]["site_placeholder"]}
                 isDisabled={onReview}
               >
                 {locations.map((location: Location) => (
@@ -166,7 +171,7 @@ export const SuccessStoryForm = ({
               <FormLabel>3. {fields[language]["cm"]}</FormLabel>
               <Select
                 name="cm_id"
-                placeholder="Select your case manager"
+                placeholder={fields[language]["cm_placeholder"]}
                 maxW="530px"
                 isDisabled={onReview}
               >
@@ -186,7 +191,7 @@ export const SuccessStoryForm = ({
               <Input
                 name="entrance_date"
                 type="date"
-                placeholder="Date"
+                placeholder={fields[language]["date_placeholder"]}
                 isDisabled={onReview}
               />
             </FormControl>
@@ -202,7 +207,7 @@ export const SuccessStoryForm = ({
               <Input
                 name="exit_date"
                 type="date"
-                placeholder="Date"
+                placeholder={fields[language]["date_placeholder"]}
                 isDisabled={onReview}
               />
             </FormControl>
@@ -212,7 +217,7 @@ export const SuccessStoryForm = ({
               <Input
                 name="date"
                 type="date"
-                placeholder="Date"
+                placeholder={fields[language]["date_placeholder"]}
                 isDisabled={onReview}
               />
             </FormControl>
@@ -234,7 +239,7 @@ export const SuccessStoryForm = ({
             </FormLabel>
             <Textarea
               name="previous_situation"
-              placeholder="Enter your response..."
+              placeholder={fields[language]["type_here"]}
               isDisabled={onReview}
             />
           </FormControl>
@@ -245,7 +250,7 @@ export const SuccessStoryForm = ({
             </FormLabel>
             <Textarea
               name="cch_impact"
-              placeholder="Enter your response..."
+              placeholder={fields[language]["type_here"]}
               isDisabled={onReview}
             />
           </FormControl>
@@ -256,7 +261,7 @@ export const SuccessStoryForm = ({
             </FormLabel>
             <Textarea
               name="where_now"
-              placeholder="Enter your response..."
+              placeholder={fields[language]["type_here"]}
               isDisabled={onReview}
             />
           </FormControl>
@@ -267,7 +272,7 @@ export const SuccessStoryForm = ({
             </FormLabel>
             <Textarea
               name="tell_donors"
-              placeholder="Enter your response..."
+              placeholder={fields[language]["type_here"]}
               isDisabled={onReview}
             />
           </FormControl>
@@ -278,7 +283,7 @@ export const SuccessStoryForm = ({
             </FormLabel>
             <Textarea
               name="quote"
-              placeholder="Enter your response..."
+              placeholder={fields[language]["type_here"]}
               isDisabled={onReview}
             />
           </FormControl>
@@ -288,7 +293,7 @@ export const SuccessStoryForm = ({
               spacing={2}
               alignItems="center"
             >
-              <Checkbox 
+              <Checkbox
                 name="consent"
                 mt={1}
                 isDisabled={onReview}
