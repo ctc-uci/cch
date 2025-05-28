@@ -13,7 +13,7 @@ const ClientLandingPage = () => {
       if (formSelected === 'rcs'){
         navigate(`random-client-survey/${language}`)
       } else if (formSelected === 'isf'){
-        navigate(`initial-screener-form/${language}`)
+        navigate(`personal/${language}`)
       } else if (formSelected === 'es'){
         navigate(`exit-survey/${language}`)
       }

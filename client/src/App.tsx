@@ -64,8 +64,15 @@ const App = () => {
     currentRoute === 'client-landing-page' ||
     currentRoute === 'choose-form' ||
     currentRoute === 'random-client-survey' ||
-    currentRoute === 'personal'
-    currentRoute === 'success-story'
+    currentRoute === 'personal' ||
+    currentRoute === 'success-story' ||
+    currentRoute === 'exit-survey' ||
+    currentRoute === 'success' ||
+    currentRoute === 'playground' ||
+    currentRoute === 'financial' ||
+    currentRoute === 'health' ||
+    currentRoute === 'additional' ||
+    currentRoute === 'review'
   );
 
   return (
@@ -97,11 +104,12 @@ const App = () => {
                 element={<ForgotPassword />}
               />
               <Route
-                path="/exit-survey"
-                element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
+                path="/exit-survey/:language?"
+                //element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
+                element={<ExitSurvey />}
               />
               <Route
-                path="/success-story"
+                path="/success-story/:language?"
                 //element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
                 element={<SuccessStory />}
               />
@@ -148,9 +156,9 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ProtectedRoute element={<ClientList/>} allowedRoles={['admin', 'user']} />}
+                element={<ClientList />}
               />
-      
+
               <Route
                 path="/clientdata"
                 element={<ProtectedRoute element={<ClientData />} allowedRoles={['admin', 'user']} />}
@@ -181,7 +189,8 @@ const App = () => {
                   element={<CaseManager/>}
                 />
                 <Route
-                  path="/random-client-survey"
+                  path="/random-client-survey/:language?"
+                  //element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={['client']} />}
                   element={<RandomClientSurvey/>}
                 />
                 <Route
@@ -193,27 +202,27 @@ const App = () => {
                   element={<ProtectedRoute element={<IntakeStats />} allowedRoles={['admin', 'user']} />}
                 />
                   <Route
-                    path ="/personal"
-                    element = {<PersonalInformation hidden={false}/>}
+                    path ="/personal/:language?"
+                    element = {<ProtectedRoute element={<PersonalInformation hidden={false}/>} />}
                   />
                   <Route
-                    path ="/financial"
+                    path ="/financial/:language?"
                     element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} />}
                   />
                   <Route
-                    path ="/health"
+                    path ="/health/:language?"
                     element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>}/>}
                   />
                   <Route
-                    path ="/additional"
+                    path ="/additional/:language?"
                     element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>}/>}
                   />
                   <Route
-                    path ="/review"
+                    path ="/review/:language?"
                     element ={<ProtectedRoute element={<ReviewInformation/>}/>}
                   />
                   <Route
-                    path ="/success"
+                    path ="/success/:language?"
                     element ={<ProtectedRoute element={<Success/>} />}
                   />
                   <Route path="/playground" element={<Playground/>}/>
@@ -226,7 +235,7 @@ const App = () => {
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
                   <Route
-                    path = "/client-landing-page"
+                    path = "/client-landing-page/:form"
                     element = {<ClientLandingPage />} />
                      <Route
                     path = "/choose-form"

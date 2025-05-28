@@ -22,7 +22,6 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
-import { MdSubtitles } from "react-icons/md";
 
 type ExitSurveyFormProps = {
   formData: ExitSurveyFormType;
@@ -124,7 +123,7 @@ export const ExitSurveyForm = ({
       outcomeExtraNotes: "3. ¿Qué más te gustaría que supiéramos?",
       submit: "Siguiente",
       namePlaceholder: "Escribe su nombre",
-      sitePlaceholder: "Selecciona la ubicación",
+      sitePlaceholder: "Selecciona el sitio",
       cmPlaceholder: "Selecciona el administrador de casos",
       enterResponse: "Escribe su respuesta...",
       unsatisfactory: "Insatisfactorio",
