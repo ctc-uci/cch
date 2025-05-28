@@ -1,20 +1,14 @@
-import { SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Box,
   Button,
-  Center,
-  Link as ChakraLink,
   Divider,
   Flex,
   FormControl,
-  FormErrorMessage,
-  FormHelperText,
   FormLabel,
-  Heading,
   HStack,
   Input,
-  Progress,
   Radio,
   RadioGroup,
   Select,
@@ -34,41 +28,16 @@ type ExitSurveyFormProps = {
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
   setFormData: React.Dispatch<React.SetStateAction<ExitSurveyFormType>>;
   onReview: boolean;
-  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
+  spanish: boolean;
 };
 
-type NavButtonsProps = {
-  onReview: boolean;
-  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-const NavButtons: React.FC<NavButtonsProps> = ({ onReview, setOnReview }) => {
-  if (!onReview) {
-    return (
-      <Flex
-        justifyContent={"flex-end"}
-        width={"100%"}
-      >
-        <Button
-          type="submit"
-          size={"lg"}
-          colorScheme="blue"
-        >
-          Next
-        </Button>
-      </Flex>
-    );
-  } else {
-    return <div></div>;
-  }
-};
 
 export const ExitSurveyForm = ({
   formData,
   handleSubmit,
   setFormData,
   onReview,
-  setOnReview,
+  spanish
 }: ExitSurveyFormProps) => {
   type CaseManager = {
     id: number;
@@ -91,6 +60,82 @@ export const ExitSurveyForm = ({
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
   const { backend } = useBackendContext();
   const toast = useToast();
+  const language = spanish ? "spanish" : "english";
+
+  const fields = {
+    english: {
+      title: "Exit Survey",
+      subtitle: "We are committed to providing you with the best help possible, so we welcome your comments. Please fill out this questionnaire. Thank you!",
+      name: "1. What is your name?",
+      site: "2. What was your site?",
+      cm: "3. Who is your case manager?",
+      overallProgram: "Overall Program",
+      lifeSkills: "Life Skills",
+      caseManagement: "Case Management",
+      outcome: "Outcome",
+      overallRating: "1. How would you rate Colette's Children's Home overall?",
+      overallLikeMost: "2. What did you like most about Colette’s Children’s Home?",
+      overallCouldBeImproved: "3. What would make Colette’s Children’s home better?",
+      lifeSkillsRating: "1. How helpful were the Life Skills Meetings?",
+      lifeSkillsHelpfulTopics: "2. What topics were the most helpful for you?",
+      lifeSkillsOfferTopicsInTheFuture: "3. What topics would you like CCH to offer in the future?",
+      cmRating: "1. How helpful was case management?",
+      cmChangeAbout: "2. What would you change about your case management?",
+      cmMostBeneficial: "3. What was the most beneficial part of your case management?",
+      outcomeFutureChange: "1. How do you think that your experience at CCH will change your future?",
+      outcomeAccomplished: "2. What have you learned/accomplished while during your stay?",
+      outcomeExtraNotes: "3. What else would you like us to know?",
+      submit: "Next",
+      namePlaceholder: "Enter your name",
+      sitePlaceholder: "Select Location",
+      cmPlaceholder: "Select case manager",
+      enterResponse: "Enter your response...",
+      unsatisfactory: "Unsatisfactory",
+      fair: "Fair",
+      good: "Good",
+      excellent: "Excellent",
+      notVeryHelpfulAtAll: "Not Very Helpful At All",
+      notVeryHelful: "Not Very Helpful",
+      helpful: "Helpful",
+      veryHelpful: "Very Helpful",
+    },
+    spanish: {
+      title: "Encuesta de Salida",
+      subtitle: "Estamos comprometidos a brindarle la mejor ayuda posible, por lo que agradecemos sus comentarios. Por favor, complete este cuestionario. ¡Gracias!",
+      name: "1. ¿Cuál es tu nombre?",
+      site: "2. ¿Cuál fue tu sitio?",
+      cm: "3. ¿Quién es tu administrador de casos?",
+      overallProgram: "Programa General",
+      lifeSkills: "Habilidades para la Vida",
+      caseManagement: "Gestión de Casos",
+      outcome: "Resultado",
+      overallRating: "1. ¿Cómo calificarías el Hogar Infantil Colette en general?",
+      overallLikeMost: "2. ¿Qué te gustó más del Hogar Infantil Colette?",
+      overallCouldBeImproved: "3. ¿Qué podría mejorar el Hogar Infantil Colette?",
+      lifeSkillsRating: "1. ¿Qué tan útiles fueron las Reuniones de Habilidades para la Vida?",
+      lifeSkillsHelpfulTopics: "2. ¿Qué temas fueron los más útiles para ti?",
+      lifeSkillsOfferTopicsInTheFuture: "3. ¿Qué temas te gustaría que CCH ofreciera en el futuro?",
+      cmRating: "1. ¿Qué tan útil fue la gestión de casos?",
+      cmChangeAbout: "2. ¿Qué cambiarías sobre tu gestión de casos?",
+      cmMostBeneficial: "3. ¿Cuál fue la parte más beneficiosa de tu gestión de casos?",
+      outcomeFutureChange: "1. ¿Cómo crees que tu experiencia en CCH cambiará tu futuro?",
+      outcomeAccomplished: "2. ¿Qué has aprendido/logrado durante tu estancia?",
+      outcomeExtraNotes: "3. ¿Qué más te gustaría que supiéramos?",
+      submit: "Siguiente",
+      namePlaceholder: "Escribe su nombre",
+      sitePlaceholder: "Selecciona el sitio",
+      cmPlaceholder: "Selecciona el administrador de casos",
+      enterResponse: "Escribe su respuesta...",
+      unsatisfactory: "Insatisfactorio",
+      fair: "Regular",
+      good: "Bueno",
+      excellent: "Excelente",
+      notVeryHelpfulAtAll: "No Muy Útil en Absoluto",
+      notVeryHelful: "No Muy Útil",
+      helpful: "Útil",
+      veryHelpful: "Muy Útil",
+    },
+  }
 
   useEffect(() => {
     const getLocations = async () => {
@@ -158,12 +203,10 @@ export const ExitSurveyForm = ({
             fontSize="3xl"
             color="#3182CE"
           >
-            Exit Survey
+            {fields[language].title}
           </Text>
           <Text>
-            We are committed to providing you with the best help possible, so we
-            welcome your comments. Please fill out this questionnaire. Thank
-            you!
+            {fields[language].subtitle}
           </Text>
 
           <Divider />
@@ -174,10 +217,10 @@ export const ExitSurveyForm = ({
             w="100%"
           >
             <FormControl isRequired>
-              <FormLabel>1. What is your first name?</FormLabel>
+              <FormLabel>{fields[language].name}</FormLabel>
               <Input
                 name="name"
-                placeholder="Enter your name"
+                placeholder={fields[language].namePlaceholder}
                 onChange={handleChange}
                 value={formData.name}
                 isDisabled={onReview}
@@ -185,10 +228,10 @@ export const ExitSurveyForm = ({
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>3. What was your site?</FormLabel>
+              <FormLabel>{fields[language].site}</FormLabel>
               <Select
                 name="site"
-                placeholder="Select Location"
+                placeholder={fields[language].sitePlaceholder}
                 onChange={handleChange}
                 value={formData.site}
                 isDisabled={onReview}
@@ -211,10 +254,10 @@ export const ExitSurveyForm = ({
             w="100%"
           >
             <FormControl isRequired>
-              <FormLabel>3. Who is your case manager?</FormLabel>
+              <FormLabel>{fields[language].cm}</FormLabel>
               <Select
                 name="cmId"
-                placeholder="Select case manager"
+                placeholder={fields[language].cmPlaceholder}
                 onChange={handleChange}
                 value={formData.cmId}
                 isDisabled={onReview}
@@ -229,18 +272,6 @@ export const ExitSurveyForm = ({
                 ))}
               </Select>
             </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>4. Date of Program Completion</FormLabel>
-              <Input
-                name="programDateCompletion"
-                type="date"
-                placeholder="Date"
-                value={formData.programDateCompletion}
-                onChange={handleChange}
-                isDisabled={onReview}
-              />
-            </FormControl>
           </Stack>
 
           <Divider />
@@ -250,12 +281,12 @@ export const ExitSurveyForm = ({
             color="#3182CE"
             pt={4}
           >
-            Overall Program
+            {fields[language].overallProgram}
           </Text>
 
           <FormControl isRequired>
             <FormLabel>
-              1. How would you rate Colette's Children's Home overall?
+              {fields[language].overallRating}
             </FormLabel>
             <RadioGroup
               name="cchRating"
@@ -264,21 +295,21 @@ export const ExitSurveyForm = ({
               isDisabled={onReview}
             >
               <HStack spacing={6}>
-                <Radio value="Unsatisfactory">Unsatisfactory</Radio>
-                <Radio value="Fair">Fair</Radio>
-                <Radio value="Good">Good</Radio>
-                <Radio value="Excellent">Excellent</Radio>
+                <Radio value="Unsatisfactory">{fields[language].unsatisfactory}</Radio>
+                <Radio value="Fair">{fields[language].fair}</Radio>
+                <Radio value="Good">{fields[language].good}</Radio>
+                <Radio value="Excellent">{fields[language].excellent}</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
 
           <FormControl isRequired>
             <FormLabel>
-              2. What did you like most about Colette’s Children’s Home?
+              {fields[language].overallLikeMost}
             </FormLabel>
             <Textarea
               name="cchLikeMost"
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               onChange={handleChange}
               isDisabled={onReview}
               value={formData.cchLikeMost}
@@ -287,10 +318,10 @@ export const ExitSurveyForm = ({
 
           <FormControl isRequired>
             <FormLabel>
-              3. What would make Colette’s Children’s home better?
+              {fields[language].overallCouldBeImproved}
             </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="cchCouldBeImproved"
               onChange={handleChange}
               isDisabled={onReview}
@@ -309,7 +340,9 @@ export const ExitSurveyForm = ({
           </Text>
 
           <FormControl isRequired>
-            <FormLabel>1. How helpful were the Life Skills Meetings?</FormLabel>
+            <FormLabel>
+              {fields[language].lifeSkillsRating}
+            </FormLabel>
             <RadioGroup
               name="lifeSkillsRating"
               onChange={handleRadioChange("lifeSkillsRating")}
@@ -328,9 +361,11 @@ export const ExitSurveyForm = ({
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>2. What topics were the most helpful for you?</FormLabel>
+            <FormLabel>
+              {fields[language].lifeSkillsHelpfulTopics}
+            </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="lifeSkillsHelpfulTopics"
               onChange={handleChange}
               isDisabled={onReview}
@@ -340,11 +375,11 @@ export const ExitSurveyForm = ({
 
           <FormControl isRequired>
             <FormLabel>
-              3. What topics would you like CCH to offer in the future?
+              {fields[language].lifeSkillsOfferTopicsInTheFuture}
             </FormLabel>
             <Textarea
               name="lifeSkillsOfferTopicsInTheFuture"
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               onChange={handleChange}
               isDisabled={onReview}
               value={formData.lifeSkillsOfferTopicsInTheFuture}
@@ -358,11 +393,13 @@ export const ExitSurveyForm = ({
             color="#3182CE"
             pt={4}
           >
-            Case Management
+            {fields[language].caseManagement}
           </Text>
 
           <FormControl isRequired>
-            <FormLabel>1. How helpful was case management?</FormLabel>
+            <FormLabel>
+              {fields[language].cmRating}
+            </FormLabel>
             <RadioGroup
               name="cmRating"
               onChange={handleRadioChange("cmRating")}
@@ -371,19 +408,21 @@ export const ExitSurveyForm = ({
             >
               <HStack spacing={6}>
                 <Radio value="not very helpful at all">
-                  Not Very Helpful At All
+                  {fields[language].notVeryHelpfulAtAll}
                 </Radio>
-                <Radio value="not very helpful">Not Very Helpful</Radio>
-                <Radio value="helpful">Helpful</Radio>
-                <Radio value="very helpful">Very Helpful</Radio>
+                <Radio value="not very helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
+                <Radio value="helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
+                <Radio value="very helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>2. What would you change about your case?</FormLabel>
+            <FormLabel>
+              {fields[language].cmChangeAbout}
+            </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="cmChangeAbout"
               onChange={handleChange}
               isDisabled={onReview}
@@ -393,10 +432,10 @@ export const ExitSurveyForm = ({
 
           <FormControl isRequired>
             <FormLabel>
-              2. What was the most beneficial part of your case management?
+              {fields[language].cmMostBeneficial}
             </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="cmMostBeneficial"
               onChange={handleChange}
               isDisabled={onReview}
@@ -411,16 +450,15 @@ export const ExitSurveyForm = ({
             color="#3182CE"
             pt={4}
           >
-            Outcome
+            {fields[language].outcome}
           </Text>
 
           <FormControl isRequired>
             <FormLabel>
-              1. How do you think that your experience at CCH will change your
-              future?
+              {fields[language].outcomeFutureChange}
             </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="experienceTakeaway"
               onChange={handleChange}
               isDisabled={onReview}
@@ -430,10 +468,10 @@ export const ExitSurveyForm = ({
 
           <FormControl isRequired>
             <FormLabel>
-              2. What have you learned/accomplished while during your stay?
+              {fields[language].outcomeAccomplished}
             </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="experienceAccomplished"
               onChange={handleChange}
               isDisabled={onReview}
@@ -442,9 +480,11 @@ export const ExitSurveyForm = ({
           </FormControl>
 
           <FormControl isRequired>
-            <FormLabel>2. What else would you like us to know?</FormLabel>
+            <FormLabel>
+              {fields[language].outcomeExtraNotes}
+            </FormLabel>
             <Textarea
-              placeholder="Enter your response..."
+              placeholder={fields[language].enterResponse}
               name="experienceExtraNotes"
               onChange={handleChange}
               isDisabled={onReview}
@@ -464,7 +504,7 @@ export const ExitSurveyForm = ({
                 size="lg"
                 colorScheme="blue"
               >
-                Next
+                {fields[language].submit}
               </Button>
             </Flex>
           )}
@@ -473,233 +513,3 @@ export const ExitSurveyForm = ({
     </Box>
   );
 };
-
-//       return (
-//       <VStack
-//         spacing={8}
-//         sx={{ width: 800, marginX: "auto" }}
-//       >
-//         <Heading textAlign={"center"}>
-//           Colette’s Children’s Home <br />
-//           Participant Satisfaction Survey
-//         </Heading>
-
-//         <form
-//           style={{ width: "100%" }}
-//           onSubmit={handleSubmit}
-//         >
-//           <Stack spacing={4}>
-//             <HStack spacing={2}>
-//               <FormControl isRequired>
-//                 <FormLabel>Name</FormLabel>
-//                 <Input
-//                   name="name"
-//                   placeholder="Name"
-//                 />
-//               </FormControl>
-
-//               <FormControl isRequired>
-//                 <FormLabel>Case Manager</FormLabel>
-//                 <Select
-//                   name="cmId"
-//                   placeholder="Select your case manager"
-//                 >
-//                   {caseManagers.map((manager: CaseManager) => (
-//                     <option
-//                       key={manager.id}
-//                       value={manager.id}
-//                     >
-//                       {manager.firstName} {manager.lastName}
-//                     </option>
-//                   ))}
-//                 </Select>
-//               </FormControl>
-
-//               <FormControl isRequired>
-//                 <FormLabel>Site</FormLabel>
-//                 <Select
-//                   name="site"
-//                   placeholder="Site"
-//                 >
-//                   {locations.map((location: Location) => (
-//                     <option
-//                       key={location.id}
-//                       value={location.id}
-//                     >
-//                       {location.name}
-//                     </option>
-//                   ))}
-//                 </Select>
-//               </FormControl>
-//             </HStack>
-
-// <FormControl isRequired>
-//   <FormLabel>Date of Program Completion</FormLabel>
-//   <Input
-//     name="programDateCompletion"
-//     type="date"
-//     placeholder="Date"
-//   />
-// </FormControl>
-
-//             <Text
-//               style={{
-//                 fontWeight: "bold",
-//                 marginTop: "10px",
-//                 marginBottom: "10px",
-//               }}
-//             >
-//               Thank you for taking the time to complete this survey. We value your
-//               feedback and use your suggestions to make important program
-//               improvements.{" "}
-//             </Text>
-
-//             <Text style={{ fontWeight: "bold" }}>Overall Program</Text>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 How would you rate Colette’s Children’s Home overall? (circle one)
-//               </FormLabel>
-//               <RadioGroup name="cchRating">
-//                 <HStack spacing={4}>
-//                   <Radio value="Excellent">Excellent</Radio>
-//                   <Radio value="Good">Good</Radio>
-//                   <Radio value="Fair">Fair</Radio>
-//                   <Radio value="Poor">Unsatisfactory</Radio>
-//                 </HStack>
-//               </RadioGroup>
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 What did you like most about Colette’s Children’s Home?
-//               </FormLabel>
-//               <Textarea
-//                 name="cchLikeMost"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 What would make Colette’s Children’s home better?
-//               </FormLabel>
-//               <Textarea
-//                 name="cchCouldBeImproved"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <Text style={{ fontWeight: "bold" }}>Life Skills</Text>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 How helpful were the Life Skills Meetings? (circle one)
-//               </FormLabel>
-//               <RadioGroup name="lifeSkillsRating">
-//                 <HStack spacing={4}>
-//                   <Radio value="very helpful">Very Helpful</Radio>
-//                   <Radio value="helpful">Helpful</Radio>
-//                   <Radio value="not very helpful">Not Very Helpful</Radio>
-//                   <Radio value="not helpful at all">Not Helpful at All</Radio>
-//                 </HStack>
-//               </RadioGroup>
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>What topics were the most helpful for you?</FormLabel>
-//               <Textarea
-//                 name="lifeSkillsHelpfulTopics"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 What topics would you like CCH to offer in the future?
-//               </FormLabel>
-//               <Textarea
-//                 name="lifeSkillsOfferTopicsInTheFuture"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <Text style={{ fontWeight: "bold" }}>Case Manager</Text>
-
-//             <FormControl isRequired>
-//               <FormLabel>How helpful was case management?</FormLabel>
-//               <RadioGroup name="cmRating">
-//                 <HStack spacing={4}>
-//                   <Radio value="very helpful">Very Helpful</Radio>
-//                   <Radio value="helpful">Helpful</Radio>
-//                   <Radio value="not very helpful">Not Very Helpful</Radio>
-//                   <Radio value="not helpful at all">Not Helpful at All</Radio>
-//                 </HStack>
-//               </RadioGroup>
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>What would you change about case management?</FormLabel>
-//               <Textarea
-//                 name="cmChangeAbout"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 What was the most beneficial part of case management?
-//               </FormLabel>
-//               <Textarea
-//                 name="cmMostBeneficial"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <Text style={{ fontWeight: "bold" }}>Outcomes</Text>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 How do you think that your experience at CCH will change your
-//                 future?
-//               </FormLabel>
-//               <Textarea
-//                 name="experienceTakeaway"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <FormControl isRequired>
-//               <FormLabel>
-//                 What have you learned/accomplished while during your stay?
-//               </FormLabel>
-//               <Textarea
-//                 name="experienceAccomplished"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <FormControl>
-//               <FormLabel>What else would you like us to know? </FormLabel>
-//               <Textarea
-//                 name="experienceExtraNotes"
-//                 placeholder="Enter your response..."
-//               />
-//             </FormControl>
-
-//             <Text style={{ fontWeight: "bold" }}>Thank you!</Text>
-
-//             <Button
-//               type="submit"
-//               size={"lg"}
-//               sx={{ width: "100%" }}
-//               //isDisabled={Object.keys(errors).length > 0}
-//             >
-//               Submit
-//             </Button>
-//           </Stack>
-//         </form>
-//       </VStack>
-//     );
-//   };
-// );

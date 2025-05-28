@@ -266,8 +266,11 @@ export const SuccessStoryTable = () => {
       <HStack
         width="100%"
         justifyContent="space-between"
+        alignItems="center"
       >
-        <Input
+        <HStack
+          width = "100%">
+          <Input
           fontSize="12px"
           width="20%"
           height="30px"
@@ -279,19 +282,8 @@ export const SuccessStoryTable = () => {
           type={"successStory"}
         />
         <HStack
-          width="55%"
           justifyContent="space-between"
         >
-          <Text fontSize="12px">
-            showing {successData.length} results on this page
-          </Text>
-          <HStack>
-            <Button></Button>
-            <Text fontSize="12px">
-              page {} of {Math.ceil(successData.length / 20)}
-            </Text>
-            <Button></Button>
-          </HStack>
           <HStack>
             <Button
               fontSize="12px"

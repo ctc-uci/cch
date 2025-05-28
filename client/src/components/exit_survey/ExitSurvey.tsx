@@ -1,38 +1,21 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   Box,
   Button,
-  Center,
-  Link as ChakraLink,
-  Divider,
   Flex,
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  Heading,
-  HStack,
-  Input,
-  Progress,
-  Radio,
-  RadioGroup,
-  Select,
   Spacer,
-  Stack,
   Text,
-  Textarea,
   useToast,
   VStack,
 } from "@chakra-ui/react";
 
-import { useNavigate } from "react-router-dom";
-
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
 import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
-import { ProgressSteps } from "./ProgressSteps.tsx";
-import { SuccessScreen } from "./SuccessScreen.tsx";
+import { ProgressSteps } from "../ProgressSteps.tsx";
+import { SuccessScreen } from "../SuccessScreen.tsx";
+import { useParams } from "react-router-dom";
 
 const initialFormData = {
   name: "",
@@ -54,14 +37,13 @@ const initialFormData = {
 };
 
 export const ExitSurvey = () => {
-  const navigate = useNavigate();
   const [onReview, setOnReview] = useState<boolean>(false);
   const [formData, setFormData] = useState<ExitSurveyFormType>(initialFormData);
   const { backend } = useBackendContext();
   const toast = useToast();
   const [submitted, setSubmitted] = useState<boolean>(false);
-
-  const formRef = useRef<HTMLFormElement>(null);
+  const params = useParams();
+  const language = params.language || "english";
 
   const handleSubmit = async (
     event:
@@ -138,7 +120,7 @@ export const ExitSurvey = () => {
               handleSubmit={handleSubmit}
               setFormData={setFormData}
               onReview={onReview}
-              setOnReview={setOnReview}
+              spanish={language === "spanish"}
             />
           </Box>
 

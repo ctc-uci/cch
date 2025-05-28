@@ -5,10 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { caseManagerForm, caseManagers } from "../../types/caseManagerForm";
 interface FormCMProps {
   onFormSubmitSuccess: () => void;
+  spanish: boolean
 }
 
 
-function FormCM({ onFormSubmitSuccess }: FormCMProps) {
+function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
   const { backend } = useBackendContext();
   const navigate = useNavigate();
   const toast = useToast();
@@ -47,7 +48,72 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
   });
   const [cm, setCm] = useState<caseManagers[]>([]);
   const [selectedCm, setSelectedCm] = useState("");
+  const fields = {
+    english: {
+      month: "Month",
+      cm: "Case Manager",
+      year: "Year",
+      total_number_of_contacts: "Total Number of Contacts (Email, Phone, In-Person)",
+      women_birthdays: "Women's Birthdays Celebrated",
+      kid_birthdays: "Kid's Birthdays Celebrated",
+      birthday_cards: "# of Birthday Cards Given Out",
+      birthday_cards_value: "Total Value",
+      food_cards: "# of Food Cards",
+      food_cards_value: "Total Value",
+      bus_passes: "# of Bus Passes",
+      bus_passes_value: "Total Value",
+      gas_cards: "# of Gas Giftcards",
+      gas_cards_value: "Total Value",
+      women_healthcare_referrals: "Healthcare Referrals for Women",
+      kid_healthcare_referrals: "Healthcare Referrals for Kids",
+      women_counseling_referrals: "Counseling Referrals for Women",
+      kid_counseling_referrals: "Counseling Referrals for Kids",
+      babies_born: "Babies Born",
+      women_degrees_earned: "Women who earn a GED or Diploma while in CCH",
+      women_enrolled_in_school: "Women who enroll in School or a trade program while in CCH",
+      women_licenses_earned: "Women who get a driver’s license while in the program",
+      reunifications: "Reunifications",
+      number_of_interviews_conducted: "# Interviews Conducted",
+      number_of_positive_tests: "# of Positive Tests",
+      number_of_ncns: "# of No Call No Shows",
+      number_of_others: "# of 'Other'",
+      number_of_interviews_accpeted: "# of Interviewees Accepted",
+      total_num_interviews: "Total Interviews Scheduled"
+    },
+    spanish:{
+      month: "Mes",
+      cm: "Administrador de Casos",
+      year: "Año",
+      total_number_of_contacts: "Número Total de Contactos (Correo, Teléfono, En Persona)",
+      women_birthdays: "Cumpleaños de Mujeres Celebrados",
+      kid_birthdays: "Cumpleaños de Niños Celebrados",
+      birthday_cards: "Número de Tarjetas de Cumpleaños Entregadas",
+      birthday_cards_value: "Valor Total",
+      food_cards: "Número de Tarjetas de Alimentos",
+      food_cards_value: "Valor Total",
+      bus_passes: "Número de Pases de Autobús",
+      bus_passes_value: "Valor Total",
+      gas_cards: "Número de Tarjetas de Gasolina",
+      gas_cards_value: "Valor Total",
+      women_healthcare_referrals: "Referencias Médicas para Mujeres",
+      kid_healthcare_referrals: "Referencias Médicas para Niños",
+      women_counseling_referrals: "Referencias de Consejería para Mujeres",
+      kid_counseling_referrals: "Referencias de Consejería para Niños",
+      babies_born: "Bebés Nacidos",
+      women_degrees_earned: "Mujeres que Obtuvieron un GED o Diploma mientras estaban en CCH",
+      women_enrolled_in_school: "Mujeres Inscritas en Escuela o Programa Técnico mientras estaban en CCH",
+      women_licenses_earned: "Mujeres que Obtenido una Licencia de Conducir mientras estaban en el programa",
+      reunifications: "Reunificaciones",
+      number_of_interviews_conducted: "Número de Entrevistas Realizadas",
+      number_of_positive_tests: "Número de Pruebas Positivas",
+      number_of_ncns: "Número de Ausencias sin Aviso",
+      number_of_others: "Número de 'Otros'",
+      number_of_interviews_accpeted: "Número de Entrevistados Aceptados",
+      total_num_interviews: "Total de Entrevistas Programadas"
+    }
+  }
 
+  const language = spanish ? "spanish" : "english"
   const handleCmChange = (event) => {
     setSelectedCm(event.target.value);
     setFormData((prevState) => ({ ...prevState, ['cm_id']: event.target.value }));
@@ -160,7 +226,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       {/* Month, Year, Case Manager */}
       <SimpleGrid columns={3} spacing={4} mb={6}>
         <Box>
-          <Text fontWeight="bold" mb={2}>Month</Text>
+          <Text fontWeight="bold" mb={2}>{fields[language]["month"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -175,7 +241,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Box>
 
         <Box>
-          <Text fontWeight="bold" mb={2}>Year</Text>
+          <Text fontWeight="bold" mb={2}>{fields[language]["year"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -190,7 +256,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         <Box>
           
 
-          <Text fontWeight="bold" mb={2}>Case Manager</Text>
+          <Text fontWeight="bold" mb={2}>{fields[language]["cm"]}</Text>
           <Select name="case_manager" value={selectedCm} onChange={handleCmChange}>
             {cm.map((data) => {
               return(
@@ -208,7 +274,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       <Box>
         <Text fontSize="lg" fontWeight="bold" mb={2}>Contacts</Text>
         <Flex align="center" gap={5}>
-          <Text w="250px">Total Number of Contacts (Email, Phone, In-Person)</Text>
+          <Text w="250px">{fields[language]["total_number_of_contacts"]}</Text>
           <Input
           placeholder="Type Here"
           type="number"
@@ -228,7 +294,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       <Text fontSize="lg" fontWeight="bold" mb={2}>Interview Questions</Text>
       <Stack spacing={4}>
         <Flex align="center" gap={5}>
-          <Text w="250px"># Interviews Conducted</Text>
+          <Text w="250px">{fields[language]["number_of_interviews_conducted"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -241,7 +307,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px"># of Positive Tests</Text>
+          <Text w="250px">{fields[language]["number_of_positive_tests"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -254,7 +320,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px"># of No Call No Shows</Text>
+          <Text w="250px">{fields[language]["number_of_ncns"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -267,7 +333,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px"># of "Other"</Text>
+          <Text w="250px">{fields[language]["number_of_others"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -280,7 +346,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px">Total Interviews Scheduled</Text>
+          <Text w="250px">{fields[language]["total_num_interviews"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -293,7 +359,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px"># of Interviewees Accepted</Text>
+          <Text w="250px">{fields[language]["number_of_interviews_accpeted"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -312,7 +378,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       <Text fontSize="lg" fontWeight="bold" mb={2}>Birthdays</Text>
       <Stack spacing={3}>
         <Flex align="center" gap={5}>
-          <Text w="250px">Women's Birthdays Celebrated</Text>
+          <Text w="250px">{fields[language]["women_birthdays"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -325,7 +391,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
         </Flex>
 
         <Flex align="center" gap={5}>
-          <Text w="250px">Kid's Birthdays Celebrated</Text>
+          <Text w="250px">{fields[language]["kid_birthdays"]}</Text>
           <Input
             placeholder="Type Here"
             type="number"
@@ -339,7 +405,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Stack>
 
       <Flex align="center" mt={4} gap={5}>
-        <Text w="250px"># of Birthday Cards Given Out</Text>
+        <Text w="250px">{fields[language]["birthday_cards"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -350,7 +416,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
           mr={8}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
         />
-        <Text w="150px">Total Value</Text>
+        <Text w="150px">{fields[language]["birthday_cards_value"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -369,7 +435,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
 
       {/* Food Cards */}
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px"># of Food Cards</Text>
+        <Text w="250px">{fields[language]["food_cards"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -380,7 +446,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
           mr={8}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
         />
-        <Text w="150px">Total Value</Text>
+        <Text w="150px">{fields[language]["food_cards_value"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -394,7 +460,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
 
       {/* Bus Passes */}
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px"># of Bus Passes</Text>
+        <Text w="250px">{fields[language]["bus_passes"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -405,7 +471,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
           mr={8}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
         />
-        <Text w="150px">Total Value</Text>
+        <Text w="150px">{fields[language]["bus_passes_value"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -419,7 +485,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
 
       {/* Gas Cards */}
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px"># of Gas Giftcards</Text>
+        <Text w="250px">{fields[language]["gas_cards"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -430,7 +496,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
           mr={8}
           onWheel={(e) => (e.target as HTMLInputElement).blur()}
         />
-        <Text w="150px">Total Value</Text>
+        <Text w="150px">{fields[language]["gas_cards_value"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -448,7 +514,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       <Text fontSize="lg" fontWeight="bold" mb={2}>Referrals</Text>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Healthcare Referrals for Women</Text>
+        <Text w="250px">{fields[language]["women_healthcare_referrals"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -461,7 +527,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Counseling Referrals for Women</Text>
+        <Text w="250px">{fields[language]["women_counseling_referrals"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -474,7 +540,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Healthcare Referrals for Kids</Text>
+        <Text w="250px">{fields[language]["kid_healthcare_referrals"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -487,7 +553,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Counseling Referrals for Kids</Text>
+        <Text w="250px">{fields[language]["kid_counseling_referrals"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -503,7 +569,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       <Text fontSize="lg" fontWeight="bold" mb={2}>Miscellaneous</Text>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Babies Born</Text>
+        <Text w="250px">{fields[language]["babies_born"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -516,7 +582,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Women who earn a GED or Diploma while in CCH</Text>
+        <Text w="250px">{fields[language]["women_degrees_earned"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -529,7 +595,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Women who enroll in School or a trade program while in CCH</Text>
+        <Text w="250px">{fields[language]["women_enrolled_in_school"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -542,7 +608,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Women who get a driver’s license while in the program</Text>
+        <Text w="250px">{fields[language]["women_licenses_earned"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"
@@ -555,7 +621,7 @@ function FormCM({ onFormSubmitSuccess }: FormCMProps) {
       </Flex>
 
       <Flex align="center" mb={3} gap={5}>
-        <Text w="250px">Reunifications</Text>
+        <Text w="250px">{fields[language]["reunifications"]}</Text>
         <Input
           placeholder="Type Here"
           type="number"

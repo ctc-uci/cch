@@ -243,6 +243,16 @@ export const Donations = () => {
   //   }
   // };
 
+  const donorMap: {[key: string]: string} = {
+    "panera": "Panera",
+    "mcdonalds": "McDonald's",
+    "grand theater": "Grand Theater",
+    "pantry": "Pantry",
+    "copia": "Copia",
+    "costco": "Costco",
+    "sprouts": "Sprouts",
+  }
+
   const handleFreqChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     // Handle frequency change logic here
     setFreq(event.target.value);
@@ -382,6 +392,12 @@ export const Donations = () => {
       });
     };
 
+    const formatter = new Intl.NumberFormat('en-US', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   useEffect(() => {
     const fetchData = async () => {
 
@@ -473,7 +489,7 @@ export const Donations = () => {
               fontSize={"3xl"}
               fontWeight="bold"
             >
-              ${valueSum}
+              ${formatter.format(valueSum)}
             </StatNumber>
             <StatLabel>
               <HStack spacing={1}>
@@ -496,7 +512,7 @@ export const Donations = () => {
               fontSize={"3xl"}
               fontWeight="bold"
             >
-              {weightSum}
+              {formatter.format(weightSum)}
             </StatNumber>
             <StatLabel>
               <HStack spacing={1}>
@@ -704,9 +720,19 @@ export const Donations = () => {
                             index={index}
                           />
                         ) : (
-                          flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
+                          cell.column.id === "category" ? (
+                            <CategoryChip category={cell.getValue() as string} />
+                          ) : (
+                            cell.column.id === "donor" ? (
+                              <Text>
+                                {donorMap[cell.getValue() as string] || 'Costco'}
+                              </Text>
+                            ) : (
+                              flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )
+                            )
                           )
                         )}
                       </Td>
@@ -769,3 +795,31 @@ export const Donations = () => {
     </HStack>
   );
 };
+
+
+const CategoryChip = ({ category }: { category: string }) => {
+  const categoryColors: { [key: string]: string } = {
+    "food": "#FEEBCB",
+    "client": "#BEE3F8",
+  };
+
+  const fontColors: { [key: string]: string } = {
+    "food": "#652B19",
+    "client": "#2A4365",
+  };
+
+  return (
+    <Box
+      backgroundColor={categoryColors[category] || "#CBD5E0"}
+      color={fontColors[category] || "#2D3748"}
+      borderRadius="lg"
+      paddingX={2}
+      paddingY={1}
+      fontSize="sm"
+      width={16}
+      textAlign={"center"}
+    >
+      {category === 'food' ? 'Food' : 'Client'}
+    </Box>
+  );
+}

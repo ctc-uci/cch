@@ -45,8 +45,9 @@ import UserSettings from "./components/userSettings/UserSettings";
 import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
-import {AdminFormsHub} from "./components/adminClientForms/AdminFormsHub"
+import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
 import { Playground } from "./themes/play";
+import { ClientLandingPage, ChooseForm } from "./components/clientLandingPage/ClientLandingPage";
 
 const App = () => {
 
@@ -60,8 +61,18 @@ const App = () => {
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
     currentRoute === 'authentification' ||
+    currentRoute === 'client-landing-page' ||
+    currentRoute === 'choose-form' ||
+    currentRoute === 'random-client-survey' ||
+    currentRoute === 'personal' ||
     currentRoute === 'success-story' ||
-    currentRoute === 'random-client-survey'
+    currentRoute === 'exit-survey' ||
+    currentRoute === 'success' ||
+    currentRoute === 'playground' ||
+    currentRoute === 'financial' ||
+    currentRoute === 'health' ||
+    currentRoute === 'additional' ||
+    currentRoute === 'review'
   );
 
   return (
@@ -93,11 +104,12 @@ const App = () => {
                 element={<ForgotPassword />}
               />
               <Route
-                path="/exit-survey"
-                element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
+                path="/exit-survey/:language?"
+                //element={<ProtectedRoute element={<ExitSurvey />} allowedRoles={['client']} />}
+                element={<ExitSurvey />}
               />
               <Route
-                path="/success-story"
+                path="/success-story/:language?"
                 element={<ProtectedRoute element = {<SuccessStory />} allowedRoles={['client']}/>}
               />
               <Route
@@ -143,9 +155,9 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ProtectedRoute element={<ClientList/>} allowedRoles={['admin', 'user']} />}
+                element={<ClientList />}
               />
-      
+
               <Route
                 path="/clientdata"
                 element={<ProtectedRoute element={<ClientData />} allowedRoles={['admin', 'user']} />}
@@ -172,8 +184,9 @@ const App = () => {
                   element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
 
                 <Route
-                  path="/random-client-survey"
-                  element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={["client"]}/>}
+                  path="/random-client-survey/:language?"
+                  //element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={['client']} />}
+                  element={<RandomClientSurvey/>}
                 />
                 <Route
                   path ="/frontDesk"
@@ -184,27 +197,27 @@ const App = () => {
                   element={<ProtectedRoute element={<IntakeStats />} allowedRoles={['admin', 'user']} />}
                 />
                   <Route
-                    path ="/personal"
-                    element ={<ProtectedRoute element={<PersonalInformation hidden={false}/>}/>}
+                    path ="/personal/:language?"
+                    element = {<ProtectedRoute element={<PersonalInformation hidden={false}/>} />}
                   />
                   <Route
-                    path ="/financial"
+                    path ="/financial/:language?"
                     element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} />}
                   />
                   <Route
-                    path ="/health"
+                    path ="/health/:language?"
                     element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>}/>}
                   />
                   <Route
-                    path ="/additional"
+                    path ="/additional/:language?"
                     element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>}/>}
                   />
                   <Route
-                    path ="/review"
+                    path ="/review/:language?"
                     element ={<ProtectedRoute element={<ReviewInformation/>}/>}
                   />
                   <Route
-                    path ="/success"
+                    path ="/success/:language?"
                     element ={<ProtectedRoute element={<Success/>} />}
                   />
                   <Route path="/playground" element={<Playground/>}/>
@@ -216,6 +229,12 @@ const App = () => {
                     path = "/comment-form/:id"
                     element = {<ProtectedRoute element={<CommentForm />} allowedRoles={["user"]}/>}
                   />
+                  <Route
+                    path = "/client-landing-page/:form"
+                    element = {<ClientLandingPage />} />
+                     <Route
+                    path = "/choose-form"
+                    element = {<ChooseForm />} />
 
                 <Route
                   path="/"

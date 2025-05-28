@@ -1,6 +1,6 @@
+import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Button, Textarea, IconButton } from '@chakra-ui/react';
 import { ChevronLeftIcon } from '@chakra-ui/icons';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
 import { InterviewScreeningFormProps } from './types';
@@ -8,6 +8,25 @@ import { InterviewScreeningFormProps } from './types';
 const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
     const { formData, setFormData } = useForm();
     const navigate = useNavigate();
+
+    const params = useParams();
+    type Language = 'english' | 'spanish';
+    const language = ((params.language as string) === 'spanish' ? 'spanish' : 'english') as Language;
+
+    const fields = {
+        english: {
+            futurePlansGoals: "1. What are your future plans and goals?",
+            lastPermanentResidentHouseholdComposition: "2. Last permanent resident household composition",
+            whyNoLongerAtLastResidence: "3. Reason why you're not there",
+            whatCouldPreventHomeless: "4. What could've prevented you from being homeless?"
+        },
+        spanish: {
+            futurePlansGoals: "1. ¿Cuáles son sus planes y objetivos futuros?",
+            lastPermanentResidentHouseholdComposition: "2. Composición del hogar residente permanente anterior",
+            whyNoLongerAtLastResidence: "3. Razón por la que ya no está allí",
+            whatCouldPreventHomeless: "4. ¿Qué podría haber evitado que estuviera sin hogar?"
+        }
+    };
 
     return (
         <Box margin={40} marginTop={10} position="relative">
@@ -31,7 +50,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                 <h1 style={{fontSize: "28px", color: "#3182CE"}}>Additional Information</h1>
                 <Box className="additional-information-form" paddingTop={5}>
                     <Box marginBottom={6}>
-                        <label><strong>1.</strong> What are your future plans and goals</label>
+                        <label>{fields[language].futurePlansGoals}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.futurePlansGoals}
@@ -39,7 +58,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>2.</strong> Last permanent resident household composition</label>
+                        <label>{fields[language].lastPermanentResidentHouseholdComposition}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.lastPermanentResidentHouseholdComposition}
@@ -47,7 +66,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>3.</strong> Reason why you're not there</label>
+                        <label>{fields[language].whyNoLongerAtLastResidence}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.whyNoLongerAtLastResidence}
@@ -55,7 +74,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                         />
                     </Box>
                     <Box marginBottom={6}>
-                        <label><strong>4.</strong> What could've prevented you from being homeless?</label>
+                        <label>{fields[language].whatCouldPreventHomeless}</label>
                         <Textarea
                             marginTop={2}
                             value={formData.whatCouldPreventHomeless}
@@ -65,7 +84,7 @@ const AdditionalInformation = ({ hidden }: InterviewScreeningFormProps) => {
                 </Box>
             </Box>
             <Box marginTop={5} display="flex" justifyContent="flex-end">
-                {!hidden && <Button colorScheme="blue" onClick={() => {navigate("/review")}}>Next</Button>}
+                {!hidden && <Button colorScheme="blue" onClick={() => {navigate(`/review/${language}`)}}>Next</Button>}
             </Box>
         </Box>
     );
