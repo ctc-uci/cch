@@ -46,7 +46,6 @@ import VolunteersPage from "./components/volunteersPage/VolunteersPage";
 import { InitialScreenerTable } from "./components/initialScreener/initialScreenerTable";
 import CommentForm from "./components/initialScreener/commentForm";
 import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
-import { Playground } from "./themes/play";
 import { ClientLandingPage, ChooseForm } from "./components/clientLandingPage/ClientLandingPage";
 
 const App = () => {
@@ -142,7 +141,7 @@ const App = () => {
                 />
               <Route
                 path="/admin-client-list"
-                element={<AdminClientList />}
+                element={<ProtectedRoute element={<AdminClientList />} allowedRoles={['admin']} />}
               />
               <Route
                 path="/accounts"
@@ -155,7 +154,7 @@ const App = () => {
               />
               <Route
                 path="/clientlist"
-                element={<ClientList />}
+                element={<ProtectedRoute element={<ClientList />} allowedRoles={['user']} />}
               />
 
               <Route
@@ -186,8 +185,7 @@ const App = () => {
 
                 <Route
                   path="/random-client-survey/:language?"
-                  //element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={['client']} />}
-                  element={<RandomClientSurvey/>}
+                  element={<ProtectedRoute element={<RandomClientSurvey />} allowedRoles={['client']} />}
                 />
                 <Route
                   path ="/frontDesk"
@@ -199,29 +197,28 @@ const App = () => {
                 />
                   <Route
                     path ="/personal/:language?"
-                    element = {<ProtectedRoute element={<PersonalInformation hidden={false}/>} />}
+                    element = {<ProtectedRoute element={<PersonalInformation hidden={false}/>} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/financial/:language?"
-                    element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} />}
+                    element ={<ProtectedRoute element={<FinancialInformation hidden={false}/>} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/health/:language?"
-                    element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>}/>}
+                    element ={<ProtectedRoute element={<HealthSocialInformation hidden={false}/>} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/additional/:language?"
-                    element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>}/>}
+                    element ={<ProtectedRoute element={<AdditionalInformation hidden={false}/>} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/review/:language?"
-                    element ={<ProtectedRoute element={<ReviewInformation/>}/>}
+                    element ={<ProtectedRoute element={<ReviewInformation/>} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/success/:language?"
-                    element ={<ProtectedRoute element={<Success/>} />}
+                    element ={<ProtectedRoute element={<Success/>}  allowedRoles={['client']}/>}
                   />
-                  <Route path="/playground" element={<Playground/>}/>
                   <Route
                     path = "/initial-screener-table"
                     element = {<ProtectedRoute element={<InitialScreenerTable />} allowedRoles={["user"]}/>}
@@ -232,11 +229,10 @@ const App = () => {
                   />
                   <Route
                     path = "/client-landing-page/:form"
-                    element = {<ClientLandingPage />} />
-                     <Route
+                    element = {<ProtectedRoute element={<ClientLandingPage />} allowedRoles={['client']} />} />
+                  <Route
                     path = "/choose-form"
-                    element = {<ChooseForm />} />
-
+                    element = {<ProtectedRoute element={<ChooseForm />} allowedRoles={['client']} />} />
                 <Route
                   path="/"
                   element={
