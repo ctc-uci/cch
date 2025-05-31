@@ -3,8 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
+  Button,
   Checkbox,
+  filter,
   HStack,
+  Input,
   Tab,
   Table,
   TableContainer,
@@ -44,6 +47,103 @@ import { LoadingWheel } from ".././loading/loading.tsx";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import PrintForm from "../printForm/PrintForm";
 import FormPreview from "./FormPreview";
+import { FormsListFilter } from "./FormListFilter.tsx";
+
+// const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = []): Form[] => {
+//   return data.filter((form) => {
+//     return filterRows.reduce<boolean>((acc, row, index) => {
+//       if (!row.field || !row.operator || !row.value) return acc;
+
+//       const fieldValue = form[row.field as keyof Form];
+//       const fieldType = row.field === "date" ? "date" : typeof fieldValue;
+//       let result = true;
+
+//       if (fieldType === "date" && typeof fieldValue === "string") {
+//         const value = row.value;
+//         const normalized = fieldValue.slice(0, 10);
+//         result = row.operator === "contains"
+//           ? normalized.includes(value)
+//           : row.operator === "="
+//           ? normalized === value
+//           : normalized !== value;
+//       } else if (typeof fieldValue === "string") {
+//         const value = row.value.toLowerCase();
+//         const lower = fieldValue.toLowerCase();
+//         result = row.operator === "contains"
+//           ? lower.includes(value)
+//           : row.operator === "="
+//           ? lower === value
+//           : lower !== value;
+//       }
+
+//       if (index === 0 || row.selector === "AND") {
+//         return acc && result;
+//       } else {
+//         return acc || result;
+//       }
+//     }, true);
+//   });
+// };
+
+const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = [], searchKey: string = ""): Form[] => {
+  return data.filter((form) => {
+    const filterMatch = filterRows.reduce<boolean>((acc, row, index) => {
+      if (!row.field || !row.operator || !row.value) return acc;
+
+      const fieldValue = form[row.field as keyof Form];
+      const fieldType = row.field === "date" ? "date" : typeof fieldValue;
+      let result = true;
+
+      if (fieldType === "date" && typeof fieldValue === "string") {
+        const value = row.value;
+        const normalized = fieldValue.slice(0, 10);
+        result = row.operator === "contains"
+          ? normalized.includes(value)
+          : row.operator === "="
+          ? normalized === value
+          : normalized !== value;
+      } else if (typeof fieldValue === "string") {
+        const value = row.value.toLowerCase();
+        const lower = fieldValue.toLowerCase();
+        result = row.operator === "contains"
+          ? lower.includes(value)
+          : row.operator === "="
+          ? lower === value
+          : lower !== value;
+      }
+
+      if (index === 0 || row.selector === "AND") {
+        return acc && result;
+      } else {
+        return acc || result;
+      }
+    }, true);
+
+    const normalizedSearch = searchKey.toLowerCase();
+    const searchMatch =
+      !searchKey ||
+      form.name.toLowerCase().includes(normalizedSearch) ||
+      form.title.toLowerCase().includes(normalizedSearch) ||
+      form.date.slice(0, 10).includes(normalizedSearch);
+
+    return filterMatch && searchMatch;
+  });
+};
+
+type FormFilter = {
+  id: number;
+  field: string;
+  operator: string;
+  value: string;
+  selector?: string;
+};
+
+
+type CaseManager = {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+};
 
 export const FormTable = () => {
   const { backend } = useBackendContext();
@@ -53,6 +153,12 @@ export const FormTable = () => {
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchKey, setSearchKey] = useState("");
+
+  const [filterRows, setFilterRows] = useState<FormFilter[]>([
+    { id: 1, field: "", operator: "", value: "" },
+  ]);
   const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
     null
   );
@@ -220,7 +326,7 @@ export const FormTable = () => {
         );
 
         const intakeStatistics: Form[] = await intakeStatsResponse.data.map(
-          (form: Form) => ({
+          (form: Form & { firstName: string; lastName: string }) => ({
             id: form.id,
             hashedId: form.id,
             date: form.date,
@@ -272,7 +378,7 @@ export const FormTable = () => {
         const caseManagerStats: Form[] =
           await caseManagersMonthlyResponse.data.map((form: Form) => {
             const matchingCM = allCaseManagersResponse.data.find(
-              (cm) => cm.id === form.cmId
+              (cm: CaseManager) => cm.id === form.cmId
             );
             return {
               id: form.id,
@@ -291,8 +397,11 @@ export const FormTable = () => {
         setSuccessStory(successStoryForms);
         setRandomClientSurvey(randomSurveyForms);
 
-        const getDate = (date) =>
+        // const getDate = (date) =>
+        //   date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
+        const getDate = (date: { lastUpdatedAt?: string }[] | undefined) =>
           date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
+
 
         setInitialScreenerDate(getDate(initialScreenerResponse.data));
         setFrontDeskDate(getDate(frontDeskMonthlyStatsResponse.data));
@@ -329,13 +438,13 @@ export const FormTable = () => {
     }
   }, [clickedFormItem, onOpen]);
 
-  const allFormsData = useMemo(() => [
+  const allFormsData = useMemo(() => applyFilters([
     ...initialScreeners,
     ...intakeStatistics,
     ...frontDeskStatistics,
     ...caseManagerStatistics,
     ...(role === "admin" ? [...exitSurvey, ...successStory, ...randomClientSurvey] : []),
-  ], [
+  ], filterRows), [
     role,
     initialScreeners,
     intakeStatistics,
@@ -344,10 +453,16 @@ export const FormTable = () => {
     exitSurvey,
     successStory,
     randomClientSurvey,
+    filterRows,
   ]);
 
+  const filteredAllFormsData = useMemo(
+    () => applyFilters(allFormsData, filterRows, searchKey),
+    [allFormsData, filterRows, searchKey]
+  );
+
   const allFormsTable = useReactTable<Form>({
-    data: allFormsData,
+    data: filteredAllFormsData,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -355,9 +470,14 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredInitialScreeners = useMemo(
+    () => applyFilters(initialScreeners, filterRows, searchKey),
+    [initialScreeners, filterRows, searchKey]
+  );
 
   const initialScreenersTable = useReactTable<Form>({
-    data: initialScreeners,
+    data: filteredInitialScreeners,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -365,9 +485,15 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredIntakeStatistics = useMemo(
+    () => applyFilters(intakeStatistics, filterRows, searchKey),
+    [intakeStatistics, filterRows, searchKey]
+  );
+
 
   const intakeStatisticsTable = useReactTable<Form>({
-    data: intakeStatistics,
+    data: filteredIntakeStatistics,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -375,9 +501,14 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredFrontDeskStatistics = useMemo(
+    () => applyFilters(frontDeskStatistics, filterRows, searchKey),
+    [frontDeskStatistics, filterRows, searchKey]
+  );
 
   const frontDeskStatisticsTable = useReactTable<Form>({
-    data: frontDeskStatistics,
+    data: filteredFrontDeskStatistics,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -385,9 +516,14 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredCaseManagerStatistics = useMemo(
+    () => applyFilters(caseManagerStatistics, filterRows, searchKey), 
+    [caseManagerStatistics, filterRows, searchKey]
+  );
 
   const caseManagerStatisticsTable = useReactTable<Form>({
-    data: caseManagerStatistics,
+    data: filteredCaseManagerStatistics,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -395,9 +531,14 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredExitSurvey = useMemo(
+    () => applyFilters(exitSurvey, filterRows, searchKey), 
+    [exitSurvey, filterRows, searchKey]
+  );
 
   const exitSurveyTable = useReactTable<Form>({
-    data: exitSurvey,
+    data: filteredExitSurvey,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -405,9 +546,14 @@ export const FormTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const filteredSuccessStory = useMemo(
+    () => applyFilters(successStory, filterRows, searchKey), 
+    [successStory, filterRows, searchKey]
+  );
 
   const successStoryTable = useReactTable<Form>({
-    data: successStory,
+    data: filteredSuccessStory,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -416,8 +562,12 @@ export const FormTable = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
+  const filteredRandomClientSurvey = useMemo(
+    () => applyFilters(randomClientSurvey, filterRows, searchKey), 
+  [randomClientSurvey, filterRows, searchKey]);
+
   const randomClientSurveyTable = useReactTable<Form>({
-    data: randomClientSurvey,
+    data: filteredRandomClientSurvey,
     columns,
     state: { sorting },
     sortDescFirst: true,
@@ -447,36 +597,44 @@ export const FormTable = () => {
             width="100%"
             justify="space-between"
           >
-            <HStack spacing="0px">
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdOutlineFilterAlt size="16px" />
-                <Text ml="8px">Filter</Text>
-              </Box>
+            <HStack padding="5px">
+              <FormsListFilter filterRows={filterRows} setFilterRows={setFilterRows}/>
             </HStack>
-            <HStack spacing="0px">
+            <HStack width="100%" justifyContent={"right"} gap={"0"}>
+              <Input
+                maxW="20%"
+                placeholder="Search"
+                value={searchKey}
+                onChange={(e) => setSearchKey(e.target.value)}
+                display={showSearch ? 'block' : 'none'}
+              />
               <Box
                 display="flex"
                 alignItems="center"
-                paddingX="16px"
+                paddingX="8px"
                 paddingY="8px"
+                cursor="pointer"
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  setSearchKey("");
+                }}
               >
-                <MdOutlineManageSearch size="24px" />
+                <Button background="white">
+                  <MdOutlineManageSearch size="24px" />
+                </Button>
               </Box>
               <Box
                 display="flex"
                 alignItems="center"
-                paddingX="16px"
+                paddingX="8px"
                 paddingY="8px"
                 cursor="pointer"
                 onClick={() => handleExport(allFormsTable)}
               >
-                <MdFileUpload size="16px" />
-                <Text ml="8px">Export</Text>
+                <Button background={"white"}>
+                  <MdFileUpload  size="16px" />
+                  <Text ml="8px">Export</Text>
+                </Button>
               </Box>
             </HStack>
           </HStack>
@@ -570,8 +728,116 @@ export const FormTable = () => {
         </TableContainer>
       </Box>
     ) : (
-      <Text>No data found.</Text>
-    );
+        <Box
+        borderWidth="1px"
+        borderRadius="12px"
+        width="100%"
+        borderColor="#E2E8F0"
+        padding="12px"
+      >
+        <TableContainer>
+          <HStack
+            width="100%"
+            justify="space-between"
+          >
+            <HStack padding="5px">
+              <FormsListFilter filterRows={filterRows} setFilterRows={setFilterRows}/>
+            </HStack>
+            <HStack width="100%" justifyContent={"right"} gap={"0"}>
+              <Input
+                maxW="20%"
+                placeholder="Search"
+                value={searchKey}
+                onChange={(e) => setSearchKey(e.target.value)}
+                display={showSearch ? 'block' : 'none'}
+              />
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="8px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => {
+                  setShowSearch(!showSearch);
+                  setSearchKey("");
+                }}
+              >
+                <Button background="white">
+                  <MdOutlineManageSearch size="24px" />
+                </Button>
+              </Box>
+              <Box
+                display="flex"
+                alignItems="center"
+                paddingX="8px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => handleExport(allFormsTable)}
+              >
+                <Button background={"white"}>
+                  <MdFileUpload  size="16px" />
+                  <Text ml="8px">Export</Text>
+                </Button>
+              </Box>
+            </HStack>
+          </HStack>
+          <Box
+            borderWidth="1px"
+            borderRadius="12px"
+            width="100%"
+            borderColor="#E2E8F0"
+            overflow="auto"
+          >
+            <Table variant="striped">
+              <Thead>
+                {tableInstance.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
+                ))}
+              </Thead>
+              <Tbody>
+                <Tr>
+                  <Td
+                    colSpan={tableInstance.getAllColumns().length}
+                    textAlign="center"
+                    py={6}
+                  >
+                    <Text>No data found.</Text>
+                  </Td>
+                </Tr>
+              </Tbody>
+            </Table>
+          </Box>
+        </TableContainer>
+      </Box>
+      )
+
   };
 
   return (
