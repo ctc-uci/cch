@@ -48,7 +48,7 @@ export const Authentification = () => {
   const toast = useToast();
   const { userType } = useParams<{ userType: string }>();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const userAbbreviation = userType === "Case Manager" ? "CM" : "AD";
+  const userAbbreviation = userType === "Case Manager" ? "CM" : (userType === "Client" ? "CL": "AD");
 
   const { handleRedirectResult, createCode, authenticate } = useAuthContext();
   const { backend } = useBackendContext();
