@@ -68,6 +68,8 @@ export const Authentification = () => {
       }
       else if (userType === "Admin") {
         navigate("/admin-client-list");
+      } else if (userType === "Client") {
+        navigate("/choose-form");
       }
     } catch (error) {
       // toast({

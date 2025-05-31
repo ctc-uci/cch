@@ -182,6 +182,7 @@ const App = () => {
                 <Route
                   path="/casemanager"
                   element={<ProtectedRoute element={<CaseManager />} allowedRoles={['admin', 'user']} />}
+                  />
 
                 <Route
                   path="/random-client-survey/:language?"
