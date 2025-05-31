@@ -18,9 +18,10 @@ authentificationRouter.post("/verify", async (req, res) => {
         WHERE a.email = $1 AND a.code = $2;`,
           [email, code]
     );
-    res.status(200).json(keysToCamel(data));
+    return res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
+    console.log(err);
   }
 });
 
@@ -47,10 +48,40 @@ authentificationRouter.post("/", async (req, res) => {
     const code = Math.floor(100000 + Math.random() * 900000);
 
     const data = await db.query(
-      `INSERT INTO auth_codes (code, email, valid_until) VALUES ($1, $2, $3) RETURNING code;`,
+      `
+      INSERT INTO auth_codes (code, email, valid_until, created_at)
+      VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
+      ON CONFLICT (email)
+      DO UPDATE SET code = $1, created_at = CURRENT_TIMESTAMP, valid_until = $3;`,
       [code, email, validUntil]
     );
-    res.status(200).json(keysToCamel(data));
+
+   const message = `Hi,
+
+          Your two-factor authentication (2FA) code is:
+
+          ${code}
+
+          This code will expire in 24 hours. If you did not request this code, please ignore this email or contact our support team immediately.
+
+          Stay secure,
+
+          Collete's Children's Home
+          `;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email and message are required" });
+  }
+
+  const mail = {
+    from: sendEmail,
+    to: email,
+    subject: "Your Two-Factor Authentication Code",
+    text: message,
+  };
+
+  transporter.sendMail(mail);
+  return res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
   }
