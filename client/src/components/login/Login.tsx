@@ -70,15 +70,15 @@ export const Login = () => {
 
   const handleLogin = async (data: SigninFormValues) => {
     try {
-      if(userType === "Client") {navigate("/choose-form");}
       await login({
         email: data.email,
         password: data.password,
       });
       if (userType === "Case Manager") navigate("/authentification/Case Manager");
       else if (userType === "Admin") {
-
         navigate("/authentification/Admin");
+      } else if (userType === "Client") {
+        navigate("/authentification/Client"); 
       }
       //else if (userType === "Client") navigate("/client-landing-page");
     } catch (err) {

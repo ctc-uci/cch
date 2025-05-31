@@ -280,7 +280,7 @@ export const SuccessStoryTable = () => {
         <FilterTemplate
           setFilterQuery={setFilterQuery}
           type={"successStory"}
-        />
+        /></HStack>
         <HStack
           justifyContent="space-between"
         >

@@ -138,35 +138,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (authCredential && email) {
       try {
         // Delete all the stale codes associated with this email
-        await backend.delete(`authentification/email?email=${email}`);
+        // await backend.delete(`authentification/email?email=${email}`);
 
         // Create new code for them
         const now = new Date();
         const validUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          
         const authData = await backend.post("/authentification", {
           email: email,
           validUntil: validUntil,
         });
-        const code = authData?.data[0]?.code;
+        //const code = authData?.data[0]?.code;
 
         // Send the code to the user via email
-
-        await backend.post("/authentification/email", {
-          email: email,
-          message: `
-          Hi,
-
-          Your two-factor authentication (2FA) code is:
-
-          ${code}
-
-          This code will expire in 24 hours. If you did not request this code, please ignore this email or contact our support team immediately.
-
-          Stay secure,
-
-          Collete's Children's Home
-          `,
-        });
 
         return;
       } catch (error) {

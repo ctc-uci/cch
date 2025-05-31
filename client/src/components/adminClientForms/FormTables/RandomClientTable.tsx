@@ -338,7 +338,7 @@ export const RandomClientTable = () => {
         <FilterTemplate
           setFilterQuery={setFilterQuery}
           type={"randomSurvey"}
-        />
+        /></HStack>
         <HStack
           justifyContent="space-between"
         >
