@@ -37,6 +37,7 @@ import {
 import { MdFileUpload, MdOutlineManageSearch } from "react-icons/md";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox.tsx";
 import EditClient from "../userSettings/EditClient";
@@ -64,6 +65,8 @@ export type RoleKey = keyof typeof roles_dict;
 
 export const ManageAccounts = () => {
   const { backend } = useBackendContext();
+  const { currentUser } = useAuthContext();
+  const currentUserEmail = currentUser?.email ?? null;
 
   const [persons, setPersons] = useState<
     (Person & { isChecked: boolean; isHovered: boolean })[]
@@ -282,20 +285,32 @@ export const ManageAccounts = () => {
       try {
         if (view === "admin") {
           const response = await backend.get("/admin/admins");
-          setPersons(response.data);
+          setPersons(
+            (response.data || []).filter(
+              (person: Person) => person.email !== currentUserEmail
+            )
+          );
         } else if (view === "cms") {
           const response = await backend.get("/admin/caseManagers");
-          setPersons(response.data);
+          setPersons(
+            (response.data || []).filter(
+              (person: Person) => person.email !== currentUserEmail
+            )
+          );
         } else {
           const response = await backend.get("/admin/clients");
-          setPersons(response.data);
+          setPersons(
+            (response.data || []).filter(
+              (person: Person) => person.email !== currentUserEmail
+            )
+          );
         }
       } catch (error) {
         console.error("Error fetching client data: ", error);
       }
     };
     fetchData();
-  }, [view, backend, setPersons]);
+  }, [view, backend, setPersons, currentUserEmail]);
 
   return (
     <VStack

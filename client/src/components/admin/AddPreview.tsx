@@ -109,25 +109,42 @@ const AddPreview = ({
         }
       }
 
-        const cmResponse = await backend.post(`/caseManagers`, {
-          role: roleDict[userType],
-          firstName: newUser.firstName,
-          lastName: newUser.lastName,
-          phoneNumber: newUser.phoneNumber,
-          email: newUser.email,
-          notes: newUser.notes
-        });
+        try {
+          const cmResponse = await backend.post(`/caseManagers`, {
+            role: roleDict[userType],
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            phoneNumber: newUser.phoneNumber,
+            email: newUser.email,
+            notes: newUser.notes
+          });
+
+          const cm_id = cmResponse.data[0].id;
+
+          await backend.post(`/locations`, {
+            cmId: cm_id,
+            name: newUser.location,
+            date: new Date(),
+            caloptimaFunded: false,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+
+      if (roleDict[userType] === "admin") {
+        try {
+          await backend.post("/users/invite", {
+            email: newUser.email,
+            role: roleDict[userType],
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            phoneNumber: newUser.phoneNumber,
+          });
+        } catch (e) {
+          console.error(e);
+        }
+      }
         
-        const cm_id = cmResponse.data[0].id;
-
-        await backend.post(`/locations`, {
-          cmId: cm_id,
-          name: newUser.location,
-          date: new Date(),
-          caloptimaFunded: false,
-        });
-
-
         onClose();
 
         toast({
@@ -138,7 +155,7 @@ const AddPreview = ({
           isClosable: true,
         });
         
-        window.location.reload();
+        // window.location.reload();
       } catch (e) {
         console.error(e);
 

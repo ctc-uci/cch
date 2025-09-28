@@ -73,9 +73,15 @@ usersRouter.delete("/email/:email", async (req, res) => {
       email,
     ]);
 
-    const userRecord = await admin.auth().getUserByEmail(email);
-    const uid = userRecord.uid;
-    await admin.auth().deleteUser(uid);
+    // Only try to delete from Firebase if the user exists there
+    try {
+      const userRecord = await admin.auth().getUserByEmail(email);
+      const uid = userRecord.uid;
+      await admin.auth().deleteUser(uid);
+    } catch (firebaseError) {
+      // If user doesn't exist in Firebase, that's okay - they might be a placeholder user
+      console.log(`User ${email} not found in Firebase, skipping Firebase deletion`);
+    }
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
@@ -103,11 +109,11 @@ usersRouter.post("/create", async (req, res) => {
 // Create user with invitation
 usersRouter.post("/invite", async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { email, role, firstName, lastName, phoneNumber } = req.body;
 
     const user = await db.query(
-      "INSERT INTO users (email, role) VALUES ($1, $2) RETURNING *",
-      [email, role]
+      "INSERT INTO users (email, role, first_name, last_name, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [email, role, firstName, lastName, phoneNumber]
     );
 
     res.status(200).json(keysToCamel(user));
