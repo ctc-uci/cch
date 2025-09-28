@@ -19,5 +19,5 @@ CREATE TABLE random_survey_table (
     cm_feedback varchar(2048) NOT NULL,
     other_comments varchar(2048),
 
-    FOREIGN KEY(cm_id) REFERENCES case_manager(id)
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );

@@ -66,7 +66,7 @@ export const DeleteUserModal = ({ isOpen, onClose, title, onSubmit } : ModalProp
                 Cancel
               </Button>
               <Button
-                colorScheme="blue"
+                colorScheme="red"
                 onClick={() => {
                   onSubmit();
                   onClose();

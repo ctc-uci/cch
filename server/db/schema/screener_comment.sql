@@ -21,8 +21,8 @@ CREATE TABLE screener_comment (
     children_in_custody int,
     last_city_perm_residence varchar(32),
     decision boolean,
-    additional_comments varchar(1024)
-    FOREIGN KEY(cm_id) REFERENCES case_manager(id)
+    additional_comments varchar(1024),
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id),
     FOREIGN KEY(initial_interview_id) REFERENCES initial_interview(id)
 );
 

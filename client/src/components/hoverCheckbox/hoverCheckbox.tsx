@@ -6,6 +6,7 @@ interface HoverCheckboxProps {
   index: number;
   isSelected: boolean;
   onSelectionChange: (id: number, checked: boolean) => void;
+  alwaysVisible?: boolean;
 }
 
 export const HoverCheckbox = ({
@@ -13,18 +14,17 @@ export const HoverCheckbox = ({
   index,
   isSelected,
   onSelectionChange,
+  alwaysVisible = false,
 }: HoverCheckboxProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const shouldShowCheckbox = isSelected || alwaysVisible;
 
   return (
     <Flex
       textAlign={"center"}
       justifyContent={"center"}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => e.stopPropagation()}
     >
-      {(isHovered || isSelected) ? (
+      {shouldShowCheckbox ? (
         <Checkbox
           isChecked={isSelected}
           onChange={(e) => onSelectionChange(id, e.target.checked)}

@@ -109,7 +109,7 @@ const AddPreview = ({
         }
       }
 
-        await backend.post(`/caseManagers`, {
+        const cmResponse = await backend.post(`/caseManagers`, {
           role: roleDict[userType],
           firstName: newUser.firstName,
           lastName: newUser.lastName,
@@ -117,6 +117,16 @@ const AddPreview = ({
           email: newUser.email,
           notes: newUser.notes
         });
+        
+        const cm_id = cmResponse.data[0].id;
+
+        await backend.post(`/locations`, {
+          cmId: cm_id,
+          name: newUser.location,
+          date: new Date(),
+          caloptimaFunded: false,
+        });
+
 
         onClose();
 
@@ -127,6 +137,8 @@ const AddPreview = ({
           duration: 9000,
           isClosable: true,
         });
+        
+        window.location.reload();
       } catch (e) {
         console.error(e);
 
@@ -167,18 +179,22 @@ const AddPreview = ({
     ) => {
       const { name, value } = e.target;
 
-      if (name === "name") {
-        const name = value.split(" ");
+      if (name === "firstName") {
+        setNewUser((prev) => ({
+          ...prev,
+          firstName: value,
+        }));
 
-        if (name.length >= 2) {
-          setNewUser((prev) => ({
-            ...prev,
-            firstName: name[0] ?? "",
-            lastName: name[1] ?? "",
-          }));
+        return;
+      }
 
-          return;
-        }
+      if (name === "lastName") {
+        setNewUser((prev) => ({
+          ...prev,
+          lastName: value,
+        }));
+
+        return;
       }
 
       setNewUser((prev) => ({
@@ -224,12 +240,24 @@ const AddPreview = ({
               <Table variant="simple">
                 <Tbody>
                   <Tr>
-                    <Td fontSize="medium">Name</Td>
+                    <Td fontSize="medium">First Name</Td>
                     <Td>
                       <TextInputComponent
-                        name="name"
+                        name="firstName"
                         type="text"
-                        value={`${newUser.firstName} ${newUser.lastName}`}
+                        value={`${newUser.firstName}`}
+                        onChange={handleChange}
+                        width="100%"
+                      />
+                    </Td>
+                  </Tr>
+                  <Tr>
+                    <Td fontSize="medium">Last Name</Td>
+                    <Td>
+                      <TextInputComponent
+                        name="lastName"
+                        type="text"
+                        value={`${newUser.lastName}`}
                         onChange={handleChange}
                         width="100%"
                       />

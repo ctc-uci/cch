@@ -19,6 +19,7 @@ import {
   Text,
   Th,
   Thead,
+  Tooltip,
   Tr,
   useDisclosure,
   useToast,
@@ -87,6 +88,7 @@ export const ManageAccounts = () => {
   } = useDisclosure();
   const [editDrawerOpened, setEditDrawerOpened] = useState(false);
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
   const toast = useToast();
 
   const buttonStyle = {
@@ -112,10 +114,20 @@ export const ManageAccounts = () => {
     }
   };
 
+
   const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(persons.map((person) => person.id));
+    if (checkboxMode === 'hidden') {
+      // State 1 -> State 2: Show checkboxes and select all
+      setCheckboxMode('visible-checked');
+      const allIds = persons.map((person) => person.id);
+      setSelectedRowIds(allIds);
+    } else if (checkboxMode === 'visible-checked') {
+      // State 2 -> State 3: Keep checkboxes visible but uncheck all
+      setCheckboxMode('visible-unchecked');
+      setSelectedRowIds([]);
     } else {
+      // State 3 -> State 1: Hide checkboxes
+      setCheckboxMode('hidden');
       setSelectedRowIds([]);
     }
   };
@@ -173,12 +185,12 @@ export const ManageAccounts = () => {
     () => [
       {
         id: "rowNumber",
-        header: ({ table }) => {
+        header: () => {
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
                 onChange={handleSelectAllCheckboxClick}
               />
             </Box>
@@ -208,8 +220,44 @@ export const ManageAccounts = () => {
         accessorKey: "location",
         header: "Site",
       },
+      {
+        accessorKey: "notes",
+        header: "Notes",
+        cell: ({ getValue }) => {
+          const notes = getValue() as string;
+          const maxLength = 20; // Maximum characters to show before truncation
+          
+          if (!notes || notes.length === 0) {
+            return <Text color="gray.400" fontStyle="italic">No notes</Text>;
+          }
+          
+          const truncatedNotes = notes.length > maxLength 
+            ? `${notes.substring(0, maxLength)}...` 
+            : notes;
+          
+          return (
+            <Tooltip 
+              label={notes} 
+              placement="top" 
+              hasArrow
+              maxW="400px"
+              whiteSpace="pre-wrap"
+            >
+              <Text
+                maxW="200px"
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+                _hover={{ color: "blue.500" }}
+              >
+                {truncatedNotes}
+              </Text>
+            </Tooltip>
+          );
+        },
+      },
     ],
-    []
+    [selectedRowIds, persons, handleSelectAllCheckboxClick, checkboxMode]
   );
 
   const table = useReactTable({
@@ -274,6 +322,8 @@ export const ManageAccounts = () => {
                 onClick={() => {
                   setView("admin");
                   setEditDrawerOpened(false);
+                  setSelectedRowIds([]);
+                  setCheckboxMode('hidden');
                 }}
               >
                 Admins
@@ -282,6 +332,8 @@ export const ManageAccounts = () => {
                 onClick={() => {
                   setView("cms");
                   setEditDrawerOpened(false);
+                  setSelectedRowIds([]);
+                  setCheckboxMode('hidden');
                 }}
               >
                 Case Managers
@@ -290,6 +342,8 @@ export const ManageAccounts = () => {
                 onClick={() => {
                   setView("clients");
                   setEditDrawerOpened(false);
+                  setSelectedRowIds([]);
+                  setCheckboxMode('hidden');
                 }}
               >
                 Clients
@@ -300,7 +354,14 @@ export const ManageAccounts = () => {
         <Spacer />
         {view !== "clients" && (
           <>
-            <Button onClick={deleteOnOpen}>Delete</Button>
+            <Button 
+              onClick={deleteOnOpen} 
+              disabled={selectedRowIds.length === 0}
+              colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
+              opacity={selectedRowIds.length === 0 ? 0.5 : 1}
+            >
+              Delete ({selectedRowIds.length})
+            </Button>
             <Button
               colorScheme="blue"
               onClick={onOpen}
@@ -402,14 +463,15 @@ export const ManageAccounts = () => {
                           }}
                         >
                           {cell.column.id === "rowNumber" ? (
-                            <HoverCheckbox
-                              id={row.original.id}
-                              isSelected={selectedRowIds.includes(
-                                row.original.id
-                              )}
-                              onSelectionChange={handleRowSelect}
-                              index={index}
-                            />
+                              <HoverCheckbox
+                                id={row.original.id}
+                                isSelected={selectedRowIds.includes(
+                                  row.original.id
+                                )}
+                                onSelectionChange={handleRowSelect}
+                                index={index}
+                                alwaysVisible={checkboxMode !== 'hidden'}
+                              />
                           ) : (
                             flexRender(
                               cell.column.columnDef.cell,

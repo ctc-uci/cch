@@ -66,15 +66,32 @@ locationsRouter.get("/:id", async (req, res) => {
   }
 });
 
-// Insert new location
+// Insert new location or create replica if exists
 locationsRouter.post("/", async (req, res) => {
   try {
     const { cmId, name, date, caloptimaFunded } = req.body;
-    const data = await db.query(
-      `INSERT INTO locations (cm_id, name, date, caloptima_funded) VALUES ($1, $2, $3, $4) RETURNING id;`,
-      [cmId, name, date, caloptimaFunded]
+    
+    // Check if location with same name already exists
+    const existingLocation = await db.query(
+      `SELECT * FROM locations WHERE name = $1 LIMIT 1`,
+      [name]
     );
-
+    
+    let data;
+    if (existingLocation.length > 0) {
+      // Create replica with new cm_id but same other properties
+      data = await db.query(
+        `INSERT INTO locations (cm_id, name, date, caloptima_funded) VALUES ($1, $2, $3, $4) RETURNING id;`,
+        [cmId, name, existingLocation[0].date, existingLocation[0].caloptima_funded]
+      );
+    } else {
+      // Create new location
+      data = await db.query(
+        `INSERT INTO locations (cm_id, name, date, caloptima_funded) VALUES ($1, $2, $3, $4) RETURNING id;`,
+        [cmId, name, date, caloptimaFunded]
+      );
+    }
+    
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
