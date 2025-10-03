@@ -68,32 +68,15 @@ usersRouter.delete("/:firebaseUid", async (req, res) => {
 usersRouter.delete("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    console.log("email", email)
 
-    // try {
-    //   const userRecord = await admin.auth().getUserByEmail(email);
-    //   console.log("userRecord", userRecord)
-    //   const uid = userRecord.uid;
-    //   console.log("uid", uid)
-    //   await admin.auth().deleteUser(uid);
-    // } catch (firebaseError) {
-    //   // If user doesn't exist in Firebase, that's okay - they might be a placeholder user
-    //   console.log(`Firebase Error: ${firebaseError}`);
-    // }
-
-    const user = await db.query("SELECT * FROM users WHERE email = $1", [
+    const user = await db.query("DELETE FROM users WHERE email = $1 RETURNING *", [
       email,
     ]);
-    
+
     // Only delete from Firebase if the user has a valid firebase_uid
     if (user[0] && user[0].firebase_uid && user[0].firebase_uid.trim() !== '') {
-      const deletedUser = await admin.auth().deleteUser(user[0].firebase_uid);
-      console.log("deletedUser", deletedUser)
-    } else {
-      console.log("No valid firebase_uid found, skipping Firebase deletion")
+      await admin.auth().deleteUser(user[0].firebase_uid);
     }
-
-    // Only try to delete from Firebase if the user exists there
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
