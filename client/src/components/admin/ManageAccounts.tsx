@@ -135,6 +135,10 @@ export const ManageAccounts = () => {
     }
   };
 
+  const handleUserAdded = (newUser: Person) => {
+    setPersons(prev => [...prev, { ...newUser, isChecked: false, isHovered: false }]);
+  };
+
   const handleDelete = async () => {
     try {
 
@@ -594,6 +598,7 @@ export const ManageAccounts = () => {
         userType={view}
         isOpen={isOpen}
         onClose={onClose}
+        onUserAdded={handleUserAdded}
       />
     </VStack>
   );

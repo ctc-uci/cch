@@ -51,10 +51,12 @@ const AddPreview = ({
                       userType,
                       isOpen,
                       onClose,
+                      onUserAdded,
                     }: {
   userType: RoleKey;
   isOpen: boolean;
   onClose: () => void;
+  onUserAdded?: (newUser: UserInfo & { id: number }) => void;
 }) => {
   const { backend } = useBackendContext();
 
@@ -95,8 +97,8 @@ const AddPreview = ({
         return;
       }
 
-      for (const value of Object.values(newUser)) {
-        if (value === "") {
+      for (const [key, value] of Object.entries(newUser)) {
+        if (key !== "notes" && value === "") {
           toast({
             title: `Missing Information`,
             description: `There is a missing or incorrect field.`,
@@ -127,6 +129,14 @@ const AddPreview = ({
             date: new Date(),
             caloptimaFunded: false,
           });
+
+          // Add the new user to local state
+          if (onUserAdded) {
+            onUserAdded({
+              ...newUser,
+              id: cm_id
+            });
+          }
         } catch (e) {
           console.error(e);
         }
@@ -257,7 +267,7 @@ const AddPreview = ({
               <Table variant="simple">
                 <Tbody>
                   <Tr>
-                    <Td fontSize="medium">First Name</Td>
+                    <Td fontSize="medium">First Name <Text as="span" color="red">*</Text></Td>
                     <Td>
                       <TextInputComponent
                         name="firstName"
@@ -269,7 +279,7 @@ const AddPreview = ({
                     </Td>
                   </Tr>
                   <Tr>
-                    <Td fontSize="medium">Last Name</Td>
+                    <Td fontSize="medium">Last Name <Text as="span" color="red">*</Text></Td>
                     <Td>
                       <TextInputComponent
                         name="lastName"
@@ -281,7 +291,7 @@ const AddPreview = ({
                     </Td>
                   </Tr>
                   <Tr>
-                    <Td fontSize="medium">Email</Td>
+                    <Td fontSize="medium">Email <Text as="span" color="red">*</Text></Td>
                     <Td>
                       <TextInputComponent
                         name="email"
@@ -293,7 +303,7 @@ const AddPreview = ({
                     </Td>
                   </Tr>
                   <Tr>
-                    <Td fontSize="medium">Location</Td>
+                    <Td fontSize="medium">Location <Text as="span" color="red">*</Text></Td>
                     <Td>
                       <SelectInputComponent
                         name="location"
@@ -305,7 +315,7 @@ const AddPreview = ({
                     </Td>
                   </Tr>
                   <Tr>
-                    <Td fontSize="medium">Phone</Td>
+                    <Td fontSize="medium">Phone <Text as="span" color="red">*</Text></Td>
                     <Td>
                       <TextInputComponent
                         name="phoneNumber"
