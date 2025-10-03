@@ -84,7 +84,6 @@ usersRouter.delete("/email/:email", async (req, res) => {
     const user = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
-    console.log("user", user)
     
     // Only delete from Firebase if the user has a valid firebase_uid
     if (user[0] && user[0].firebase_uid && user[0].firebase_uid.trim() !== '') {
