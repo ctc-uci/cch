@@ -74,7 +74,7 @@ authentificationRouter.post("/", async (req, res) => {
   }
 
   const mail = {
-    from: sendEmail,
+    from: "cchautomatedemail@gmail.com",
     to: email,
     subject: "Your Two-Factor Authentication Code",
     text: message,

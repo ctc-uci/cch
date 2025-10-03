@@ -84,16 +84,24 @@ export const Authentification = () => {
     }
   };
 
-  useEffect( () => {
-    const generateCode = async () => {
-      try {
-        await createCode();
-      } catch (err) {
-        console.error('Error posting code: ', err);
-      }
-    };
-    generateCode();
-  }, [createCode]);
+  // const generateCode = async () => {
+  //   try {
+  //     await createCode();
+  //   } catch (err) {
+  //     console.error('Error posting code: ', err);
+  //   }
+  // };
+
+  // useEffect( () => {
+  //   const generateCode = async () => {
+  //     try {
+  //       await createCode();
+  //     } catch (err) {
+  //       console.error('Error posting code: ', err);
+  //     }
+  //   };
+  //   generateCode();
+  // }, [createCode]);
 
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);

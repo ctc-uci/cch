@@ -68,20 +68,33 @@ usersRouter.delete("/:firebaseUid", async (req, res) => {
 usersRouter.delete("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
+    console.log("email", email)
 
-    const user = await db.query("DELETE FROM users WHERE email = $1", [
+    // try {
+    //   const userRecord = await admin.auth().getUserByEmail(email);
+    //   console.log("userRecord", userRecord)
+    //   const uid = userRecord.uid;
+    //   console.log("uid", uid)
+    //   await admin.auth().deleteUser(uid);
+    // } catch (firebaseError) {
+    //   // If user doesn't exist in Firebase, that's okay - they might be a placeholder user
+    //   console.log(`Firebase Error: ${firebaseError}`);
+    // }
+
+    const user = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
+    console.log("user", user)
+    
+    // Only delete from Firebase if the user has a valid firebase_uid
+    if (user[0] && user[0].firebase_uid && user[0].firebase_uid.trim() !== '') {
+      const deletedUser = await admin.auth().deleteUser(user[0].firebase_uid);
+      console.log("deletedUser", deletedUser)
+    } else {
+      console.log("No valid firebase_uid found, skipping Firebase deletion")
+    }
 
     // Only try to delete from Firebase if the user exists there
-    try {
-      const userRecord = await admin.auth().getUserByEmail(email);
-      const uid = userRecord.uid;
-      await admin.auth().deleteUser(uid);
-    } catch (firebaseError) {
-      // If user doesn't exist in Firebase, that's okay - they might be a placeholder user
-      console.log(`User ${email} not found in Firebase, skipping Firebase deletion`);
-    }
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
@@ -165,6 +178,26 @@ usersRouter.put("/update/set-role", verifyRole("admin"), async (req, res) => {
       [role, firebaseUid]
     );
 
+    res.status(200).json(keysToCamel(user));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
+usersRouter.put("/updateUser", async (req, res) => {
+  try {
+    const { email, firstName, lastName, phoneNumber, firebaseUid } = req.body;
+
+    const user = await db.query(
+      `UPDATE users
+       SET first_name = COALESCE($1, first_name), 
+           last_name = COALESCE($2, last_name), 
+           phone_number = COALESCE($3, phone_number),
+           firebase_uid = COALESCE($4, firebase_uid)
+       WHERE email = $5
+       RETURNING *`,
+       [firstName, lastName, phoneNumber, firebaseUid, email]
+    );
     res.status(200).json(keysToCamel(user));
   } catch (err) {
     res.status(400).send(err.message);

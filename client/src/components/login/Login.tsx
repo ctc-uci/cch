@@ -44,7 +44,7 @@ export const Login = () => {
   const { userType = "Admin"} = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Client" ? "CL" : "AD";
 
-  const { login, handleRedirectResult, loading } = useAuthContext();
+  const { login, handleRedirectResult, loading, createCode } = useAuthContext();
   const { backend } = useBackendContext();
 
   const {
@@ -70,16 +70,21 @@ export const Login = () => {
 
   const handleLogin = async (data: SigninFormValues) => {
     try {
-      await login({
+      const authCredential = await login({
         email: data.email,
         password: data.password,
       });
-      if (userType === "Case Manager") navigate("/authentification/Case Manager");
-      else if (userType === "Admin") {
+      
+      await createCode(data.email, authCredential);
+      
+      if (userType === "Case Manager") {
+        navigate("/authentification/Case Manager");
+      } else if (userType === "Admin") {
         navigate("/authentification/Admin");
       } else if (userType === "Client") {
         navigate("/authentification/Client"); 
       }
+
       //else if (userType === "Client") navigate("/client-landing-page");
     } catch (err) {
       const errorCode = err.code;

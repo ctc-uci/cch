@@ -15,7 +15,7 @@ import {
   User,
   UserCredential,
 } from "firebase/auth";
-import { Navigate, NavigateFunction } from "react-router-dom";
+import { useNavigate, Navigate, NavigateFunction } from "react-router-dom";
 
 import { auth } from "../utils/auth/firebase";
 import { useBackendContext } from "./hooks/useBackendContext";
@@ -34,7 +34,7 @@ interface AuthContextProps {
     role,
   }: SignupInfo) => Promise<UserCredential>;
   login: ({ email, password }: EmailPassword) => Promise<EmailAuthCredential>;
-  createCode: () => Promise<void>;
+  createCode: (email: string, authCredential: EmailAuthCredential) => Promise<void>;
   logout: () => Promise<void>;
   authenticate: ({ code }: Authenticate) => Promise<UserCredential | void>;
   resetPassword: ({ email }: Pick<EmailPassword, "email">) => Promise<void>;
@@ -75,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authCredential, setAuthCredential] =
     useState<EmailAuthCredential | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const signup = async ({
     email,
@@ -103,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       throw new Error("Not authorized to create this type of user");
     }
 
-    await backend.delete(`users/email/${email}`);
+    // await backend.delete(`users/email/${email}`);
 
     const userCredential = await createUserWithEmailAndPassword(
       auth,
@@ -111,22 +112,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password
     );
 
-    await backend.post("/users/create", {
-      email: email,
-      firebaseUid: userCredential.user.uid,
-      firstName: firstName,
-      lastName: lastName,
-      phoneNumber: phoneNumber,
-      role,
-    });
+    try {
+      await backend.put("/users/updateUser", {
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+          phoneNumber: phoneNumber,
+          firebaseUid: userCredential.user.uid,
+        });
+      } catch (error) {
+        console.error("Error updating user:", error);
+      }
+
+    // await backend.post("/users/create", {
+    //   email: email,
+    //   firebaseUid: userCredential.user.uid,
+    //   firstName: firstName,
+    //   lastName: lastName,
+    //   phoneNumber: phoneNumber,
+    //   role,
+    // });
 
     return userCredential;
   };
 
   const login = async ({ email, password }: EmailPassword) => {
     if (currentUser) {
+      // TODO CHANGE TO REDIRECT IF LOGGED IN
       signOut(auth);
     }
+
+    const user = await backend.get(`/users/email/${email}`)
+
+    if(user.data.length === 0){
+      throw new Error("Incorrect username or password");
+    }
+    
     const authCredential = EmailAuthProvider.credential(email, password);
     setAuthCredential(authCredential);
     setEmail(email);
@@ -134,28 +155,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return authCredential;
   };
 
-  const createCode = async () => {
-    if (authCredential && email) {
-      try {
-        // Delete all the stale codes associated with this email
-        // await backend.delete(`authentification/email?email=${email}`);
+  const createCode = async (email: string, authCredential: EmailAuthCredential) => {
+    try {
+      
+      // Delete all the stale codes associated with this email
+      // await backend.delete(`authentification/email?email=${email}`);
 
-        // Create new code for them
-        const now = new Date();
-        const validUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-          
-        const authData = await backend.post("/authentification", {
-          email: email,
-          validUntil: validUntil,
-        });
-        //const code = authData?.data[0]?.code;
+      // Create new code for them
+      const now = new Date();
+      const validUntil = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        
+      const authData = await backend.post(`/authentification`, {
+        email: email,
+        validUntil: validUntil,
+      });
 
-        // Send the code to the user via email
 
-        return;
-      } catch (error) {
-        console.error("Error signing in with credential:", error);
-      }
+      //const code = authData?.data[0]?.code;
+      // Send the code to the user via email
+    } catch (error) {
+      console.error("Error creating code:", error);
     }
   };
 
@@ -164,12 +183,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await backend.post(
         `/authentification/verify?email=${email}&code=${code}`
       );
-      if (response.data.length == 0) {
+      if (response.data.length === 0) {
         throw new Error("Invalid code. Try again.");
       }
 
       const userCredential = await signInWithCredential(auth, authCredential);
-
       // we have to update the currnet user role BEFORE we sign in or else the app won't know what role we are currently
       const userData = await backend.get(`/users/${userCredential.user.uid}`);
       setCurrentUserRole(userData.data[0]?.role);

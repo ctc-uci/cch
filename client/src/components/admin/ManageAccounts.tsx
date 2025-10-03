@@ -137,11 +137,11 @@ export const ManageAccounts = () => {
 
   const handleDelete = async () => {
     try {
-      await Promise.all(
-        selectedRowIds.map((row_id) =>
-          backend.delete(`/caseManagers/${row_id}`)
-        )
-      );
+
+      selectedRowIds.map(async (row_id) => {
+        const caseManager = await backend.delete(`/caseManagers/${row_id}`);
+        await backend.delete(`/users/email/${caseManager.data[0].email}`);
+      })
       setPersons(
         persons.filter((client) => !selectedRowIds.includes(client.id))
       );

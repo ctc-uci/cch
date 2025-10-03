@@ -430,6 +430,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>
