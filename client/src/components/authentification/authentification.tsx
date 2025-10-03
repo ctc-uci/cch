@@ -146,7 +146,7 @@ export const Authentification = () => {
             <Image src={cch} alt="logo" height="50px" />
           </HStack>
 
-          <Heading mb={2}>Enter Admin Pin</Heading>
+          <Heading mb={2}>Enter {userType} Pin</Heading>
           
 
            <form onSubmit={handlePinSubmit} style={{ width: "100%" }}>

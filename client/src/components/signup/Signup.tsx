@@ -71,7 +71,7 @@ export const Signup = () => {
 
     try {
 
-      const user = await signup({
+      await signup({
         email: data.email,
         password: data.password,
         firstName: data.firstName,
@@ -79,9 +79,24 @@ export const Signup = () => {
         phoneNumber: data.phoneNumber,
         role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
       });
-      if (user) {
-        navigate(`/clientlist`);
+      // if (user) {
+      //   navigate(`/clientlist`);
+      // }
+      toast({
+        title: "Account created",
+        description: "Account created successfully",
+        status: "success",
+        variant: "subtle",
+      });
+
+      if(userType === "Admin"){
+        navigate("/login/Admin");
+      } else if(userType === "Case Manager"){
+        navigate("/login/Case Manager");
+      } else if(userType === "Client"){
+        navigate("/login/Client");
       }
+
     } catch (err) {
       if (err instanceof Error) {
         toast({
