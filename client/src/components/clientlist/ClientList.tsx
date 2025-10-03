@@ -82,6 +82,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState({});
 
 
 
@@ -346,6 +347,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const fetchData = async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
+      const userRequest = await backend.get(`/users/${currentUser?.uid}`);
+      setUser(userRequest.data[0]);
       let clientsRequest;
       if (searchKey && filterQuery.length > 1) {
         clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
@@ -379,7 +382,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
       {showUnfinishedAlert && <UnfinishedClientAlert/>}
-      <Heading paddingBottom="4%">Welcome, {currentUser?.displayName}</Heading>
+      <Heading paddingBottom="4%">Welcome, {user?.firstName} {user?.lastName}</Heading>
       <HStack width="100%">
         <Heading size="md">{admin ? 'Client Tracking Statistics' : 'My Complete Client Table'}</Heading>
         <Heading
