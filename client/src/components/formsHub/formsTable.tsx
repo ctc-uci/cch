@@ -46,8 +46,8 @@ import { downloadCSV } from "../../utils/downloadCSV";
 import { LoadingWheel } from ".././loading/loading.tsx";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import PrintForm from "../printForm/PrintForm";
-import FormPreview from "./FormPreview";
 import { FormsListFilter } from "./FormListFilter.tsx";
+import FormPreview from "./FormPreview";
 
 // const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = []): Form[] => {
 //   return data.filter((form) => {
@@ -85,7 +85,11 @@ import { FormsListFilter } from "./FormListFilter.tsx";
 //   });
 // };
 
-const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = [], searchKey: string = ""): Form[] => {
+const applyFilters = (
+  data: Form[] = [],
+  filterRows: FormFilter[] = [],
+  searchKey: string = ""
+): Form[] => {
   return data.filter((form) => {
     const filterMatch = filterRows.reduce<boolean>((acc, row, index) => {
       if (!row.field || !row.operator || !row.value) return acc;
@@ -97,19 +101,21 @@ const applyFilters = (data: Form[] = [], filterRows: FormFilter[] = [], searchKe
       if (fieldType === "date" && typeof fieldValue === "string") {
         const value = row.value;
         const normalized = fieldValue.slice(0, 10);
-        result = row.operator === "contains"
-          ? normalized.includes(value)
-          : row.operator === "="
-          ? normalized === value
-          : normalized !== value;
+        result =
+          row.operator === "contains"
+            ? normalized.includes(value)
+            : row.operator === "="
+              ? normalized === value
+              : normalized !== value;
       } else if (typeof fieldValue === "string") {
         const value = row.value.toLowerCase();
         const lower = fieldValue.toLowerCase();
-        result = row.operator === "contains"
-          ? lower.includes(value)
-          : row.operator === "="
-          ? lower === value
-          : lower !== value;
+        result =
+          row.operator === "contains"
+            ? lower.includes(value)
+            : row.operator === "="
+              ? lower === value
+              : lower !== value;
       }
 
       if (index === 0 || row.selector === "AND") {
@@ -138,7 +144,6 @@ type FormFilter = {
   selector?: string;
 };
 
-
 type CaseManager = {
   id: number;
   firstName?: string;
@@ -166,7 +171,8 @@ export const FormTable = () => {
   const [cmMonthlyDate, setCMMonthlyDate] = useState<Date | null>(null);
   const [exitSurveyDate, setExitSurveyDate] = useState<Date | null>(null);
   const [successStoryDate, setSuccessStoryDate] = useState<Date | null>(null);
-  const [randomClientSurveyDate, setRandomClientSurveyDate] = useState<Date | null>(null);
+  const [randomClientSurveyDate, setRandomClientSurveyDate] =
+    useState<Date | null>(null);
 
   const [mostRecentDate, setMostRecentDate] = useState<Date | null>(null);
   const [initialScreeners, setInitialScreeners] = useState<Form[]>([]);
@@ -175,15 +181,9 @@ export const FormTable = () => {
   const [caseManagerStatistics, setCaseManagerStatistics] = useState<Form[]>(
     []
   );
-  const [exitSurvey, setExitSurvey] = useState<Form[]>(
-    []
-  );
-  const [successStory, setSuccessStory] = useState<Form[]>(
-    []
-  );
-  const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>(
-    []
-  );
+  const [exitSurvey, setExitSurvey] = useState<Form[]>([]);
+  const [successStory, setSuccessStory] = useState<Form[]>([]);
+  const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>([]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
@@ -365,15 +365,14 @@ export const FormTable = () => {
           })
         );
 
-        const randomSurveyForms: Form[] = await randomClientSurveyResponse.data.map(
-          (form: Form) => ({
+        const randomSurveyForms: Form[] =
+          await randomClientSurveyResponse.data.map((form: Form) => ({
             id: form.id,
             hashedId: form.id,
             date: form.date,
             name: "",
             title: "Random Client Surveys",
-          })
-        );
+          }));
 
         const caseManagerStats: Form[] =
           await caseManagersMonthlyResponse.data.map((form: Form) => {
@@ -402,13 +401,14 @@ export const FormTable = () => {
         const getDate = (date: { lastUpdatedAt?: string }[] | undefined) =>
           date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
 
-
         setInitialScreenerDate(getDate(initialScreenerResponse.data));
         setFrontDeskDate(getDate(frontDeskMonthlyStatsResponse.data));
         setCMMonthlyDate(getDate(cmMonthlyStatsResponse.data));
         setExitSurveyDate(getDate(lastUpdatedExitSurveyResponse.data));
         setSuccessStoryDate(getDate(lastUpdatedSuccessStoryResponse.data));
-        setRandomClientSurveyDate(getDate(lastUpdatedRandomSurveyResponse.data));
+        setRandomClientSurveyDate(
+          getDate(lastUpdatedRandomSurveyResponse.data)
+        );
 
         const mostRecent = new Date(
           Math.max(
@@ -438,23 +438,32 @@ export const FormTable = () => {
     }
   }, [clickedFormItem, onOpen]);
 
-  const allFormsData = useMemo(() => applyFilters([
-    ...initialScreeners,
-    ...intakeStatistics,
-    ...frontDeskStatistics,
-    ...caseManagerStatistics,
-    ...(role === "admin" ? [...exitSurvey, ...successStory, ...randomClientSurvey] : []),
-  ], filterRows), [
-    role,
-    initialScreeners,
-    intakeStatistics,
-    frontDeskStatistics,
-    caseManagerStatistics,
-    exitSurvey,
-    successStory,
-    randomClientSurvey,
-    filterRows,
-  ]);
+  const allFormsData = useMemo(
+    () =>
+      applyFilters(
+        [
+          ...initialScreeners,
+          ...intakeStatistics,
+          ...frontDeskStatistics,
+          ...caseManagerStatistics,
+          ...(role === "admin"
+            ? [...exitSurvey, ...successStory, ...randomClientSurvey]
+            : []),
+        ],
+        filterRows
+      ),
+    [
+      role,
+      initialScreeners,
+      intakeStatistics,
+      frontDeskStatistics,
+      caseManagerStatistics,
+      exitSurvey,
+      successStory,
+      randomClientSurvey,
+      filterRows,
+    ]
+  );
 
   const filteredAllFormsData = useMemo(
     () => applyFilters(allFormsData, filterRows, searchKey),
@@ -491,7 +500,6 @@ export const FormTable = () => {
     [intakeStatistics, filterRows, searchKey]
   );
 
-
   const intakeStatisticsTable = useReactTable<Form>({
     data: filteredIntakeStatistics,
     columns,
@@ -518,7 +526,7 @@ export const FormTable = () => {
   });
 
   const filteredCaseManagerStatistics = useMemo(
-    () => applyFilters(caseManagerStatistics, filterRows, searchKey), 
+    () => applyFilters(caseManagerStatistics, filterRows, searchKey),
     [caseManagerStatistics, filterRows, searchKey]
   );
 
@@ -533,7 +541,7 @@ export const FormTable = () => {
   });
 
   const filteredExitSurvey = useMemo(
-    () => applyFilters(exitSurvey, filterRows, searchKey), 
+    () => applyFilters(exitSurvey, filterRows, searchKey),
     [exitSurvey, filterRows, searchKey]
   );
 
@@ -548,7 +556,7 @@ export const FormTable = () => {
   });
 
   const filteredSuccessStory = useMemo(
-    () => applyFilters(successStory, filterRows, searchKey), 
+    () => applyFilters(successStory, filterRows, searchKey),
     [successStory, filterRows, searchKey]
   );
 
@@ -563,8 +571,9 @@ export const FormTable = () => {
   });
 
   const filteredRandomClientSurvey = useMemo(
-    () => applyFilters(randomClientSurvey, filterRows, searchKey), 
-  [randomClientSurvey, filterRows, searchKey]);
+    () => applyFilters(randomClientSurvey, filterRows, searchKey),
+    [randomClientSurvey, filterRows, searchKey]
+  );
 
   const randomClientSurveyTable = useReactTable<Form>({
     data: filteredRandomClientSurvey,
@@ -598,15 +607,22 @@ export const FormTable = () => {
             justify="space-between"
           >
             <HStack padding="5px">
-              <FormsListFilter filterRows={filterRows} setFilterRows={setFilterRows}/>
+              <FormsListFilter
+                filterRows={filterRows}
+                setFilterRows={setFilterRows}
+              />
             </HStack>
-            <HStack width="100%" justifyContent={"right"} gap={"0"}>
+            <HStack
+              width="100%"
+              justifyContent={"right"}
+              gap={"0"}
+            >
               <Input
                 maxW="20%"
                 placeholder="Search"
                 value={searchKey}
                 onChange={(e) => setSearchKey(e.target.value)}
-                display={showSearch ? 'block' : 'none'}
+                display={showSearch ? "block" : "none"}
               />
               <Box
                 display="flex"
@@ -623,7 +639,8 @@ export const FormTable = () => {
                   <MdOutlineManageSearch size="24px" />
                 </Button>
               </Box>
-              <Box
+              <Button
+                background={"white"}
                 display="flex"
                 alignItems="center"
                 paddingX="8px"
@@ -631,11 +648,9 @@ export const FormTable = () => {
                 cursor="pointer"
                 onClick={() => handleExport(allFormsTable)}
               >
-                <Button background={"white"}>
-                  <MdFileUpload  size="16px" />
-                  <Text ml="8px">Export</Text>
-                </Button>
-              </Box>
+                <MdFileUpload size="16px" />
+                <Text ml="8px">Export bruh</Text>
+              </Button>
             </HStack>
           </HStack>
           <Box
@@ -728,7 +743,7 @@ export const FormTable = () => {
         </TableContainer>
       </Box>
     ) : (
-        <Box
+      <Box
         borderWidth="1px"
         borderRadius="12px"
         width="100%"
@@ -741,15 +756,22 @@ export const FormTable = () => {
             justify="space-between"
           >
             <HStack padding="5px">
-              <FormsListFilter filterRows={filterRows} setFilterRows={setFilterRows}/>
+              <FormsListFilter
+                filterRows={filterRows}
+                setFilterRows={setFilterRows}
+              />
             </HStack>
-            <HStack width="100%" justifyContent={"right"} gap={"0"}>
+            <HStack
+              width="100%"
+              justifyContent={"right"}
+              gap={"0"}
+            >
               <Input
                 maxW="20%"
                 placeholder="Search"
                 value={searchKey}
                 onChange={(e) => setSearchKey(e.target.value)}
-                display={showSearch ? 'block' : 'none'}
+                display={showSearch ? "block" : "none"}
               />
               <Box
                 display="flex"
@@ -775,7 +797,7 @@ export const FormTable = () => {
                 onClick={() => handleExport(allFormsTable)}
               >
                 <Button background={"white"}>
-                  <MdFileUpload  size="16px" />
+                  <MdFileUpload size="16px" />
                   <Text ml="8px">Export</Text>
                 </Button>
               </Box>
@@ -836,8 +858,7 @@ export const FormTable = () => {
           </Box>
         </TableContainer>
       </Box>
-      )
-
+    );
   };
 
   return (
@@ -865,7 +886,7 @@ export const FormTable = () => {
           {role === "admin" && <Tab>Random Client Survey Forms</Tab>}
         </TabList>
         <TabPanels>
-        <TabPanel>{renderTable(allFormsTable, allFormsData)}</TabPanel>
+          <TabPanel>{renderTable(allFormsTable, allFormsData)}</TabPanel>
           <TabPanel>
             {renderTable(initialScreenersTable, initialScreeners)}
           </TabPanel>
@@ -878,9 +899,17 @@ export const FormTable = () => {
           <TabPanel>
             {renderTable(caseManagerStatisticsTable, caseManagerStatistics)}
           </TabPanel>
-          {role === "admin" && <TabPanel>{renderTable(exitSurveyTable, exitSurvey)}</TabPanel>}
-          {role === "admin" && <TabPanel>{renderTable(successStoryTable, successStory)}</TabPanel>}
-          {role === "admin" && <TabPanel>{renderTable(randomClientSurveyTable, randomClientSurvey)}</TabPanel>}
+          {role === "admin" && (
+            <TabPanel>{renderTable(exitSurveyTable, exitSurvey)}</TabPanel>
+          )}
+          {role === "admin" && (
+            <TabPanel>{renderTable(successStoryTable, successStory)}</TabPanel>
+          )}
+          {role === "admin" && (
+            <TabPanel>
+              {renderTable(randomClientSurveyTable, randomClientSurvey)}
+            </TabPanel>
+          )}
         </TabPanels>
       </Tabs>
       {clickedFormItem && (

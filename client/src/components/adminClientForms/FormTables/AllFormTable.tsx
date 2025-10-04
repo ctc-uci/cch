@@ -29,23 +29,63 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+
 import { useAuthContext } from "../../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import type { Client } from "../../../types/client";
 import { formatDateString } from "../../../utils/dateUtils";
 import { downloadCSV } from "../../../utils/downloadCSV";
+import { LoadingWheel } from "../.././loading/loading.tsx";
 import { UpdateClients } from "../../admin/UpdateClient";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox";
-import { LoadingWheel } from "../.././loading/loading.tsx"
 import { FilterTemplate } from "./FilterTemplate.tsx";
-
-
 
 export const AllFormTable = () => {
   const headers = [
-    "age","attendingSchoolUponEntry","attendingSchoolUponExit","bedNights","bedNightsChildren","caseManagerFirstName","caseManagerLastName","chronicallyHomeless","cityOfLastPermanentResidence","comments","createdBy","dateOfBirth","destinationCity","disabledChildren","email","emergencyContactName","emergencyContactPhoneNumber","employementGained","entranceDate","estimatedExitDate","ethnicity","exitDate","firstName","grant","homelessnessLength","id","lastName","locationName","medical","phoneNumber","pregnantUponEntry","priorLiving","priorLivingCity","race","reasonForLeaving","reunified","savingsAmount","shelterInLastFiveYears","specificDestination","specificReasonForLeaving","status","successfulCompletion","unitId"
-
+    "age",
+    "attendingSchoolUponEntry",
+    "attendingSchoolUponExit",
+    "bedNights",
+    "bedNightsChildren",
+    "caseManagerFirstName",
+    "caseManagerLastName",
+    "chronicallyHomeless",
+    "cityOfLastPermanentResidence",
+    "comments",
+    "createdBy",
+    "dateOfBirth",
+    "destinationCity",
+    "disabledChildren",
+    "email",
+    "emergencyContactName",
+    "emergencyContactPhoneNumber",
+    "employementGained",
+    "entranceDate",
+    "estimatedExitDate",
+    "ethnicity",
+    "exitDate",
+    "firstName",
+    "grant",
+    "homelessnessLength",
+    "id",
+    "lastName",
+    "locationName",
+    "medical",
+    "phoneNumber",
+    "pregnantUponEntry",
+    "priorLiving",
+    "priorLivingCity",
+    "race",
+    "reasonForLeaving",
+    "reunified",
+    "savingsAmount",
+    "shelterInLastFiveYears",
+    "specificDestination",
+    "specificReasonForLeaving",
+    "status",
+    "successfulCompletion",
+    "unitId",
   ];
 
   const { currentUser } = useAuthContext();
@@ -62,7 +102,6 @@ export const AllFormTable = () => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -256,7 +295,6 @@ export const AllFormTable = () => {
     [selectedRowIds, clients]
   );
 
-
   const table = useReactTable({
     data: clients,
     columns,
@@ -281,51 +319,51 @@ export const AllFormTable = () => {
     const selectedClients = clients.filter((client) =>
       selectedRowIds.includes(client.id)
     );
-    
+
     const data = selectedClients.map((client) => ({
-      "age": client.age,
-"attendingSchoolUponEntry": client.attendingSchoolUponEntry,
-"attendingSchoolUponExit": client.attendingSchoolUponExit,
-"bedNights": client.bedNights,
-"bedNightsChildren": client.bedNightsChildren,
-"caseManagerFirstName": client.caseManagerFirstName,
-"caseManagerLastName": client.caseManagerLastName,
-"chronicallyHomeless": client.chronicallyHomeless,
-"cityOfLastPermanentResidence": client.cityOfLastPermanentResidence,
-"comments": client.comments,
-"createdBy": client.createdBy,
-"dateOfBirth": client.dateOfBirth,
-"destinationCity": client.destinationCity,
-"disabledChildren": client.disabledChildren,
-"email": client.email,
-"emergencyContactName": client.emergencyContactName,
-"emergencyContactPhoneNumber": client.emergencyContactPhoneNumber,
-"employementGained": client.employementGained,
-"entranceDate": client.entranceDate,
-"estimatedExitDate": client.estimatedExitDate,
-"ethnicity": client.ethnicity,
-"exitDate": client.exitDate,
-"firstName": client.firstName,
-"grant": client.grant,
-"homelessnessLength": client.homelessnessLength,
-"id": client.id,
-"lastName": client.lastName,
-"locationName": client.locationName,
-"medical": client.medical,
-"phoneNumber": client.phoneNumber,
-"pregnantUponEntry": client.pregnantUponEntry,
-"priorLiving": client.priorLiving,
-"priorLivingCity": client.priorLivingCity,
-"race": client.race,
-"reasonForLeaving": client.reasonForLeaving,
-"reunified": client.reunified,
-"savingsAmount": client.savingsAmount,
-"shelterInLastFiveYears": client.shelterInLastFiveYears,
-"specificDestination": client.specificDestination,
-"specificReasonForLeaving": client.specificReasonForLeaving,
-"status": client.status,
-"successfulCompletion": client.successfulCompletion,
-"unitId": client.unitId,
+      age: client.age,
+      attendingSchoolUponEntry: client.attendingSchoolUponEntry,
+      attendingSchoolUponExit: client.attendingSchoolUponExit,
+      bedNights: client.bedNights,
+      bedNightsChildren: client.bedNightsChildren,
+      caseManagerFirstName: client.caseManagerFirstName,
+      caseManagerLastName: client.caseManagerLastName,
+      chronicallyHomeless: client.chronicallyHomeless,
+      cityOfLastPermanentResidence: client.cityOfLastPermanentResidence,
+      comments: client.comments,
+      createdBy: client.createdBy,
+      dateOfBirth: client.dateOfBirth,
+      destinationCity: client.destinationCity,
+      disabledChildren: client.disabledChildren,
+      email: client.email,
+      emergencyContactName: client.emergencyContactName,
+      emergencyContactPhoneNumber: client.emergencyContactPhoneNumber,
+      employementGained: client.employementGained,
+      entranceDate: client.entranceDate,
+      estimatedExitDate: client.estimatedExitDate,
+      ethnicity: client.ethnicity,
+      exitDate: client.exitDate,
+      firstName: client.firstName,
+      grant: client.grant,
+      homelessnessLength: client.homelessnessLength,
+      id: client.id,
+      lastName: client.lastName,
+      locationName: client.locationName,
+      medical: client.medical,
+      phoneNumber: client.phoneNumber,
+      pregnantUponEntry: client.pregnantUponEntry,
+      priorLiving: client.priorLiving,
+      priorLivingCity: client.priorLivingCity,
+      race: client.race,
+      reasonForLeaving: client.reasonForLeaving,
+      reunified: client.reunified,
+      savingsAmount: client.savingsAmount,
+      shelterInLastFiveYears: client.shelterInLastFiveYears,
+      specificDestination: client.specificDestination,
+      specificReasonForLeaving: client.specificReasonForLeaving,
+      status: client.status,
+      successfulCompletion: client.successfulCompletion,
+      unitId: client.unitId,
     }));
 
     downloadCSV(headers, data, `clients.csv`);
@@ -358,34 +396,41 @@ export const AllFormTable = () => {
     const fetchData = async () => {
       try {
         const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-  
+
         let clientsRequest;
         if (searchKey && filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
+          clientsRequest = backend.get(
+            `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
+          );
         } else if (searchKey) {
-          clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
+          clientsRequest = backend.get(
+            `/clients?page=&filter=&search=${searchKey}`
+          );
         } else if (filterQuery.length > 1) {
-          clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
+          clientsRequest = backend.get(
+            `/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
+          );
         } else {
           clientsRequest = backend.get("/clients");
         }
-  
-        const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
-  
+
+        const [lastUpdatedResponse, clientsResponse] = await Promise.all([
+          lastUpdatedRequest,
+          clientsRequest,
+        ]);
+
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setClients(clientsResponse.data);
-  
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [backend, searchKey, filterQuery]);
-  
 
   return (
     <VStack
@@ -397,20 +442,21 @@ export const AllFormTable = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <HStack
-          width = "100%">
+        <HStack width="100%">
           <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} /></HStack>
-        
-        <HStack
-          justifyContent="space-between"
-        >
+            fontSize="12px"
+            width="20%"
+            height="30px"
+            placeholder="search"
+            onChange={(e) => setSearchKey(e.target.value)}
+          />
+          <FilterTemplate
+            setFilterQuery={setFilterQuery}
+            type={"allForm"}
+          />
+        </HStack>
+
+        <HStack justifyContent="space-between">
           <HStack>
             <Button
               fontSize="12px"
@@ -423,6 +469,7 @@ export const AllFormTable = () => {
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>
@@ -527,4 +574,3 @@ export const AllFormTable = () => {
     </VStack>
   );
 };
-

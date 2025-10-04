@@ -626,17 +626,18 @@ export const Donations = () => {
               >
                 <MdOutlineManageSearch size="24px" />
               </Box>
-              <Box
+              <Button
                 display="flex"
                 alignItems="center"
                 paddingX="16px"
                 paddingY="8px"
                 cursor="pointer"
                 onClick={() => onPressCSVButton()}
+                isDisabled={selectedRowIds.length === 0}
               >
                 <MdFileUpload size="16px" />
                 <Text ml="8px">Export</Text>
-              </Box>
+              </Button>
             </HStack>
           </HStack>
           <TableContainer

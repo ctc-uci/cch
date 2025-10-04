@@ -17,8 +17,8 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
   VStack,
-  useDisclosure
 } from "@chakra-ui/react";
 
 import {
@@ -30,26 +30,90 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
-
-import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
 
 import { useNavigate } from "react-router-dom";
 
+import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 import type { InitialInterview } from "../../../types/initialScreener.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
-import FormPreview from "../../formsHub/FormPreview.tsx";
-
 
 export const InitialScreenerTable = () => {
   // still gotta do this -- but I'll do it later
-  const headers = ["age","applicantType","beenConvicted","childDob","childName","cityOfSchool","clientId","convictedReasonAndTime","currentAddress","currentlyEmployed","currentlyHomeless","custodyOfChild","date","dateOfBirth","disabled","domesticViolenceHistory","educationHistory","email","ethnicity","eventLeadingToHomelessness","fatherName","futurePlansGoals","howHearAboutCch","howLongExperiencingHomelessness","id","lastAlcoholUse","lastDrugUse","lastEmployedDate","lastEmployer","lastPermAddress","lastPermanentResidenceHouseholdComposition","legalResident","lengthOfSobriety","maritalStatus","medical","medicalCity","medicalInsurance","medications","monthlyBills","monthlyIncome","name","nameSchoolChildrenAttend","personalReferenceTelephone","personalReferences","phoneNumber","presentWarrantExist","prevAppliedToCch","prevInCch","probationParoleOfficer","probationParoleOfficerTelephone","programsBeenInBefore","reasonForLeavingPermAddress","socialWorker","socialWorkerOfficeLocation","socialWorkerTelephone","sourcesOfIncome","ssnLastFour","timeUsingDrugsAlcohol","transportation","veteran","warrantCounty","whatCouldPreventHomeless","whenPrevAppliedToCch","whenPrevInCch","whereResideLastNight","whyNoLongerAtLastResidence"
-];
+  const headers = [
+    "age",
+    "applicantType",
+    "beenConvicted",
+    "childDob",
+    "childName",
+    "cityOfSchool",
+    "clientId",
+    "convictedReasonAndTime",
+    "currentAddress",
+    "currentlyEmployed",
+    "currentlyHomeless",
+    "custodyOfChild",
+    "date",
+    "dateOfBirth",
+    "disabled",
+    "domesticViolenceHistory",
+    "educationHistory",
+    "email",
+    "ethnicity",
+    "eventLeadingToHomelessness",
+    "fatherName",
+    "futurePlansGoals",
+    "howHearAboutCch",
+    "howLongExperiencingHomelessness",
+    "id",
+    "lastAlcoholUse",
+    "lastDrugUse",
+    "lastEmployedDate",
+    "lastEmployer",
+    "lastPermAddress",
+    "lastPermanentResidenceHouseholdComposition",
+    "legalResident",
+    "lengthOfSobriety",
+    "maritalStatus",
+    "medical",
+    "medicalCity",
+    "medicalInsurance",
+    "medications",
+    "monthlyBills",
+    "monthlyIncome",
+    "name",
+    "nameSchoolChildrenAttend",
+    "personalReferenceTelephone",
+    "personalReferences",
+    "phoneNumber",
+    "presentWarrantExist",
+    "prevAppliedToCch",
+    "prevInCch",
+    "probationParoleOfficer",
+    "probationParoleOfficerTelephone",
+    "programsBeenInBefore",
+    "reasonForLeavingPermAddress",
+    "socialWorker",
+    "socialWorkerOfficeLocation",
+    "socialWorkerTelephone",
+    "sourcesOfIncome",
+    "ssnLastFour",
+    "timeUsingDrugsAlcohol",
+    "transportation",
+    "veteran",
+    "warrantCounty",
+    "whatCouldPreventHomeless",
+    "whenPrevAppliedToCch",
+    "whenPrevInCch",
+    "whereResideLastNight",
+    "whyNoLongerAtLastResidence",
+  ];
 
   const [initialData, setInitialData] = useState<
     (InitialInterview & { isChecked: boolean; isHovered: boolean })[]
@@ -65,7 +129,7 @@ export const InitialScreenerTable = () => {
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
- 
+
   const navigate = useNavigate();
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
     () => [
@@ -361,72 +425,73 @@ export const InitialScreenerTable = () => {
       selectedRowIds.includes(row.id)
     );
     const data = selectedTableData.map((row) => ({
-      "age": row.age,
-"applicantType": row.applicantType,
-"beenConvicted": row.beenConvicted,
-"childDob": row.childDob,
-"childName": row.childName,
-"cityOfSchool": row.cityOfSchool,
-"clientId": row.clientId,
-"convictedReasonAndTime": row.convictedReasonAndTime,
-"currentAddress": row.currentAddress,
-"currentlyEmployed": row.currentlyEmployed,
-"currentlyHomeless": row.currentlyHomeless,
-"custodyOfChild": row.custodyOfChild,
-"date": row.date,
-"dateOfBirth": row.dateOfBirth,
-"disabled": row.disabled,
-"domesticViolenceHistory": row.domesticViolenceHistory,
-"educationHistory": row.educationHistory,
-"email": row.email,
-"ethnicity": row.ethnicity,
-"eventLeadingToHomelessness": row.eventLeadingToHomelessness,
-"fatherName": row.fatherName,
-"futurePlansGoals": row.futurePlansGoals,
-"howHearAboutCch": row.howHearAboutCch,
-"howLongExperiencingHomelessness": row.howLongExperiencingHomelessness,
-"id": row.id,
-"lastAlcoholUse": row.lastAlcoholUse,
-"lastDrugUse": row.lastDrugUse,
-"lastEmployedDate": row.lastEmployedDate,
-"lastEmployer": row.lastEmployer,
-"lastPermAddress": row.lastPermAddress,
-"lastPermanentResidenceHouseholdComposition": row.lastPermanentResidenceHouseholdComposition,
-"legalResident": row.legalResident,
-"lengthOfSobriety": row.lengthOfSobriety,
-"maritalStatus": row.maritalStatus,
-"medical": row.medical,
-"medicalCity": row.medicalCity,
-"medicalInsurance": row.medicalInsurance,
-"medications": row.medications,
-"monthlyBills": row.monthlyBills,
-"monthlyIncome": row.monthlyIncome,
-"name": row.name,
-"nameSchoolChildrenAttend": row.nameSchoolChildrenAttend,
-"personalReferenceTelephone": row.personalReferenceTelephone,
-"personalReferences": row.personalReferences,
-"phoneNumber": row.phoneNumber,
-"presentWarrantExist": row.presentWarrantExist,
-"prevAppliedToCch": row.prevAppliedToCch,
-"prevInCch": row.prevInCch,
-"probationParoleOfficer": row.probationParoleOfficer,
-"probationParoleOfficerTelephone": row.probationParoleOfficerTelephone,
-"programsBeenInBefore": row.programsBeenInBefore,
-"reasonForLeavingPermAddress": row.reasonForLeavingPermAddress,
-"socialWorker": row.socialWorker,
-"socialWorkerOfficeLocation": row.socialWorkerOfficeLocation,
-"socialWorkerTelephone": row.socialWorkerTelephone,
-"sourcesOfIncome": row.sourcesOfIncome,
-"ssnLastFour": row.ssnLastFour,
-"timeUsingDrugsAlcohol": row.timeUsingDrugsAlcohol,
-"transportation": row.transportation,
-"veteran": row.veteran,
-"warrantCounty": row.warrantCounty,
-"whatCouldPreventHomeless": row.whatCouldPreventHomeless,
-"whenPrevAppliedToCch": row.whenPrevAppliedToCch,
-"whenPrevInCch": row.whenPrevInCch,
-"whereResideLastNight": row.whereResideLastNight,
-"whyNoLongerAtLastResidence": row.whyNoLongerAtLastResidence,
+      age: row.age,
+      applicantType: row.applicantType,
+      beenConvicted: row.beenConvicted,
+      childDob: row.childDob,
+      childName: row.childName,
+      cityOfSchool: row.cityOfSchool,
+      clientId: row.clientId,
+      convictedReasonAndTime: row.convictedReasonAndTime,
+      currentAddress: row.currentAddress,
+      currentlyEmployed: row.currentlyEmployed,
+      currentlyHomeless: row.currentlyHomeless,
+      custodyOfChild: row.custodyOfChild,
+      date: row.date,
+      dateOfBirth: row.dateOfBirth,
+      disabled: row.disabled,
+      domesticViolenceHistory: row.domesticViolenceHistory,
+      educationHistory: row.educationHistory,
+      email: row.email,
+      ethnicity: row.ethnicity,
+      eventLeadingToHomelessness: row.eventLeadingToHomelessness,
+      fatherName: row.fatherName,
+      futurePlansGoals: row.futurePlansGoals,
+      howHearAboutCch: row.howHearAboutCch,
+      howLongExperiencingHomelessness: row.howLongExperiencingHomelessness,
+      id: row.id,
+      lastAlcoholUse: row.lastAlcoholUse,
+      lastDrugUse: row.lastDrugUse,
+      lastEmployedDate: row.lastEmployedDate,
+      lastEmployer: row.lastEmployer,
+      lastPermAddress: row.lastPermAddress,
+      lastPermanentResidenceHouseholdComposition:
+        row.lastPermanentResidenceHouseholdComposition,
+      legalResident: row.legalResident,
+      lengthOfSobriety: row.lengthOfSobriety,
+      maritalStatus: row.maritalStatus,
+      medical: row.medical,
+      medicalCity: row.medicalCity,
+      medicalInsurance: row.medicalInsurance,
+      medications: row.medications,
+      monthlyBills: row.monthlyBills,
+      monthlyIncome: row.monthlyIncome,
+      name: row.name,
+      nameSchoolChildrenAttend: row.nameSchoolChildrenAttend,
+      personalReferenceTelephone: row.personalReferenceTelephone,
+      personalReferences: row.personalReferences,
+      phoneNumber: row.phoneNumber,
+      presentWarrantExist: row.presentWarrantExist,
+      prevAppliedToCch: row.prevAppliedToCch,
+      prevInCch: row.prevInCch,
+      probationParoleOfficer: row.probationParoleOfficer,
+      probationParoleOfficerTelephone: row.probationParoleOfficerTelephone,
+      programsBeenInBefore: row.programsBeenInBefore,
+      reasonForLeavingPermAddress: row.reasonForLeavingPermAddress,
+      socialWorker: row.socialWorker,
+      socialWorkerOfficeLocation: row.socialWorkerOfficeLocation,
+      socialWorkerTelephone: row.socialWorkerTelephone,
+      sourcesOfIncome: row.sourcesOfIncome,
+      ssnLastFour: row.ssnLastFour,
+      timeUsingDrugsAlcohol: row.timeUsingDrugsAlcohol,
+      transportation: row.transportation,
+      veteran: row.veteran,
+      warrantCounty: row.warrantCounty,
+      whatCouldPreventHomeless: row.whatCouldPreventHomeless,
+      whenPrevAppliedToCch: row.whenPrevAppliedToCch,
+      whenPrevInCch: row.whenPrevInCch,
+      whereResideLastNight: row.whereResideLastNight,
+      whyNoLongerAtLastResidence: row.whyNoLongerAtLastResidence,
     }));
 
     downloadCSV(headers, data, `initial-screeners.csv`);
@@ -504,7 +569,6 @@ export const InitialScreenerTable = () => {
     }
   }, [clickedFormItem, onOpen]);
 
-
   return (
     <VStack
       align="start"
@@ -515,20 +579,21 @@ export const InitialScreenerTable = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <HStack
-          width = "100%">
+        <HStack width="100%">
           <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} /></HStack>
-        
-        <HStack
-          justifyContent="space-between"
-        >
+            fontSize="12px"
+            width="20%"
+            height="30px"
+            placeholder="search"
+            onChange={(e) => setSearchKey(e.target.value)}
+          />
+          <FilterTemplate
+            setFilterQuery={setFilterQuery}
+            type={"allForm"}
+          />
+        </HStack>
+
+        <HStack justifyContent="space-between">
           <HStack>
             <Button
               fontSize="12px"
@@ -537,10 +602,16 @@ export const InitialScreenerTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px" onClick={() => navigate('/personal')}>add</Button>
+            <Button
+              fontSize="12px"
+              onClick={() => navigate("/personal")}
+            >
+              add
+            </Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>
@@ -608,9 +679,10 @@ export const InitialScreenerTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
-                            (row.original as { [key: string]: any }).title = "Initial Screeners";
-                            setClickedFormItem(row.original);
-                            onOpen();
+                          (row.original as { [key: string]: any }).title =
+                            "Initial Screeners";
+                          setClickedFormItem(row.original);
+                          onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
                           }
@@ -639,18 +711,18 @@ export const InitialScreenerTable = () => {
             </Table>
           </TableContainer>
         )}
-                          {clickedFormItem && (
-            <FormPreview
-              clickedFormItem={clickedFormItem}
-              isOpen={isOpen}
-              onClose={() => {
-                onClose();
-                setClickedFormItem(null);
-              }}
-              refreshTable={refreshTable}
-              setRefreshTable={setRefreshTable}
-            />
-          )}
+        {clickedFormItem && (
+          <FormPreview
+            clickedFormItem={clickedFormItem}
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setClickedFormItem(null);
+            }}
+            refreshTable={refreshTable}
+            setRefreshTable={setRefreshTable}
+          />
+        )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}

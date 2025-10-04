@@ -30,6 +30,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
@@ -42,7 +43,6 @@ import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
-import { useNavigate } from "react-router-dom";
 
 export const SuccessStoryTable = () => {
   // still gotta do this -- but I'll do it later
@@ -268,22 +268,20 @@ export const SuccessStoryTable = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <HStack
-          width = "100%">
+        <HStack width="100%">
           <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <FilterTemplate
-          setFilterQuery={setFilterQuery}
-          type={"successStory"}
-        /></HStack>
-        <HStack
-          justifyContent="space-between"
-        >
+            fontSize="12px"
+            width="20%"
+            height="30px"
+            placeholder="search"
+            onChange={(e) => setSearchKey(e.target.value)}
+          />
+          <FilterTemplate
+            setFilterQuery={setFilterQuery}
+            type={"successStory"}
+          />
+        </HStack>
+        <HStack justifyContent="space-between">
           <HStack>
             <Button
               fontSize="12px"
@@ -292,10 +290,18 @@ export const SuccessStoryTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px" onClick={() => {navigate('/success-story')}}>add</Button>
+            <Button
+              fontSize="12px"
+              onClick={() => {
+                navigate("/success-story");
+              }}
+            >
+              add
+            </Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>

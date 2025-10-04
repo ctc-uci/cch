@@ -17,8 +17,8 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
   VStack,
-  useDisclosure
 } from "@chakra-ui/react";
 
 import {
@@ -30,6 +30,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
@@ -38,16 +39,36 @@ import type { ExitSurvey } from "../../../types/exitSurvey.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
 import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
+import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
-import FormPreview from "../../formsHub/FormPreview.tsx";
-import { useNavigate } from "react-router-dom";
 
-export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) => void}) => {
+export const ExitSurveyTable = ({
+  onRowClick,
+}: {
+  onRowClick: (form: ExitSurvey) => void;
+}) => {
   // still gotta do this -- but I'll do it later
-  const headers = ["cchCouldBeImproved","cchLikeMost","cchRating","cmChangeAbout","cmFirstName","cmLastName","cmMostBeneficial","cmRating","experienceAccomplished","experienceExtraNotes","experienceTakeaway","id","lifeSkillsHelpfulTopics","lifeSkillsOfferTopicsInTheFuture","lifeSkillsRating","location","programDateCompletion"
-];
+  const headers = [
+    "cchCouldBeImproved",
+    "cchLikeMost",
+    "cchRating",
+    "cmChangeAbout",
+    "cmFirstName",
+    "cmLastName",
+    "cmMostBeneficial",
+    "cmRating",
+    "experienceAccomplished",
+    "experienceExtraNotes",
+    "experienceTakeaway",
+    "id",
+    "lifeSkillsHelpfulTopics",
+    "lifeSkillsOfferTopicsInTheFuture",
+    "lifeSkillsRating",
+    "location",
+    "programDateCompletion",
+  ];
   const [exitData, setExitData] = useState<
     (ExitSurvey & { isChecked: boolean; isHovered: boolean })[]
   >([]);
@@ -182,25 +203,25 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
     const selectedTableData = exitData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-    console.log(selectedTableData)
+    console.log(selectedTableData);
     const data = selectedTableData.map((row) => ({
-      "cchCouldBeImproved": row.cchCouldBeImproved,
-"cchLikeMost": row.cchLikeMost,
-"cchRating": row.cchRating,
-"cmChangeAbout": row.cmChangeAbout,
-"cmFirstName": row.cmFirstName,
-"cmLastName": row.cmLastName,
-"cmMostBeneficial": row.cmMostBeneficial,
-"cmRating": row.cmRating,
-"experienceAccomplished": row.experienceAccomplished,
-"experienceExtraNotes": row.experienceExtraNotes,
-"experienceTakeaway": row.experienceTakeaway,
-"id": row.id,
-"lifeSkillsHelpfulTopics": row.lifeSkillsHelpfulTopics,
-"lifeSkillsOfferTopicsInTheFuture": row.lifeSkillsOfferTopicsInTheFuture,
-"lifeSkillsRating": row.lifeSkillsRating,
-"location": row.location,
-"programDateCompletion": row.programDateCompletion,
+      cchCouldBeImproved: row.cchCouldBeImproved,
+      cchLikeMost: row.cchLikeMost,
+      cchRating: row.cchRating,
+      cmChangeAbout: row.cmChangeAbout,
+      cmFirstName: row.cmFirstName,
+      cmLastName: row.cmLastName,
+      cmMostBeneficial: row.cmMostBeneficial,
+      cmRating: row.cmRating,
+      experienceAccomplished: row.experienceAccomplished,
+      experienceExtraNotes: row.experienceExtraNotes,
+      experienceTakeaway: row.experienceTakeaway,
+      id: row.id,
+      lifeSkillsHelpfulTopics: row.lifeSkillsHelpfulTopics,
+      lifeSkillsOfferTopicsInTheFuture: row.lifeSkillsOfferTopicsInTheFuture,
+      lifeSkillsRating: row.lifeSkillsRating,
+      location: row.location,
+      programDateCompletion: row.programDateCompletion,
     }));
 
     downloadCSV(headers, data, `exit-surveys.csv`);
@@ -219,13 +240,9 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
   const handleDelete = async () => {
     try {
       await Promise.all(
-        selectedRowIds.map(
-          (row_id) => backend.delete(`/exitSurvey/${row_id}`)
-        )
+        selectedRowIds.map((row_id) => backend.delete(`/exitSurvey/${row_id}`))
       );
-      setExitData(
-        exitData.filter((row) => !selectedRowIds.includes(row.id))
-      );
+      setExitData(exitData.filter((row) => !selectedRowIds.includes(row.id)));
       setSelectedRowIds([]);
       setDeleteModalOpen(false);
     } catch (error) {
@@ -272,7 +289,7 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
     fetchData();
   }, [backend, searchKey, filterQuery]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (clickedFormItem) {
       onOpen();
     }
@@ -288,20 +305,21 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
         justifyContent="space-between"
         alignItems="center"
       >
-        <HStack
-          width = "100%">
+        <HStack width="100%">
           <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <FilterTemplate setFilterQuery={setFilterQuery} type={"allForm"} /></HStack>
-        
-        <HStack
-          justifyContent="space-between"
-        >
+            fontSize="12px"
+            width="20%"
+            height="30px"
+            placeholder="search"
+            onChange={(e) => setSearchKey(e.target.value)}
+          />
+          <FilterTemplate
+            setFilterQuery={setFilterQuery}
+            type={"allForm"}
+          />
+        </HStack>
+
+        <HStack justifyContent="space-between">
           <HStack>
             <Button
               fontSize="12px"
@@ -310,10 +328,18 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
             >
               delete
             </Button>
-            <Button fontSize="12px" onClick={() => {navigate('/exit-survey')}}>add</Button>
+            <Button
+              fontSize="12px"
+              onClick={() => {
+                navigate("/exit-survey");
+              }}
+            >
+              add
+            </Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>
@@ -347,7 +373,6 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
                           header.column.getCanSort() ? "pointer" : "default"
                         }
                         onClick={header.column.getToggleSortingHandler()}
-                        
                       >
                         {flexRender(
                           header.column.columnDef.header,
@@ -383,9 +408,10 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
                         fontWeight="500px"
                         onClick={(e) => {
                           console.log(`cliocked ${cell.id}`);
-                          (row.original as { [key: string]: any }).title = "Exit Surveys";
+                          (row.original as { [key: string]: any }).title =
+                            "Exit Surveys";
                           setClickedFormItem(row.original);
-                          console.log(row.original)
+                          console.log(row.original);
                           onOpen();
                           if (cell.column.id === "rowNumber") {
                             e.stopPropagation();
@@ -415,18 +441,18 @@ export const ExitSurveyTable = ({ onRowClick }: {onRowClick: (form: ExitSurvey) 
             </Table>
           </TableContainer>
         )}
-                  {clickedFormItem && (
-            <FormPreview
-              clickedFormItem={clickedFormItem}
-              isOpen={isOpen}
-              onClose={() => {
-                onClose();
-                setClickedFormItem(null);
-              }}
-              refreshTable={refreshTable}
-              setRefreshTable={setRefreshTable}
-            />
-          )}
+        {clickedFormItem && (
+          <FormPreview
+            clickedFormItem={clickedFormItem}
+            isOpen={isOpen}
+            onClose={() => {
+              onClose();
+              setClickedFormItem(null);
+            }}
+            refreshTable={refreshTable}
+            setRefreshTable={setRefreshTable}
+          />
+        )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}

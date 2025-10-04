@@ -30,6 +30,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { FiUpload } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 //have to make the separate types for each table
@@ -42,7 +43,6 @@ import FormPreview from "../../formsHub/FormPreview.tsx";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
 import { FilterTemplate } from "./FilterTemplate.tsx";
-import { useNavigate } from "react-router-dom";
 
 export const RandomClientTable = () => {
   // still gotta do this -- but I'll do it later
@@ -85,7 +85,7 @@ export const RandomClientTable = () => {
   const [refreshTable, setRefreshTable] = useState(false);
 
   const navigate = useNavigate();
-  
+
   const columns = useMemo<ColumnDef<RandomSurvey>[]>(
     () => [
       {
@@ -299,7 +299,6 @@ export const RandomClientTable = () => {
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString());
         setRandomData(tableDataResponse.data);
-
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -326,22 +325,20 @@ export const RandomClientTable = () => {
         justifyContent="space-between"
         alignItems="center"
       >
-        <HStack
-          width = "100%">
+        <HStack width="100%">
           <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <FilterTemplate
-          setFilterQuery={setFilterQuery}
-          type={"randomSurvey"}
-        /></HStack>
-        <HStack
-          justifyContent="space-between"
-        >
+            fontSize="12px"
+            width="20%"
+            height="30px"
+            placeholder="search"
+            onChange={(e) => setSearchKey(e.target.value)}
+          />
+          <FilterTemplate
+            setFilterQuery={setFilterQuery}
+            type={"randomSurvey"}
+          />
+        </HStack>
+        <HStack justifyContent="space-between">
           <HStack>
             <Button
               fontSize="12px"
@@ -350,10 +347,18 @@ export const RandomClientTable = () => {
             >
               delete
             </Button>
-            <Button fontSize="12px" onClick={() => {navigate('/random-client-survey')}}>add</Button>
+            <Button
+              fontSize="12px"
+              onClick={() => {
+                navigate("/random-client-survey");
+              }}
+            >
+              add
+            </Button>
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
+              isDisabled={selectedRowIds.length === 0}
             >
               <FiUpload />
             </IconButton>
@@ -421,7 +426,6 @@ export const RandomClientTable = () => {
                         fontSize="14px"
                         fontWeight="500px"
                         onClick={(e) => {
-
                           (row.original as { [key: string]: any }).title =
                             "Random Client Surveys";
                           setClickedFormItem(row.original);

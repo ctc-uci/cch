@@ -63,7 +63,6 @@ export const AdminFormsHub = () => {
         const random = new Date(randomResponse.data[0].lastUpdatedAt);
         const clients = new Date(clientsResponse.data[0].lastUpdatedAt);
 
-
         const mostRecent = new Date(
           Math.max(
             initial ? initial.getTime() : 0,
@@ -125,8 +124,7 @@ export const AdminFormsHub = () => {
             isFitted
             w="full"
           >
-
-            <TabList whiteSpace="nowrap"> 
+            <TabList whiteSpace="nowrap">
               <Tab>Initial Screeners</Tab>
               <Tab>Success Stories</Tab>
               <Tab>Exit Surveys</Tab>
