@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
@@ -67,6 +67,9 @@ const VolunteersTable = ({
     useState<Volunteer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [eventTypeFilter, setEventTypeFilter] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const fetchVolunteers = async () => {
@@ -229,7 +232,22 @@ const VolunteersTable = ({
   );
 
   const table = useReactTable({
-    data: volunteers,
+    data: useMemo(() => {
+      if (!searchQuery.trim()) return volunteers;
+      const q = searchQuery.toLowerCase();
+      return volunteers.filter((v) => {
+        const dateStr = (v.date ? formatDateString(v.date as unknown as string) : "").toLowerCase();
+        const nameStr = `${v.firstName ?? ""} ${v.lastName ?? ""}`.trim().toLowerCase();
+        const emailStr = (v as any).email ? String((v as any).email).toLowerCase() : "";
+        const eventTypeStr = (v.eventType ?? "").toLowerCase();
+        const hoursStr = v.hours !== undefined && v.hours !== null ? String(v.hours).toLowerCase() : "";
+        const valueStr = v.value !== undefined && v.value !== null ? String(v.value).toLowerCase() : "";
+        const totalStr = v.total !== undefined && v.total !== null ? String(v.total).toLowerCase() : "";
+        return [dateStr, nameStr, emailStr, eventTypeStr, hoursStr, valueStr, totalStr].some((field) =>
+          field.includes(q)
+        );
+      });
+    }, [volunteers, searchQuery]),
     columns,
     state: {
       sorting,
@@ -239,6 +257,15 @@ const VolunteersTable = ({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      // focus the input when opened
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 0);
+    }
+  }, [isSearchOpen]);
 
   if (loading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error}</Text>;
@@ -317,6 +344,7 @@ const VolunteersTable = ({
           color="#3182CE"
           variant="outline"
           textDecoration="underline"
+          cursor="pointer"
         >
           Reset All Dropdowns
         </Text>
@@ -362,8 +390,24 @@ const VolunteersTable = ({
                 paddingX="16px"
                 paddingY="8px"
               >
-                <MdOutlineManageSearch size="24px" />
+                <MdOutlineManageSearch
+                  size="24px"
+                  onClick={() => setIsSearchOpen((prev) => !prev)}
+                  style={{ cursor: "pointer" }}
+                />
               </Box>
+              {isSearchOpen && (
+                <Box paddingY="8px" paddingRight="16px">
+                  <Input
+                    ref={searchInputRef}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search..."
+                    width="260px"
+                    size="sm"
+                  />
+                </Box>
+              )}
               <Box
                 display="flex"
                 alignItems="center"
