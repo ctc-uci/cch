@@ -13,10 +13,19 @@ import {
   Tbody,
   Td,
   Text,
+  Badge,
   Th,
   Thead,
   Tr,
   useDisclosure,
+  Tooltip,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
 } from "@chakra-ui/react";
 
 import {
@@ -29,7 +38,6 @@ import {
 } from "@tanstack/react-table";
 import {
   MdFileUpload,
-  MdImportExport,
   MdOutlineFilterAlt,
   MdOutlineManageSearch,
 } from "react-icons/md";
@@ -69,6 +77,18 @@ const VolunteersTable = ({
     useState<Volunteer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [eventTypeFilter, setEventTypeFilter] = useState("");
+  type FilterField = 'firstName' | 'lastName' | 'email' | 'eventType' | 'hours' | 'value' | 'total';
+  type FilterOp = 'contains' | 'equals' | 'starts_with' | 'ends_with' | '>' | '>=' | '<' | '<=';
+  type FilterCond = { field: FilterField; op: FilterOp; value: string };
+  const [advancedFilters, setAdvancedFilters] = useState<FilterCond[]>([]);
+  const [filterCombinator, setFilterCombinator] = useState<'AND' | 'OR'>('AND');
+
+  const filterCount =
+    (eventTypeFilter ? 1 : 0) +
+    (startDate ? 1 : 0) +
+    (endDate ? 1 : 0) +
+    advancedFilters.length;
+  const isFilterActive = filterCount > 0;
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -138,22 +158,7 @@ const VolunteersTable = ({
     );
   }, []);
 
-  const handleSelectAllCheckboxClick = () => {
-    if (checkboxMode === 'hidden') {
-      // State 1 -> State 2: Show checkboxes and select all
-      setCheckboxMode('visible-checked');
-      const allIds = volunteers.map((v) => v.id);
-      setSelectedVolunteers(allIds);
-    } else if (checkboxMode === 'visible-checked') {
-      // State 2 -> State 3: Keep checkboxes visible but uncheck all
-      setCheckboxMode('visible-unchecked');
-      setSelectedVolunteers([]);
-    } else {
-      // State 3 -> State 1: Hide checkboxes
-      setCheckboxMode('hidden');
-      setSelectedVolunteers([]);
-    }
-  };
+  // Header select-all handled inline in header using visible rows
 
   const refreshPage = () => {
     setToggleRefresh(!toggleRefresh);
@@ -182,13 +187,28 @@ const VolunteersTable = ({
     () => [
       {
         id: "rowNumber",
-        header: ({ table }) => {
+        header: () => {
+          const visibleIds = table.getRowModel().rows.map(r => r.original.id);
           return (
             <Box textAlign="center">
               <Checkbox
                 isChecked={checkboxMode === 'visible-checked'}
                 isIndeterminate={checkboxMode === 'visible-unchecked'}
-                onChange={handleSelectAllCheckboxClick}
+                onChange={() => {
+                  if (checkboxMode === 'hidden') {
+                    // Show and select visible
+                    setCheckboxMode('visible-checked');
+                    setSelectedVolunteers(prev => Array.from(new Set([...prev, ...visibleIds])));
+                  } else if (checkboxMode === 'visible-checked') {
+                    // Keep visible but uncheck visible
+                    setCheckboxMode('visible-unchecked');
+                    setSelectedVolunteers(prev => prev.filter(id => !visibleIds.includes(id)));
+                  } else {
+                    // Hide and clear all selections
+                    setCheckboxMode('hidden');
+                    setSelectedVolunteers([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -244,9 +264,9 @@ const VolunteersTable = ({
 
   const table = useReactTable({
     data: useMemo(() => {
-      if (!searchQuery.trim()) return volunteers;
-      const q = searchQuery.toLowerCase();
-      return volunteers.filter((v) => {
+      const base = volunteers.filter((v) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
         const dateStr = (v.date ? formatDateString(v.date as unknown as string) : "").toLowerCase();
         const nameStr = `${v.firstName ?? ""} ${v.lastName ?? ""}`.trim().toLowerCase();
         const emailStr = (v as any).email ? String((v as any).email).toLowerCase() : "";
@@ -254,11 +274,54 @@ const VolunteersTable = ({
         const hoursStr = v.hours !== undefined && v.hours !== null ? String(v.hours).toLowerCase() : "";
         const valueStr = v.value !== undefined && v.value !== null ? String(v.value).toLowerCase() : "";
         const totalStr = v.total !== undefined && v.total !== null ? String(v.total).toLowerCase() : "";
-        return [dateStr, nameStr, emailStr, eventTypeStr, hoursStr, valueStr, totalStr].some((field) =>
-          field.includes(q)
-        );
+        return [dateStr, nameStr, emailStr, eventTypeStr, hoursStr, valueStr, totalStr].some((field) => field.includes(q));
       });
-    }, [volunteers, searchQuery]),
+
+      if (advancedFilters.length === 0) return base;
+
+      const applyCond = (v: Volunteer, cond: FilterCond) => {
+        const fieldMap: Record<string, any> = {
+          date: v.date,
+          firstName: v.firstName,
+          lastName: v.lastName,
+          email: (v as any).email,
+          eventType: v.eventType,
+          hours: v.hours,
+          value: v.value,
+          total: v.total,
+        };
+        const lhsRaw = fieldMap[cond.field];
+        const lhs = lhsRaw === null || lhsRaw === undefined ? '' : String(lhsRaw).toLowerCase();
+        const rhs = cond.value.toLowerCase();
+        switch (cond.op) {
+          case 'contains':
+            return lhs.includes(rhs);
+          case 'equals':
+            return lhs === rhs;
+          case 'starts_with':
+            return lhs.startsWith(rhs);
+          case 'ends_with':
+            return lhs.endsWith(rhs);
+          case '>':
+            return Number(lhsRaw) > Number(cond.value);
+          case '<':
+            return Number(lhsRaw) < Number(cond.value);
+          case '>=':
+            return Number(lhsRaw) >= Number(cond.value);
+          case '<=':
+            return Number(lhsRaw) <= Number(cond.value);
+          default:
+            return true;
+        }
+      };
+
+      return base.filter((v) => {
+        const results = advancedFilters.map((c) => applyCond(v, c));
+        return filterCombinator === 'AND'
+          ? results.every(Boolean)
+          : results.some(Boolean);
+      });
+    }, [volunteers, searchQuery, advancedFilters, filterCombinator]),
     columns,
     state: {
       sorting,
@@ -331,7 +394,7 @@ const VolunteersTable = ({
         justify="space-between"
         align="left"
       >
-        <HStack spacing="12px" width="60%">
+        {/* <HStack spacing="12px" width="60%">
           <Select
             placeholder="Select Event Type"
             value={eventTypeFilter}
@@ -363,8 +426,8 @@ const VolunteersTable = ({
             w="60%"
             onChange={handleEndDateChange}
           />
-        </HStack>
-        <HStack
+        </HStack> */}
+        {/* <HStack
           justify="space-between"
           paddingX="12px"
         >
@@ -386,23 +449,9 @@ const VolunteersTable = ({
             onClose={onClose}
             isOpen={isOpen}
           />
-        </HStack>
+        </HStack> */}
       </HStack>
-      <HStack
-        width="100%"
-        justify="flex-start"
-      >
-        <Text
-          onClick={handleResetDropdowns}
-          size="med"
-          color="#3182CE"
-          variant="outline"
-          textDecoration="underline"
-          cursor="pointer"
-        >
-          Reset All Dropdowns
-        </Text>
-      </HStack>
+      {/* Reset moved into filter popover */}
       <Box
         borderWidth="1px"
         borderRadius="12px"
@@ -418,24 +467,173 @@ const VolunteersTable = ({
             justify="space-between"
           >
             <HStack spacing="0px">
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdOutlineFilterAlt size="16px" />
-                <Text ml="8px">Filter</Text>
-              </Box>
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdImportExport size="16px" />
-                <Text ml="8px">Sort</Text>
-              </Box>
+              <Popover placement="right-end" closeOnBlur>
+                <PopoverTrigger>
+                  <Box
+                    display="flex"
+                    alignItems="center"
+                    paddingX="16px"
+                    paddingY="8px"
+                    cursor="pointer"
+                  >
+                    <MdOutlineFilterAlt size="16px" />
+                    <HStack ml="8px" spacing={2}>
+                      <Text>Filter</Text>
+                      {isFilterActive && (
+                        <Badge colorScheme="blue" borderRadius="full">{filterCount}</Badge>
+                      )}
+                    </HStack>
+                  </Box>
+                </PopoverTrigger>
+                <PopoverContent w="md">
+                  <PopoverArrow />
+                  <PopoverCloseButton />
+                  <PopoverHeader>Filter options</PopoverHeader>
+                  <PopoverBody>
+                    {/* <HStack spacing="12px" width="100%">
+                      <Select
+                        placeholder="Select Event Type"
+                        value={eventTypeFilter}
+                        onChange={(e) => {
+                          setEventTypeFilter(e.target.value);
+                        }}
+                        width="100%"
+                      >
+                        {eventTypes.map((eventType) => (
+                          <option
+                            key={eventType}
+                            value={eventType}
+                          >
+                            {eventType}
+                          </option>
+                        ))}
+                      </Select>
+                    </HStack> */}
+                    <HStack mt={3} spacing="12px" align="center">
+                      <Text>From:</Text>
+                      <Input
+                        type="date"
+                        name="startDate"
+                        w="60%"
+                        onChange={handleStartDateChange}
+                      />
+                      <Text>To:</Text>
+                      <Input
+                        type="date"
+                        name="endDate"
+                        w="60%"
+                        onChange={handleEndDateChange}
+                      />
+                    </HStack>
+                    <Box mt={4}>
+                      <Text fontWeight="semibold" mb={2}>Advanced filters</Text>
+                      {advancedFilters.map((cond, idx) => (
+                        <HStack key={idx} spacing={2} mb={2}>
+                          <Select
+                            value={cond.field}
+                            onChange={(e) => {
+                              const v = e.target.value as FilterField;
+                              setAdvancedFilters((prev) => {
+                                const next = [...prev];
+                                const existing = next[idx] as FilterCond;
+                                next[idx] = { field: v, op: existing.op, value: existing.value };
+                                return next;
+                              });
+                            }}
+                            size="sm"
+                            width="32%"
+                          >
+                            <option value="firstName">First Name</option>
+                            <option value="lastName">Last Name</option>
+                            <option value="email">Email</option>
+                            <option value="eventType">Event Type</option>
+                            <option value="hours">Hours</option>
+                            <option value="value">Value</option>
+                            <option value="total">Total</option>
+                          </Select>
+                          <Select
+                            value={cond.op}
+                            onChange={(e) => {
+                              const v = e.target.value as FilterOp;
+                              setAdvancedFilters((prev) => {
+                                const next = [...prev];
+                                const existing = next[idx] as FilterCond;
+                                next[idx] = { field: existing.field, op: v, value: existing.value };
+                                return next;
+                              });
+                            }}
+                            size="sm"
+                            width="28%"
+                          >
+                            <option value="contains">contains</option>
+                            <option value="equals">equals</option>
+                            <option value="starts_with">starts with</option>
+                            <option value="ends_with">ends with</option>
+                            <option value=">">{'>'}</option>
+                            <option value=">=">{'>='}</option>
+                            <option value="<">{'<'}</option>
+                            <option value="<=">{'<='}</option>
+                          </Select>
+                          <Input
+                            value={cond.value}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setAdvancedFilters((prev) => {
+                                const next = [...prev];
+                                const existing = next[idx] as FilterCond;
+                                next[idx] = { field: existing.field, op: existing.op, value: v };
+                                return next;
+                              });
+                            }}
+                            size="sm"
+                            width="32%"
+                            placeholder="Value"
+                          />
+                        <Button
+                            size="sm"
+                            onClick={() => setAdvancedFilters((prev) => prev.filter((_, i) => i !== idx))}
+                          >
+                            Remove
+                          </Button>
+                        </HStack>
+                      ))}
+                      <HStack justify="space-between">
+                        <Button
+                          size="sm"
+                          onClick={() => setAdvancedFilters((prev) => [...prev, { field: 'eventType', op: 'contains', value: '' }])}
+                        >
+                          Add filter
+                        </Button>
+                        <HStack>
+                          <Text>Match</Text>
+                          <Select
+                            size="sm"
+                            value={filterCombinator}
+                            onChange={(e) => setFilterCombinator(e.target.value as 'AND' | 'OR')}
+                            width="100px"
+                          >
+                            <option value="AND">ALL</option>
+                            <option value="OR">ANY</option>
+                          </Select>
+                          <Text>conditions</Text>
+                        </HStack>
+                      </HStack>
+                    </Box>
+                    <HStack mt={3}>
+                      <Text
+                        onClick={handleResetDropdowns}
+                        size="med"
+                        color="#3182CE"
+                        variant="outline"
+                        textDecoration="underline"
+                        cursor="pointer"
+                      >
+                        Reset All Filters
+                      </Text>
+                    </HStack>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
             </HStack>
             <HStack spacing="0px">
               <Box
@@ -493,30 +691,39 @@ const VolunteersTable = ({
                 {table.getHeaderGroups().map((headerGroup) => (
                   <Tr key={headerGroup.id}>
                     {headerGroup.headers.map((header) => (
-                      <Th
+                      <Tooltip
                         key={header.id}
-                        cursor={
-                          header.column.getCanSort() ? "pointer" : "default"
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
+                        label={header.column.getCanSort() ? "Click to sort" : undefined}
+                        openDelay={300}
                       >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getCanSort() && (
-                          <Box
-                            display="inline-block"
-                            ml={1}
-                          >
-                            {header.column.getIsSorted() === "asc" ? (
-                              <TriangleUpIcon />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <TriangleDownIcon />
-                            ) : null}
-                          </Box>
-                        )}
-                      </Th>
+                        <Th
+                          cursor={
+                            header.column.getCanSort() ? "pointer" : "default"
+                          }
+                          onClick={header.column.getToggleSortingHandler()}
+                          textAlign="center"
+                        >
+                          <HStack justify="center" spacing={1}>
+                            <Text>
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                            </Text>
+                            {header.column.getCanSort() && (
+                              <Box display="inline-block">
+                                {header.column.getIsSorted() === "asc" ? (
+                                  <TriangleUpIcon />
+                                ) : header.column.getIsSorted() === "desc" ? (
+                                  <TriangleDownIcon />
+                                ) : (
+                                  <TriangleUpIcon opacity={0.3} />
+                                )}
+                              </Box>
+                            )}
+                          </HStack>
+                        </Th>
+                      </Tooltip>
                     ))}
                   </Tr>
                 ))}
@@ -563,6 +770,30 @@ const VolunteersTable = ({
             </Table>
           </Box>
         </TableContainer>}
+        <HStack
+          justify="flex-end"
+          mt="12px"
+          paddingX="12px"
+        >
+          <Button
+            colorScheme="red"
+            onClick={handleDelete}
+            isDisabled={selectedVolunteers.length === 0}
+          >
+            Delete
+          </Button>
+          <Button
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Add
+          </Button>
+          <VolunteerDrawer
+            onFormSubmitSuccess={refreshPage}
+            onClose={onClose}
+            isOpen={isOpen}
+          />
+        </HStack>
         {currentlySelectedVolunteer && (
           <VolunteerDrawer
             volunteer={currentlySelectedVolunteer}

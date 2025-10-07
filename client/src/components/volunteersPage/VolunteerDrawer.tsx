@@ -62,6 +62,8 @@ const VolunteerDrawer = ({
   } = useDisclosure();
   const isEditMode = volunteer ? true : false;
 
+  const isPristine = JSON.stringify(formData) === JSON.stringify(initialForm);
+
   useEffect(() => {
     const hours = Number(formData.hours) || 0;
     const value = Number(formData.value) || 0;
@@ -272,7 +274,13 @@ const VolunteerDrawer = ({
             <Button
               variant="outline"
               mr={3}
-              onClick={() => onConfirmOpen()}
+              onClick={() => {
+                if (isPristine) {
+                  onClose();
+                } else {
+                  onConfirmOpen();
+                }
+              }}
             >
               Cancel
             </Button>
