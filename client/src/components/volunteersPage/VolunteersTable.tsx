@@ -41,6 +41,7 @@ import { formatDateString } from "../../utils/dateUtils";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import VolunteerDrawer from "./VolunteerDrawer";
 import { LoadingWheel } from "../loading/loading";
+import { downloadCSV } from "../../utils/downloadCSV";
 
 interface VolunteersTableProps {
   toggleRefresh: boolean;
@@ -58,6 +59,7 @@ const VolunteersTable = ({
   const { backend } = useBackendContext();
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [selectedVolunteers, setSelectedVolunteers] = useState<number[]>([]);
+  const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -137,9 +139,18 @@ const VolunteersTable = ({
   }, []);
 
   const handleSelectAllCheckboxClick = () => {
-    if (selectedVolunteers.length === 0) {
-      setSelectedVolunteers(volunteers.map((volunteer) => volunteer.id));
+    if (checkboxMode === 'hidden') {
+      // State 1 -> State 2: Show checkboxes and select all
+      setCheckboxMode('visible-checked');
+      const allIds = volunteers.map((v) => v.id);
+      setSelectedVolunteers(allIds);
+    } else if (checkboxMode === 'visible-checked') {
+      // State 2 -> State 3: Keep checkboxes visible but uncheck all
+      setCheckboxMode('visible-unchecked');
+      setSelectedVolunteers([]);
     } else {
+      // State 3 -> State 1: Hide checkboxes
+      setCheckboxMode('hidden');
       setSelectedVolunteers([]);
     }
   };
@@ -175,8 +186,8 @@ const VolunteersTable = ({
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedVolunteers.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
                 onChange={handleSelectAllCheckboxClick}
               />
             </Box>
@@ -266,6 +277,49 @@ const VolunteersTable = ({
       }, 0);
     }
   }, [isSearchOpen]);
+
+  const handleExport = () => {
+    const headers = [
+      "Date",
+      "Volunteer Name",
+      "Event Type",
+      "Hours",
+      "Value ($)",
+      "Total ($)",
+    ];
+
+    const selectedIdSet = new Set(selectedVolunteers);
+    const rows = table
+      .getRowModel()
+      .rows
+      .filter((row) => selectedIdSet.has(row.original.id))
+      .map((row) => {
+        const v = row.original;
+        return {
+          "Date": v.date ? formatDateString(v.date as unknown as string) : "",
+          "Volunteer Name": `${v.firstName ?? ""} ${v.lastName ?? ""}`.trim(),
+          "Event Type": v.eventType ?? "",
+          "Hours": v.hours ?? "",
+          "Value ($)": v.value ?? "",
+          "Total ($)": v.total ?? "",
+        } as Record<string, string | number>;
+      });
+
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const yyyy = now.getFullYear();
+    const mm = pad(now.getMonth() + 1);
+    const dd = pad(now.getDate());
+    const hh = pad(now.getHours());
+    const mi = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    const timestamp = `${yyyy}-${mm}-${dd}_${hh}-${mi}-${ss}`;
+
+    if (rows.length === 0) {
+      return;
+    }
+    downloadCSV(headers, rows, `volunteers_${timestamp}.csv`);
+  };
 
   if (loading) return <Text>Loading...</Text>;
   if (error) return <Text>Error: {error}</Text>;
@@ -408,15 +462,23 @@ const VolunteersTable = ({
                   />
                 </Box>
               )}
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="16px"
-                paddingY="8px"
-              >
-                <MdFileUpload size="16px" />
-                <Text ml="8px">Export</Text>
-              </Box>
+              <HStack>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                  onClick={selectedVolunteers.length > 0 ? handleExport : undefined}
+                  cursor={selectedVolunteers.length > 0 ? "pointer" : "not-allowed"}
+                  opacity={selectedVolunteers.length > 0 ? 1 : 0.5}
+                >
+                  <MdFileUpload size="16px" />
+                  <Text ml="8px">{`Export (${selectedVolunteers.length})`}</Text>
+                </Box>
+                {/* {selectedVolunteers.length === 0 && (
+                  <Text fontSize="sm" color="gray.500">Select rows to enable export</Text>
+                )} */}
+              </HStack>
             </HStack>
           </HStack>
           <Box
@@ -485,6 +547,7 @@ const VolunteersTable = ({
                             )}
                             onSelectionChange={handleCheckboxChange}
                             index={index}
+                            alwaysVisible={checkboxMode !== 'hidden'}
                           />
                         ) : (
                           flexRender(
