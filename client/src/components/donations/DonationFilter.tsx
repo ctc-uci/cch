@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Menu,
   MenuButton,
@@ -18,15 +18,6 @@ import {
 import { ChevronDownIcon, SearchIcon } from "@chakra-ui/icons";
 import { FaPlus } from "react-icons/fa";
 
-type Props = {
-  donors: string[];
-  donor: string;
-  setDonor: (d: string) => void;
-  newDonor: string;
-  setNewDonor: (n: string) => void;
-
-  addDonor: (name: string) => Promise<void>;
-};
 
 export function DonationFilter({
   donors,
@@ -44,15 +35,6 @@ export function DonationFilter({
   handleAddDonor: () => void;
 }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const donorMap: {[key: string]: string} = {
-    "panera": "Panera",
-    "mcdonalds": "McDonald's",
-    "grand theater": "Grand Theater",
-    "pantry": "Pantry",
-    "copia": "Copia",
-    "costco": "Costco",
-    "sprouts": "Sprouts",
-  }
   const {
     isOpen: isAddOpen,
     onOpen: onAddOpen,
@@ -93,7 +75,7 @@ export function DonationFilter({
         w="300px"
         textAlign="left"
       >
-        {donor || "Select Donor"}
+        {donor ? donor.charAt(0).toUpperCase() + donor.slice(1).toLowerCase() : "Select Donor"}
       </MenuButton>
 
       <MenuList w="300px" p={2} boxShadow="md">
@@ -111,7 +93,7 @@ export function DonationFilter({
         <VStack align="stretch" spacing={0} maxH="100vh" overflowY="auto">
           {filtered.map((d) => (
             <MenuItem key={d} onClick={() => selectDonor(d)}>
-              {donorMap[d]}
+              {d.charAt(0).toUpperCase() + d.slice(1).toLowerCase()}
             </MenuItem>
           ))}
           {filtered.length === 0 && (
