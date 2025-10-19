@@ -8,7 +8,7 @@ export const LandingPage = () => {
     return (
         <Box cursor="pointer" display="flex" justifyContent="center" alignItems="center" height="100vh" onClick={() => navigate("/choose-login")}>
             <VStack gap={5}>
-                <Image src={cch} alt="logo" boxSize="50vh" />
+                <Image src={cch} alt="logo" />
                 <Text color={"#0099D2"}>Press anywhere to continue </Text>
             </VStack>
         </Box>
