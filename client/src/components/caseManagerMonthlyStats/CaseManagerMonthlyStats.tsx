@@ -31,6 +31,8 @@ export const CaseManagerMonthlyStats = () => {
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [hiddenFields, setHiddenFields] = useState<string[]>([]);
+  const [pinnedFields, setPinnedFields] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +74,28 @@ export const CaseManagerMonthlyStats = () => {
 
   const buttonStyle = {
     colorScheme: "blue",
+  };
+
+  // Sort tables: pinned first, then visible, then hidden
+  const sortTables = (tables: any[]) => {
+    return [...tables].sort((a, b) => {
+      const aIsPinned = pinnedFields.includes(a.tableName);
+      const bIsPinned = pinnedFields.includes(b.tableName);
+      const aIsHidden = hiddenFields.includes(a.tableName);
+      const bIsHidden = hiddenFields.includes(b.tableName);
+
+      // Pinned tables come first
+      if (aIsPinned && !bIsPinned) return -1;
+      if (!aIsPinned && bIsPinned) return 1;
+
+      // Among non-pinned tables, hidden ones go to bottom
+      if (!aIsPinned && !bIsPinned) {
+        if (aIsHidden && !bIsHidden) return 1;
+        if (!aIsHidden && bIsHidden) return -1;
+      }
+
+      return 0;
+    });
   };
 
   return (
@@ -131,37 +155,42 @@ export const CaseManagerMonthlyStats = () => {
         w="full"
       >
         <TabList whiteSpace="nowrap">
-          {/* "All Statistics" tab plus one tab for each table */}
-          <Tab key="all">All Statistics</Tab>
           {allTabData.map((tab) => (
             <Tab key={tab.tabName}>{tab.tabName}</Tab>
           ))}
+          <Tab key="all">All</Tab>
         </TabList>
         {loading ? 
         <LoadingWheel/> :
         <TabPanels>
-          {/* All Statistics: render all tables */}
-          <TabPanel>
-            {allTabData.map((tab) =>
-              tab.tables.map((table) => (
-                <StatsTable
-                  key={table.tableName}
-                  table={table}
-                />
-              ))
-            )}
-          </TabPanel>
           {/* Render each table in its own tab panel */}
           {allTabData.map((tab) => (
             <TabPanel key={tab.tabName}>
-              {tab.tables.map((table) => (
+              {sortTables(tab.tables).map((table) => (
                 <StatsTable
                   key={table.tableName}
+                  setHiddenFields={setHiddenFields}
+                  setPinnedFields={setPinnedFields}
                   table={table}
+                  hiddenFields={hiddenFields}
+                  pinnedFields={pinnedFields}
                 />
               ))}
             </TabPanel>
           ))}
+          {/* All Statistics: render all tables */}
+          <TabPanel>
+            {sortTables(allTabData.flatMap((tab) => tab.tables)).map((table) => (
+              <StatsTable
+                key={table.tableName}
+                hiddenFields={hiddenFields}
+                pinnedFields={pinnedFields}
+                setHiddenFields={setHiddenFields}
+                setPinnedFields={setPinnedFields}
+                table={table} 
+              />
+            ))}
+          </TabPanel>
         </TabPanels>
         }
       </Tabs>

@@ -1,12 +1,17 @@
+import { useMemo, useState, useRef, useEffect } from "react";
+
+import { SearchIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
+  Divider,
   Flex,
   Heading,
   HStack,
   IconButton,
   Input,
   InputGroup,
+  InputLeftElement,
   InputRightElement,
   Table,
   TableContainer,
@@ -31,8 +36,12 @@ import {
 import type { Table as StatsTableProps } from "../../types/monthlyStat.ts";
 import { downloadCSV } from "../../utils/downloadCSV.ts";
 
-export const StatsTable = ({ table }: { table: StatsTableProps }) => {
+export const StatsTable = ({ table, setHiddenFields, setPinnedFields, hiddenFields, pinnedFields }: { table: StatsTableProps, setHiddenFields: (fields: string[]) => void, setPinnedFields: (fields: string[]) => void, hiddenFields: string[], pinnedFields: string[] }) => {
   const { tableName, tableData } = table;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
   const { getInputProps, getIncrementButtonProps, getDecrementButtonProps } =
     useNumberInput({
       step: 1,
@@ -44,6 +53,23 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
   const inc = getIncrementButtonProps();
   const dec = getDecrementButtonProps();
   const input = getInputProps();
+
+  // Handle clicks outside search input
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    if (isSearchOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSearchOpen]);
 
   const monthNames = [
     "January",
@@ -60,15 +86,29 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
     "December",
   ];
 
+  // Filter table data based on search term
+  const filteredTableData = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return tableData;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+    return Object.fromEntries(
+      Object.entries(tableData).filter(([, row]) =>
+        row.categoryName.toLowerCase().includes(searchLower)
+      )
+    );
+  }, [tableData, searchTerm]);
+
   const buttonStyle = {
     variant: "ghost",
   };
 
   const csvHeaders = ["Category", ...monthNames, "Total"];
-  const csvData = Object.values(tableData).map((row) => {
+  const csvData = Object.values(filteredTableData).map((row) => {
     return {
       Category: row.categoryName,
-      ...row.monthlyCounts.reduce((acc, m) => {
+      ...row.monthlyCounts.reduce((acc: Record<string, number>, m) => {
         acc[m.month] = m.count;
         return acc;
       }, {}),
@@ -82,7 +122,21 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
       spacing="24px"
       paddingTop="24px"
     >
+      <HStack justify="space-between" width="100%">
       <Heading fontSize="20px">{tableName}</Heading>
+      {
+        hiddenFields.includes(tableName) && (
+          <Button
+            {...buttonStyle}
+            leftIcon={<MdHideSource />}
+            onClick={() => setHiddenFields(hiddenFields.filter((field) => field !== tableName))}
+          >
+            Show fields
+          </Button>
+        )
+      }
+      </HStack>
+      {!hiddenFields.includes(tableName) && (
       <Box
         borderWidth="1px"
         borderRadius="12px"
@@ -100,18 +154,31 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
             <Button
               {...buttonStyle}
               leftIcon={<MdHideSource />}
+              onClick={() => setHiddenFields([...hiddenFields, tableName])}
             >
               Hide fields
             </Button>
-            <Button
-              {...buttonStyle}
-              leftIcon={<MdPushPin />}
-            >
-              Pin fields
-            </Button>
-            <MdZoomIn />
+            {!pinnedFields.includes(tableName) ? (
+              <Button
+                {...buttonStyle}
+                leftIcon={<MdPushPin />}
+                onClick={() => setPinnedFields([...pinnedFields, tableName])}
+              >
+                Pin fields
+              </Button>
+            ) : (
+              <Button
+                {...buttonStyle}
+                colorScheme="blue"
+                leftIcon={<MdPushPin />}
+                onClick={() => setPinnedFields(pinnedFields.filter((field) => field !== tableName))}
+              >
+                Unpin fields
+              </Button>
+            )}
+            {/* <MdZoomIn />
             <Text>Zoom</Text>
-            <Flex maxW="163px">
+            <Flex width="17ch">
               <InputGroup>
                 <Input
                   type="number"
@@ -128,17 +195,35 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
               <Button
                 {...buttonStyle}
                 {...inc}
-              >
-                +
+                >
+                  +
               </Button>
-            </Flex>
+            </Flex> */}
           </HStack>
-          <HStack>
-            <IconButton
-              {...buttonStyle}
-              icon={<MdOutlineManageSearch />}
-              aria-label={"search"}
-            />
+            <HStack>
+              <div ref={searchRef}>
+                {!isSearchOpen && (
+                  <IconButton
+                    {...buttonStyle}
+                    icon={<MdOutlineManageSearch />}
+                    aria-label={"search"}
+                    onClick={() => setIsSearchOpen(!isSearchOpen)}
+                    style={{ cursor: "pointer" }}
+                  />
+                )}
+                {isSearchOpen && (
+                  <InputGroup>
+                    <InputLeftElement pointerEvents="none">
+                      <SearchIcon color="gray.400" />
+                    </InputLeftElement>
+                    <Input
+                      placeholder="Search categories"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </InputGroup>
+                )}
+              </div>
             <Button
               {...buttonStyle}
               leftIcon={<MdFileUpload />}
@@ -167,7 +252,7 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
               </Tr>
             </Thead>
             <Tbody>
-              {Object.entries(tableData).map(([key, tableRow]) => (
+              {Object.entries(filteredTableData).map(([key, tableRow]) => (
                 <Tr key={key}>
                   <Td textAlign="left">{tableRow.categoryName}</Td>
                   {tableRow.monthlyCounts.map((monthlyCount) => (
@@ -185,6 +270,7 @@ export const StatsTable = ({ table }: { table: StatsTableProps }) => {
           </Table>
         </TableContainer>
       </Box>
+      )}
     </VStack>
   );
 };

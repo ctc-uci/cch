@@ -25,7 +25,7 @@ export const DeleteRowModal = ({
     <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>"Confirm Deletion"</ModalHeader>
+        <ModalHeader>Confirm Deletion</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <Text>
