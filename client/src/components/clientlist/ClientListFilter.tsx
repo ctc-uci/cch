@@ -263,7 +263,7 @@ export const ClientListFilter = ({ setFilterQuery }: ClientListFilterProps) => {
   };
 
   return (
-    <Popover placement="bottom-start">
+    <Popover placement="right-end">
       <PopoverTrigger>
         <Button background={"white"}>
           <HStack>

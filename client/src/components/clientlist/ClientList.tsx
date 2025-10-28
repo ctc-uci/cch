@@ -508,7 +508,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
           fontSize="12px"
           width="20%"
           height="30px"
-          placeholder="search test"
+          placeholder="search by client name"
           onChange={(e) => setSearchKey(e.target.value)}
         />
         <ClientListFilter setFilterQuery={setFilterQuery} />
