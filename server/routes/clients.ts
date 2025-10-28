@@ -18,6 +18,7 @@ clientsRouter.get("/:id", async (req, res) => {
 clientsRouter.get("/", async (req, res) => {
   try {
     const { search, page, filter } = req.query;
+    console.log(search);
     let queryStr = `
       SELECT 
         clients.*, 
@@ -151,7 +152,7 @@ clientsRouter.post("/", async (req, res) => {
       reunified,
       successful_completion,
       destination_city,
-      comments
+      comments,
     } = req.body;
 
     const data = await db.query(
@@ -241,7 +242,7 @@ clientsRouter.post("/", async (req, res) => {
         reunified,
         successful_completion,
         destination_city,
-        comments
+        comments,
       ]
     );
 
@@ -292,7 +293,7 @@ clientsRouter.put("/:id", async (req, res) => {
       reunified,
       successful_completion,
       destination_city,
-      comments
+      comments,
     } = req.body;
 
     const { id } = req.params;
@@ -391,7 +392,6 @@ clientsRouter.put("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-
 
 // Delete a client
 clientsRouter.delete("/:id", async (req, res) => {

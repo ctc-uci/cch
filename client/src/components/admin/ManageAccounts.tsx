@@ -137,7 +137,10 @@ export const ManageAccounts = () => {
   };
 
   const handleUserAdded = (newUser: Person) => {
-    setPersons(prev => [...prev, { ...newUser, isChecked: false, isHovered: false }]);
+    setPersons((prev) => [
+      ...prev,
+      { ...newUser, isChecked: false, isHovered: false },
+    ]);
   };
 
   const handleDelete = async () => {

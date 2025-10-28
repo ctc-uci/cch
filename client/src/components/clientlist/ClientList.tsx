@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
@@ -12,9 +12,7 @@ import {
   Table,
   TableContainer,
   Tbody,
-  Flex,
   Td,
-  Text,
   Th,
   Thead,
   Tr,
@@ -29,10 +27,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { MdFileUpload } from "react-icons/md";
-import { MdOutlineManageSearch } from "react-icons/md";
 import { FiUpload } from "react-icons/fi";
-
 import { useNavigate } from "react-router-dom";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -40,15 +35,12 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { Client } from "../../types/client";
 import { formatDateString } from "../../utils/dateUtils";
 import { downloadCSV } from "../../utils/downloadCSV";
+import { LoadingWheel } from ".././loading/loading.tsx";
 import { UpdateClients } from "../admin/UpdateClient";
+import { AddClientForm } from "../clientlist/AddClientForm";
 import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
-import { LoadingWheel } from ".././loading/loading.tsx"
-
-
-import {AddClientForm} from "../clientlist/AddClientForm";
-
 import { UnfinishedClientAlert } from "./UnfinishedClientAlert";
 
 interface ClientListProps {
@@ -68,10 +60,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
   const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
+  const navigate = useNavigate();
 
-  // const navigate = useNavigate();
-
-  const [clients, setClients] = useState<
+  const [allClients, setAllClients] = useState<
+    (Client & { isChecked: boolean; isHovered: boolean })[]
+  >([]);
+  const [filteredClients, setFilteredClients] = useState<
     (Client & { isChecked: boolean; isHovered: boolean })[]
   >([]);
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
@@ -82,13 +76,19 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState<{ firstName?: string; lastName?: string }>(
+    {}
+  );
 
+  const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false);
 
-
-  const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false)
-
-  const [showSearch, setShowSearch] = useState(false);
+  const handleSelectAllCheckboxClick = useCallback(() => {
+    if (selectedRowIds.length === 0) {
+      setSelectedRowIds(filteredClients.map((client) => client.id));
+    } else {
+      setSelectedRowIds([]);
+    }
+  }, [selectedRowIds, filteredClients]);
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -279,12 +279,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
         header: "Destination City",
       },
     ],
-    [selectedRowIds, clients]
+    [selectedRowIds, handleSelectAllCheckboxClick]
   );
 
-
   const table = useReactTable({
-    data: clients,
+    data: filteredClients,
     columns,
     state: {
       sorting,
@@ -295,16 +294,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(clients.map((client) => client.id));
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
-
   const onPressCSVButton = () => {
-    const selectedClients = clients.filter((client) =>
+    const selectedClients = filteredClients.filter((client) =>
       selectedRowIds.includes(client.id)
     );
 
@@ -334,8 +325,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
       await Promise.all(
         selectedRowIds.map((row_id) => backend.delete(`/clients/${row_id}`))
       );
-      setClients(
-        clients.filter((client) => !selectedRowIds.includes(client.id))
+      setAllClients(
+        allClients.filter((client) => !selectedRowIds.includes(client.id))
+      );
+      setFilteredClients(
+        filteredClients.filter((client) => !selectedRowIds.includes(client.id))
       );
       setSelectedRowIds([]);
       setDeleteModalOpen(false);
@@ -344,36 +338,144 @@ export const ClientList = ({ admin }: ClientListProps) => {
     }
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-      const userRequest = await backend.get(`/users/${currentUser?.uid}`);
-      setUser(userRequest.data[0]);
-      let clientsRequest;
-      if (searchKey && filterQuery.length > 1) {
-        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`);
-      } else if (searchKey) {
-        clientsRequest = backend.get(`/clients?page=&filter=&search=${searchKey}`);
-      } else if (filterQuery.length > 1) {
-        clientsRequest = backend.get(`/clients?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`);
-      } else {
-        clientsRequest = backend.get("/clients");
-      }
-      const [lastUpdatedResponse, clientsResponse] = await Promise.all([lastUpdatedRequest, clientsRequest]);
+      const userRequest = backend.get(`/users/${currentUser?.uid}`);
+      const clientsRequest = backend.get("/clients");
 
+      const [lastUpdatedResponse, userResponse, clientsResponse] =
+        await Promise.all([lastUpdatedRequest, userRequest, clientsRequest]);
+
+      setUser(userResponse.data[0]);
       const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
       setLastUpdated(date.toLocaleString());
-      setClients(clientsResponse.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-  };
+      setAllClients(clientsResponse.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [backend, currentUser?.uid]);
 
   useEffect(() => {
+    console.log("heh?3");
     fetchData();
-  }, [backend, searchKey, filterQuery]);
+  }, [fetchData]);
+
+  // Client-side filtering and searching
+  useEffect(() => {
+    let filtered = [...allClients];
+
+    // Apply search filter
+    if (searchKey.trim()) {
+      const searchLower = searchKey.toLowerCase().trim();
+      filtered = filtered.filter((client) => {
+        // Search by first name, last name, or both combined
+        const firstName = client.firstName?.toLowerCase() || "";
+        const lastName = client.lastName?.toLowerCase() || "";
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        // Check if search term matches first name, last name, or full name
+        return (
+          firstName.includes(searchLower) ||
+          lastName.includes(searchLower) ||
+          fullName.includes(searchLower) ||
+          // Also search other fields like the backend did
+          client.phoneNumber?.toLowerCase().includes(searchLower) ||
+          client.email?.toLowerCase().includes(searchLower) ||
+          client.caseManagerFirstName?.toLowerCase().includes(searchLower) ||
+          client.caseManagerLastName?.toLowerCase().includes(searchLower) ||
+          client.locationName?.toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    // Apply filter queries
+    if (filterQuery.length > 1) {
+      filtered = filtered.filter((client) => {
+        return filterQuery.slice(1).every((query) => {
+          if (!query) return true;
+
+          // Parse the filter query to extract field, operator, and value
+          const match = query.match(
+            /(\w+\.\w+)\s+(ILIKE|contains|=|!=|>|<)\s+['"]?([^'"]*)['"]?/
+          );
+          if (!match) return true;
+
+          const [, fieldPath, operator, value] = match;
+          if (!fieldPath || !operator || !value) return true;
+
+          const [_table, _field] = fieldPath.split(".");
+
+          // Map database field names to client object properties
+          const fieldMap: { [key: string]: string } = {
+            "clients.first_name": "firstName",
+            "clients.last_name": "lastName",
+            "clients.date_of_birth": "dateOfBirth",
+            "clients.age": "age",
+            "clients.phone_number": "phoneNumber",
+            "clients.email": "email",
+            "clients.grant": "grant",
+            "clients.status": "status",
+            "clients.entrance_date": "entranceDate",
+            "clients.exit_date": "exitDate",
+            "clients.bed_nights": "bedNights",
+            "clients.bed_nights_children": "bedNightsChildren",
+            "clients.pregnant_upon_entry": "pregnantUponEntry",
+            "clients.disabled_children": "disabledChildren",
+            "clients.ethnicity": "ethnicity",
+            "clients.race": "race",
+            "clients.city_of_last_permanent_residence":
+              "cityOfLastPermanentResidence",
+            "clients.prior_living": "priorLiving",
+            "clients.prior_living_city": "priorLivingCity",
+            "clients.shelter_in_last_five_years": "shelterInLastFiveYears",
+            "clients.homelessness_length": "homelessnessLength",
+            "clients.chronically_homeless": "chronicallyHomeless",
+            "clients.attending_school_upon_entry": "attendingSchoolUponEntry",
+            "clients.employement_gained": "employementGained",
+            "clients.reason_for_leaving": "reasonForLeaving",
+            "clients.specific_reason_for_leaving": "specificReasonForLeaving",
+            "clients.specific_destination": "specificDestination",
+            "clients.savings_amount": "savingsAmount",
+            "clients.attending_school_upon_exit": "attendingSchoolUponExit",
+            "clients.reunified": "reunified",
+            "clients.successful_completion": "successfulCompletion",
+            "clients.destination_city": "destinationCity",
+            "case_managers.first_name": "caseManagerFirstName",
+            "case_managers.last_name": "caseManagerLastName",
+            "locations.name": "locationName",
+          };
+
+          const clientField = fieldMap[fieldPath];
+          if (!clientField) return true;
+
+          const clientValue = client[clientField as keyof Client];
+          const stringValue = String(clientValue || "").toLowerCase();
+          const filterValue = value.toLowerCase();
+
+          switch (operator) {
+            case "ILIKE":
+            case "contains":
+              return stringValue.includes(filterValue);
+            case "=":
+              return stringValue === filterValue;
+            case "!=":
+              return stringValue !== filterValue;
+            case ">":
+              return Number(clientValue) > Number(value);
+            case "<":
+              return Number(clientValue) < Number(value);
+            default:
+              return true;
+          }
+        });
+      });
+    }
+
+    setFilteredClients(filtered);
+  }, [allClients, searchKey, filterQuery]);
 
   return (
     <VStack
@@ -381,10 +483,14 @@ export const ClientList = ({ admin }: ClientListProps) => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
-      {showUnfinishedAlert && <UnfinishedClientAlert/>}
-      <Heading paddingBottom="4%">Welcome, {user?.firstName} {user?.lastName}</Heading>
+      {showUnfinishedAlert && <UnfinishedClientAlert />}
+      <Heading paddingBottom="4%">
+        Welcome, {user?.firstName} {user?.lastName}
+      </Heading>
       <HStack width="100%">
-        <Heading size="md">{admin ? 'Client Tracking Statistics' : 'My Complete Client Table'}</Heading>
+        <Heading size="md">
+          {admin ? "Client Tracking Statistics" : "My Complete Client Table"}
+        </Heading>
         <Heading
           size="sm"
           paddingLeft="10%"
@@ -402,7 +508,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
           fontSize="12px"
           width="20%"
           height="30px"
-          placeholder="search"
+          placeholder="search test"
           onChange={(e) => setSearchKey(e.target.value)}
         />
         <ClientListFilter setFilterQuery={setFilterQuery} />
@@ -429,7 +535,12 @@ export const ClientList = ({ admin }: ClientListProps) => {
               delete
             </Button>
             {/* <Button fontSize="12px">add</Button> */}
-            <AddClientForm onClientAdded={fetchData} setShowUnfinishedAlert={setShowUnfinishedAlert} />
+            <AddClientForm
+              onClientAdded={() => {
+                fetchData();
+              }}
+              setShowUnfinishedAlert={setShowUnfinishedAlert}
+            />
             <IconButton
               aria-label="Download CSV"
               onClick={() => onPressCSVButton()}
@@ -441,89 +552,95 @@ export const ClientList = ({ admin }: ClientListProps) => {
         </HStack>
       </HStack>
       <Box
-        width = {'100%'}
+        width={"100%"}
         justifyContent={"center"}
       >
-      {loading ?
-      <LoadingWheel/> :
-      <TableContainer
-        maxHeight="calc(100vh - 20px)"
-        sx={{
-          overflowX: "auto",
-          overflowY: "auto",
-          maxWidth: "100%",
-          border: "1px solid gray",
-        }}
-      >
-        <Table variant="striped">
-          <Thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <Tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <Th
-                    key={header.id}
-                    cursor={header.column.getCanSort() ? "pointer" : "default"}
-                    onClick={header.column.getToggleSortingHandler()}
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                    {header.column.getCanSort() && (
-                      <Box
-                        display="inline-block"
-                        ml={1}
+        {loading ? (
+          <LoadingWheel />
+        ) : (
+          <TableContainer
+            maxHeight="calc(100vh - 20px)"
+            sx={{
+              overflowX: "auto",
+              overflowY: "auto",
+              maxWidth: "100%",
+              border: "1px solid gray",
+            }}
+          >
+            <Table variant="striped">
+              <Thead>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <Tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <Th
+                        key={header.id}
+                        cursor={
+                          header.column.getCanSort() ? "pointer" : "default"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
                       >
-                        {header.column.getIsSorted() === "asc" ? (
-                          <TriangleUpIcon />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <TriangleDownIcon />
-                        ) : null}
-                      </Box>
-                    )}
-                  </Th>
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {header.column.getCanSort() && (
+                          <Box
+                            display="inline-block"
+                            ml={1}
+                          >
+                            {header.column.getIsSorted() === "asc" ? (
+                              <TriangleUpIcon />
+                            ) : header.column.getIsSorted() === "desc" ? (
+                              <TriangleDownIcon />
+                            ) : null}
+                          </Box>
+                        )}
+                      </Th>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Thead>
-          <Tbody>
-            {table.getRowModel().rows.map((row, index) => (
-              <Tr
-                key={row.id}
-                cursor="pointer"
-                onClick={
-                  () => navigate(`/ViewClient/2`)
-                }
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <Td
-                    key={cell.id}
-                    fontSize="14px"
-                    fontWeight="500px"
-                    onClick={(e) => {
-                      if (cell.column.id === "rowNumber") {
-                        e.stopPropagation();
-                      }
-                    }}
+              </Thead>
+              <Tbody>
+                {table.getRowModel().rows.map((row, index) => (
+                  <Tr
+                    key={row.id}
+                    cursor="pointer"
+                    onClick={() => navigate(`/ViewClient/2`)}
                   >
-                    {cell.column.id === "rowNumber" ? (
-                      <HoverCheckbox
-                        id={row.original.id}
-                        isSelected={selectedRowIds.includes(row.original.id)}
-                        onSelectionChange={handleRowSelect}
-                        index={index}
-                      />
-                    ) : (
-                      flexRender(cell.column.columnDef.cell, cell.getContext())
-                    )}
-                  </Td>
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedRowIds.includes(
+                              row.original.id
+                            )}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
+                  </Tr>
                 ))}
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-      }
+              </Tbody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}
