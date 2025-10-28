@@ -18,7 +18,8 @@ import {
   Thead,
   Tr,
   VStack,
-  Text
+  Text,
+  Tooltip
 } from "@chakra-ui/react";
 
 import {
@@ -44,7 +45,7 @@ import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import { UnfinishedClientAlert } from "./UnfinishedClientAlert";
-import { MdFileUpload } from "react-icons/md";
+import { MdFileUpload, MdOutlineManageSearch } from "react-icons/md";
 
 interface ClientListProps {
   admin?: boolean;
@@ -113,13 +114,14 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "entranceDate", desc: true }]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ firstName?: string; lastName?: string }>(
     {}
   );
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleSelectAllCheckboxClick = useCallback(() => {
     if (selectedRowIds.length === 0) {
@@ -191,6 +193,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
       {
         accessorKey: "entranceDate",
         header: "Entry Date",
+        id: "entranceDate",
         cell: ({ getValue }) => {
           return formatDateString(getValue() as string);
         },
@@ -604,7 +607,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
           </Heading>
           <HStack>
             <Button
-              fontSize="12px"
+
               onClick={() => setDeleteModalOpen(true)}
               isDisabled={selectedRowIds.length === 0}
             >
@@ -631,29 +634,51 @@ export const ClientList = ({ admin }: ClientListProps) => {
             justifyContent="space-between"
           >
             <HStack>
-            <ClientListFilter setFilterQuery={setFilterQuery} />
+              <ClientListFilter setFilterQuery={setFilterQuery} />
             </HStack>
             <HStack pb={4} width="fit-content">
-              <Input
-                fontSize="12px"
-                height="30px"
-                placeholder="search by client name"
-                onChange={(e) => setSearchKey(e.target.value)}
-                width="fit-content"
-              />
+              {isSearchOpen && (
+                <Box paddingRight="16px">
+                  <Input
+                    value={searchKey}
+                    onChange={(e) => setSearchKey(e.target.value)}
+                    placeholder="Search by client name..."
+                    width="260px"
+                    size="sm"
+                    autoFocus
+                  />
+                </Box>
+              )}
               <Box
-                  display="flex"
-                  alignItems="center"
-                  paddingX="16px"
-                  paddingY="8px"
-                  onClick={selectedRowIds.length > 0 ? onPressCSVButton : undefined}
-                  cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
-                  opacity={selectedRowIds.length > 0 ? 1 : 0.5}
-                  width="fit-content"
-                >
-                  <MdFileUpload size="16px" />
-                  <Text ml="8px">{`Export (${selectedRowIds.length})`}</Text>
+                display="flex"
+                alignItems="center"
+                paddingX="16px"
+                paddingY="8px"
+                cursor="pointer"
+                onClick={() => setIsSearchOpen((prev) => !prev)}
+              >
+                <MdOutlineManageSearch size="24px" />
               </Box>
+              <Tooltip
+                label={selectedRowIds.length === 0 
+                  && "Select rows to export"}
+                isDisabled={false}
+                placement="top"
+              >
+                <Box
+                    display="flex"
+                    alignItems="center"
+                    paddingX="16px"
+                    paddingY="8px"
+                    onClick={selectedRowIds.length > 0 ? onPressCSVButton : undefined}
+                    cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                    opacity={selectedRowIds.length > 0 ? 1 : 0.5}
+                    width="fit-content"
+                  >
+                    <MdFileUpload size="16px" />
+                    <Text ml="8px">{`Export (${selectedRowIds.length})`}</Text>
+                </Box>
+              </Tooltip>
             </HStack>
           </HStack>
           <Box
@@ -683,23 +708,25 @@ export const ClientList = ({ admin }: ClientListProps) => {
                               header.column.getCanSort() ? "pointer" : "default"
                             }
                             onClick={header.column.getToggleSortingHandler()}
+                            position="relative"
                           >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                            {header.column.getCanSort() && (
-                              <Box
-                                display="inline-block"
-                                ml={1}
-                              >
-                                {header.column.getIsSorted() === "asc" ? (
-                                  <TriangleUpIcon />
-                                ) : header.column.getIsSorted() === "desc" ? (
-                                  <TriangleDownIcon />
-                                ) : null}
-                              </Box>
-                            )}
+                            <HStack spacing={1} alignItems="center">
+                              <Text>{flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}</Text>
+                              {header.column.getCanSort() && (
+                                <Box ml={1}>
+                                  {header.column.getIsSorted() === "asc" ? (
+                                    <TriangleUpIcon color="blue.500" />
+                                  ) : header.column.getIsSorted() === "desc" ? (
+                                    <TriangleDownIcon color="blue.500" />
+                                  ) : (
+                                    <TriangleDownIcon opacity={0.3} />
+                                  )}
+                                </Box>
+                              )}
+                            </HStack>
                           </Th>
                         ))}
                       </Tr>

@@ -265,7 +265,7 @@ export const ClientListFilter = ({ setFilterQuery }: ClientListFilterProps) => {
   return (
     <Popover placement="right-end">
       <PopoverTrigger>
-        <Button background={"white"}>
+        <Button background={"white"} variant="ghost" mt={-2}>
           <HStack>
             <Icon as={MdOutlineFilterAlt} />
             <h1>Filter</h1>
