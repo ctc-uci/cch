@@ -23,7 +23,7 @@ export const Navbar = () => {
         variant={currentPage === pageName ? 'select' : 'hover'}
         onClick={() => setCurrentPage(pageName)}
       >
-        <Text>{pageName}</Text>
+        <Text fontWeight="500">{pageName}</Text>
       </Link>
     );
   };

@@ -9,6 +9,7 @@ import {
   HStack,
   IconButton,
   Input,
+  Stack,
   Table,
   TableContainer,
   Tbody,
@@ -17,6 +18,7 @@ import {
   Thead,
   Tr,
   VStack,
+  Text
 } from "@chakra-ui/react";
 
 import {
@@ -42,6 +44,7 @@ import { ClientListFilter } from "../clientlist/ClientListFilter";
 import { DeleteRowModal } from "../deleteRow/deleteRowModal";
 import { HoverCheckbox } from "../hoverCheckbox/hoverCheckbox";
 import { UnfinishedClientAlert } from "./UnfinishedClientAlert";
+import { MdFileUpload } from "react-icons/md";
 
 interface ClientListProps {
   admin?: boolean;
@@ -49,13 +52,49 @@ interface ClientListProps {
 
 export const ClientList = ({ admin }: ClientListProps) => {
   const headers = [
+    "ID",
     "First Name",
     "Last Name",
     "Phone Number",
-    "E-mail",
+    "Email",
+    "Case Manager First Name",
+    "Case Manager Last Name",
     "Entrance Date",
     "Exit Date",
-    "Birthday",
+    "Estimated Exit Date",
+    "Date of Birth",
+    "Age",
+    "Bed Nights",
+    "Bed Nights Children",
+    "Created By",
+    "Grant",
+    "Emergency Contact Name",
+    "Emergency Contact Phone Number",
+    "Medical",
+    "Pregnant Upon Entry",
+    "Disabled Children",
+    "Ethnicity",
+    "Race",
+    "City of Last Permanent Residence",
+    "Prior Living",
+    "Prior Living City",
+    "Shelter in Last Five Years",
+    "Homelessness Length",
+    "Chronically Homeless",
+    "Attending School Upon Entry",
+    "Employment Gained",
+    "Reason for Leaving",
+    "Specific Reason for Leaving",
+    "Specific Destination",
+    "Savings Amount",
+    "Attending School Upon Exit",
+    "Reunified",
+    "Successful Completion",
+    "Destination City",
+    "Location Name",
+    "Status",
+    "Unit ID",
+    "Comments",
   ];
 
   const { currentUser } = useAuthContext();
@@ -300,13 +339,49 @@ export const ClientList = ({ admin }: ClientListProps) => {
     );
 
     const data = selectedClients.map((client) => ({
+      "ID": client.id,
       "First Name": client.firstName,
       "Last Name": client.lastName,
       "Phone Number": client.phoneNumber,
-      "E-mail": client.email,
+      "Email": client.email,
+      "Case Manager First Name": client.caseManagerFirstName,
+      "Case Manager Last Name": client.caseManagerLastName,
       "Entrance Date": client.entranceDate,
       "Exit Date": client.exitDate,
-      Birthday: client.dateOfBirth,
+      "Estimated Exit Date": client.estimatedExitDate,
+      "Date of Birth": client.dateOfBirth,
+      "Age": client.age,
+      "Bed Nights": client.bedNights,
+      "Bed Nights Children": client.bedNightsChildren,
+      "Created By": client.createdBy,
+      "Grant": client.grant,
+      "Emergency Contact Name": client.emergencyContactName,
+      "Emergency Contact Phone Number": client.emergencyContactPhoneNumber,
+      "Medical": client.medical,
+      "Pregnant Upon Entry": client.pregnantUponEntry,
+      "Disabled Children": client.disabledChildren,
+      "Ethnicity": client.ethnicity,
+      "Race": client.race,
+      "City of Last Permanent Residence": client.cityOfLastPermanentResidence,
+      "Prior Living": client.priorLiving,
+      "Prior Living City": client.priorLivingCity,
+      "Shelter in Last Five Years": client.shelterInLastFiveYears,
+      "Homelessness Length": client.homelessnessLength,
+      "Chronically Homeless": client.chronicallyHomeless,
+      "Attending School Upon Entry": client.attendingSchoolUponEntry,
+      "Employment Gained": client.employementGained,
+      "Reason for Leaving": client.reasonForLeaving,
+      "Specific Reason for Leaving": client.specificReasonForLeaving,
+      "Specific Destination": client.specificDestination,
+      "Savings Amount": client.savingsAmount,
+      "Attending School Upon Exit": client.attendingSchoolUponExit,
+      "Reunified": client.reunified,
+      "Successful Completion": client.successfulCompletion,
+      "Destination City": client.destinationCity,
+      "Location Name": client.locationName,
+      "Status": client.status,
+      "Unit ID": client.unitId,
+      "Comments": client.comments,
     }));
 
     downloadCSV(headers, data, `clients.csv`);
@@ -349,7 +424,15 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
       setUser(userResponse.data[0]);
       const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-      setLastUpdated(date.toLocaleString());
+      setLastUpdated(
+        date.toLocaleString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      );
       setAllClients(clientsResponse.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -480,58 +563,52 @@ export const ClientList = ({ admin }: ClientListProps) => {
     <VStack
       spacing={6}
       align="start"
-      sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
+      sx={{ maxWidth: "100%", marginX: "auto", padding: "2% 4%" }}
     >
       {showUnfinishedAlert && <UnfinishedClientAlert />}
-      <Heading paddingBottom="4%">
+      <Heading
+        size="md"
+        fontWeight="medium"
+        color="brand.Blue 500"
+      >
         Welcome, {user?.firstName} {user?.lastName}
       </Heading>
-      <HStack width="100%">
-        <Heading size="md">
+      <Stack width="100%">
+        <Heading
+          size="lg"
+          fontWeight="600"
+        >
           {admin ? "Client Tracking Statistics" : "My Complete Client Table"}
         </Heading>
         <Heading
           size="sm"
-          paddingLeft="10%"
+          fontWeight="medium"
+          color="brand.Gray 700"
         >
           Last Updated: {lastUpdated}
         </Heading>
-      </HStack>
+      </Stack>
       {admin && <UpdateClients />}
-      <VStack></VStack>
-      <HStack
-        width="100%"
-        justifyContent="space-between"
-      >
-        <Input
-          fontSize="12px"
-          width="20%"
-          height="30px"
-          placeholder="search by client name"
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <ClientListFilter setFilterQuery={setFilterQuery} />
+      <Box width="100%">
         <HStack
-          width="55%"
+          width="100%"
           justifyContent="space-between"
+          mb={4}
         >
-          {/* <Text fontSize="12px">
-            showing {clients.length} results on this page
-          </Text> */}
-          <HStack>
-            {/* <Button></Button> */}
-            {/* <Text fontSize="12px">
-              page {} of {Math.ceil(clients.length / 20)}
-            </Text> */}
-            {/* <Button></Button> */}
-          </HStack>
+          <Heading
+            size="md"
+            fontWeight="medium"
+            color="brand.Gray 700"
+          >
+            Client Tracking Statistics Table
+          </Heading>
           <HStack>
             <Button
               fontSize="12px"
               onClick={() => setDeleteModalOpen(true)}
               isDisabled={selectedRowIds.length === 0}
             >
-              delete
+              Delete
             </Button>
             {/* <Button fontSize="12px">add</Button> */}
             <AddClientForm
@@ -540,106 +617,137 @@ export const ClientList = ({ admin }: ClientListProps) => {
               }}
               setShowUnfinishedAlert={setShowUnfinishedAlert}
             />
-            <IconButton
-              aria-label="Download CSV"
-              onClick={() => onPressCSVButton()}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              <FiUpload />
-            </IconButton>
           </HStack>
         </HStack>
-      </HStack>
-      <Box
-        width={"100%"}
-        justifyContent={"center"}
-      >
-        {loading ? (
-          <LoadingWheel />
-        ) : (
-          <TableContainer
-            maxHeight="calc(100vh - 20px)"
-            sx={{
-              overflowX: "auto",
-              overflowY: "auto",
-              maxWidth: "100%",
-              border: "1px solid gray",
-            }}
+        <Box
+          width="100%"
+          border="1px solid"
+          borderColor="#E2E8F0"
+          borderRadius="md"
+          padding="12px"
+        >
+          <HStack
+            width="100%"
+            justifyContent="space-between"
           >
-            <Table variant="striped">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th
-                        key={header.id}
-                        cursor={
-                          header.column.getCanSort() ? "pointer" : "default"
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getCanSort() && (
-                          <Box
-                            display="inline-block"
-                            ml={1}
+            <HStack>
+            <ClientListFilter setFilterQuery={setFilterQuery} />
+            </HStack>
+            <HStack pb={4} width="fit-content">
+              <Input
+                fontSize="12px"
+                height="30px"
+                placeholder="search by client name"
+                onChange={(e) => setSearchKey(e.target.value)}
+                width="fit-content"
+              />
+              <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                  onClick={selectedRowIds.length > 0 ? onPressCSVButton : undefined}
+                  cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                  opacity={selectedRowIds.length > 0 ? 1 : 0.5}
+                  width="fit-content"
+                >
+                  <MdFileUpload size="16px" />
+                  <Text ml="8px">{`Export (${selectedRowIds.length})`}</Text>
+              </Box>
+            </HStack>
+          </HStack>
+          <Box
+            width={"100%"}
+            justifyContent={"center"}
+          >
+            {loading ? (
+              <LoadingWheel />
+            ) : (
+              <TableContainer
+                maxHeight="calc(100vh - 20px)"
+                sx={{
+                  overflowX: "auto",
+                  overflowY: "auto",
+                  maxWidth: "100%",
+                  border: "1px solid gray",
+                }}
+              >
+                <Table variant="striped">
+                  <Thead>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <Tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <Th
+                            key={header.id}
+                            cursor={
+                              header.column.getCanSort() ? "pointer" : "default"
+                            }
+                            onClick={header.column.getToggleSortingHandler()}
                           >
-                            {header.column.getIsSorted() === "asc" ? (
-                              <TriangleUpIcon />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <TriangleDownIcon />
-                            ) : null}
-                          </Box>
-                        )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row, index) => (
-                  <Tr
-                    key={row.id}
-                    cursor="pointer"
-                    onClick={() => navigate(`/ViewClient/2`)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <Td
-                        key={cell.id}
-                        fontSize="14px"
-                        fontWeight="500px"
-                        onClick={(e) => {
-                          if (cell.column.id === "rowNumber") {
-                            e.stopPropagation();
-                          }
-                        }}
-                      >
-                        {cell.column.id === "rowNumber" ? (
-                          <HoverCheckbox
-                            id={row.original.id}
-                            isSelected={selectedRowIds.includes(
-                              row.original.id
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
                             )}
-                            onSelectionChange={handleRowSelect}
-                            index={index}
-                          />
-                        ) : (
-                          flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )
-                        )}
-                      </Td>
+                            {header.column.getCanSort() && (
+                              <Box
+                                display="inline-block"
+                                ml={1}
+                              >
+                                {header.column.getIsSorted() === "asc" ? (
+                                  <TriangleUpIcon />
+                                ) : header.column.getIsSorted() === "desc" ? (
+                                  <TriangleDownIcon />
+                                ) : null}
+                              </Box>
+                            )}
+                          </Th>
+                        ))}
+                      </Tr>
                     ))}
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        )}
+                  </Thead>
+                  <Tbody>
+                    {table.getRowModel().rows.map((row, index) => (
+                      <Tr
+                        key={row.id}
+                        cursor="pointer"
+                        onClick={() => navigate(`/ViewClient/2`)}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <Td
+                            key={cell.id}
+                            fontSize="14px"
+                            fontWeight="500px"
+                            onClick={(e) => {
+                              if (cell.column.id === "rowNumber") {
+                                e.stopPropagation();
+                              }
+                            }}
+                          >
+                            {cell.column.id === "rowNumber" ? (
+                              <HoverCheckbox
+                                id={row.original.id}
+                                isSelected={selectedRowIds.includes(
+                                  row.original.id
+                                )}
+                                onSelectionChange={handleRowSelect}
+                                index={index}
+                              />
+                            ) : (
+                              flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )
+                            )}
+                          </Td>
+                        ))}
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+            )}
+          </Box>
+        </Box>
       </Box>
       <DeleteRowModal
         isOpen={isDeleteModalOpen}

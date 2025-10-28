@@ -551,7 +551,13 @@ export const InitialScreenerTable = () => {
           tableDataRequest,
         ]);
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString());
+        setLastUpdated(date.toLocaleString('en-US', { 
+          month: '2-digit', 
+          day: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }));
         setInitialData(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);

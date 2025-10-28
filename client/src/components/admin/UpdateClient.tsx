@@ -108,26 +108,42 @@ export const UpdateClients = () => {
   return (
     <VStack alignItems={'start'} width={'100%'}>
       <HStack width={'100%'} justifyContent={'space-between'}>
+        <HStack>
         <Button
           rightIcon={isOpen ? <FaAngleUp /> : <FaAngleDown />}
           onClick={onToggle}
           variant={'ghost'}
-          _hover={'ghost'}
-          _active={'ghost'}
+          _hover={{ backgroundColor: 'transparent' }}
+          _active={{ backgroundColor: 'transparent' }}
           size={'lg'}
+          p={0}
         >
           Edit Requests
         </Button>
+        <Text fontSize="md" fontWeight="medium" color="#718096" paddingLeft="10px">
+          {updateRequests.length} New Requests
+        </Text>
+        </HStack>
+
         {isOpen &&
-          <Button size={'lg'} onClick={handleComplete} isDisabled={disabled}>Complete</Button>
+          <Button size={'md'} onClick={handleComplete} isDisabled={disabled} variant={'outline'} _hover={{ backgroundColor: 'transparent' }} _active={{ backgroundColor: 'transparent' }}>Complete</Button>
         }
       </HStack>
       
-      <Box width="full">
-        <Collapse
-          in={isOpen}
-          animateOpacity
+      {isOpen && (
+        <Box 
+          width="100vw" 
+          backgroundColor="#EBF8FF" 
+          paddingX="4%" 
+          paddingY={4}
+          marginLeft="calc(-50vw + 50%)"
+          marginRight="calc(-50vw + 50%)"
         >
+          <Collapse
+            in={isOpen}
+            animateOpacity
+          >
+          <Box paddingTop={4}>
           <TableContainer
             width="100%"
             sx={{
@@ -182,8 +198,10 @@ export const UpdateClients = () => {
               </Tbody>
             </Table>
           </TableContainer>
-        </Collapse>
-      </Box>
+          </Box>
+          </Collapse>
+        </Box>
+      )}
     </VStack>
   );
 };

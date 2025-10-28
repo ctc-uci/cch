@@ -422,7 +422,13 @@ export const FormTable = () => {
           )
         );
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
-        setLastUpdated(mostRecent.toLocaleString());
+        setLastUpdated(mostRecent.toLocaleString('en-US', { 
+          month: '2-digit', 
+          day: '2-digit', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }));
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {

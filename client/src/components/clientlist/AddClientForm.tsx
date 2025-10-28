@@ -98,13 +98,20 @@ export const AddClientForm = ({
 
   const handleCloseAndSave = () => {
     onClose();
-    toast({
-      title: "New Client Data Saved",
-      description: "Successfully saved unfinished client data.",
-      status: "info",
-      position: "bottom-right",
-      isClosable: true,
-    });
+    
+    // Check if any field has been filled
+    const hasAnyData = Object.values(formData).some(value => !isFieldEmpty(value));
+    
+    // Only show toast if there's actual data entered
+    if (hasAnyData) {
+      toast({
+        title: "New Client Data Saved",
+        description: "Successfully saved unfinished client data.",
+        status: "info",
+        position: "bottom-right",
+        isClosable: true,
+      });
+    }
   };
 
   const handleConfirmCancel = () => {
