@@ -359,7 +359,6 @@ export const ClientList = ({ admin }: ClientListProps) => {
   }, [backend, currentUser?.uid]);
 
   useEffect(() => {
-    console.log("heh?3");
     fetchData();
   }, [fetchData]);
 
