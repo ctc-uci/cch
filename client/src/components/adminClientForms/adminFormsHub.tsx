@@ -96,7 +96,7 @@ export const AdminFormsHub = () => {
   return (
     <VStack
       overflowX="hidden"
-      w="100vw"
+      w="100%"
       spacing={8}
       align="stretch"
     >

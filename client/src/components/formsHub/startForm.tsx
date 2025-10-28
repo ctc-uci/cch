@@ -37,34 +37,42 @@ export const StartForms = () => {
         gap="6rem"
       >
         {cards.map((card, index) => (
-          <Box
+          <Link
             key={index}
+            as={RouterLink}
+            to={card.route}
+            textDecoration="none"
+            _hover={{ textDecoration: "none" }}
             flex="1"
             h="90%"
-            minW="150px"
+            minW="200px"
             display="flex"
-            backgroundColor="white"
-            borderWidth="1px"
-            borderRadius="lg"
-            flexDirection="column"
-            justifyContent="flex-end"
-            p={6}
-            textAlign="center"
           >
-            <Text
-              fontWeight="bold"
-              fontSize="md"
+            <Box
+              flex="1"
+              display="flex"
+              backgroundColor="white"
+              borderWidth="1px"
+              borderRadius="lg"
+              flexDirection="column"
+              justifyContent="center"
+              p={6}
+              textAlign="center"
+              cursor="pointer"
+              _hover={{
+                backgroundColor: "gray.50",
+                boxShadow: "md",
+              }}
+              transition="all 0.2s"
             >
-              <Link
-                as={RouterLink}
-                to={card.route}
-                color="#3182CE"
+              <Text
+                fontWeight="medium"
+                fontSize="md"
               >
-                Start
-              </Link>{" "}
-              {card.label}
-            </Text>
-          </Box>
+                <span style={{ color: "#3182CE" }}>Start</span> {card.label}
+              </Text>
+            </Box>
+          </Link>
         ))}
       </Flex>
     </Flex>

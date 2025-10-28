@@ -21,8 +21,9 @@ export const FormsHub = ({ admin }: FormsHubProps) => {
           as="h1"
           size="xl"
           mb={2}
+          ml={8}
         >
-          Forms
+          My Forms
         </Heading>
       </Box>
       {admin || (
@@ -31,6 +32,7 @@ export const FormsHub = ({ admin }: FormsHubProps) => {
             fontWeight="bold"
             px={6}
             fontSize="lg"
+            ml={8}
           >
             Start a Form
           </Text>
