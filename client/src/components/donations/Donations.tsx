@@ -30,6 +30,7 @@ import {
   Tr,
   useToast,
   VStack,
+  Stack
 } from "@chakra-ui/react";
 
 import {
@@ -471,10 +472,12 @@ export const Donations = () => {
       w="100%"
       maxHeight="100%"
     >
-      <VStack
+      <Stack
         w="25vw"
         h="100vh"
-      >
+        ml="4rem"
+        mt="2rem"
+      > 
         <Heading>Donations</Heading>
         <Text>Last Updated: {lastUpdated}</Text>
         <HStack
@@ -522,17 +525,17 @@ export const Donations = () => {
             </StatLabel>
           </Stat>
         </HStack>
-      </VStack>
+      </Stack>
 
-      <VStack
-        w="69vw"
+      <Stack
+        w="65vw"
         h="95vh"
       >
         <HStack>
         <HStack
-          w="90%"
           spacing={4}
           align="center"
+          overflowX="auto"
         >
           <DonationFilter
           donors={donors}
@@ -757,7 +760,7 @@ export const Donations = () => {
           </TableContainer>
         </Box>
         }
-      </VStack>
+      </Stack>
 
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
       <ModalOverlay />

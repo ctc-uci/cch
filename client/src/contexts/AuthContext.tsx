@@ -19,6 +19,7 @@ import { useNavigate, Navigate, NavigateFunction } from "react-router-dom";
 
 import { auth } from "../utils/auth/firebase";
 import { useBackendContext } from "./hooks/useBackendContext";
+import { cookieKeys, setCookie, clearAllAuthCookies } from "../utils/auth/cookie";
 
 interface AuthContextProps {
   currentUser: User | null;
@@ -133,6 +134,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     //   role,
     // });
 
+    // Set access token in cookie for persistent login
+    const idToken = await userCredential.user.getIdToken();
+    setCookie({
+      key: cookieKeys.ACCESS_TOKEN,
+      value: idToken,
+    });
+
     return userCredential;
   };
 
@@ -192,13 +200,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = await backend.get(`/users/${userCredential.user.uid}`);
       setCurrentUserRole(userData.data[0]?.role);
 
+      // Set access token in cookie for persistent login
+      const idToken = await userCredential.user.getIdToken();
+      setCookie({
+        key: cookieKeys.ACCESS_TOKEN,
+        value: idToken,
+      });
+
       setAuthCredential(null);
       setEmail(null);
       return userCredential;
     } 
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Clear all authentication cookies
+    clearAllAuthCookies();
     <Navigate to={"/landing-page"} />;
     return signOut(auth);
   };
@@ -238,6 +255,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
           }
         }
+        
+        // Set access token in cookie for persistent login
+        const idToken = await result.user.getIdToken();
+        setCookie({
+          key: cookieKeys.ACCESS_TOKEN,
+          value: idToken,
+        });
+        
         navigate("/dashboard");
       }
     } catch (error) {
@@ -250,10 +275,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = await backend.get(`/users/${user.uid}`);
       setCurrentUserRole(data.data.role);
     };
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+
+    const setAuthCookie = async (user: User | null) => {
+      if (user) {
+        try {
+          const idToken = await user.getIdToken();
+          setCookie({
+            key: cookieKeys.ACCESS_TOKEN,
+            value: idToken,
+          });
+        } catch (error) {
+          console.error("Error setting auth cookie:", error);
+        }
+      }
+    };
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
       if (user) {
-        fetchRole(user);
+        await fetchRole(user);
+        await setAuthCookie(user);
       }
 
       setLoading(false);
@@ -261,7 +302,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [backend]);
 
   return (
     <AuthContext.Provider

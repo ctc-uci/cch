@@ -114,15 +114,33 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
   }
 
   const language = spanish ? "spanish" : "english"
-  const handleCmChange = (event) => {
+  const handleCmChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCm(event.target.value);
     setFormData((prevState) => ({ ...prevState, ['cm_id']: event.target.value }));
     
   }
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
-    setFormData((prevState) => ({ ...prevState, [name]: value }));
+    
+    // Validate month input to only accept 1-12
+    if (name === 'month') {
+      const numValue = parseInt(value, 10);
+      // Allow empty string, or numbers between 1 and 12
+      if (value === '' || (!isNaN(numValue) && numValue >= 1 && numValue <= 12)) {
+        setFormData((prevState) => ({ ...prevState, [name]: value }));
+      }
+    } 
+    // Validate year input to only accept up to 4 digits
+    else if (name === 'year') {
+      // Allow empty string, or numeric strings up to 4 digits
+      if (value === '' || (/^\d{1,4}$/.test(value))) {
+        setFormData((prevState) => ({ ...prevState, [name]: value }));
+      }
+    } 
+    else {
+      setFormData((prevState) => ({ ...prevState, [name]: value }));
+    }
   };
 
   useEffect(() => {
@@ -226,15 +244,17 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
       {/* Month, Year, Case Manager */}
       <SimpleGrid columns={3} spacing={4} mb={6}>
         <Box>
-          <Text fontWeight="bold" mb={2}>{fields[language]["month"]}</Text>
+          <Text fontWeight="bold" mb={2}>{fields[language]["month"] + " (1-12)"}</Text>
           <Input
             placeholder="Type Here"
             type="number"
             name="month"
-            // value={formData[name]}
+            min={1}
+            value={formData.month}
             onChange={handleChange}
             size="md"
             width="150px"
+            max={12}
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
             
           />    
@@ -246,10 +266,11 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
             placeholder="Type Here"
             type="number"
             name="year"
-            // value={formData[name]}
+            value={formData.year}
             onChange={handleChange}
             size="md"
             width="150px"
+            maxLength={4}
             onWheel={(e) => (e.target as HTMLInputElement).blur()}
           />        
         </Box>

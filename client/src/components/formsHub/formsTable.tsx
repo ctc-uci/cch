@@ -20,6 +20,7 @@ import {
   Text,
   Th,
   Thead,
+  Tooltip,
   Tr,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -345,7 +346,7 @@ export const FormTable = () => {
           })
         );
 
-        const exitSurveyForms: Form[] = await exitSurveyResponse.data.data?.map(
+        const exitSurveyForms: Form[] = (await exitSurveyResponse.data.data?.map(
           (form: Form) => ({
             id: form.id,
             hashedId: form.id,
@@ -353,9 +354,9 @@ export const FormTable = () => {
             name: "",
             title: "Exit Surveys",
           })
-        );
+        )) || [];
 
-        const successStoryForms: Form[] = await successStoryResponse.data.map(
+        const successStoryForms: Form[] = (await successStoryResponse.data.map(
           (form: Form) => ({
             id: form.id,
             hashedId: form.id,
@@ -363,16 +364,16 @@ export const FormTable = () => {
             name: "",
             title: "Success Stories",
           })
-        );
+        )) || [];
 
         const randomSurveyForms: Form[] =
-          await randomClientSurveyResponse.data.map((form: Form) => ({
+          (await randomClientSurveyResponse.data.map((form: Form) => ({
             id: form.id,
             hashedId: form.id,
             date: form.date,
             name: "",
             title: "Random Client Surveys",
-          }));
+          }))) || [];
 
         const caseManagerStats: Form[] =
           await caseManagersMonthlyResponse.data.map((form: Form) => {
@@ -601,7 +602,24 @@ export const FormTable = () => {
         borderColor="#E2E8F0"
         padding="12px"
       >
-        <TableContainer>
+        <TableContainer 
+          overflowX="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'transparent',
+              borderRadius: '4px',
+            },
+            '&:hover::-webkit-scrollbar-thumb': {
+              background: 'rgba(0, 0, 0, 0.2)',
+            },
+          }}
+        >
           <HStack
             width="100%"
             justify="space-between"
@@ -639,18 +657,28 @@ export const FormTable = () => {
                   <MdOutlineManageSearch size="24px" />
                 </Button>
               </Box>
-              <Button
-                background={"white"}
-                display="flex"
-                alignItems="center"
-                paddingX="8px"
-                paddingY="8px"
-                cursor="pointer"
-                onClick={() => handleExport(allFormsTable)}
+              <Tooltip 
+                label="Please select rows to export" 
+                isDisabled={selectedRowIds.length > 0}
               >
-                <MdFileUpload size="16px" />
-                <Text ml="8px">Export bruh</Text>
-              </Button>
+                <Button
+                  background="white"
+                  display="flex"
+                  alignItems="center"
+                  paddingX="8px"
+                  paddingY="8px"
+                  cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                  onClick={() => handleExport(tableInstance)}
+                  disabled={selectedRowIds.length === 0}
+                  color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}
+                  _disabled={{ opacity: 1 }}
+                >
+                  <Box color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>
+                    <MdFileUpload size="16px" />
+                  </Box>
+                  <Text ml="8px" color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>Export</Text>
+                </Button>
+              </Tooltip>
             </HStack>
           </HStack>
           <Box
@@ -658,7 +686,9 @@ export const FormTable = () => {
             borderRadius="12px"
             width="100%"
             borderColor="#E2E8F0"
-            overflow="auto"
+            overflowY="auto"
+            overflowX="auto"
+            maxHeight="500px"
           >
             <Table variant="striped">
               <Thead>
@@ -750,7 +780,24 @@ export const FormTable = () => {
         borderColor="#E2E8F0"
         padding="12px"
       >
-        <TableContainer>
+        <TableContainer 
+          overflowX="auto"
+          css={{
+            '&::-webkit-scrollbar': {
+              height: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: 'transparent',
+              borderRadius: '4px',
+            },
+            '&:hover::-webkit-scrollbar-thumb': {
+              background: 'rgba(0, 0, 0, 0.2)',
+            },
+          }}
+        >
           <HStack
             width="100%"
             justify="space-between"
@@ -788,19 +835,31 @@ export const FormTable = () => {
                   <MdOutlineManageSearch size="24px" />
                 </Button>
               </Box>
-              <Box
-                display="flex"
-                alignItems="center"
-                paddingX="8px"
-                paddingY="8px"
-                cursor="pointer"
-                onClick={() => handleExport(allFormsTable)}
+              <Tooltip 
+                label="Please select rows to export" 
+                isDisabled={selectedRowIds.length > 0}
               >
-                <Button background={"white"}>
-                  <MdFileUpload size="16px" />
-                  <Text ml="8px">Export</Text>
-                </Button>
-              </Box>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="8px"
+                  paddingY="8px"
+                  cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                >
+                  <Button 
+                    background="white"
+                    onClick={() => handleExport(tableInstance)}
+                    disabled={selectedRowIds.length === 0}
+                    color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}
+                    _disabled={{ opacity: 1 }}
+                  >
+                    <Box color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>
+                      <MdFileUpload size="16px" />
+                    </Box>
+                    <Text ml="8px" color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>Export</Text>
+                  </Button>
+                </Box>
+              </Tooltip>
             </HStack>
           </HStack>
           <Box
@@ -808,7 +867,9 @@ export const FormTable = () => {
             borderRadius="12px"
             width="100%"
             borderColor="#E2E8F0"
-            overflow="auto"
+            overflowY="auto"
+            overflowX="auto"
+            maxHeight="500px"
           >
             <Table variant="striped">
               <Thead>
@@ -862,7 +923,7 @@ export const FormTable = () => {
   };
 
   return (
-    <Box p="4">
+    <Box p="4" ml={8}>
       <Text
         fontSize="13pt"
         fontWeight="bold"
@@ -875,7 +936,16 @@ export const FormTable = () => {
         isFitted
         w="full"
       >
-        <TabList whiteSpace="nowrap">
+        <TabList 
+          whiteSpace="nowrap" 
+          overflowX="auto" 
+          overflowY="hidden"
+          css={{
+            '&::-webkit-scrollbar': {
+              height: '0px',
+            }
+          }}
+        >
           <Tab>All Forms</Tab>
           <Tab>Initial Screeners</Tab>
           <Tab>Client Tracking Statistics (Intake Statistics)</Tab>
