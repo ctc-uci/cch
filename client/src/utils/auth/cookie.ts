@@ -11,7 +11,7 @@ interface CookieConfig {
  * @see {@link https://www.npmjs.com/package/react-cookie}
  */
 const cookieConfig: CookieConfig = {
-  maxAge: 3600,
+  maxAge: 604800, // 7 days (7 * 24 * 60 * 60 seconds) for persistent login
   path: "/",
   secure: document.location.protocol === "https:",
 };
@@ -40,6 +40,17 @@ export const setCookie = ({
   }
 
   document.cookie = cookie;
+};
+
+export const clearCookie = (key: string) => {
+  // To delete a cookie, set it with an expiration date in the past
+  document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
+
+export const clearAllAuthCookies = () => {
+  Object.values(cookieKeys).forEach((key) => {
+    clearCookie(key);
+  });
 };
 
 export const clearCookies = (cookies: Cookies) => {

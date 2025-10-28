@@ -1,6 +1,6 @@
 import axios from "axios";
 import { initializeApp } from "firebase/app";
-import { getAuth, User } from "firebase/auth";
+import { getAuth, setPersistence, User, browserLocalPersistence } from "firebase/auth";
 
 import { cookieKeys, setCookie } from "./cookie";
 
@@ -22,6 +22,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Set persistence to local storage (persists across browser sessions)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error("Error setting auth persistence:", error);
+});
 
 /**
  * Synchronously retrieves the current user.

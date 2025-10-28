@@ -29,6 +29,7 @@ import cch from "../../../public/cch_logo.png";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { useRoleContext } from "../../contexts/hooks/useRoleContext";
 
 const signinSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -44,8 +45,9 @@ export const Login = () => {
   const { userType = "Admin"} = useParams<{ userType: string }>();
   const userAbbreviation = userType === "Case Manager" ? "CM" : userType === "Client" ? "CL" : "AD";
 
-  const { login, handleRedirectResult, loading, createCode } = useAuthContext();
+  const { login, handleRedirectResult, loading, createCode, currentUser, initialized } = useAuthContext();
   const { backend } = useBackendContext();
+  const { role } = useRoleContext();
 
   const {
     register,
@@ -120,6 +122,22 @@ export const Login = () => {
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);
   }, [backend, handleRedirectResult, navigate, toast]);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (initialized && currentUser && role) {
+      if (role === "admin") {
+        navigate("/admin-client-list", { replace: true });
+      } else if (role === "user") {
+        navigate("/clientlist", { replace: true });
+      }
+    }
+  }, [currentUser, role, initialized, navigate]);
+
+  // Don't render login form if user is already logged in (while redirecting)
+  if (initialized && currentUser && role) {
+    return null;
+  }
 
   return (
     <Grid templateColumns="1fr 2fr" height="100vh">
