@@ -1,8 +1,9 @@
-import { Box, Input, Radio, RadioGroup, Stack, Button, Select } from '@chakra-ui/react';
+import { Box, Input, Radio, RadioGroup, Stack, Button, Select, IconButton } from '@chakra-ui/react';
 import { useForm } from '../../contexts/formContext';
 import StepperComponent from './stepperComponent';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InterviewScreeningFormProps } from './types';
+import { ChevronLeftIcon } from '@chakra-ui/icons/ChevronLeft';
 
 const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: InterviewScreeningFormProps) => {
   const { formData, setFormData } = useForm();
@@ -83,6 +84,17 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: 
   };
   return (
     <Box width={'70%'} margin={'auto'} marginTop={16} padding={4} borderRadius={8} boxShadow="0 0 10px 1px grey" backgroundColor="white">
+      <IconButton
+          aria-label="Back to personal"
+          icon={<ChevronLeftIcon boxSize={8} />}
+          onClick={() => navigate(-1)}
+          colorScheme="blue"
+          variant="ghost"
+          size="lg"
+          position="absolute"
+          left={5}
+          top={0}
+      />
       <Box width={'90%'} margin={'auto'} marginTop={4} padding={4} borderRadius={8}  backgroundColor="white">
         {!hidden && <StepperComponent step_index={1} />}
       </Box>
@@ -342,7 +354,9 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: 
       </Box>
       <Box marginTop={5} display="flex" justifyContent="flex-end">
 
-      {!hidden && <Button colorScheme="blue" onClick={() => {navigate(`/financial/${language}`)}}>{fields[language].nextButton}</Button>}
+      {!hidden &&
+        <Button colorScheme="blue" onClick={() => {navigate(`/financial/${language}`)}}>{fields[language].nextButton}</Button>
+      }
       </Box>
     </Box>
   );

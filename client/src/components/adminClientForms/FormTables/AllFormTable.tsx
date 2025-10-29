@@ -21,9 +21,10 @@ import { TableContent } from "./TableContent.tsx";
 interface AllFormTableProps {
   selectedRowIds: number[];
   setSelectedRowIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+  deletedRowIds: number[];
 }
 
-export const AllFormTable = ({ selectedRowIds, setSelectedRowIds }: AllFormTableProps) => {
+export const AllFormTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds }: AllFormTableProps) => {
   const headers = [
     "age",
     "attendingSchoolUponEntry",
@@ -80,6 +81,14 @@ export const AllFormTable = ({ selectedRowIds, setSelectedRowIds }: AllFormTable
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
   const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
+
+  // apply local deletion updates when parent deletes rows
+  useEffect(() => {
+    if (deletedRowIds && deletedRowIds.length > 0) {
+      setClients((prev) => prev.filter((c) => !deletedRowIds.includes(c.id)));
+      setSelectedRowIds((prev) => prev.filter((id) => !deletedRowIds.includes(id)));
+    }
+  }, [deletedRowIds, setSelectedRowIds]);
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [

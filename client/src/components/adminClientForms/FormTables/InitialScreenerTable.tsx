@@ -23,9 +23,10 @@ import { TableContent } from "./TableContent.tsx";
 interface InitialScreenerTableProps {
   selectedRowIds: number[];
   setSelectedRowIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+  deletedRowIds: number[];
 }
 
-export const InitialScreenerTable = ({ selectedRowIds, setSelectedRowIds }: InitialScreenerTableProps) => {
+export const InitialScreenerTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds }: InitialScreenerTableProps) => {
   // still gotta do this -- but I'll do it later
   const headers = [
     "name",
@@ -388,6 +389,14 @@ export const InitialScreenerTable = ({ selectedRowIds, setSelectedRowIds }: Init
     ],
     [selectedRowIds, initialData, checkboxMode, setCheckboxMode, setSelectedRowIds]
   );
+
+  // apply local deletion updates when parent deletes rows
+  useEffect(() => {
+    if (deletedRowIds && deletedRowIds.length > 0) {
+      setInitialData((prev) => prev.filter((r) => !deletedRowIds.includes(r.id)));
+      setSelectedRowIds((prev) => prev.filter((id) => !deletedRowIds.includes(id)));
+    }
+  }, [deletedRowIds, setSelectedRowIds]);
   //def needs ADAPTATION
 
   const table = useReactTable({

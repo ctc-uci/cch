@@ -37,6 +37,7 @@ export const AdminFormsHub = () => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletedRowIds, setDeletedRowIds] = useState<number[]>([]);
 
   // Tab configurations
   const tabConfig = [
@@ -127,8 +128,11 @@ export const AdminFormsHub = () => {
         )
       );
       
+      // update child tables locally by passing the deleted ids down
+      setDeletedRowIds(selectedRowIds);
       setSelectedRowIds([]);
       setIsDeleteModalOpen(false);
+      // optional: keep for other flows relying on refresh
       setRefreshTable((prev) => !prev);
     } catch (error) {
       console.error("Error deleting rows", error);
@@ -212,30 +216,35 @@ export const AdminFormsHub = () => {
                 <InitialScreenerTable 
                   selectedRowIds={selectedRowIds}
                   setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
                 />
               </TabPanel>
               <TabPanel>
                 <SuccessStoryTable 
                   selectedRowIds={selectedRowIds}
                   setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
                 />
               </TabPanel>
               <TabPanel>
                 <ExitSurveyTable 
                   selectedRowIds={selectedRowIds}
                   setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
                 />
               </TabPanel>
               <TabPanel>
                 <RandomClientTable 
                   selectedRowIds={selectedRowIds}
                   setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
                 />
               </TabPanel>
               <TabPanel>
                 <AllFormTable 
                   selectedRowIds={selectedRowIds}
                   setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
                 />
               </TabPanel>
             </TabPanels>

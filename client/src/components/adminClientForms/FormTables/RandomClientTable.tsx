@@ -23,9 +23,10 @@ import { TableContent } from "./TableContent.tsx";
 interface RandomClientTableProps {
   selectedRowIds: number[];
   setSelectedRowIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+  deletedRowIds: number[];
 }
 
-export const RandomClientTable = ({ selectedRowIds, setSelectedRowIds }: RandomClientTableProps) => {
+export const RandomClientTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds }: RandomClientTableProps) => {
   // still gotta do this -- but I'll do it later
   const headers = [
     "caseMeetingFrequency",
@@ -180,6 +181,14 @@ export const RandomClientTable = ({ selectedRowIds, setSelectedRowIds }: RandomC
     ],
     [selectedRowIds, randomData, checkboxMode, setCheckboxMode, setSelectedRowIds]
   );
+
+  // apply local deletion updates when parent deletes rows
+  useEffect(() => {
+    if (deletedRowIds && deletedRowIds.length > 0) {
+      setRandomData((prev) => prev.filter((r) => !deletedRowIds.includes(r.id)));
+      setSelectedRowIds((prev) => prev.filter((id) => !deletedRowIds.includes(id)));
+    }
+  }, [deletedRowIds, setSelectedRowIds]);
 
   const table = useReactTable({
     data: randomData,
