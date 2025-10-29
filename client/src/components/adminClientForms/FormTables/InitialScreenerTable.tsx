@@ -1,147 +1,137 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Heading,
-  HStack,
-  IconButton,
-  Input,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  useDisclosure,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Checkbox, VStack, useDisclosure } from "@chakra-ui/react";
 
 import {
   ColumnDef,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
-//have to make the separate types for each table
-
-import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext.ts";
 import type { InitialInterview } from "../../../types/initialScreener.ts";
+import type { Form } from "../../../types/form.ts";
 import { formatDateString } from "../../../utils/dateUtils.ts";
 import { downloadCSV } from "../../../utils/downloadCSV.ts";
-import { DeleteRowModal } from "../../deleteRow/deleteRowModal.tsx";
 import FormPreview from "../../formsHub/FormPreview.tsx";
-import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
 import { LoadingWheel } from "../../loading/loading.tsx";
-import { FilterTemplate } from "./FilterTemplate.tsx";
+import { TableControls } from "./TableControls.tsx";
+import { TableContent } from "./TableContent.tsx";
 
-export const InitialScreenerTable = () => {
+interface InitialScreenerTableProps {
+  selectedRowIds: number[];
+  setSelectedRowIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+}
+
+export const InitialScreenerTable = ({ selectedRowIds, setSelectedRowIds }: InitialScreenerTableProps) => {
   // still gotta do this -- but I'll do it later
   const headers = [
+    "name",
     "age",
-    "applicantType",
-    "beenConvicted",
-    "childDob",
-    "childName",
-    "cityOfSchool",
-    "clientId",
-    "convictedReasonAndTime",
-    "currentAddress",
-    "currentlyEmployed",
-    "currentlyHomeless",
-    "custodyOfChild",
-    "date",
     "dateOfBirth",
-    "disabled",
-    "domesticViolenceHistory",
-    "educationHistory",
-    "email",
-    "ethnicity",
-    "eventLeadingToHomelessness",
-    "fatherName",
-    "futurePlansGoals",
-    "howHearAboutCch",
-    "howLongExperiencingHomelessness",
-    "id",
-    "lastAlcoholUse",
-    "lastDrugUse",
-    "lastEmployedDate",
-    "lastEmployer",
-    "lastPermAddress",
-    "lastPermanentResidenceHouseholdComposition",
-    "legalResident",
-    "lengthOfSobriety",
     "maritalStatus",
+    "phoneNumber",
+    "email",
+    "ssnLastFour",
+    "ethnicity",
+    "veteran",
+    "disabled",
+    "currentAddress",
+    "reasonForLeavingPermAddress",
+    "whereResideLastNight",
+    "currentlyHomeless",
+    "eventLeadingToHomelessness",
+    "howLongExperiencingHomelessness",
+    "prevAppliedToCch",
+    "whenPrevAppliedToCch",
+    "prevInCch",
+    "whenPrevInCch",
+    "custodyOfChild",
+    "nameSchoolChildrenAttend",
+    "cityOfSchool",
+    "howHearAboutCch",
+    "programsBeenInBefore",
+    "monthlyIncome",
+    "sourcesOfIncome",
+    "monthlyBills",
+    "currentlyEmployed",
+    "lastEmployer",
+    "lastEmployedDate",
+    "educationHistory",
+    "transportation",
+    "legalResident",
     "medical",
     "medicalCity",
     "medicalInsurance",
     "medications",
-    "monthlyBills",
-    "monthlyIncome",
-    "name",
-    "nameSchoolChildrenAttend",
-    "personalReferenceTelephone",
-    "personalReferences",
-    "phoneNumber",
+    "domesticViolenceHistory",
+    "socialWorker",
+    "socialWorkerTelephone",
+    "socialWorkerOfficeLocation",
+    "lengthOfSobriety",
+    "lastDrugUse",
+    "lastAlcoholUse",
+    "timeUsingDrugsAlcohol",
+    "beenConvicted",
+    "convictedReasonAndTime",
     "presentWarrantExist",
-    "prevAppliedToCch",
-    "prevInCch",
+    "warrantCounty",
     "probationParoleOfficer",
     "probationParoleOfficerTelephone",
-    "programsBeenInBefore",
-    "reasonForLeavingPermAddress",
-    "socialWorker",
-    "socialWorkerOfficeLocation",
-    "socialWorkerTelephone",
-    "sourcesOfIncome",
-    "ssnLastFour",
-    "timeUsingDrugsAlcohol",
-    "transportation",
-    "veteran",
-    "warrantCounty",
-    "whatCouldPreventHomeless",
-    "whenPrevAppliedToCch",
-    "whenPrevInCch",
-    "whereResideLastNight",
+    "personalReferences",
+    "personalReferenceTelephone",
+    "futurePlansGoals",
+    "lastPermanentResidenceHouseholdComposition",
     "whyNoLongerAtLastResidence",
+    "whatCouldPreventHomeless",
+    "id",
+    "applicantType",
+    "childDob",
+    "childName",
+    "clientId",
+    "date",
+    "fatherName",
+    "lastPermAddress",
   ];
 
   const [initialData, setInitialData] = useState<
     (InitialInterview & { isChecked: boolean; isHovered: boolean })[]
   >([]);
   const { backend } = useBackendContext();
-  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<string>("");
-  const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
+  const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<InitialInterview>[]>(
     () => [
       {
         id: "rowNumber",
         header: ({ table }) => {
+          const visibleIds = table.getRowModel().rows.map(r => r.original.id);
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={handleSelectAllCheckboxClick}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
+                onChange={() => {
+                  if (checkboxMode === 'hidden') {
+                    setCheckboxMode('visible-checked');
+                    setSelectedRowIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                  } else if (checkboxMode === 'visible-checked') {
+                    setCheckboxMode('visible-unchecked');
+                    setSelectedRowIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                  } else {
+                    setCheckboxMode('hidden');
+                    setSelectedRowIds([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -396,7 +386,7 @@ export const InitialScreenerTable = () => {
           "What would have prevented you from becoming homeless (list as many items as you want)",
       },
     ],
-    [selectedRowIds, initialData]
+    [selectedRowIds, initialData, checkboxMode, setCheckboxMode, setSelectedRowIds]
   );
   //def needs ADAPTATION
 
@@ -412,86 +402,78 @@ export const InitialScreenerTable = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(initialData.map((row) => row.id));
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
-
   const onPressCSVButton = () => {
     const selectedTableData = initialData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
     const data = selectedTableData.map((row) => ({
+      name: row.name,
       age: row.age,
-      applicantType: row.applicantType,
-      beenConvicted: row.beenConvicted,
-      childDob: row.childDob,
-      childName: row.childName,
-      cityOfSchool: row.cityOfSchool,
-      clientId: row.clientId,
-      convictedReasonAndTime: row.convictedReasonAndTime,
-      currentAddress: row.currentAddress,
-      currentlyEmployed: row.currentlyEmployed,
-      currentlyHomeless: row.currentlyHomeless,
-      custodyOfChild: row.custodyOfChild,
-      date: row.date,
       dateOfBirth: row.dateOfBirth,
-      disabled: row.disabled,
-      domesticViolenceHistory: row.domesticViolenceHistory,
-      educationHistory: row.educationHistory,
-      email: row.email,
-      ethnicity: row.ethnicity,
-      eventLeadingToHomelessness: row.eventLeadingToHomelessness,
-      fatherName: row.fatherName,
-      futurePlansGoals: row.futurePlansGoals,
-      howHearAboutCch: row.howHearAboutCch,
-      howLongExperiencingHomelessness: row.howLongExperiencingHomelessness,
-      id: row.id,
-      lastAlcoholUse: row.lastAlcoholUse,
-      lastDrugUse: row.lastDrugUse,
-      lastEmployedDate: row.lastEmployedDate,
-      lastEmployer: row.lastEmployer,
-      lastPermAddress: row.lastPermAddress,
-      lastPermanentResidenceHouseholdComposition:
-        row.lastPermanentResidenceHouseholdComposition,
-      legalResident: row.legalResident,
-      lengthOfSobriety: row.lengthOfSobriety,
       maritalStatus: row.maritalStatus,
+      phoneNumber: row.phoneNumber,
+      email: row.email,
+      ssnLastFour: row.ssnLastFour,
+      ethnicity: row.ethnicity,
+      veteran: row.veteran,
+      disabled: row.disabled,
+      currentAddress: row.currentAddress,
+      reasonForLeavingPermAddress: row.reasonForLeavingPermAddress,
+      whereResideLastNight: row.whereResideLastNight,
+      currentlyHomeless: row.currentlyHomeless,
+      eventLeadingToHomelessness: row.eventLeadingToHomelessness,
+      howLongExperiencingHomelessness: row.howLongExperiencingHomelessness,
+      prevAppliedToCch: row.prevAppliedToCch,
+      whenPrevAppliedToCch: row.whenPrevAppliedToCch,
+      prevInCch: row.prevInCch,
+      whenPrevInCch: row.whenPrevInCch,
+      custodyOfChild: row.custodyOfChild,
+      nameSchoolChildrenAttend: row.nameSchoolChildrenAttend,
+      cityOfSchool: row.cityOfSchool,
+      howHearAboutCch: row.howHearAboutCch,
+      programsBeenInBefore: row.programsBeenInBefore,
+      monthlyIncome: row.monthlyIncome,
+      sourcesOfIncome: row.sourcesOfIncome,
+      monthlyBills: row.monthlyBills,
+      currentlyEmployed: row.currentlyEmployed,
+      lastEmployer: row.lastEmployer,
+      lastEmployedDate: row.lastEmployedDate,
+      educationHistory: row.educationHistory,
+      transportation: row.transportation,
+      legalResident: row.legalResident,
       medical: row.medical,
       medicalCity: row.medicalCity,
       medicalInsurance: row.medicalInsurance,
       medications: row.medications,
-      monthlyBills: row.monthlyBills,
-      monthlyIncome: row.monthlyIncome,
-      name: row.name,
-      nameSchoolChildrenAttend: row.nameSchoolChildrenAttend,
-      personalReferenceTelephone: row.personalReferenceTelephone,
-      personalReferences: row.personalReferences,
-      phoneNumber: row.phoneNumber,
+      domesticViolenceHistory: row.domesticViolenceHistory,
+      socialWorker: row.socialWorker,
+      socialWorkerTelephone: row.socialWorkerTelephone,
+      socialWorkerOfficeLocation: row.socialWorkerOfficeLocation,
+      lengthOfSobriety: row.lengthOfSobriety,
+      lastDrugUse: row.lastDrugUse,
+      lastAlcoholUse: row.lastAlcoholUse,
+      timeUsingDrugsAlcohol: row.timeUsingDrugsAlcohol,
+      beenConvicted: row.beenConvicted,
+      convictedReasonAndTime: row.convictedReasonAndTime,
       presentWarrantExist: row.presentWarrantExist,
-      prevAppliedToCch: row.prevAppliedToCch,
-      prevInCch: row.prevInCch,
+      warrantCounty: row.warrantCounty,
       probationParoleOfficer: row.probationParoleOfficer,
       probationParoleOfficerTelephone: row.probationParoleOfficerTelephone,
-      programsBeenInBefore: row.programsBeenInBefore,
-      reasonForLeavingPermAddress: row.reasonForLeavingPermAddress,
-      socialWorker: row.socialWorker,
-      socialWorkerOfficeLocation: row.socialWorkerOfficeLocation,
-      socialWorkerTelephone: row.socialWorkerTelephone,
-      sourcesOfIncome: row.sourcesOfIncome,
-      ssnLastFour: row.ssnLastFour,
-      timeUsingDrugsAlcohol: row.timeUsingDrugsAlcohol,
-      transportation: row.transportation,
-      veteran: row.veteran,
-      warrantCounty: row.warrantCounty,
-      whatCouldPreventHomeless: row.whatCouldPreventHomeless,
-      whenPrevAppliedToCch: row.whenPrevAppliedToCch,
-      whenPrevInCch: row.whenPrevInCch,
-      whereResideLastNight: row.whereResideLastNight,
+      personalReferences: row.personalReferences,
+      personalReferenceTelephone: row.personalReferenceTelephone,
+      futurePlansGoals: row.futurePlansGoals,
+      lastPermanentResidenceHouseholdComposition:
+        row.lastPermanentResidenceHouseholdComposition,
       whyNoLongerAtLastResidence: row.whyNoLongerAtLastResidence,
+      whatCouldPreventHomeless: row.whatCouldPreventHomeless,
+      id: row.id,
+      applicantType: row.applicantType,
+      childDob: row.childDob,
+      childName: row.childName,
+      clientId: row.clientId,
+      date: row.date,
+      fatherName: row.fatherName,
+      lastPermAddress: row.lastPermAddress,
     }));
 
     downloadCSV(headers, data, `initial-screeners.csv`);
@@ -506,37 +488,18 @@ export const InitialScreenerTable = () => {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await Promise.all(
-        selectedRowIds.map((row_id) =>
-          backend.delete(`/initialInterview/${row_id}`)
-        )
-      );
-      setInitialData(
-        initialData.filter((row) => !selectedRowIds.includes(row.id))
-      );
-      setSelectedRowIds([]);
-      setDeleteModalOpen(false);
-    } catch (error) {
-      console.error("Error deleting interview", error);
-    }
-  };
-
   // actual data call -- needs ADAPTATION
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/initialInterview`);
-
         let tableDataRequest;
-        if (searchKey && filterQuery.length > 1) {
+        if (searchQuery && filterQuery.length > 1) {
           tableDataRequest = backend.get(
-            `/initialInterview/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
+            `/initialInterview/search-filter?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchQuery}`
           );
-        } else if (searchKey) {
+        } else if (searchQuery) {
           tableDataRequest = backend.get(
-            `/initialInterview/search-filter?page=&filter=&search=${searchKey}`
+            `/initialInterview/search-filter?page=&filter=&search=${searchQuery}`
           );
         } else if (filterQuery.length > 1) {
           tableDataRequest = backend.get(
@@ -546,18 +509,7 @@ export const InitialScreenerTable = () => {
           tableDataRequest = backend.get("/initialInterview");
         }
 
-        const [lastUpdatedResponse, tableDataResponse] = await Promise.all([
-          lastUpdatedRequest,
-          tableDataRequest,
-        ]);
-        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString('en-US', { 
-          month: '2-digit', 
-          day: '2-digit', 
-          year: 'numeric', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }));
+        const tableDataResponse = await tableDataRequest;
         setInitialData(tableDataResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -567,7 +519,7 @@ export const InitialScreenerTable = () => {
     };
 
     fetchData();
-  }, [backend, searchKey, filterQuery]);
+  }, [backend, searchQuery, filterQuery]);
 
   useEffect(() => {
     if (clickedFormItem) {
@@ -580,50 +532,16 @@ export const InitialScreenerTable = () => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto" }}
     >
-      <HStack
-        width="100%"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <HStack width="100%">
-          <Input
-            fontSize="12px"
-            width="20%"
-            height="30px"
-            placeholder="search"
-            onChange={(e) => setSearchKey(e.target.value)}
-          />
-          <FilterTemplate
-            setFilterQuery={setFilterQuery}
-            type={"allForm"}
-          />
-        </HStack>
-
-        <HStack justifyContent="space-between">
-          <HStack>
-            <Button
-              fontSize="12px"
-              onClick={() => setDeleteModalOpen(true)}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              delete
-            </Button>
-            <Button
-              fontSize="12px"
-              onClick={() => navigate("/personal")}
-            >
-              add
-            </Button>
-            <IconButton
-              aria-label="Download CSV"
-              onClick={() => onPressCSVButton()}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              <FiUpload />
-            </IconButton>
-          </HStack>
-        </HStack>
-      </HStack>
+      <TableControls
+        searchKey={searchQuery}
+        setSearchKey={setSearchQuery}
+        filterQuery={filterQuery}
+        setFilterQuery={setFilterQuery}
+        selectedRowIds={selectedRowIds}
+        onExport={onPressCSVButton}
+        filterType={"initialScreener"}
+        showExportCount={true}
+      />
       <Box
         width={"100%"}
         justifyContent={"center"}
@@ -631,91 +549,25 @@ export const InitialScreenerTable = () => {
         {loading ? (
           <LoadingWheel />
         ) : (
-          <TableContainer
-            maxHeight="calc(100vh - 20px)"
-            sx={{
-              overflowX: "auto",
-              overflowY: "auto",
-              maxWidth: "100%",
-              border: "1px solid gray",
+          <TableContent
+            table={table}
+            selectedRowIds={selectedRowIds}
+            onRowSelect={handleRowSelect}
+            checkboxMode={checkboxMode}
+            setCheckboxMode={setCheckboxMode}
+            onRowClick={(row) => {
+              const formItem: Form = {
+                ...row,
+                hashedId: row.id || 0,
+                date: (row as any).date || '',
+                name: (row as any).name || '',
+                title: 'Initial Screeners' as const,
+                id: row.id,
+              };
+              setClickedFormItem(formItem);
+              onOpen();
             }}
-          >
-            <Table variant="striped">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th
-                        key={header.id}
-                        cursor={
-                          header.column.getCanSort() ? "pointer" : "default"
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getCanSort() && (
-                          <Box
-                            display="inline-block"
-                            ml={1}
-                          >
-                            {header.column.getIsSorted() === "asc" ? (
-                              <TriangleUpIcon />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <TriangleDownIcon />
-                            ) : null}
-                          </Box>
-                        )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row, index) => (
-                  <Tr
-                    key={row.id}
-                    cursor="pointer"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <Td
-                        key={cell.id}
-                        fontSize="14px"
-                        fontWeight="500px"
-                        onClick={(e) => {
-                          (row.original as { [key: string]: any }).title =
-                            "Initial Screeners";
-                          setClickedFormItem(row.original);
-                          onOpen();
-                          if (cell.column.id === "rowNumber") {
-                            e.stopPropagation();
-                          }
-                        }}
-                      >
-                        {cell.column.id === "rowNumber" ? (
-                          <HoverCheckbox
-                            id={row.original.id}
-                            isSelected={selectedRowIds.includes(
-                              row.original.id
-                            )}
-                            onSelectionChange={handleRowSelect}
-                            index={index}
-                          />
-                        ) : (
-                          flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
+          />
         )}
         {clickedFormItem && (
           <FormPreview
@@ -730,11 +582,6 @@ export const InitialScreenerTable = () => {
           />
         )}
       </Box>
-      <DeleteRowModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-      />
     </VStack>
   );
 };

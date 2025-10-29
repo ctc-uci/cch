@@ -1,47 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Heading,
-  HStack,
-  IconButton,
-  Input,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Text,
-  Th,
-  Thead,
-  Tr,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Checkbox, VStack } from "@chakra-ui/react";
 
 import {
   ColumnDef,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { FiUpload } from "react-icons/fi";
 
-import { useAuthContext } from "../../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import type { Client } from "../../../types/client";
 import { formatDateString } from "../../../utils/dateUtils";
 import { downloadCSV } from "../../../utils/downloadCSV";
 import { LoadingWheel } from "../.././loading/loading.tsx";
-import { UpdateClients } from "../../admin/UpdateClient";
-import { DeleteRowModal } from "../../deleteRow/deleteRowModal";
-import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox";
-import { FilterTemplate } from "./FilterTemplate.tsx";
+import { TableControls } from "./TableControls.tsx";
+import { TableContent } from "./TableContent.tsx";
 
-export const AllFormTable = () => {
+interface AllFormTableProps {
+  selectedRowIds: number[];
+  setSelectedRowIds: (ids: number[] | ((prev: number[]) => number[])) => void;
+}
+
+export const AllFormTable = ({ selectedRowIds, setSelectedRowIds }: AllFormTableProps) => {
   const headers = [
     "age",
     "attendingSchoolUponEntry",
@@ -88,32 +70,43 @@ export const AllFormTable = () => {
     "unitId",
   ];
 
-  const { currentUser } = useAuthContext();
   const { backend } = useBackendContext();
 
   const [clients, setClients] = useState<
     (Client & { isChecked: boolean; isHovered: boolean })[]
   >([]);
-  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  const [lastUpdated, setLastUpdated] = useState<string>("");
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
+  const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
       {
         id: "rowNumber",
         header: ({ table }) => {
+          const visibleIds = table.getRowModel().rows.map(r => r.original.id);
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={handleSelectAllCheckboxClick}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
+                onChange={() => {
+                  if (checkboxMode === 'hidden') {
+                    // Show and select visible
+                    setCheckboxMode('visible-checked');
+                    setSelectedRowIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                  } else if (checkboxMode === 'visible-checked') {
+                    // Keep visible but uncheck visible
+                    setCheckboxMode('visible-unchecked');
+                    setSelectedRowIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                  } else {
+                    // Hide and clear all selections
+                    setCheckboxMode('hidden');
+                    setSelectedRowIds([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -292,7 +285,7 @@ export const AllFormTable = () => {
         header: "Destination City",
       },
     ],
-    [selectedRowIds, clients]
+    [selectedRowIds, clients, checkboxMode, setCheckboxMode, setSelectedRowIds]
   );
 
   const table = useReactTable({
@@ -307,13 +300,6 @@ export const AllFormTable = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(clients.map((client) => client.id));
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
 
   const onPressCSVButton = () => {
     const selectedClients = clients.filter((client) =>
@@ -377,26 +363,9 @@ export const AllFormTable = () => {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await Promise.all(
-        selectedRowIds.map((row_id) => backend.delete(`/clients/${row_id}`))
-      );
-      setClients(
-        clients.filter((client) => !selectedRowIds.includes(client.id))
-      );
-      setSelectedRowIds([]);
-      setDeleteModalOpen(false);
-    } catch (error) {
-      console.error("Error deleting clients", error);
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const lastUpdatedRequest = backend.get(`/lastUpdated/clients`);
-
         let clientsRequest;
         if (searchKey && filterQuery.length > 1) {
           clientsRequest = backend.get(
@@ -414,19 +383,7 @@ export const AllFormTable = () => {
           clientsRequest = backend.get("/clients");
         }
 
-        const [lastUpdatedResponse, clientsResponse] = await Promise.all([
-          lastUpdatedRequest,
-          clientsRequest,
-        ]);
-
-        const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
-        setLastUpdated(date.toLocaleString('en-US', { 
-          month: '2-digit', 
-          day: '2-digit', 
-          year: 'numeric', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }));
+        const clientsResponse = await clientsRequest;
         setClients(clientsResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -443,45 +400,15 @@ export const AllFormTable = () => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto" }}
     >
-      <HStack
-        width="100%"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <HStack width="100%">
-          <Input
-            fontSize="12px"
-            width="20%"
-            height="30px"
-            placeholder="search"
-            onChange={(e) => setSearchKey(e.target.value)}
-          />
-          <FilterTemplate
-            setFilterQuery={setFilterQuery}
-            type={"allForm"}
-          />
-        </HStack>
-
-        <HStack justifyContent="space-between">
-          <HStack>
-            <Button
-              fontSize="12px"
-              onClick={() => setDeleteModalOpen(true)}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              delete
-            </Button>
-            <Button fontSize="12px">add</Button>
-            <IconButton
-              aria-label="Download CSV"
-              onClick={() => onPressCSVButton()}
-              isDisabled={selectedRowIds.length === 0}
-            >
-              <FiUpload />
-            </IconButton>
-          </HStack>
-        </HStack>
-      </HStack>
+      <TableControls
+        searchKey={searchKey}
+        setSearchKey={setSearchKey}
+        filterQuery={filterQuery}
+        setFilterQuery={setFilterQuery}
+        selectedRowIds={selectedRowIds}
+        onExport={onPressCSVButton}
+        filterType={"allForm"}
+      />
       <Box
         width={"100%"}
         justifyContent={"center"}
@@ -489,94 +416,15 @@ export const AllFormTable = () => {
         {loading ? (
           <LoadingWheel />
         ) : (
-          <TableContainer
-            maxHeight="calc(100vh - 20px)"
-            sx={{
-              overflowX: "auto",
-              overflowY: "auto",
-              maxWidth: "100%",
-              border: "1px solid gray",
-            }}
-          >
-            <Table variant="striped">
-              <Thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <Tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <Th
-                        key={header.id}
-                        cursor={
-                          header.column.getCanSort() ? "pointer" : "default"
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {header.column.getCanSort() && (
-                          <Box
-                            display="inline-block"
-                            ml={1}
-                          >
-                            {header.column.getIsSorted() === "asc" ? (
-                              <TriangleUpIcon />
-                            ) : header.column.getIsSorted() === "desc" ? (
-                              <TriangleDownIcon />
-                            ) : null}
-                          </Box>
-                        )}
-                      </Th>
-                    ))}
-                  </Tr>
-                ))}
-              </Thead>
-              <Tbody>
-                {table.getRowModel().rows.map((row, index) => (
-                  <Tr
-                    key={row.id}
-                    cursor="pointer"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <Td
-                        key={cell.id}
-                        fontSize="14px"
-                        fontWeight="500px"
-                        onClick={(e) => {
-                          if (cell.column.id === "rowNumber") {
-                            e.stopPropagation();
-                          }
-                        }}
-                      >
-                        {cell.column.id === "rowNumber" ? (
-                          <HoverCheckbox
-                            id={row.original.id}
-                            isSelected={selectedRowIds.includes(
-                              row.original.id
-                            )}
-                            onSelectionChange={handleRowSelect}
-                            index={index}
-                          />
-                        ) : (
-                          flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )
-                        )}
-                      </Td>
-                    ))}
-                  </Tr>
-                ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
+          <TableContent
+            table={table}
+            selectedRowIds={selectedRowIds}
+            onRowSelect={handleRowSelect}
+            checkboxMode={checkboxMode}
+            setCheckboxMode={setCheckboxMode}
+          />
         )}
       </Box>
-      <DeleteRowModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-      />
     </VStack>
   );
 };

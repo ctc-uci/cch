@@ -1,30 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Checkbox,
+  Button,
   Heading,
   HStack,
+  Stack,
   Tab,
-  Table,
-  TableContainer,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
   useDisclosure,
-  VStack,
 } from "@chakra-ui/react";
 
+import { useNavigate } from "react-router-dom";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
-import { TabData } from "../../types/form.ts";
+import type { Form } from "../../types/form.ts";
+import { DeleteRowModal } from "../deleteRow/deleteRowModal.tsx";
 import FormPreview from "../formsHub/FormPreview.tsx";
 import { AllFormTable } from "./FormTables/AllFormTable.tsx";
 import { ExitSurveyTable } from "./FormTables/ExitSurveyTable.tsx";
@@ -34,10 +29,31 @@ import { SuccessStoryTable } from "./FormTables/SuccessStoryTable.tsx";
 
 export const AdminFormsHub = () => {
   const { backend } = useBackendContext();
+  const navigate = useNavigate();
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [clickedFormItem, setClickedFormItem] = useState<Form | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [refreshTable, setRefreshTable] = useState(false);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Tab configurations
+  const tabConfig = [
+    { addRoute: "/personal", label: "Initial Screener Form", noAdd: false },
+    { addRoute: "/success-story", label: "Success Story Form", noAdd: false },
+    {
+      addRoute: "/exit-survey",
+      label: "Client Exit Survey Form",
+      noAdd: false,
+    },
+    {
+      addRoute: "/random-client-survey",
+      label: "Random Client Survey Form",
+      noAdd: false,
+    },
+    { addRoute: null, label: "All Client Forms", noAdd: true },
+  ] as const;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,25 +109,45 @@ export const AdminFormsHub = () => {
     }
   }, [clickedFormItem, onOpen]);
 
+  const handleDelete = async () => {
+    try {
+      const deleteEndpoints = [
+        "/initialInterview",
+        "/successStory",
+        "/exitSurvey",
+        "/randomSurvey",
+        "/clients",
+      ];
+      
+      const endpoint = deleteEndpoints[activeTabIndex] || "/clients";
+      
+      await Promise.all(
+        selectedRowIds.map((row_id) =>
+          backend.delete(`${endpoint}/${row_id}`)
+        )
+      );
+      
+      setSelectedRowIds([]);
+      setIsDeleteModalOpen(false);
+      setRefreshTable((prev) => !prev);
+    } catch (error) {
+      console.error("Error deleting rows", error);
+    }
+  };
+
   return (
-    <VStack
+    <Stack
       overflowX="hidden"
-      w="100%"
-      spacing={8}
-      align="stretch"
+      p="2% 4%"
     >
-      <Box px={9}>
-        <Heading
-          p={6}
-          as="h1"
-          size="xl"
-          mb={2}
-        >
-          Client Forms
-        </Heading>
-      </Box>
-      <Box px={10}>
-        <Box p="4">
+      <Heading
+        as="h1"
+        size="xl"
+      >
+        Client Forms
+      </Heading>
+      <Box>
+        <Stack mb={12}>
           <Text
             fontSize="13pt"
             fontWeight="bold"
@@ -119,33 +155,88 @@ export const AdminFormsHub = () => {
             Form History
           </Text>
           <Text fontSize="12pt">Last Updated: {lastUpdated}</Text>
+        </Stack>
 
+        <Box>
           <Tabs
-            isFitted
-            w="full"
+            size="sm"
+            variant="line"
+            onChange={setActiveTabIndex}
           >
-            <TabList whiteSpace="nowrap">
-              <Tab>Initial Screeners</Tab>
-              <Tab>Success Stories</Tab>
-              <Tab>Exit Surveys</Tab>
-              <Tab>Random Client Surveys</Tab>
-              <Tab>All Forms</Tab>
-            </TabList>
+            <HStack
+              width="100%"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={4}
+            >
+              <TabList
+                w="70%"
+                justifyContent="space-between"
+              >
+                <Tab>Initial Screener Form</Tab>
+                <Tab>Success Story Form</Tab>
+                <Tab>Client Exit Survey Form</Tab>
+                <Tab>Random Client Survey Form</Tab>
+                <Tab>All Client Forms</Tab>
+              </TabList>
+
+              <HStack spacing={2}>
+                {(() => {
+                  const currentTab = tabConfig[activeTabIndex];
+                  if (!currentTab) return null;
+
+                  if (!currentTab.noAdd && currentTab.addRoute) {
+                    return (
+                      <Button
+                        fontSize="12px"
+                        onClick={() => navigate(currentTab.addRoute as string)}
+                      >
+                        Add
+                      </Button>
+                    );
+                  }
+                  return null;
+                })()}
+
+                <Button
+                  fontSize="12px"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  isDisabled={selectedRowIds.length === 0}
+                >
+                  Delete
+                </Button>
+              </HStack>
+            </HStack>
             <TabPanels>
               <TabPanel>
-                <InitialScreenerTable />
+                <InitialScreenerTable 
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                />
               </TabPanel>
               <TabPanel>
-                <SuccessStoryTable />
+                <SuccessStoryTable 
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                />
               </TabPanel>
               <TabPanel>
-                <ExitSurveyTable />
+                <ExitSurveyTable 
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                />
               </TabPanel>
               <TabPanel>
-                <RandomClientTable />
+                <RandomClientTable 
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                />
               </TabPanel>
               <TabPanel>
-                <AllFormTable />
+                <AllFormTable 
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                />
               </TabPanel>
             </TabPanels>
           </Tabs>
@@ -161,8 +252,13 @@ export const AdminFormsHub = () => {
               setRefreshTable={setRefreshTable}
             />
           )}
+          <DeleteRowModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onConfirm={handleDelete}
+          />
         </Box>
       </Box>
-    </VStack>
+    </Stack>
   );
 };

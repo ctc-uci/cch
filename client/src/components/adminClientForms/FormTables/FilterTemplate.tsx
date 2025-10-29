@@ -608,7 +608,7 @@ export const FilterTemplate = ({
   };
 
   return (
-    <Popover placement="bottom-start">
+    <Popover placement="right-end">
       <PopoverTrigger>
         <Button>
           <HStack>

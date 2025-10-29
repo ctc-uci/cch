@@ -12,6 +12,9 @@ export type Form = {
 export type FormType =
   | "All Forms"
   | "Initial Screeners"
+  | "Exit Surveys"
+  | "Success Stories"
+  | "Random Client Surveys"
   | "Front Desk Monthly Statistics"
   | "Case Manager Monthly Statistics"
   | "Client Tracking Statistics (Intake Statistics)";
