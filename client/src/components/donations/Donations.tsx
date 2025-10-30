@@ -298,9 +298,24 @@ export const Donations = () => {
   };
 
   const filteredDonations = useMemo(() => {
-    if (!donor) return allDonations;
-    return allDonations.filter(d => d.donor === donor);
-  }, [allDonations, donor]);
+    // Helper to check if a donation falls within user range
+    const withinRange = (dateStr: string) => {
+      const date = new Date(dateStr);
+      if (startDate && (!dateStr || date < startDate)) return false;
+      if (endDate && (!dateStr || date > endDate)) return false;
+      return true;
+    };
+
+    let filtered = allDonations;
+    if (donor) {
+      filtered = filtered.filter(d => d.donor === donor);
+    }
+    // Only filter by date if dates are valid 
+    if (startDate || endDate) {
+      filtered = filtered.filter(d => withinRange(d.date || d.monthYear));
+    }
+    return filtered;
+  }, [allDonations, donor, startDate, endDate]);
 
   const table = useReactTable({
     data: filteredDonations,
@@ -403,8 +418,11 @@ export const Donations = () => {
     const fetchData = async () => {
 
       try {
-        const start = startDate ? startDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
-        const end = endDate ? endDate.toLocaleDateString('en-US', { timeZone: 'UTC' }) : "";
+        const getIsoDateOrEmpty = (date: Date | null) =>
+          date instanceof Date && !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : "";
+        const start = getIsoDateOrEmpty(startDate);
+        const end = getIsoDateOrEmpty(endDate);
+
         let allDonationsQuery =
           freq === "monthly" ?
             `/donations/monthfilter?donor=${donor}&startDate=${start}&endDate=${end}`
@@ -414,14 +432,11 @@ export const Donations = () => {
                 : `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
 
         if (freq !== "monthly" && freq !== "yearly") {
-          if (filterQuery.length > 0 && searchKey.length > 0) {
-            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`;
-          }
-          else if (searchKey.length > 0) {
-            allDonationsQuery = `/donations?filter=&search=${searchKey}`;
-          }
-          else if (filterQuery.length > 0) {
-            allDonationsQuery = `/donations?filter=${encodeURIComponent(filterQuery.join(" "))}&search=`;
+          allDonationsQuery = `/donations/filter?donor=${donor}&startDate=${start}&endDate=${end}`;
+          if (filterQuery.length > 0 || searchKey.length > 0) {
+            const filterParam = filterQuery.length > 0 ? encodeURIComponent(filterQuery.join(" ")) : "";
+            const searchParam = searchKey.length > 0 ? searchKey : "";
+            allDonationsQuery += `&filter=${filterParam}&search=${searchParam}`;
           }
         } else {
           if (filterQuery.length > 0 && searchKey.length > 0) {
@@ -562,7 +577,7 @@ export const Donations = () => {
               type="date"
               name="startDate"
               w="40%"
-              value={startDate ? startDate.toISOString().split("T")[0] : ""}
+              value={startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate.toISOString().split("T")[0] : ""}
               onChange={handleStartDateChange}
             />
             <Text>To:</Text>
@@ -570,7 +585,7 @@ export const Donations = () => {
               type="date"
               name="endDate"
               w="40%"
-              value={endDate ? endDate.toISOString().split("T")[0] : ""}
+              value={endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate.toISOString().split("T")[0] : ""}
               onChange={handleEndDateChange}
             />
           </HStack>
