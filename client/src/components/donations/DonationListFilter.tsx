@@ -156,7 +156,7 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
   };
 
   return (
-    <Popover placement="bottom-start">
+    <Popover placement="right-end">
       <PopoverTrigger>
         <Button>
           <HStack>

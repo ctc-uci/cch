@@ -16,13 +16,11 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
-import type { TabData } from "../../types/monthlyStat.ts";
+import type { TabData, TableRow } from "../../types/monthlyStat.ts";
 import { StatsTable } from "./StatsTable.tsx";
-import { useNavigate } from "react-router-dom";
 import { LoadingWheel } from ".././loading/loading.tsx"
 
 export const CaseManagerMonthlyStats = () => {
-  const navigate = useNavigate();
 
   const { backend } = useBackendContext();
   const startYear = 2025;
@@ -33,6 +31,7 @@ export const CaseManagerMonthlyStats = () => {
   const [loading, setLoading] = useState(true);
   const [hiddenFields, setHiddenFields] = useState<string[]>([]);
   const [pinnedFields, setPinnedFields] = useState<string[]>([]);
+  const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +97,102 @@ export const CaseManagerMonthlyStats = () => {
     });
   };
 
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // Filter and sort tables: exclude hidden, pinned first
+  const filterAndSortTables = (tables: any[]) => {
+    const visibleTables = tables.filter((table) => !hiddenFields.includes(table.tableName));
+    return visibleTables.sort((a, b) => {
+      const aIsPinned = pinnedFields.includes(a.tableName);
+      const bIsPinned = pinnedFields.includes(b.tableName);
+
+      // Pinned tables come first
+      if (aIsPinned && !bIsPinned) return -1;
+      if (!aIsPinned && bIsPinned) return 1;
+      return 0;
+    });
+  };
+
+  // Create CSV with separate tables
+  const createMultiTableCSV = (tables: any[], fileName: string) => {
+    const csvRows: string[] = [];
+    const headers = ["Category", ...monthNames, "Total"];
+
+    tables.forEach((table, tableIndex) => {
+      // Add table name as a header row
+      csvRows.push(`"${table.tableName}"`);
+
+      // Add column headers
+      csvRows.push(headers.join(','));
+
+      // Add data rows for this table
+      const tableRows = Object.values(table.tableData) as TableRow[];
+      tableRows.forEach((row) => {
+        const monthlyData: Record<string, number> = {};
+        row.monthlyCounts.forEach((m) => {
+          monthlyData[m.month] = m.count;
+        });
+
+        const values = [
+          `"${row.categoryName.replace(/"/g, '\\"')}"`,
+          ...monthNames.map((month) => monthlyData[month] || 0),
+          row.total,
+        ];
+
+        csvRows.push(values.join(','));
+      });
+
+      // Add blank row separator between tables (except after last table)
+      if (tableIndex < tables.length - 1) {
+        csvRows.push('');
+      }
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = fileName;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportAll = () => {
+    const allTables = allTabData.flatMap((tab) => tab.tables);
+    const filteredAndSortedTables = filterAndSortTables(allTables);
+    const timestamp = new Date().toISOString().split('T')[0];
+    createMultiTableCSV(
+      filteredAndSortedTables,
+      `MonthlyStats_All_${selectedYear}_${timestamp}.csv`
+    );
+  };
+
+  const handleExport = (tables: any[]) => {
+    const filteredAndSortedTables = filterAndSortTables(tables);
+    const timestamp = new Date().toISOString().split('T')[0];
+    createMultiTableCSV(
+      filteredAndSortedTables,
+      `MonthlyStats_${selectedYear}_${timestamp}.csv`
+    );
+  };
+
   return (
     <VStack
       align="start"
@@ -125,12 +220,26 @@ export const CaseManagerMonthlyStats = () => {
           >
             Start Case Manager Form
           </Button> */}
+          {tabIndex === allTabData.length ? (
           <Button
             {...buttonStyle}
-            onClick={() => navigate('/casemanager')}
+            onClick={handleExportAll}
           >
-            Export
+            Export All
           </Button>
+          ) : (
+            <Button
+              {...buttonStyle}
+              onClick={() => {
+                const currentTab = allTabData[tabIndex];
+                if (currentTab) {
+                  handleExport(currentTab.tables);
+                }
+              }}
+            >
+              Export
+            </Button>
+          )}
         </ButtonGroup>
         <Select
           value={selectedYear}
@@ -153,6 +262,8 @@ export const CaseManagerMonthlyStats = () => {
       <Tabs
         isFitted
         w="full"
+        index={tabIndex}
+        onChange={setTabIndex}
       >
         <TabList whiteSpace="nowrap">
           {allTabData.map((tab) => (
