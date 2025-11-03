@@ -427,14 +427,18 @@ export const ManageAccounts = () => {
                   icon={<MdOutlineManageSearch />}
                   aria-label={"search"}
                 />
-                <Button
-                  {...buttonStyle}
-                  leftIcon={<MdFileUpload />}
-                  onClick={() => onPressCSVButton()}
-                  isDisabled={selectedRowIds.length === 0}
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  paddingX="16px"
+                  paddingY="8px"
+                  onClick={selectedRowIds.length > 0 ? () => onPressCSVButton() : undefined}
+                  cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                  opacity={selectedRowIds.length > 0 ? 1 : 0.5}
                 >
-                  Export
-                </Button>
+                  <MdFileUpload size="16px" />
+                  <Text ml="8px" whiteSpace="nowrap">{`Export (${selectedRowIds.length})`}</Text>
+                </Box>
               </HStack>
             </HStack>
             <TableContainer

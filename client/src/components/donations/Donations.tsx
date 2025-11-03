@@ -69,6 +69,7 @@ export const Donations = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [selectedRowIds, setSelectedRowIds] = useState<number[]>([]);
+  const [checkboxMode, setCheckboxMode] = useState<'hidden' | 'visible-unchecked' | 'visible-checked'>('hidden');
 
   const [allDonations, setAllDonations] = useState<Donation[]>([]);
   const [valueSum, setValueSum] = useState<number>(0);
@@ -109,9 +110,24 @@ export const Donations = () => {
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={handleSelectAllCheckboxClick}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
+                onChange={() => {
+                  const visibleIds = table.getRowModel().rows.map(r => r.original.id);
+                  if (checkboxMode === 'hidden') {
+                    // Show and select visible
+                    setCheckboxMode('visible-checked');
+                    setSelectedRowIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                  } else if (checkboxMode === 'visible-checked') {
+                    // Keep visible but uncheck visible
+                    setCheckboxMode('visible-unchecked');
+                    setSelectedRowIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                  } else {
+                    // Hide and clear all selections
+                    setCheckboxMode('hidden');
+                    setSelectedRowIds([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -146,7 +162,7 @@ export const Donations = () => {
         header: "Total",
       },
     ],
-    [selectedRowIds, allDonations]
+    [selectedRowIds, allDonations, checkboxMode]
   );
 
   const columnsFreq = useMemo<ColumnDef<Donation>[]>(
@@ -157,9 +173,24 @@ export const Donations = () => {
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={handleSelectAllCheckboxClick}
+                isChecked={checkboxMode === 'visible-checked'}
+                isIndeterminate={checkboxMode === 'visible-unchecked'}
+                onChange={() => {
+                  const visibleIds = table.getRowModel().rows.map(r => r.original.id);
+                  if (checkboxMode === 'hidden') {
+                    // Show and select visible
+                    setCheckboxMode('visible-checked');
+                    setSelectedRowIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                  } else if (checkboxMode === 'visible-checked') {
+                    // Keep visible but uncheck visible
+                    setCheckboxMode('visible-unchecked');
+                    setSelectedRowIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                  } else {
+                    // Hide and clear all selections
+                    setCheckboxMode('hidden');
+                    setSelectedRowIds([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -187,10 +218,15 @@ export const Donations = () => {
         header: "Total Value ($)",
       },
     ],
-    [selectedRowIds, allDonations]
+    [selectedRowIds, allDonations, checkboxMode]
   );
 
   const [columns, setColumns] = useState<ColumnDef<Donation>[]>(freq === "monthly" || freq === "yearly" ? columnsFreq : columnsReg);
+
+  // Update columns when freq or column definitions change
+  useEffect(() => {
+    setColumns(freq === "monthly" || freq === "yearly" ? columnsFreq : columnsReg);
+  }, [freq, columnsFreq, columnsReg]);
 
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
@@ -329,13 +365,7 @@ export const Donations = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleSelectAllCheckboxClick = () => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(allDonations.map((donation) => donation.id));
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
+  // Removed handleSelectAllCheckboxClick - now handled inline in header checkbox
 
   const handleRowSelect = (id: number, isChecked: boolean) => {
     if (isChecked) {
@@ -650,18 +680,18 @@ export const Donations = () => {
               >
                 <MdOutlineManageSearch size="24px" />
               </Box>
-              <Button
+              <Box
                 display="flex"
                 alignItems="center"
                 paddingX="16px"
                 paddingY="8px"
-                cursor="pointer"
-                onClick={() => onPressCSVButton()}
-                isDisabled={selectedRowIds.length === 0}
+                onClick={selectedRowIds.length > 0 ? () => onPressCSVButton() : undefined}
+                cursor={selectedRowIds.length > 0 ? "pointer" : "not-allowed"}
+                opacity={selectedRowIds.length > 0 ? 1 : 0.5}
               >
                 <MdFileUpload size="16px" />
-                <Text ml="8px">Export</Text>
-              </Button>
+                <Text ml="8px" whiteSpace="nowrap">{`Export (${selectedRowIds.length})`}</Text>
+              </Box>
             </HStack>
           </HStack>
           <TableContainer
@@ -743,6 +773,7 @@ export const Donations = () => {
                             isSelected={selectedRowIds.includes(row.original.id)}
                             onSelectionChange={handleRowSelect}
                             index={index}
+                            alwaysVisible={checkboxMode !== 'hidden'}
                           />
                         ) : (
                           cell.column.id === "category" ? (
