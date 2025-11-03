@@ -30,18 +30,32 @@ function DonationInputs({ subDonation, index, onChange }: {
                 <Text fontSize="sm">Date Donated</Text>
                 <Input
                   name="date"
-                  type="date"
+                  type="datetime-local"
                   size="sm"
-                  value={subDonation.date instanceof Date ? subDonation.date.toISOString().split('T')[0] : ''}
+                  maxWidth="210px"
+                  value={subDonation.date instanceof Date 
+                    ? new Date(subDonation.date.getTime() - subDonation.date.getTimezoneOffset() * 60000)
+                        .toISOString().slice(0, 16)
+                    : ''}
                   onChange={(e) => {
-                    const newDate = new Date(e.target.value);
+                    // Convert datetime-local value to UTC Date
+                    const localDate = new Date(e.target.value);
+                    // Create UTC date by treating the local datetime as UTC
+                    const utcDate = new Date(Date.UTC(
+                      localDate.getFullYear(),
+                      localDate.getMonth(),
+                      localDate.getDate(),
+                      localDate.getHours(),
+                      localDate.getMinutes(),
+                      localDate.getSeconds()
+                    ));
 
                     const customEvent = {
                       target: {
                         name: 'date',
-                        value: newDate,
+                        value: utcDate,
                         checked: false,
-                        type: 'date',
+                        type: 'datetime-local',
                         validity: {} as ValidityState,
                       }
                     } as unknown as React.ChangeEvent<HTMLInputElement>;
@@ -70,7 +84,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                 <Text fontSize="sm">Total Weight (lbs)</Text>
                 <InputGroup size="sm">
                   <Input
-                    maxWidth="120px"
+                    maxWidth="100px"
                     name="weight"
                     type="number"
                     placeholder="XX"
@@ -89,7 +103,7 @@ function DonationInputs({ subDonation, index, onChange }: {
                 <InputGroup size="sm">
                   <InputLeftAddon>$</InputLeftAddon>
                   <Input
-                    maxWidth="120px"
+                    maxWidth="100px"
                     name="value"
                     type="number"
                     placeholder="0.00"

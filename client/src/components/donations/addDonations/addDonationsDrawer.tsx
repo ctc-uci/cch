@@ -39,10 +39,23 @@ function AddDonationsDrawer({ refresh }: AddDonationsDrawerProps) {
     onOpen: openModal,
     onClose: closeModal,
   } = useDisclosure();
+  // Get current UTC datetime
+  const getCurrentUTC = () => {
+    const now = new Date();
+    return new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours(),
+      now.getUTCMinutes(),
+      now.getUTCSeconds()
+    ));
+  };
+  
   const initialDonations: Donation[] = [
     {
       donor: "",
-      sub: [{ date: new Date(), category: "", weight: -1, value: -1 }],
+      sub: [{ date: getCurrentUTC(), category: "", weight: -1, value: -1 }],
     },
   ];
   const [donations, setDonations] = useState<Donation[]>(initialDonations);
@@ -54,10 +67,21 @@ function AddDonationsDrawer({ refresh }: AddDonationsDrawerProps) {
   // Reset initial state when drawer opens
   useEffect(() => {
     if (isDrawerOpen) {
+      // Get current UTC datetime
+      const now = new Date();
+      const utcDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+      ));
+      
       const currentInitial: Donation[] = [
         {
           donor: "",
-          sub: [{ date: new Date(), category: "", weight: -1, value: -1 }],
+          sub: [{ date: utcDate, category: "", weight: -1, value: -1 }],
         },
       ];
       // Deep clone to store initial state
@@ -121,11 +145,22 @@ function AddDonationsDrawer({ refresh }: AddDonationsDrawerProps) {
   };
 
   const handleAddDonor = () => {
+    // Get current UTC datetime
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours(),
+      now.getUTCMinutes(),
+      now.getUTCSeconds()
+    ));
+    
     setDonations((prevDonations) => [
       ...prevDonations,
       {
         donor: "",
-        sub: [{ date: new Date(), category: "", weight: -1, value: -1 }],
+        sub: [{ date: utcDate, category: "", weight: -1, value: -1 }],
       },
     ]);
   };
@@ -137,87 +172,121 @@ function AddDonationsDrawer({ refresh }: AddDonationsDrawerProps) {
   };
 
   const handleSubmitAllDonations = async () => {
+    const donationsToSubmit: Array<{ date: string; weight: number; value: number; category: string; donor: string }> = [];
+    
+    // Validate and collect all donations
     for (const donation of donations) {
       for (const sub of donation.sub) {
-        try {
-          // Format date as ISO datetime string (YYYY-MM-DDTHH:mm:ss.sssZ)
-          const formattedDate =
-            sub.date instanceof Date
-              ? sub.date.toISOString()
-              : sub.date;
+        // Format date as ISO datetime string (YYYY-MM-DDTHH:mm:ss.sssZ)
+        const formattedDate =
+          sub.date instanceof Date
+            ? sub.date.toISOString()
+            : sub.date;
 
-          const Food = {
-            date: formattedDate,
-            weight: sub.weight,
-            value: sub.value,
-            category: sub.category,
-            donor: donation.donor,
-          };
+        const Food = {
+          date: formattedDate,
+          weight: sub.weight,
+          value: sub.value,
+          category: sub.category,
+          donor: donation.donor,
+        };
 
-          if (
-            Food.weight === -1 ||
-            Food.value === -1 ||
-            Food.category === "" ||
-            Food.donor === ""
-          ) {
-            toast({
-              title: "Missing Information",
-              description:
-                "Please fill in all required fields (donor, weight, value, and category).",
-              status: "warning",
-              duration: 5000,
-              isClosable: true,
-            });
-            return; // Stop processing if validation fails
-          } else {
-            await backend.post("/donations", Food);
-            const currentTime = new Date();
-            let hours = currentTime.getHours();
-            let minutes = currentTime.getMinutes();
-            const ampm = hours >= 12 ? "PM" : "AM";
-
-            hours = hours % 12;
-            hours = hours ? hours : 12;
-            minutes = minutes < 10 ? +minutes : minutes;
-            const formattedTime = `${hours}:${minutes} ${ampm} ${currentTime.toISOString().split("T")[0]}`;
-
-            toast({
-              title: "Donation Added",
-              description: `The donation has been successfully added into the database at ${formattedTime}.`,
-              status: "success",
-              duration: 5000,
-              isClosable: true,
-            });
-            closeDrawer();
-            refresh();
-            resetData();
-          }
-        } catch (err) {
+        if (
+          Food.weight === -1 ||
+          Food.value === -1 ||
+          Food.category === "" ||
+          Food.donor === ""
+        ) {
           toast({
-            title: "Donation Not Added",
+            title: "Missing Information",
             description:
-              "There was something wrong that happened and the donation was not added.",
-            status: "error",
+              "Please fill in all required fields (donor, weight, value, and category).",
+            status: "warning",
             duration: 5000,
             isClosable: true,
           });
-          closeDrawer();
-          refresh();
-          resetData();
-          console.error(err);
+          return; // Stop processing if validation fails
         }
+        
+        donationsToSubmit.push(Food);
       }
     }
-    // Close drawer and refresh after all donations are processed
-    closeDrawer();
-    refresh();
-    resetData();
+
+    // Submit all donations
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      for (const Food of donationsToSubmit) {
+        try {
+          await backend.post("/donations", Food);
+          successCount++;
+        } catch (err) {
+          errorCount++;
+          console.error("Error submitting donation:", err);
+        }
+      }
+
+      // Show summary toast
+      if (successCount > 0 && errorCount === 0) {
+        toast({
+          title: "Donations Added",
+          description: `Successfully added ${successCount} donation${successCount > 1 ? 's' : ''} to the database.`,
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else if (successCount > 0 && errorCount > 0) {
+        toast({
+          title: "Partial Success",
+          description: `Added ${successCount} donation${successCount > 1 ? 's' : ''}, but ${errorCount} failed.`,
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Donations Not Added",
+          description: "There was an error adding the donations.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+
+      // Close drawer and refresh to show new donations
+      closeDrawer();
+      resetData();
+      refresh(); // This will trigger the parent component to refetch and display new donations
+      
+    } catch (err) {
+      toast({
+        title: "Donation Not Added",
+        description:
+          "There was something wrong that happened and the donation was not added.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error(err);
+    }
   };
   const resetData = () => {
+    // Get current UTC datetime
+    const now = new Date();
+    const utcDate = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours(),
+      now.getUTCMinutes(),
+      now.getUTCSeconds()
+    ));
+    
     setDonations([
       {
         donor: "",
-        sub: [{ date: new Date(), category: "", weight: -1, value: -1 }],
+        sub: [{ date: utcDate, category: "", weight: -1, value: -1 }],
       },
     ]);
   };

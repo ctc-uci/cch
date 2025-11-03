@@ -68,7 +68,7 @@ const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputEl
   setDonation((prevDonation) => {
     const newSubDonations = [...prevDonation.sub];
 
-    const currentSub = { ...newSubDonations[index] };
+    const currentSub = { ...newSubDonations[index] } as DonationSub;
 
     if (name === 'date') {
       currentSub.date = typeof value === 'object' ? value as Date : new Date(value as string);
@@ -88,8 +88,19 @@ const handleSubDonationChange = (index: number, e: React.ChangeEvent<HTMLInputEl
 
 const handleAddDonation = () => {
     setDonation((prevDonation) => {
+      // Get current UTC datetime
+      const now = new Date();
+      const utcDate = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+      ));
+      
       const newSubDonation: DonationSub = {
-        date: new Date(),
+        date: utcDate,
         category: '',
         weight: -1,
         value: -1
