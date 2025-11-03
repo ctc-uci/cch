@@ -23,6 +23,7 @@ import {
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import DonationCard, { Donation } from "./donationsCard";
+import { BackArrowIcon } from "./BackArrowIcon";
 
 interface AddDonationsDrawerProps {
   refresh: () => void;
@@ -319,20 +320,7 @@ function AddDonationsDrawer({ refresh }: AddDonationsDrawerProps) {
           <DrawerHeader>
             {" "}
             <HStack alignItems="center">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                onClick={handleClose}
-                style={{ cursor: "pointer" }}
-              >
-                <path
-                  d="M5.58984 8.41L10.1798 13L5.58984 17.59L6.99984 19L12.9998 13L6.99984 7L5.58984 8.41ZM15.9998 7H17.9998V19H15.9998V7Z"
-                  fill="#3182CE"
-                />
-              </svg>
+              <BackArrowIcon onClick={handleClose} />
               <Text
                 fontSize="md"
                 mt="2px"
