@@ -185,7 +185,7 @@ export const AdminFormsHub = () => {
               </TabList>
 
               <HStack spacing={2}>
-                {(() => {
+                {/* {(() => {
                   const currentTab = tabConfig[activeTabIndex];
                   if (!currentTab) return null;
 
@@ -200,12 +200,14 @@ export const AdminFormsHub = () => {
                     );
                   }
                   return null;
-                })()}
+                })()} */}
 
                 <Button
                   fontSize="12px"
                   onClick={() => setIsDeleteModalOpen(true)}
                   isDisabled={selectedRowIds.length === 0}
+                  variant="outline"
+                  colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
                 >
                   Delete
                 </Button>

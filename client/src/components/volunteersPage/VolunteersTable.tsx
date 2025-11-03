@@ -709,12 +709,12 @@ const VolunteersTable = ({
                           textAlign="center"
                         >
                           <HStack justify="center" spacing={1}>
-                            <Text>
+                            <Box>
                               {flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
-                            </Text>
+                            </Box>
                             {header.column.getCanSort() && (
                               <Box display="inline-block">
                                 {header.column.getIsSorted() === "asc" ? (

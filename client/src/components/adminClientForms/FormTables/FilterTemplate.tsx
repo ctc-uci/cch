@@ -678,7 +678,7 @@ export const FilterTemplate = ({
                     {columns.map((column) => {
                       return (
                         <option
-                          key={column.name}
+                          key={column.value}
                           typeof={column.type}
                           value={column.value}
                         >
