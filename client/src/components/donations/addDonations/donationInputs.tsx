@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import { Select } from '@chakra-ui/react'
+import { HStack, Select, Stack } from '@chakra-ui/react'
 import { CardBody, Text, Input, InputGroup, InputRightAddon, InputLeftAddon } from '@chakra-ui/react'
 
 
@@ -24,12 +24,14 @@ function DonationInputs({ subDonation, index, onChange }: {
         }, [subDonation]);
 
         return (
-            <CardBody display="flex" flexWrap="wrap" alignItems="flex-start" gap={4}>
-              <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
-                <Text>Date Donated</Text>
+            <CardBody p={0} mt={4}>
+              <HStack justifyContent="space-between" alignItems="center">
+              <Stack>
+                <Text fontSize="sm">Date Donated</Text>
                 <Input
                   name="date"
                   type="date"
+                  size="sm"
                   value={subDonation.date instanceof Date ? subDonation.date.toISOString().split('T')[0] : ''}
                   onChange={(e) => {
                     const newDate = new Date(e.target.value);
@@ -47,12 +49,13 @@ function DonationInputs({ subDonation, index, onChange }: {
                     onChange(index, customEvent);
                   }}
                 />
-              </CardBody>
+              </Stack>
 
-              <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
-                <Text>Category</Text>
+              <Stack>
+                <Text fontSize="sm">Category</Text>
                 <Select
                   name="category"
+                  size="sm"
                   value={subDonation.category}
                   placeholder="Select Category"
                   onChange={(e) => onChange(index, e)}
@@ -61,45 +64,54 @@ function DonationInputs({ subDonation, index, onChange }: {
                   <option value="food">Food</option>
                   <option value="client">Client</option>
                 </Select>
-              </CardBody>
+              </Stack>
 
-              <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
-                <Text>Total Weight (lbs)</Text>
-                <InputGroup>
+              <Stack>
+                <Text fontSize="sm">Total Weight (lbs)</Text>
+                <InputGroup size="sm">
                   <Input
+                    maxWidth="120px"
                     name="weight"
                     type="number"
                     placeholder="XX"
+                    size="sm"
                     value={isNaN(subDonation.weight) || subDonation.weight === -1 ? "" : subDonation.weight}
                     onChange={(e) => onChange(index, e)}
                   />
                   <InputRightAddon>lbs</InputRightAddon>
                 </InputGroup>
-              </CardBody>
+              </Stack>
+              
+              <Text fontSize="sm" mt={6}>x</Text>
 
-              <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
-                <Text>Value per lbs ($)</Text>
-                <InputGroup>
+              <Stack>
+                <Text fontSize="sm">Value per lbs ($)</Text>
+                <InputGroup size="sm">
                   <InputLeftAddon>$</InputLeftAddon>
                   <Input
+                    maxWidth="120px"
                     name="value"
                     type="number"
                     placeholder="0.00"
+                    size="sm"
                     value={isNaN(subDonation.value) || subDonation.value === -1 ? "" : subDonation.value}
                     onChange={(e) => onChange(index, e)}
                   />
                 </InputGroup>
-              </CardBody>
+              </Stack>
 
-              <CardBody m={0} p={0} flexDirection="column" alignItems="flex-start" width="auto">
-                <Text>Total Value ($)</Text>
-                <Text fontWeight="bold">
+              <Text fontSize="sm" mt={6}>=</Text>
+
+              <Stack>
+                <Text fontSize="sm">Total Value ($)</Text>
+                <Text fontSize="sm" color="gray.500">
                   {(subDonation.value === -1 || subDonation.weight === -1)
                     ? "$00.00"
                     : `$${totalValue.toFixed(2)}`
                   }
                 </Text>
-              </CardBody>
+              </Stack>
+            </HStack>
             </CardBody>
           );
 

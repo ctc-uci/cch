@@ -1,14 +1,15 @@
 import React, {useState, useEffect} from 'react'
-import { Card, CardHeader, CardBody, CardFooter, Text } from '@chakra-ui/react'
+import { Card, CardHeader, CardBody, CardFooter, Text, Icon, Button, HStack, CloseButton, Flex } from '@chakra-ui/react'
 import { useBackendContext } from '../../../contexts/hooks/useBackendContext.ts';
 import DonationInputs, { DonationSub } from "./donationInputs";
 import {DonationFilter} from "../DonationFilter.tsx"
+import { FaMinus, FaPlus } from 'react-icons/fa';
 export interface Donation {
     donor: string,
     sub: DonationSub[];
 }
 
-function DonationCard({ donationToEdit, onSubmit }: { donationToEdit?: Donation, onSubmit: (donation: Donation) => void }) {
+function DonationCard({ donationToEdit, onSubmit, handleDeleteDonation }: { donationToEdit?: Donation, onSubmit: (donation: Donation) => void, handleDeleteDonation: () => void }) {
     const [donation, setDonation] = useState<Donation>(
       donationToEdit || {
         donor: '',
@@ -101,11 +102,21 @@ const handleAddDonation = () => {
     });
 };
 
+const handleDeleteLastDonation = () => {
+  setDonation((prevDonation) => {
+    const newSubDonations = [...prevDonation.sub];
+    newSubDonations.splice(newSubDonations.length - 1, 1);
+    return { ...prevDonation, sub: newSubDonations };
+  });
+};
+
 return (
   <Card>
-    <CardHeader>Donation Form</CardHeader>
     <CardBody>
-      <Text>Donor</Text>
+    <Flex justifyContent="space-between" alignItems="center">
+        <Text>Donor</Text>
+        <CloseButton aria-label="Delete Donation" onClick={handleDeleteDonation} h="10px" w="10px" />
+      </Flex>
       <DonationFilter
         donors={donors}
         donor={donor}
@@ -122,8 +133,15 @@ return (
             onChange={handleSubDonationChange}/>
         ))}
       </CardBody>
-    <CardFooter color="blue.500" fontWeight="bold" onClick={handleAddDonation} width="200px">
-      + Add Donation
+    <CardFooter color="blue.500" fontWeight="bold">
+      <HStack w="100%" >
+        <Button size="sm" colorScheme="blue" variant="ghost" onClick={handleAddDonation} leftIcon={<FaPlus />}>
+          Add Donation
+        </Button>
+        <Button size="sm" colorScheme="blue" variant="ghost" onClick={handleDeleteLastDonation} leftIcon={<FaMinus />}>
+          Delete Last Donation
+        </Button>
+      </HStack>
     </CardFooter>
   </Card>
 );
