@@ -15,6 +15,7 @@ import { LandingPage } from "./components/login/LandingPage";
 import { ChooseLogin } from "./components/login/ChooseLogin";
 import { ForgotPassword } from "./components/forgotPassword/ForgotPassword";
 import { Authentification } from "./components/authentification/authentification";
+import { ResetPassword } from "./components/resetPassword/ResetPassword";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { Donations } from "./components/donations/Donations"
 import { ExitSurvey } from "./components/exit_survey/ExitSurvey";
@@ -59,6 +60,7 @@ const App = () => {
     currentRoute === 'choose-login' ||
     currentRoute === 'signup' ||
     currentRoute === 'forgot-password' ||
+    currentRoute === 'reset-password' ||
     currentRoute === 'authentification' ||
     currentRoute === 'client-landing-page' ||
     currentRoute === 'choose-form' ||
@@ -101,6 +103,10 @@ const App = () => {
               <Route
                 path="/forgot-password/:userType?"
                 element={<ForgotPassword />}
+              />
+              <Route
+                path="/reset-password"
+                element={<ResetPassword />}
               />
               <Route
                 path="/exit-survey/:language?"

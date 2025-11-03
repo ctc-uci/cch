@@ -8,7 +8,6 @@ import {
   EmailAuthCredential,
   EmailAuthProvider,
   getRedirectResult,
-  sendPasswordResetEmail,
   signInWithCredential,
   signInWithEmailAndPassword,
   signOut,
@@ -220,8 +219,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return signOut(auth);
   };
 
-  const resetPassword = ({ email }: Pick<EmailPassword, "email">) => {
-    return sendPasswordResetEmail(auth, email);
+  const resetPassword = async ({ email }: Pick<EmailPassword, "email">) => {
+    try {
+      await backend.post("/authentification/reset-password", { email });
+    } catch (error: any) {
+      // Re-throw with Firebase-style error codes for compatibility
+      if (error.response?.status === 400 && error.response?.data?.error?.includes("No user found")) {
+        const firebaseError = new Error("auth/user-not-found");
+        (firebaseError as any).code = "auth/user-not-found";
+        throw firebaseError;
+      }
+      throw error;
+    }
   };
 
   /**

@@ -65,7 +65,7 @@ export const ForgotPassword = () => {
 
   const handleResetPassword = async (data: ResetPasswordFormValues) => {
     try {
-      await resetPassword(data.email);
+      await resetPassword({ email: data.email });
 
       toast({
         title: "Password Reset Email Sent",
