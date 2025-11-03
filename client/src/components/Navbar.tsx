@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Avatar, Box, HStack, Link, Text, Button } from "@chakra-ui/react";
+import { Avatar, Box, HStack, Link, Text, Button, Image } from "@chakra-ui/react";
 
 import { useNavigate , NavLink } from "react-router-dom";
 
@@ -13,7 +13,7 @@ import { User } from "../types/user";
 export const Navbar = () => {
   const { role } = useRoleContext();
   const { logout } = useAuthContext();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState('home')
   const makeNavTabs = (pageName: string, path: string) => {
     return (
@@ -61,9 +61,9 @@ export const Navbar = () => {
         paddingLeft="54px"
         paddingTop="25px"
       >
-        <HStack>
-          <Avatar src={"/cch_logo.png"} />
-          <Box>Colette's Children's Home</Box>
+        <HStack onClick={() => navigate("/")} cursor="pointer">
+          <Image src={"/cch_logo.png"} height="50px" />
+          <Text fontSize="xl" fontWeight="semibold">Colette's Children's Home</Text>
         </HStack>
         <HStack spacing={5}>
           {createTabs(role ?? "user")}
