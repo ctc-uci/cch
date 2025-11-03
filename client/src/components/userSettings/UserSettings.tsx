@@ -43,7 +43,7 @@ const UserSettings = () => {
   }, [refreshStatus]);
 
   return (
-    <div>
+    <>
       <h1
         style={{
           marginTop: "2%",
@@ -99,7 +99,7 @@ const UserSettings = () => {
           )}
         </Flex>
       </Box>
-    </div>
+    </>
   );
 };
 export default UserSettings;

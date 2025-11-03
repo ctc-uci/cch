@@ -711,10 +711,10 @@ export const ClientList = ({ admin }: ClientListProps) => {
                             position="relative"
                           >
                             <HStack spacing={1} alignItems="center">
-                              <Text>{flexRender(
+                              <Box>{flexRender(
                                 header.column.columnDef.header,
                                 header.getContext()
-                              )}</Text>
+                              )}</Box>
                               {header.column.getCanSort() && (
                                 <Box ml={1}>
                                   {header.column.getIsSorted() === "asc" ? (

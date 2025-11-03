@@ -238,7 +238,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
 
 
   return (
-    <div>
+    <>
       <Flex
         direction="column"
         gap="2rem"
@@ -717,7 +717,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
       >
         Cancel
       </Button>
-    </div>
+    </>
   );
 };
 export default EditSettings;

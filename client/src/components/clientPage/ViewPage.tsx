@@ -261,7 +261,7 @@ export const ViewPage = () => {
   };
 
   return (
-    <div>
+    <>
       <Box w="100%" p={4}>
         <HStack w="100%" align="flex-start">
           <HStack w="60%" spacing={8} align="center">
@@ -587,6 +587,6 @@ export const ViewPage = () => {
           </TableContainer>
         </Box>
       </Box>
-    </div>
+    </>
   );
 };

@@ -20,6 +20,8 @@ export const FrontDeskMonthlyStats = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshStatus, setRefreshStatus] = useState(true);
+  const params = useParams();
+  const language = params.language || "english";
 
   const fetchFrontDesk = async () => {
     try {
@@ -47,8 +49,6 @@ export const FrontDeskMonthlyStats = () => {
     setRefreshStatus(true);
   };
   return (
-    <div>
-      <FormFrontDesk onFormSubmitSuccess={handleFormSubmitSuccess} />
-    </div>
+      <FormFrontDesk onFormSubmitSuccess={handleFormSubmitSuccess} spanish={language === "spanish"} />
   );
 };

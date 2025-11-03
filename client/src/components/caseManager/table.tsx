@@ -32,7 +32,7 @@ const TableCM = ({ items }: TableCMProps) => {
   };
   
   return (
-    <div>
+    <>
     <TableContainer>
       <Table variant="simple">
         <Thead>
@@ -125,7 +125,7 @@ const TableCM = ({ items }: TableCMProps) => {
       </ModalFooter>
     </ModalContent>
   </Modal>
-  </div>
+  </>
   );
 };
 
