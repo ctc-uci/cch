@@ -30,6 +30,7 @@ import { CloseIcon } from '@chakra-ui/icons';
 import { useBackendContext } from '../../contexts/hooks/useBackendContext';
 import { DonationFilter } from '../donations/DonationFilter';
 import { formatDateForInput } from "../../utils/dateUtils";
+import { BackArrowIcon } from './addDonations/BackArrowIcon';
 
 interface EditDrawerProps {
     isOpen: boolean;
@@ -194,7 +195,14 @@ const EditDrawer: React.FC<EditDrawerProps> = ({isOpen, onClose, existingDonatio
       <Drawer isOpen={isOpen} placement="right" size="lg" onClose={onClose}>
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton />
+          <DrawerHeader>
+            <HStack alignItems="center">
+              <BackArrowIcon onClick={onClose} />
+              <Text fontSize="md" mt="2px">
+                {initialDonation.id ? 'Edit Donations' : 'Add Donations'}
+              </Text>
+            </HStack>
+          </DrawerHeader>
           <DrawerHeader>{initialDonation.id ? 'Edit Donations' : 'Add Donations'}</DrawerHeader>
           <DrawerBody>
             <Card>

@@ -30,7 +30,8 @@ import {
   Tr,
   useToast,
   VStack,
-  Stack
+  Stack,
+  Badge
 } from "@chakra-ui/react";
 
 import {
@@ -95,6 +96,13 @@ export const Donations = () => {
 
   const [showSearch, setShowSearch] = useState(false);
 
+  const filterCount =
+    (donor ? 1 : 0) +
+    (startDate instanceof Date && !isNaN(startDate.getTime()) ? 1 : 0) +
+    (endDate instanceof Date && !isNaN(endDate.getTime()) ? 1 : 0) +
+    (freq ? 1 : 0) +
+    filterQuery.filter(q => q !== "").length +
+    (searchKey ? 1 : 0);
 
   const {
     isOpen: isDeleteOpen,
@@ -667,7 +675,7 @@ export const Donations = () => {
         <LoadingWheel/> :
         <Box border="1px solid" padding = "10px" borderColor="gray.300" borderRadius="md" overflow="hidden" width="100%" maxHeight="80%">
           <HStack padding="5px">
-            <DonationListFilter setFilterQuery={setFilterQuery}/>
+            <DonationListFilter setFilterQuery={setFilterQuery} filterCount={filterCount}/>
             <HStack width="100%" justifyContent={"right"}>
               <Input maxWidth="20%" placeholder="search" value={searchKey} onChange={(e) => setSearchKey(e.target.value)} display={showSearch ? 'block' : 'none'}></Input>
               <Box

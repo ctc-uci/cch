@@ -11,6 +11,7 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerOverlay,
+  HStack,
   Input,
   InputGroup,
   InputLeftAddon,
@@ -28,6 +29,7 @@ import { eventTypes } from "../../types/volunteer";
 import type { Volunteer, VolunteerForm } from "../../types/volunteer";
 import { formatDateForInput } from "../../utils/dateUtils";
 import ConfirmCancelModal from "./ConfirmCancelModal";
+import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
 interface VolunteerDrawerProps {
   onFormSubmitSuccess: () => void;
@@ -106,7 +108,7 @@ const VolunteerDrawer = ({
 
       toast({
         title: isEditMode ? "Volunteer Updated" : "Volunteer Added",
-        description: `The volunteer has successfully been ${isEditMode ? "updated" : "added"} in the database at ${currentTime}.`,
+        description: `Volunteer has been ${isEditMode ? "updated" : "added"}!`,
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -133,9 +135,13 @@ const VolunteerDrawer = ({
       >
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader borderBottomWidth="1px">
-            {isEditMode ? "Edit" : "Add"} Volunteer
+          <DrawerHeader>
+            <HStack alignItems="center">
+              <BackArrowIcon onClick={onClose} />
+              <Text fontSize="md" mt="2px">
+                {isEditMode ? "Edit" : "Add"} Volunteer
+              </Text>
+            </HStack>
           </DrawerHeader>
 
           <DrawerBody>

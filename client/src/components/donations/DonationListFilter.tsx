@@ -24,6 +24,7 @@ import {
   useToast,
   Divider,
   IconButton,
+  Badge,
 } from "@chakra-ui/react";
 
 import { ChevronDownIcon, SearchIcon } from "@chakra-ui/icons";
@@ -36,11 +37,11 @@ import {
 
 interface DonationListFilterProps {
   setFilterQuery: React.Dispatch<React.SetStateAction<string[]>>;
-
+  filterCount?: number;
 }
 
 
-export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) => {
+export const DonationListFilter = ({setFilterQuery, filterCount = 0}: DonationListFilterProps) => {
     const toast = useToast();
     const [nextId, setNextId] = useState(2);
 
@@ -158,10 +159,13 @@ export const DonationListFilter = ({setFilterQuery}: DonationListFilterProps) =>
   return (
     <Popover placement="right-end">
       <PopoverTrigger>
-        <Button>
-          <HStack>
+        <Button variant="ghost">
+          <HStack spacing={2}>
             <Icon as={MdOutlineFilterAlt} />
-            <h1>Filter</h1>
+            <Text>Filter</Text>
+            {filterCount > 0 && (
+                        <Badge colorScheme="blue" borderRadius="full">{filterCount}</Badge>
+                      )}
           </HStack>
         </Button>
       </PopoverTrigger>

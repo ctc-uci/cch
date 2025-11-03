@@ -71,8 +71,8 @@ const VolunteersTable = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [currentlySelectedVolunteer, setCurrentlySelectedVolunteer] =
     useState<Volunteer | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -97,10 +97,10 @@ const VolunteersTable = ({
     const fetchVolunteers = async () => {
       try {
         const params = {
-          startDate: startDate
+          startDate: startDate instanceof Date && !isNaN(startDate.getTime())
             ? startDate.toLocaleDateString("en-US", { timeZone: "UTC" })
             : "",
-          endDate: endDate
+          endDate: endDate instanceof Date && !isNaN(endDate.getTime())
             ? endDate.toLocaleDateString("en-US", { timeZone: "UTC" })
             : "",
           eventType: eventTypeFilter ? eventTypeFilter : "",
@@ -133,20 +133,20 @@ const VolunteersTable = ({
 
   const handleResetDropdowns = () => {
     setEventTypeFilter("");
-    setStartDate(undefined);
-    setEndDate(undefined);
+    setStartDate(null);
+    setEndDate(null);
   };
 
   const handleStartDateChange = (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const dateValue = event.target.value;
-    setStartDate(dateValue ? new Date(dateValue) : undefined);
+    setStartDate(dateValue ? new Date(dateValue) : null);
   };
 
   const handleEndDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const dateValue = event.target.value;
-    setEndDate(dateValue ? new Date(dateValue) : undefined);
+    setEndDate(dateValue ? new Date(dateValue) : null);
   };
 
   const handleCheckboxChange = useCallback((volunteerId: number) => {
@@ -394,7 +394,8 @@ const VolunteersTable = ({
         justify="space-between"
         align="left"
       >
-        {/* <HStack spacing="12px" width="60%">
+        
+        <HStack spacing="12px" width="60%">
           <Select
             placeholder="Select Event Type"
             value={eventTypeFilter}
@@ -417,6 +418,7 @@ const VolunteersTable = ({
             type="date"
             name="startDate"
             w="60%"
+            value={startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate.toISOString().split("T")[0] : ""}
             onChange={handleStartDateChange}
           />
           <Text>To:</Text>
@@ -424,10 +426,11 @@ const VolunteersTable = ({
             type="date"
             name="endDate"
             w="60%"
+            value={endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate.toISOString().split("T")[0] : ""}
             onChange={handleEndDateChange}
           />
-        </HStack> */}
-        {/* <HStack
+        </HStack>
+        <HStack
           justify="space-between"
           paddingX="12px"
         >
@@ -449,7 +452,7 @@ const VolunteersTable = ({
             onClose={onClose}
             isOpen={isOpen}
           />
-        </HStack> */}
+        </HStack>
       </HStack>
       {/* Reset moved into filter popover */}
       <Box
@@ -515,6 +518,7 @@ const VolunteersTable = ({
                         type="date"
                         name="startDate"
                         w="60%"
+                        value={startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate.toISOString().split("T")[0] : ""}
                         onChange={handleStartDateChange}
                       />
                       <Text>To:</Text>
@@ -522,6 +526,7 @@ const VolunteersTable = ({
                         type="date"
                         name="endDate"
                         w="60%"
+                        value={endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate.toISOString().split("T")[0] : ""}
                         onChange={handleEndDateChange}
                       />
                     </HStack>
@@ -770,30 +775,11 @@ const VolunteersTable = ({
             </Table>
           </Box>
         </TableContainer>}
-        <HStack
-          justify="flex-end"
-          mt="12px"
-          paddingX="12px"
-        >
-          <Button
-            colorScheme="red"
-            onClick={handleDelete}
-            isDisabled={selectedVolunteers.length === 0}
-          >
-            Delete
-          </Button>
-          <Button
-            colorScheme="blue"
-            onClick={onOpen}
-          >
-            Add
-          </Button>
           <VolunteerDrawer
             onFormSubmitSuccess={refreshPage}
             onClose={onClose}
             isOpen={isOpen}
           />
-        </HStack>
         {currentlySelectedVolunteer && (
           <VolunteerDrawer
             volunteer={currentlySelectedVolunteer}
