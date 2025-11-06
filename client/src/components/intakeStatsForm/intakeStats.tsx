@@ -217,6 +217,7 @@ export const IntakeStats = () => {
         duration: 9000,
         isClosable: true,
       });
+      navigate("/forms-hub");
     } catch (error) {
       console.error("Submission error:", error);
       toast({
