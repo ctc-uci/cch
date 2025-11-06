@@ -10,6 +10,10 @@ import {
   Box,
   Button,
   Flex,
+  Grid,
+  GridItem,
+  HStack,
+  Icon,
   Input,
   Select,
   Stack,
@@ -24,6 +28,8 @@ import {
   reauthenticateWithCredential,
   updatePassword,
 } from "firebase/auth";
+
+import { MdEdit } from "react-icons/md";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { LocationData } from "../../types/location.ts";
@@ -543,132 +549,119 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
               fontSize="lg"
               fontWeight="bold"
             >
-              Confirm {submitting ? 'Changes' : 'Cancel'}
+              <HStack>
+                <Icon as={MdEdit} />
+                <Text>
+                  Confirm {submitting ? 'Changes' : 'Cancel'}
+                </Text>
+              </HStack>
             </AlertDialogHeader>
 
             <AlertDialogBody>
-              {user.firstName !== formData.firstName && (
-                <Stack>
-                  <Flex
-                    alignItems={"center"}
-                    gap={"2rem"}
+              <Grid templateColumns="1fr 2fr" gap={4}>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
                   >
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="gray.500"
-                    >
-                      FIRST NAME
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color="gray.600"
-                    >
-                      {formData.firstName}
-                    </Text>
-                  </Flex>
-                </Stack>
-              )}
-              {user.lastName !== formData.lastName && (
-                <Stack>
-                  <Flex
-                    alignItems={"center"}
-                    gap={"2rem"}
-                  >
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="gray.500"
-                    >
-                      LAST NAME
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color="gray.600"
-                    >
-                      {formData.lastName}
-                    </Text>
-                  </Flex>
-                </Stack>
-              )}
-              {userLocation !== oldUserLocation && (
-                <Stack>
-                  <Flex
-                    alignItems={"center"}
-                    gap={"2rem"}
-                  >
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="gray.500"
-                    >
-                      LOCATION
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color="gray.600"
-                    >
-                      {userLocation.name}
-                    </Text>
-                  </Flex>
-                </Stack>
-              )}
-              {user.email !== formData.email && (
-                <Stack>
-                  <Flex
-                    alignItems={"center"}
-                    gap={"2rem"}
-                  >
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="gray.500"
-                    >
-                      EMAIL
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color="gray.600"
-                    >
-                      {formData.email}
-                    </Text>
-                  </Flex>
-                </Stack>
-              )}
-              {user.phoneNumber !== formData.phoneNumber && (
-                <Stack>
-                  <Flex
-                    alignItems={"center"}
-                    gap={"2rem"}
-                  >
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="gray.500"
-                    >
-                      PHONE
-                    </Text>
-                    <Text
-                      fontSize="sm"
-                      color="gray.600"
-                    >
-                      {formData.phoneNumber}
-                    </Text>
-                  </Flex>
-                </Stack>
-              )}
-              {user.phoneNumber === formData.phoneNumber &&
-                user.email === formData.email &&
-                userLocation === oldUserLocation &&
-                user.firstName === formData.firstName &&
-                user.lastName === formData.lastName && (
+                    FIRST NAME
+                  </Text>
+                </GridItem>
+                <GridItem>
                   <Text
                     fontSize="sm"
                     color="gray.600"
                   >
-                    No changes detected.
+                    {formData.firstName}
                   </Text>
-                )}
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
+                  >
+                    LAST NAME
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {formData.lastName}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
+                  >
+                    LOCATION
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {userLocation.name}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
+                  >
+                    EMAIL
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {formData.email}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
+                  >
+                    PHONE
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {formData.phoneNumber}
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    fontWeight="bold"
+                    color="gray.500"
+                  >
+                    PASSWORD CHANGE
+                  </Text>
+                </GridItem>
+                <GridItem>
+                  <Text
+                    fontSize="sm"
+                    color="gray.600"
+                  >
+                    {passwordData.newPassword ? "Yes" : "No"}
+                  </Text>
+                </GridItem>
+              </Grid>
             </AlertDialogBody>
 
             <AlertDialogFooter>
