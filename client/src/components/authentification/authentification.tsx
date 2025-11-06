@@ -50,7 +50,7 @@ export const Authentification = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const userAbbreviation = userType === "Case Manager" ? "CM" : (userType === "Client" ? "CL": "AD");
 
-  const { handleRedirectResult, createCode, authenticate } = useAuthContext();
+  const { handleRedirectResult, authenticate } = useAuthContext();
   const { backend } = useBackendContext();
   const [pin, setPin] = useState("");
 
@@ -83,26 +83,6 @@ export const Authentification = () => {
       setPin("");
     }
   };
-
-  // const generateCode = async () => {
-  //   try {
-  //     await createCode();
-  //   } catch (err) {
-  //     console.error('Error posting code: ', err);
-  //   }
-  // };
-
-  // useEffect( () => {
-  //   const generateCode = async () => {
-  //     try {
-  //       await createCode();
-  //     } catch (err) {
-  //       console.error('Error posting code: ', err);
-  //     }
-  //   };
-  //   generateCode();
-  // }, [createCode]);
-
   useEffect(() => {
     handleRedirectResult(backend, navigate, toast);
   }, [backend, handleRedirectResult, navigate, toast]);
@@ -191,7 +171,7 @@ export const Authentification = () => {
               <ModalHeader display={'flex'} justifyContent={'space-between'}>
                 <Box display={'flex'} alignItems={'center'} gap="10px">
                   <IoMdLock size={'27px'} style={{ marginBottom: "5px" }}/>
-                  <Text fontFamily={'Inter'} fontSize={'18px'} fontWeight={'700'}>Authorization Failed</Text>
+                  <Text fontSize={'18px'} fontWeight={'700'}>Authorization Failed</Text>
                 </Box>
                 <IconButton 
                   icon={<IoMdClose />} 
@@ -207,7 +187,6 @@ export const Authentification = () => {
               </ModalHeader>
               <ModalBody>
                 <Text
-                  fontFamily={'Inter'}
                   fontSize={'16px'}
                   fontStyle={'normal'}
                   fontWeight={'400'}

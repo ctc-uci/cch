@@ -76,7 +76,7 @@ export const Login = () => {
         email: data.email,
         password: data.password,
       });
-      
+
       await createCode(data.email, authCredential);
       
       if (userType === "Case Manager") {

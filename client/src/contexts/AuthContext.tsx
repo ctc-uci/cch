@@ -188,7 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const authenticate = async ({ code }: Authenticate) => {
     if (authCredential && email) {
       const response = await backend.post(
-        `/authentification/verify?email=${email}&code=${code}`
+        `/authentification/verify?email=${encodeURIComponent(email)}&code=${code}`
       );
       if (response.data.length === 0) {
         throw new Error("Invalid code. Try again.");
