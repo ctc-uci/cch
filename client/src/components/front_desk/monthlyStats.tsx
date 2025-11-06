@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import FormFrontDesk from "./form";
+import { useParams } from "react-router-dom";
 
 interface MonthlyStats {
   date: string;
