@@ -89,7 +89,7 @@ const AddPreview = ({
     try {
       const roleDict = {
         admin: "admin",
-        cms: "case_manager",
+        cms: "case manager",
         clients: "client"
       };
 
@@ -141,18 +141,28 @@ const AddPreview = ({
           console.error(e);
         }
 
-      if (roleDict[userType] === "admin") {
-        try {
+      try {
+        if (roleDict[userType] === "admin") {
           await backend.post("/users/invite", {
             email: newUser.email,
-            role: roleDict[userType],
+            role: "admin",
             firstName: newUser.firstName,
             lastName: newUser.lastName,
             phoneNumber: newUser.phoneNumber,
           });
-        } catch (e) {
-          console.error(e);
         }
+        else {
+          await backend.post("/users/create", {
+            email: newUser.email,
+            role: "user",
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            phoneNumber: newUser.phoneNumber,
+          });
+        }
+        
+      } catch (e) {
+        console.error(e);
       }
         
         onClose();
