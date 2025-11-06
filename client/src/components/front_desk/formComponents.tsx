@@ -12,6 +12,7 @@ import {
   Radio,
   RadioGroup,
   Select,
+  Stack,
   Text,
 } from "@chakra-ui/react";
 
@@ -134,7 +135,7 @@ export const SelectInputComponent = ({
 }: SelectInputProps) => {
   return (
     <FormControl isRequired>
-      <HStack display="flex"  flexDirection="column">
+      <Stack>
       {label && <Text >{label}</Text>}
         <Select
           name={name}
@@ -152,7 +153,7 @@ export const SelectInputComponent = ({
             </option>
           ))}
         </Select>
-      </HStack>
+      </Stack>
     </FormControl>
   );
 };

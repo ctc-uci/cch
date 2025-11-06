@@ -238,6 +238,17 @@ export const FormTable = () => {
     [selectedRowIds]
   );
 
+  const frontDeskColumns: ColumnDef<Form>[] = useMemo(
+    () =>
+      columns.map((column) => {
+        const colWithKey = column as unknown as { accessorKey?: string };
+        if (colWithKey.accessorKey === "name") {
+          return { ...column, header: "Case Manager" } as ColumnDef<Form>;
+        }
+        return column;
+      }),
+    [columns]
+  );
   const handleSelectAllCheckboxClick = (
     tableInstance: ReturnType<typeof useReactTable<Form>>
   ) => {
@@ -341,10 +352,11 @@ export const FormTable = () => {
             id: form.id,
             hashedId: form.id,
             date: form.date,
-            name: "",
+            name: form.caseManager,
             title: "Front Desk Monthly Statistics",
           })
         );
+        console.log("frontDeskResponse.data", frontDeskResponse.data);
 
         const exitSurveyForms: Form[] = (await exitSurveyResponse.data.data?.map(
           (form: Form) => ({
@@ -524,7 +536,7 @@ export const FormTable = () => {
 
   const frontDeskStatisticsTable = useReactTable<Form>({
     data: filteredFrontDeskStatistics,
-    columns,
+    columns: frontDeskColumns,
     state: { sorting },
     sortDescFirst: true,
     onSortingChange: setSorting,
