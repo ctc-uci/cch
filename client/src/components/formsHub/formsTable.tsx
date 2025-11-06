@@ -356,7 +356,6 @@ export const FormTable = () => {
             title: "Front Desk Monthly Statistics",
           })
         );
-        console.log("frontDeskResponse.data", frontDeskResponse.data);
 
         const exitSurveyForms: Form[] = (await exitSurveyResponse.data.data?.map(
           (form: Form) => ({
@@ -414,23 +413,28 @@ export const FormTable = () => {
         const getDate = (date: { lastUpdatedAt?: string }[] | undefined) =>
           date?.[0]?.lastUpdatedAt ? new Date(date[0].lastUpdatedAt) : null;
 
-        setInitialScreenerDate(getDate(initialScreenerResponse.data));
-        setFrontDeskDate(getDate(frontDeskMonthlyStatsResponse.data));
-        setCMMonthlyDate(getDate(cmMonthlyStatsResponse.data));
-        setExitSurveyDate(getDate(lastUpdatedExitSurveyResponse.data));
-        setSuccessStoryDate(getDate(lastUpdatedSuccessStoryResponse.data));
-        setRandomClientSurveyDate(
-          getDate(lastUpdatedRandomSurveyResponse.data)
-        );
+        const initialScreenerDt = getDate(initialScreenerResponse.data);
+        const frontDeskDt = getDate(frontDeskMonthlyStatsResponse.data);
+        const cmMonthlyDt = getDate(cmMonthlyStatsResponse.data);
+        const exitSurveyDt = getDate(lastUpdatedExitSurveyResponse.data);
+        const successStoryDt = getDate(lastUpdatedSuccessStoryResponse.data);
+        const randomClientSurveyDt = getDate(lastUpdatedRandomSurveyResponse.data);
+
+        setInitialScreenerDate(initialScreenerDt);
+        setFrontDeskDate(frontDeskDt);
+        setCMMonthlyDate(cmMonthlyDt);
+        setExitSurveyDate(exitSurveyDt);
+        setSuccessStoryDate(successStoryDt);
+        setRandomClientSurveyDate(randomClientSurveyDt);
 
         const mostRecent = new Date(
           Math.max(
-            initialScreenerDate?.getTime() || 0,
-            frontDeskDate?.getTime() || 0,
-            cmMonthlyDate?.getTime() || 0,
-            exitSurveyDate?.getTime() || 0,
-            successStoryDate?.getTime() || 0,
-            randomClientSurveyDate?.getTime() || 0
+            initialScreenerDt?.getTime() || 0,
+            frontDeskDt?.getTime() || 0,
+            cmMonthlyDt?.getTime() || 0,
+            exitSurveyDt?.getTime() || 0,
+            successStoryDt?.getTime() || 0,
+            randomClientSurveyDt?.getTime() || 0
           )
         );
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
