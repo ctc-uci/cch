@@ -238,7 +238,6 @@ function FormFrontDesk({ onFormSubmitSuccess, spanish }: FormFrontDeskProps) {
           10
         ),
       };
-      console.log("monthlyStatData", monthlyStatData);
 
       await backend.post("/frontDesk", monthlyStatData);
       toast({

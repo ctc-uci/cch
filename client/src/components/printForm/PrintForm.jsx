@@ -54,7 +54,7 @@ export default function PrintForm({ formType, formId }) {
           break;
         case "Client Tracking Statistics (Intake Statistics)":
           response = await backend.get(`/intakeStatsForm/${formId}`);
-          data = [response.data];
+          data = response.data;
           documentComponent = <IntakeStatsForm intakeStatsData={data} />;
           break;
         case "Front Desk Monthly Statistics":
