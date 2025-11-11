@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Box,
@@ -19,37 +19,76 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {ConfirmChangesModal} from "./ConfirmChangesModal.tsx";
+import { DeleteUserModal } from "../admin/DeleteUserModal.tsx";
 
-export default function EditClient({ email, setClientModal }) {
+type EditClientProps = { email: string; setClientModal: (open: boolean) => void };
+type ClientUser = {
+  id: number;
+  email: string;
+  firebaseUid?: string;
+  [key: string]: unknown;
+};
+
+export default function EditClient({ email, setClientModal }: EditClientProps) {
   const { backend } = useBackendContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: deleteIsOpen,
+    onOpen: deleteOnOpen,
+    onClose: deleteOnClose,
+  } = useDisclosure();
   const auth = getAuth();
   const toast = useToast();
 
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState<ClientUser | null>(null);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [formData, _setFormData] = useState<Record<string, unknown>>({});
+
+  const handleDelete = async () => {
+    try {
+      // delete client record
+      if (!user) return;
+      await backend.delete(`/clients/${user.id}`);
+      // delete corresponding user by email (also deletes Firebase if linked on server)
+      await backend.delete(`/users/email/${encodeURIComponent(user.email)}`);
+      toast({
+        title: "Client Deleted",
+        description: "The client account has been removed.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      setClientModal(false);
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast({
+        title: "Delete Failed",
+        description: "An error occurred while deleting this client.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
       try {
         const response = await backend.get(`/clients/email/${email}`);
 
-        setUser(response.data[0]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setIsLoading(false);
+        setUser(response.data[0] as ClientUser);
+      } catch (_error) {
+        console.error("Error fetching data:", _error);
       }
     };
     fetchData();
-  }, []);
+  }, [backend, email]);
 
   const handlePasswordChange = async () => {
     if (!auth.currentUser) {
@@ -69,12 +108,15 @@ export default function EditClient({ email, setClientModal }) {
       return;
     }
     try {
+      if (!user) {
+        return;
+      }
       const credential = EmailAuthProvider.credential(
         user.email,
         passwordData.currentPassword
       );
       await reauthenticateWithCredential(auth.currentUser, credential);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Password update failed",
         description: "Failed to update password. Please try again.",
@@ -109,6 +151,7 @@ export default function EditClient({ email, setClientModal }) {
       await handlePasswordChange();
     }
     try {
+      if (!user) return;
       // console.log("Sending request: ", {
       //   ...formData,
       //   firebaseUid: user.firebaseUid,
@@ -183,11 +226,11 @@ export default function EditClient({ email, setClientModal }) {
                 >
                   Email
                 </Text>
-                <Input
+                {user && <Input
                   placeholder="Email"
                   defaultValue={user.email}
                   name="email"
-                />
+                />}
               </Stack>
             </Flex>
           </Stack>
@@ -274,6 +317,13 @@ export default function EditClient({ email, setClientModal }) {
             Cancel
           </Button>
           <Button
+            colorScheme="red"
+            variant="outline"
+            onClick={deleteOnOpen}
+          >
+            Delete Profile
+          </Button>
+          <Button
             colorScheme="blue"
             onClick={onOpen}
           >
@@ -284,9 +334,15 @@ export default function EditClient({ email, setClientModal }) {
         <ConfirmChangesModal
           isOpen={isOpen}
           onClose={onClose}
-          email={user.email}
+          email={user ? user.email : ""}
           password={passwordData.newPassword}
           onSubmit={handleSaveChanges}
+        />
+        <DeleteUserModal
+          isOpen={deleteIsOpen}
+          onClose={deleteOnClose}
+          title="Client"
+          onSubmit={handleDelete}
         />
       </Box>
     )

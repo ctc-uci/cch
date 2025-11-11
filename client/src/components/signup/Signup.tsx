@@ -30,25 +30,39 @@ import { z } from "zod";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-const signupSchema = z.object({
+const signupBaseObject = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters long"),
   confirmPassword: z.string(),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
-})
+});
+
+const baseSignupSchema = signupBaseObject.superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      path: ["confirmPassword"],
+      message: "Passwords don't match",
+      code: z.ZodIssueCode.custom,
+    });
+  }
+});
+
+const fullDetailsSchema = signupBaseObject
+  .extend({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    phoneNumber: z.string().min(10, "Phone number must be at least 10 characters"),
+  })
   .superRefine((data, ctx) => {
     if (data.password !== data.confirmPassword) {
       ctx.addIssue({
-        path: ['confirmPassword'],
+        path: ["confirmPassword"],
         message: "Passwords don't match",
         code: z.ZodIssueCode.custom,
       });
     }
-});
+  });
 
-type SignupFormValues = z.infer<typeof signupSchema>;
+type SignupDetails = z.infer<typeof fullDetailsSchema>;
 
 export const Signup = () => {
   const { userType = "Admin"} = useParams<{ userType: string }>();
@@ -57,27 +71,33 @@ export const Signup = () => {
   const toast = useToast();
   const { signup, handleRedirectResult } = useAuthContext();
   const { backend } = useBackendContext();
+  const isClient = userType === "Client";
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
+  } = useForm<SignupDetails>({
+    resolver: zodResolver(isClient ? baseSignupSchema : fullDetailsSchema),
     mode: "onBlur",
   });
 
-  const handleSignup = async (data: SignupFormValues) => {
+  const handleSignup = async (data: SignupDetails) => {
 
     try {
 
       await signup({
         email: data.email,
         password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phoneNumber: data.phoneNumber,
-        role: userType === "Admin" ? "admin" : (userType === "Case Manager" ? "user" : "client"),
+        firstName: isClient ? "" : data.firstName,
+        lastName: isClient ? "" : data.lastName,
+        phoneNumber: isClient ? "" : data.phoneNumber,
+        role:
+          userType === "Admin"
+            ? "admin"
+            : userType === "Case Manager"
+            ? "user"
+            : "client",
       });
       // if (user) {
       //   navigate(`/clientlist`);
@@ -207,49 +227,53 @@ export const Signup = () => {
                 </FormErrorMessage>
               </FormControl>
 
-              <Grid templateColumns="1fr 1fr" gap={4} mb={4}>
-                <FormControl isInvalid={!!errors.firstName}>
-                  <Text>First Name</Text>
-                  <Input
-                    placeholder="First Name"
-                    size="lg"
-                    {...register("firstName")}
-                    name="firstName"
-                    isRequired
-                  />
-                  <FormErrorMessage>{errors.firstName?.message?.toString()}</FormErrorMessage>
-                </FormControl>
+              {!isClient && (
+                <>
+                  <Grid templateColumns="1fr 1fr" gap={4} mb={4}>
+                    <FormControl isInvalid={!!errors.firstName}>
+                      <Text>First Name</Text>
+                      <Input
+                        placeholder="First Name"
+                        size="lg"
+                        {...register("firstName")}
+                        name="firstName"
+                        isRequired
+                      />
+                      <FormErrorMessage>{errors.firstName?.message?.toString()}</FormErrorMessage>
+                    </FormControl>
 
-                <FormControl isInvalid={!!errors.lastName}>
-                  <Text>Last Name</Text>
-                  <Input
-                    placeholder="Last Name"
-                    size="lg"
-                    {...register("lastName")}
-                    name="lastName"
-                    isRequired
-                  />
-                  <FormErrorMessage>{errors.lastName?.message?.toString()}</FormErrorMessage>
-                </FormControl>
-              </Grid>
+                    <FormControl isInvalid={!!errors.lastName}>
+                      <Text>Last Name</Text>
+                      <Input
+                        placeholder="Last Name"
+                        size="lg"
+                        {...register("lastName")}
+                        name="lastName"
+                        isRequired
+                      />
+                      <FormErrorMessage>{errors.lastName?.message?.toString()}</FormErrorMessage>
+                    </FormControl>
+                  </Grid>
 
-              <Text>Phone Number</Text>
-              <FormControl isInvalid={!!errors.phoneNumber}>
-                <Center>
-                  <Input
-                    placeholder="Phone Number"
-                    type="phoneNumber"
-                    size={"lg"}
-                    {...register("phoneNumber")}
-                    name="phoneNumber"
-                    isRequired
-                    autoComplete="phoneNumber"
-                  />
-                </Center>
-                <FormErrorMessage>
-                  {errors.phoneNumber?.message?.toString()}
-                </FormErrorMessage>
-              </FormControl>
+                  <Text>Phone Number</Text>
+                  <FormControl isInvalid={!!errors.phoneNumber}>
+                    <Center>
+                      <Input
+                        placeholder="Phone Number"
+                        type="phoneNumber"
+                        size={"lg"}
+                        {...register("phoneNumber")}
+                        name="phoneNumber"
+                        isRequired
+                        autoComplete="phoneNumber"
+                      />
+                    </Center>
+                    <FormErrorMessage>
+                      {errors.phoneNumber?.message?.toString()}
+                    </FormErrorMessage>
+                  </FormControl>
+                </>
+              )}
 
 
               <Button bg="#3182CE" mt={5} color="white" type="submit" size={"lg"} sx={{ width: "100%" }}

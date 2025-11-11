@@ -145,10 +145,21 @@ export const ManageAccounts = () => {
 
   const handleDelete = async () => {
     try {
-      selectedRowIds.map(async (row_id) => {
-        const caseManager = await backend.delete(`/caseManagers/${row_id}`);
-        await backend.delete(`/users/email/${caseManager.data[0].email}`);
-      });
+      if (view === "clients") {
+        await Promise.all(
+          selectedRowIds.map(async (row_id) => {
+            const person = persons.find((p) => p.id === row_id);
+            if (!person) return;
+            await backend.delete(`/clients/${row_id}`);
+            await backend.delete(`/users/email/${encodeURIComponent(person.email)}`);
+          })
+        );
+      } else {
+        selectedRowIds.map(async (row_id) => {
+          const caseManager = await backend.delete(`/caseManagers/${row_id}`);
+          await backend.delete(`/users/email/${caseManager.data[0].email}`);
+        });
+      }
       setPersons(
         persons.filter((client) => !selectedRowIds.includes(client.id))
       );

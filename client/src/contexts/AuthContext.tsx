@@ -113,13 +113,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     try {
+      // For clients, only set firebaseUid; do not overwrite profile fields
       await backend.put("/users/updateUser", {
         email: email,
-        firstName: firstName,
-        lastName: lastName,
-          phoneNumber: phoneNumber,
-          firebaseUid: userCredential.user.uid,
-        });
+        firstName: role === "client" ? null : firstName,
+        lastName: role === "client" ? null : lastName,
+        phoneNumber: role === "client" ? null : phoneNumber,
+        firebaseUid: userCredential.user.uid,
+      });
       } catch (error) {
         console.error("Error updating user:", error);
       }
