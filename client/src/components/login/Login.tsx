@@ -130,6 +130,8 @@ export const Login = () => {
         navigate("/admin-client-list", { replace: true });
       } else if (role === "user") {
         navigate("/clientlist", { replace: true });
+      } else if (role === "client") {
+        navigate("/choose-form", { replace: true });
       }
     }
   }, [currentUser, role, initialized, navigate]);

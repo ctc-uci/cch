@@ -11,14 +11,14 @@ const ClientLandingPage = () => {
     const handleContinue = () => {
       const formSelected = params.form;
       if (formSelected === 'rcs'){
-        navigate(`random-client-survey/${language}`)
+      navigate(`/random-client-survey/${language}`)
       } else if (formSelected === 'isf'){
-        navigate(`personal/${language}`)
+      navigate(`/personal/${language}`)
       } else if (formSelected === 'es'){
-        navigate(`exit-survey/${language}`)
+      navigate(`/exit-survey/${language}`)
       }
       else if (formSelected === 'ss'){
-        navigate(`success-story/${language}`)
+      navigate(`/success-story/${language}`)
       }
     }
 
