@@ -131,15 +131,16 @@ exitSurveyRouter.post("/", async (req, res) => {
       experienceTakeaway,
       experienceAccomplished,
       experienceExtraNotes,
+      client_id,
     } = req.body;
 
     const data = await db.query(
       `INSERT INTO exit_survey (
         cm_id, name, site, program_date_completion, cch_rating, cch_like_most, cch_could_be_improved,
         life_skills_rating, life_skills_helpful_topics, life_skills_offer_topics_in_the_future, cm_rating, cm_change_about,
-        cm_most_beneficial, experience_takeaway, experience_accomplished, experience_extra_notes
+        cm_most_beneficial, experience_takeaway, experience_accomplished, experience_extra_notes, client_id
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
       ) RETURNING id`,
       [
         cmId,
@@ -158,6 +159,7 @@ exitSurveyRouter.post("/", async (req, res) => {
         experienceTakeaway,
         experienceAccomplished,
         experienceExtraNotes,
+        client_id,
       ]
     );
 

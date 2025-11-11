@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Box,
@@ -16,12 +16,14 @@ import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
 import { ProgressSteps } from "../ProgressSteps.tsx";
 import { SuccessScreen } from "../SuccessScreen.tsx";
 import { useParams } from "react-router-dom";
+import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 const initialFormData = {
   name: "",
   cmId: 0,
   site: 0,
   programDateCompletion: "",
+  client_id: 0,
   cchRating: "",
   cchLikeMost: "",
   cchCouldBeImproved: "",
@@ -44,6 +46,8 @@ export const ExitSurvey = () => {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
   const language = params.language || "english";
+  const { currentUser } = useAuthContext();
+
 
   const handleSubmit = async (
     event:
@@ -53,6 +57,9 @@ export const ExitSurvey = () => {
     event.preventDefault();
     if (onReview) {
       try {
+        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+        const client = response.data?.[0];
+        formData.client_id = client.id;
         await backend.post("/exitSurvey", formData);
         toast({
           title: "Form submitted",

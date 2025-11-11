@@ -84,7 +84,7 @@ export const Login = () => {
       } else if (userType === "Admin") {
         navigate("/authentification/Admin");
       } else if (userType === "Client") {
-        navigate("/choose-form"); 
+        navigate("/authentification/Client"); 
       }
 
       //else if (userType === "Client") navigate("/client-landing-page");

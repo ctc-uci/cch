@@ -45,6 +45,7 @@ export type ExitSurveyForm = {
   cmId: number;
   site: number;
   programDateCompletion: string;
+  client_id: number;
   cchRating: string;
   cchLikeMost: string;
   cchCouldBeImproved: string;
