@@ -737,7 +737,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
                       <Tr
                         key={row.id}
                         cursor="pointer"
-                        onClick={() => navigate(`/ViewClient/2`)}
+                        onClick={() => navigate(`/ViewClient/${row.original.id}`)}
                       >
                         {row.getVisibleCells().map((cell) => (
                           <Td
