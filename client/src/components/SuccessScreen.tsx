@@ -8,7 +8,18 @@ export const SuccessScreen = () => {
   const { logout } = useAuthContext();
 
   return (
-    <Center minH="100vh" bg="white">
+    <Center
+      minH="100vh"
+      bg="white"
+      cursor="pointer"
+      onClick={async () => {
+        try {
+          await logout();
+        } finally {
+          navigate('/landing-page');
+        }
+      }}
+    >
       <VStack spacing={6}>
         <Text fontSize="3xl" fontWeight="normal">
           You're all set!
@@ -21,14 +32,6 @@ export const SuccessScreen = () => {
           display="flex"
           alignItems="center"
           justifyContent="center"
-          cursor="pointer"
-          onClick={async () => {
-            try {
-              await logout();
-            } finally {
-              navigate('/landing-page');
-            }
-          }}
         >
           <CheckIcon color="white" boxSize={10} />
         </Box>
