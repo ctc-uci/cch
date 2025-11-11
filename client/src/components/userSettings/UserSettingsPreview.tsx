@@ -10,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
+import { useEffect } from "react";
 
 const UserSettingsPreview = ({
   user,
@@ -145,7 +146,7 @@ const UserSettingsPreview = ({
           >
             USERNAME
           </Text>
-          <Text>{currentUser?.displayName}</Text>
+          <Text>{currentUser?.email}</Text>
         </Flex>
         <Flex justify="space-between">
           <Text

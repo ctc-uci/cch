@@ -11,7 +11,6 @@ import {
   Button,
   Drawer,
   DrawerBody,
-  DrawerCloseButton,
   DrawerContent,
   DrawerFooter,
   DrawerHeader,
@@ -43,7 +42,7 @@ export const AddClientForm = ({
     onClose: closeAlert,
   } = useDisclosure();
 
-  const cancelRef = useRef();
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const resetForm = () => {
@@ -97,7 +96,7 @@ export const AddClientForm = ({
       setHasSubmitted(false);
       resetForm();
     }
-  }, [hasSubmitted]);
+  }, [hasSubmitted, onClientAdded]);
 
   const handleCloseAndSave = () => {
     onClose();
@@ -169,14 +168,58 @@ export const AddClientForm = ({
   const [formInProgress, setFormInProgress] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, boolean>>({});
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const btnRef = React.useRef();
+  const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const { backend } = useBackendContext();
   const toast = useToast();
+  const [validUnitIds, setValidUnitIds] = React.useState<number[]>([]);
+  const [validCaseManagerIds, setValidCaseManagerIds] = React.useState<number[]>([]);
+  const [units, setUnits] = React.useState<Array<{ id: number; name: string }>>([]);
+  const [caseManagers, setCaseManagers] = React.useState<Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>>([]);
 
   // Helper function to check if a field is empty
-  const isFieldEmpty = (value: any): boolean => {
+  const isFieldEmpty = (value: unknown): boolean => {
     return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
   };
+
+  // Load valid foreign key IDs for validation
+  useEffect(() => {
+    const loadReferences = async () => {
+      try {
+        const [unitsRes, cmsRes] = await Promise.all([
+          backend.get("/units"),
+          backend.get("/caseManagers"),
+        ]);
+        const unitList: Array<{ id: number; name: string }> = Array.isArray(unitsRes.data)
+          ? unitsRes.data.map((u: { id: number | string; name: string }) => ({
+              id: Number(u.id),
+              name: u.name,
+            }))
+            .filter((u) => !Number.isNaN(u.id))
+          : [];
+        const unitIds = unitList.map((u) => u.id);
+        setUnits(unitList);
+        const cmList: Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }> =
+          Array.isArray(cmsRes.data)
+            ? cmsRes.data
+                .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+                  id: Number(cm.id),
+                  firstName: cm.firstName,
+                  lastName: cm.lastName,
+                  first_name: cm.first_name,
+                  last_name: cm.last_name,
+                }))
+                .filter((cm) => !Number.isNaN(cm.id))
+            : [];
+        const cmIds = cmList.map((cm) => cm.id);
+        setCaseManagers(cmList);
+        setValidUnitIds(unitIds);
+        setValidCaseManagerIds(cmIds);
+      } catch (_e) {
+        // If we can't load references, skip pre-validation; backend will still enforce constraints
+      }
+    };
+    loadReferences();
+  }, [backend]);
 
   const handleSubmit = async () => {
     // Validate all fields and track which ones have errors
@@ -205,6 +248,30 @@ export const AddClientForm = ({
     setErrors({});
 
     try {
+      // Foreign key validation for created_by and unit_id
+      const createdById = parseInt(formData.created_by || "0", 10);
+      const unitId = parseInt(formData.unit_id || "0", 10);
+      if (validUnitIds.length > 0 && !validUnitIds.includes(unitId)) {
+        toast({
+          title: "Invalid Unit ID",
+          description: "Please choose an existing unit ID.",
+          status: "error",
+          position: "bottom-right",
+          isClosable: true,
+        });
+        return;
+      }
+      if (validCaseManagerIds.length > 0 && !validCaseManagerIds.includes(createdById)) {
+        toast({
+          title: "Invalid Case Manager ID",
+          description: "Please choose an existing case manager ID.",
+          status: "error",
+          position: "bottom-right",
+          isClosable: true,
+        });
+        return;
+      }
+
       const clientData = {
         created_by: parseInt(formData.created_by || "0", 10),
         unit_id: parseInt(formData.unit_id || "0", 10),
@@ -254,6 +321,29 @@ export const AddClientForm = ({
         comments: formData.comments,
       };
       await backend.post("/clients", clientData);
+      // Also create a corresponding user record for this client
+      try {
+        const invitePayload = {
+          email: formData.email || undefined,
+          role: "client",
+          firstName: formData.first_name || undefined,
+          lastName: formData.last_name || undefined,
+          phoneNumber: formData.phone_number || undefined,
+        };
+        // Only attempt if we have at least an email and a name
+        if (invitePayload.email && (invitePayload.firstName || invitePayload.lastName)) {
+          await backend.post("/users/invite", invitePayload);
+        }
+      } catch (userErr) {
+        console.log("User creation failed after client add:", userErr);
+        toast({
+          title: "Client Added, but User Not Created",
+          description: "The client was added, but creating the user record failed.",
+          position: "bottom-right",
+          status: "warning",
+          isClosable: true,
+        });
+      }
       toast({
         title: "Client Added",
         description: `Client Name has been added!`,
@@ -279,7 +369,7 @@ export const AddClientForm = ({
     return (
       <>
         <Button ref={btnRef} colorScheme='blue' onClick={onOpen}>
-          {!formInProgress && <Text>Add</Text>}
+          {!formInProgress && <Text>Add Client</Text>}
           {formInProgress && <Text>Edit New Client</Text>}
         </Button>
         <Drawer
@@ -350,20 +440,52 @@ export const AddClientForm = ({
 
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Unit ID</Text>
-                      <Input placeholder="Enter unit ID" value={formData.unit_id}
-                      isInvalid={errors.unit_id} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, unit_id: e.target.value }); setFormInProgress(true); setErrors({...errors, unit_id: false})}}
-                      />
+                      <Text fontWeight="medium">Unit</Text>
+                      <Select
+                        placeholder="Select unit"
+                        value={formData.unit_id}
+                        isInvalid={errors.unit_id}
+                        errorBorderColor="red.500"
+                        onChange={(e) => {
+                          setFormData({ ...formData, unit_id: e.target.value });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, unit_id: false });
+                        }}
+                      >
+                        {units.map((u) => (
+                          <option key={u.id} value={u.id.toString()}>
+                            {u.name}
+                          </option>
+                        ))}
+                      </Select>
                     </Grid>
                   </Box>
 
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Case Manager ID</Text>
-                      <Input placeholder="Enter case manager ID"
-                      isInvalid={errors.created_by} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, created_by: e.target.value }); setFormInProgress(true); setErrors({...errors, created_by: false})}} />
+                      <Text fontWeight="medium">Case Manager</Text>
+                      <Select
+                        placeholder="Select case manager"
+                        value={formData.created_by}
+                        isInvalid={errors.created_by}
+                        errorBorderColor="red.500"
+                        onChange={(e) => {
+                          setFormData({ ...formData, created_by: e.target.value });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, created_by: false });
+                        }}
+                      >
+                        {caseManagers.map((cm) => {
+                          const first = cm.firstName ?? cm.first_name ?? "";
+                          const last = cm.lastName ?? cm.last_name ?? "";
+                          const label = `${first} ${last}`.trim() || `ID ${cm.id}`;
+                          return (
+                            <option key={cm.id} value={cm.id.toString()}>
+                              {label}
+                            </option>
+                          );
+                        })}
+                      </Select>
                     </Grid>
                   </Box>
 
