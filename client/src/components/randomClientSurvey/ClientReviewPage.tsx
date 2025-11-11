@@ -195,7 +195,6 @@ export const ClientReviewPage = ({
             1
           </Circle>
           <Text
-            fontFamily={"Inter"}
             fontSize={"12px"}
             fontStyle={"normal"}
             fontWeight={"400"}
@@ -215,7 +214,6 @@ export const ClientReviewPage = ({
             2
           </Circle>
           <Text
-            fontFamily={"Inter"}
             fontSize={"12px"}
             fontStyle={"normal"}
             fontWeight={"400"}
@@ -229,7 +227,6 @@ export const ClientReviewPage = ({
       <Heading
         color={"#3182CE"}
         textAlign={"center"}
-        fontFamily={"Inter"}
         fontSize={"30px"}
         fontStyle={"normal"}
         fontWeight={"400"}
@@ -239,7 +236,6 @@ export const ClientReviewPage = ({
       </Heading>
       <Text
         color={"#656464"}
-        fontFamily={"Inter"}
         fontSize={"16px"}
         fontStyle={"normal"}
         fontWeight={"400"}
@@ -264,11 +260,10 @@ export const ClientReviewPage = ({
             />
           ))}
         </FormControl>
-        <OrderedList style={{ fontSize: "18px", fontFamily: "Inter", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
+        <OrderedList style={{ fontSize: "18px", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
           <ListItem marginBottom={"50px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -286,7 +281,6 @@ export const ClientReviewPage = ({
                         key={label} 
                         textAlign={"center"}
                         fontSize={"12px"}
-                        fontFamily={"Inter"} 
                         color={"#808080"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -304,7 +298,6 @@ export const ClientReviewPage = ({
                       <Td
                         width={"200px"}
                         color={"#000"}
-                        fontFamily={"Inter"}
                         fontSize={"12px"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -358,7 +351,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -375,7 +367,6 @@ export const ClientReviewPage = ({
                 <Text
                   color={"#000"}
                   textAlign={"center"}
-                  fontFamily={"Inter"}
                   fontSize={"16px"}
                   fontStyle={"normal"}
                   fontWeight={"400"}
@@ -400,7 +391,6 @@ export const ClientReviewPage = ({
                       borderRadius={"6.985px"}
                       color={surveyData.courteous === (option === "yes") ? "white" : "black"}
                       textAlign={"center"}
-                      fontFamily={"Inter"}
                       fontSize={"10.588px"}
                       fontStyle={"normal"}
                       fontWeight={"400"}
@@ -424,7 +414,6 @@ export const ClientReviewPage = ({
                 <Text
                   color={"#000"}
                   textAlign={"center"}
-                  fontFamily={"Inter"}
                   fontSize={"16px"}
                   fontStyle={"normal"}
                   fontWeight={"400"}
@@ -448,7 +437,6 @@ export const ClientReviewPage = ({
                       borderRadius={"6.985px"}
                       color={surveyData.informative === (option === "yes") ? "white" : "black"}
                       textAlign={"center"}
-                      fontFamily={"Inter"}
                       fontSize={"10.588px"}
                       fontStyle={"normal"}
                       fontWeight={"400"}
@@ -472,7 +460,6 @@ export const ClientReviewPage = ({
                 <Text
                   color={"#000"}
                   textAlign={"center"}
-                  fontFamily={"Inter"}
                   fontSize={"16px"}
                   fontStyle={"normal"}
                   fontWeight={"400"}
@@ -497,7 +484,6 @@ export const ClientReviewPage = ({
                       borderRadius={"6.985px"}
                       color={surveyData.prompt_and_helpful === (option === "yes") ? "white" : "black"}
                       textAlign={"center"}
-                      fontFamily={"Inter"}
                       fontSize={"10.588px"}
                       fontStyle={"normal"}
                       fontWeight={"400"}
@@ -524,7 +510,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -549,7 +534,6 @@ export const ClientReviewPage = ({
                     <VStack key={option}>
                       <Text
                         color="var(--gray-600, #4A5568)"
-                        fontFamily="Inter"
                         fontSize="12px"
                         fontStyle="normal"
                         fontWeight="400"
@@ -757,7 +741,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -783,7 +766,6 @@ export const ClientReviewPage = ({
                     borderRadius={"6.985px"}
                     color={surveyData.lifeskills === (option === "yes") ? "white" : "black"}
                     textAlign={"center"}
-                    fontFamily={"Inter"}
                     fontSize={"10.588px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -808,7 +790,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -834,7 +815,6 @@ export const ClientReviewPage = ({
                   borderRadius={"6.985px"}
                   color={surveyData.recommend === (option === "yes") ? "white" : "black"}
                   textAlign={"center"}
-                  fontFamily={"Inter"}
                   fontSize={"10.588px"}
                   fontStyle={"normal"}
                   fontWeight={"400"}
@@ -858,7 +838,6 @@ export const ClientReviewPage = ({
             <Box pl={6} mt={2}>
               <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"16px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -896,7 +875,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -926,7 +904,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -968,7 +945,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -997,7 +973,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}
@@ -1026,7 +1001,6 @@ export const ClientReviewPage = ({
           <ListItem marginBottom={"30px"}>
             <Heading
               color={"#000"}
-              fontFamily={"Inter"}
               fontSize={"16px"}
               fontStyle={"normal"}
               fontWeight={"400"}

@@ -29,7 +29,6 @@ export const RandomSurveyConfirmation = ({ onExit }: Props) => {
             <Heading
                 color={"#000"}
                 textAlign={"center"}
-                fontFamily={"Inter"}
                 fontSize={"40.436px"}
                 fontWeight={"400"}
                 lineHeight={"normal"}
@@ -45,7 +44,6 @@ export const RandomSurveyConfirmation = ({ onExit }: Props) => {
             <Text
                 color={"rgba(0, 0, 0, 0.36)"}
                 textAlign={"center"}
-                fontFamily={"Inter"}
                 fontSize={"20.218px"}
                 fontWeight={"400"}
                 lineHeight={"normal"}

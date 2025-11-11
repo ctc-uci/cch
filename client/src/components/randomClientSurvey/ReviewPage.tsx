@@ -126,7 +126,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 1
             </Circle>
             <Text
-                fontFamily={"Inter"}
                 fontSize={"12px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -146,7 +145,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 2
             </Circle>
             <Text
-                fontFamily={"Inter"}
                 fontSize={"12px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -167,7 +165,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
         <Heading
             color={"#3182CE"}
             textAlign={"center"}
-            fontFamily={"Inter"}
             fontSize={"24.405px"}
             fontStyle={"normal"}
             fontWeight={"400"}
@@ -179,7 +176,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
         <Text
             color={"#656464"}
             fontSize={"13.016px"}
-            fontFamily={"Inter"}
             fontStyle={"normal"}
             fontWeight={"400"}
             lineHeight={"150%"}
@@ -203,11 +199,10 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 />
             ))}
             </FormControl>
-            <OrderedList style={{ fontSize: "14px", fontFamily: "Inter", fontWeight: "600"}} spacing={"4"}>
+            <OrderedList style={{ fontSize: "14px", fontWeight: "600"}} spacing={"4"}>
             <ListItem marginBottom={"50px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -225,7 +220,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                             key={label} 
                             textAlign={"center"}
                             fontSize={"9.762px"}
-                            fontFamily={"Inter"} 
                             color={"#808080"}
                             fontStyle={"normal"}
                             fontWeight={"400"}
@@ -243,7 +237,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         <Td
                             width={"180px"}
                             color={"#000"}
-                            fontFamily={"Inter"}
                             fontSize={"9.762px"}
                             fontStyle={"normal"}
                             fontWeight={"400"}
@@ -287,7 +280,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -304,7 +296,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     <Text
                     color={"#000"}
                     textAlign={"center"}
-                    fontFamily={"Inter"}
                     fontSize={"12.331px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -323,7 +314,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         borderRadius={"6.985px"}
                         color={surveyData.courteous === (option === "yes") ? "white" : "black"}
                         textAlign={"center"}
-                        fontFamily={"Inter"}
                         fontSize={"8.613px"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -342,7 +332,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     <Text
                     color={"#000"}
                     textAlign={"center"}
-                    fontFamily={"Inter"}
                     fontSize={"12.331px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -360,7 +349,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         borderRadius={"6.985px"}
                         color={surveyData.informative === (option === "yes") ? "white" : "black"}
                         textAlign={"center"}
-                        fontFamily={"Inter"}
                         fontSize={"8.613px"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -379,7 +367,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     <Text
                     color={"#000"}
                     textAlign={"center"}
-                    fontFamily={"Inter"}
                     fontSize={"12.331px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -398,7 +385,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         borderRadius={"6.985px"}
                         color={surveyData.prompt_and_helpful === (option === "yes") ? "white" : "black"}
                         textAlign={"center"}
-                        fontFamily={"Inter"}
                         fontSize={"8.613px"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -420,7 +406,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -439,7 +424,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         <VStack key={option}>
                         <Text
                             color="var(--gray-600, #4A5568)"
-                            fontFamily="Inter"
                             fontSize="9.762px"
                             fontStyle="normal"
                             fontWeight="400"
@@ -477,7 +461,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -497,7 +480,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                         borderRadius={"6.985px"}
                         color={surveyData.lifeskills === (option === "yes") ? "white" : "black"}
                         textAlign={"center"}
-                        fontFamily={"Inter"}
                         fontSize={"8.613px"}
                         fontStyle={"normal"}
                         fontWeight={"400"}
@@ -517,7 +499,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -537,7 +518,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     borderRadius={"6.985px"}
                     color={surveyData.recommend === (option === "yes") ? "white" : "black"}
                     textAlign={"center"}
-                    fontFamily={"Inter"}
                     fontSize={"8.613px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -556,7 +536,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 <Box pl={6} mt={2}>
                 <Heading
                     color={"#000"}
-                    fontFamily={"Inter"}
                     fontSize={"13px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -583,7 +562,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -607,7 +585,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -639,7 +616,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -662,7 +638,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -685,7 +660,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             <ListItem marginBottom={"30px"}>
                 <Heading
                 color={"#000"}
-                fontFamily={"Inter"}
                 fontSize={"13px"}
                 fontStyle={"normal"}
                 fontWeight={"400"}
@@ -757,7 +731,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 >
                 <Heading
                     color={"#000"}
-                    fontFamily={"Inter"}
                     fontSize={"18px"}
                     fontStyle={"normal"}
                     fontWeight={"600"}
@@ -767,7 +740,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 </Heading>
                 <Text
                     color={"#000"}
-                    fontFamily={"Inter"}
                     fontSize={"14px"}
                     fontStyle={"normal"}
                     fontWeight={"400"}
@@ -788,7 +760,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 backgroundColor={"var(--blackAlpha-600, rgba(0, 0, 0, 0.48))"}
                 borderRadius={"6px"}
                 color={"#FFF"}
-                fontFamily={"Inter"}
                 fontSize={"18px"}
                 fontStyle={"normal"}
                 fontWeight={"600"}
@@ -802,7 +773,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 backgroundColor={"var(--blue-500, #3182CE)"}
                 borderRadius={"6px"}
                 color={"#FFF"}
-                fontFamily={"Inter"}
                 fontSize={"18px"}
                 fontStyle={"normal"}
                 fontWeight={"600"}
