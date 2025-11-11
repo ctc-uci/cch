@@ -29,9 +29,9 @@ import {
   Thead,
   Tr,
   useToast,
-  VStack,
+  
   Stack,
-  Badge
+  
 } from "@chakra-ui/react";
 
 import {
@@ -170,7 +170,7 @@ export const Donations = () => {
         header: "Total",
       },
     ],
-    [selectedRowIds, allDonations, checkboxMode]
+    [checkboxMode]
   );
 
   const columnsFreq = useMemo<ColumnDef<Donation>[]>(
@@ -226,7 +226,7 @@ export const Donations = () => {
         header: "Total Value ($)",
       },
     ],
-    [selectedRowIds, allDonations, checkboxMode]
+    [checkboxMode]
   );
 
   const [columns, setColumns] = useState<ColumnDef<Donation>[]>(freq === "monthly" || freq === "yearly" ? columnsFreq : columnsReg);
@@ -239,10 +239,6 @@ export const Donations = () => {
   const handleRowClick = (donation: Donation) => {
     setSelectedDonation(donation);
     onOpen();
-  };
-
-  const handleDonorChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setDonor(event.target.value);
   };
 
   const handleStartDateChange = (
@@ -345,8 +341,14 @@ export const Donations = () => {
     // Helper to check if a donation falls within user range
     const withinRange = (dateStr: string) => {
       const date = new Date(dateStr);
+      // Inclusive start: date >= startDate
       if (startDate && (!dateStr || date < startDate)) return false;
-      if (endDate && (!dateStr || date > endDate)) return false;
+      // Inclusive end: date <= endDate -> implemented as date < (endDate + 1 day)
+      if (endDate) {
+        const endExclusive = new Date(endDate);
+        endExclusive.setDate(endExclusive.getDate() + 1);
+        if (!dateStr || date >= endExclusive) return false;
+      }
       return true;
     };
 
@@ -458,8 +460,15 @@ export const Donations = () => {
       try {
         const getIsoDateOrEmpty = (date: Date | null) =>
           date instanceof Date && !isNaN(date.getTime()) ? date.toISOString().split('T')[0] : "";
+        // Make end date inclusive on the backend by sending endDate + 1 day
+        const getIsoDatePlusOneDayOrEmpty = (date: Date | null) => {
+          if (!(date instanceof Date) || isNaN(date.getTime())) return "";
+          const d = new Date(date);
+          d.setDate(d.getDate() + 1);
+          return d.toISOString().split('T')[0];
+        };
         const start = getIsoDateOrEmpty(startDate);
-        const end = getIsoDateOrEmpty(endDate);
+        const end = getIsoDatePlusOneDayOrEmpty(endDate);
 
         let allDonationsQuery =
           freq === "monthly" ?
@@ -496,10 +505,11 @@ export const Donations = () => {
           backend.get(`/donations/donors`)
         ]);
 
-        if (!donationsResponse.data[0].id) {
-          donationsResponse.data = donationsResponse.data.map((donation: any, index: number) => ({
+        if (Array.isArray(donationsResponse.data)) {
+          type DonationLike = { id?: number } & Record<string, unknown>;
+          donationsResponse.data = (donationsResponse.data as DonationLike[]).map((donation, index: number) => ({
             ...donation,
-            id: index + 1
+            id: donation.id ?? index + 1,
           }));
         }
         setValueSum(valuesResponse.data[0]?.sum || 0);
