@@ -16,6 +16,7 @@ import { SuccessScreen } from "../SuccessScreen";
 import { SuccessStoryForm } from "./SuccessStoryForm";
 import type { SuccessStoryForm as SuccessStoryFormType} from "../../types/successStory";
 import { useParams } from "react-router-dom";
+import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 export type CaseManager = {
   id: number;
@@ -57,6 +58,7 @@ export const SuccessStory = () => {
     consent: false,
     client_id: null,
   });
+  const { currentUser } = useAuthContext();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -84,6 +86,9 @@ export const SuccessStory = () => {
       setOnReview(true);
     } else {
       try {
+        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+        const client = response.data?.[0];
+        formData.client_id = client.id;
         await backend.post("/successStory", formData);
         toast({
           title: "Form submitted",
