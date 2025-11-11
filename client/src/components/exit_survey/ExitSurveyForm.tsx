@@ -73,6 +73,7 @@ export const ExitSurveyForm = ({
       lifeSkills: "Life Skills",
       caseManagement: "Case Management",
       outcome: "Outcome",
+      programDateCompletion: "4. Date of Program Completion",
       overallRating: "1. How would you rate Colette's Children's Home overall?",
       overallLikeMost: "2. What did you like most about Colette’s Children’s Home?",
       overallCouldBeImproved: "3. What would make Colette’s Children’s home better?",
@@ -109,6 +110,7 @@ export const ExitSurveyForm = ({
       lifeSkills: "Habilidades para la Vida",
       caseManagement: "Gestión de Casos",
       outcome: "Resultado",
+      programDateCompletion: "4. Fecha de finalización del programa",
       overallRating: "1. ¿Cómo calificarías el Hogar Infantil Colette en general?",
       overallLikeMost: "2. ¿Qué te gustó más del Hogar Infantil Colette?",
       overallCouldBeImproved: "3. ¿Qué podría mejorar el Hogar Infantil Colette?",
@@ -273,6 +275,17 @@ export const ExitSurveyForm = ({
               </Select>
             </FormControl>
           </Stack>
+
+          <FormControl isRequired>
+            <FormLabel>{fields[language].programDateCompletion}</FormLabel>
+            <Input
+              name="programDateCompletion"
+              type="date"
+              onChange={handleChange}
+              value={formData.programDateCompletion}
+              isDisabled={onReview}
+            />
+          </FormControl>
 
           <Divider />
 
