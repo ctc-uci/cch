@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Table,
@@ -64,7 +64,7 @@ function Forms({ forms }: FormsProps) {
           <Tbody>
             {forms.map((form) => (
               <Tr
-                key={form.title}
+                key={`${form.type}-${form.id}-${form.date}`}
                 onClick={() => handleRowClick(form)}
                 _hover={{ backgroundColor: "#f0f0f0", cursor: "pointer" }}
               >
