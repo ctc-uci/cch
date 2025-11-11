@@ -552,6 +552,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     name="recommend_reasoning"
                     value={surveyData.recommend_reasoning}
                     resize={"none"}
+                    isReadOnly
                     borderRadius={"14px"}
                     fontSize={"13px"}
                     borderColor={"blue.solid var(--gray-600, #4A5568)"}
@@ -577,6 +578,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 value={surveyData.make_cch_more_helpful}
                 fontSize={"13px"}
                 borderRadius={"14px"}
+                isReadOnly
                 borderColor={"blue.solid var(--gray-600, #4A5568)"}
                 resize={"none"}
                 />
@@ -598,6 +600,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     name="cm_id"
                     placeholder="Select your case manager"
                     value={surveyData.cm_id}
+                    isDisabled
                     fontSize={"13px"}
                     borderRadius={"14px"}
                     borderColor={"blue.solid var(--gray-600, #4A5568)"}
@@ -630,6 +633,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     value={surveyData.cm_feedback}
                     fontSize={"13px"}
                     borderRadius={"14px"}
+                    isReadOnly
                     borderColor={"blue.solid var(--gray-600, #4A5568)"}
                     resize={"none"}
                 />
@@ -652,6 +656,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     value={surveyData.other_comments}
                     fontSize={"13px"}
                     borderRadius={"14px"}
+                    isReadOnly
                     borderColor={"blue.solid var(--gray-600, #4A5568)"}
                     resize={"none"}
                 />
@@ -674,6 +679,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     type="date"
                     placeholder="Date"
                     fontSize={"13px"}
+                    isReadOnly
                     value={surveyData.date instanceof Date ? surveyData.date.toISOString().slice(0, 10) : String(surveyData.date)}
                     borderRadius={"14px"}
                     borderColor={"blue.solid var(--gray-600, #4A5568)"}
