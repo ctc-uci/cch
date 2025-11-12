@@ -20,7 +20,7 @@ export const FormProvider = ({ children }: ContextProviderProps) => {
         lastName: "",
         name: "",
         age: "",
-        date: "",
+        date: new Date().toISOString(),
         phoneNumber: "",
         maritalStatus: "",
         dateOfBirth: "",

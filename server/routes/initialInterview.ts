@@ -265,7 +265,89 @@ initialInterviewRouter.patch("/app-status/:id", async (req, res) => {
 
 initialInterviewRouter.post("/", async (req, res) => {
   try {
+    // Helper functions to match SQL types
+    const toInt = (value: unknown): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    };
+
+    const toBoolean = (value: unknown): boolean => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const lower = value.toLowerCase();
+        return lower === 'yes' || lower === 'true' || lower === '1';
+      }
+      return false;
+    };
+
+    const toNumeric = (value: unknown): number => {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    };
+
+    const toDate = (value: unknown): string => {
+      if (!value) {
+        const defaultDate = new Date().toISOString();
+        return defaultDate.split('T')[0] ?? '1970-01-01';
+      }
+      if (typeof value === 'string') {
+        // If it's already in YYYY-MM-DD format, return it
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+        // Try to parse and format
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          const isoString = date.toISOString();
+          const datePart = isoString.split('T')[0];
+          return datePart ?? '1970-01-01';
+        }
+      }
+      const defaultDate = new Date().toISOString();
+      return defaultDate.split('T')[0] ?? '1970-01-01';
+    };
+
+    const toPhoneNumber = (value: unknown): string => {
+      if (!value) return '';
+      const cleaned = String(value).replace(/\D/g, '');
+      return cleaned.slice(0, 10);
+    };
+
+    const toEmail = (value: unknown): string => {
+      if (!value) return '';
+      return String(value).slice(0, 32);
+    };
+
+    const toMaritalStatus = (value: unknown): 'single' | 'married' | 'divorced' | 'widowed' => {
+      const validStatuses: Array<'single' | 'married' | 'divorced' | 'widowed'> = ['single', 'married', 'divorced', 'widowed'];
+      if (typeof value === 'string') {
+        const lower = value.toLowerCase();
+        const found = validStatuses.find(s => s === lower);
+        if (found) return found;
+      }
+      return 'single';
+    };
+
+    const toEthnicity = (value: unknown): 'Non-Hispanic' | 'Hispanic' | 'Refused' => {
+      const validEthnicities: Array<'Non-Hispanic' | 'Hispanic' | 'Refused'> = ['Non-Hispanic', 'Hispanic', 'Refused'];
+      if (typeof value === 'string') {
+        const found = validEthnicities.find(e => e === value);
+        if (found) return found;
+        // Handle common variations
+        if (value.toLowerCase().includes('hispanic')) return 'Hispanic';
+        if (value.toLowerCase().includes('refused')) return 'Refused';
+      }
+      return 'Refused';
+    };
+
     const {
+      client_id,
       applicantType,
       name,
       age,
@@ -334,6 +416,7 @@ initialInterviewRouter.post("/", async (req, res) => {
 
     const query = `
       INSERT INTO initial_interview (
+        client_id,
         applicant_type,
         name,
         age,
@@ -405,78 +488,82 @@ initialInterviewRouter.post("/", async (req, res) => {
                  $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
                  $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
                  $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
-                 $61, $62, $63, $64
+                 $61, $62, $63, $64, $65
                );
     `;
 
-    const res = await db.query(query, [
-      applicantType,
-      name,
-      age,
-      date,
-      phoneNumber,
-      maritalStatus,
-      dateOfBirth,
-      email,
-      ssnLastFour,
-      ethnicity,
-      veteran,
-      disabled,
-      currentAddress,
-      lastPermAddress,
-      reasonForLeavingPermAddress,
-      whereResideLastNight,
-      currentlyHomeless,
-      eventLeadingToHomelessness,
-      howLongExperiencingHomelessness,
-      prevAppliedToCch,
-      whenPrevAppliedToCch,
-      prevInCch,
-      whenPrevInCch,
-      childName,
-      childDob,
-      custodyOfChild,
-      fatherName,
-      nameSchoolChildrenAttend,
-      cityOfSchool,
-      howHearAboutCch,
-      programsBeenInBefore,
-      monthlyIncome,
-      sourcesOfIncome,
-      monthlyBills,
-      currentlyEmployed,
-      lastEmployer,
-      lastEmployedDate,
-      educationHistory,
-      transportation,
-      legalResident,
-      medical,
-      medicalCity,
-      medicalInsurance,
-      medications,
-      domesticViolenceHistory,
-      socialWorker,
-      socialWorkerTelephone,
-      socialWorkerOfficeLocation,
-      lengthOfSobriety,
-      lastDrugUse,
-      lastAlcoholUse,
-      timeUsingDrugsAlcohol,
-      beenConvicted,
-      convictedReasonAndTime,
-      presentWarrantExist,
-      warrantCounty,
-      probationParoleOfficer,
-      probationParoleOfficerTelephone,
-      personalReferences,
-      personalReferenceTelephone,
-      futurePlansGoals,
-      lastPermanentResidenceHouseholdComposition,
-      whyNoLongerAtLastResidence,
-      whatCouldPreventHomeless,
+    const result = await db.query(query, [
+      toInt(client_id), // INT - client_id
+      String(applicantType || ''), // VARCHAR(256)
+      String(name || ''), // VARCHAR(256)
+      toInt(age), // INT
+      toDate(date), // DATE
+      toPhoneNumber(phoneNumber), // VARCHAR(10)
+      toMaritalStatus(maritalStatus), // ENUM
+      toDate(dateOfBirth), // DATE
+      toEmail(email), // VARCHAR(32)
+      toInt(ssnLastFour), // INT
+      toEthnicity(ethnicity), // ENUM
+      toBoolean(veteran), // BOOLEAN
+      toBoolean(disabled), // BOOLEAN
+      String(currentAddress || ''), // VARCHAR(256)
+      String(lastPermAddress || ''), // VARCHAR(256)
+      String(reasonForLeavingPermAddress || ''), // VARCHAR(256)
+      String(whereResideLastNight || ''), // VARCHAR(1024)
+      toBoolean(currentlyHomeless), // BOOLEAN
+      eventLeadingToHomelessness ? String(eventLeadingToHomelessness) : null, // VARCHAR(256) nullable
+      String(howLongExperiencingHomelessness || ''), // VARCHAR(256)
+      toBoolean(prevAppliedToCch), // BOOLEAN
+      whenPrevAppliedToCch ? String(whenPrevAppliedToCch) : null, // VARCHAR(256) nullable
+      toBoolean(prevInCch), // BOOLEAN
+      whenPrevInCch ? String(whenPrevInCch) : null, // VARCHAR(256) nullable
+      String(childName || ''), // VARCHAR(256)
+      toDate(childDob), // DATE
+      toBoolean(custodyOfChild), // BOOLEAN
+      String(fatherName || ''), // VARCHAR(256)
+      String(nameSchoolChildrenAttend || ''), // VARCHAR(256)
+      String(cityOfSchool || ''), // VARCHAR(256)
+      String(howHearAboutCch || ''), // VARCHAR(1024)
+      String(programsBeenInBefore || ''), // VARCHAR(1024)
+      toNumeric(monthlyIncome), // NUMERIC
+      String(sourcesOfIncome || ''), // VARCHAR(1024)
+      String(monthlyBills || ''), // VARCHAR(1024)
+      toBoolean(currentlyEmployed), // BOOLEAN
+      String(lastEmployer || ''), // VARCHAR(1024)
+      toDate(lastEmployedDate), // DATE
+      String(educationHistory || ''), // VARCHAR(1024)
+      String(transportation || ''), // VARCHAR(256)
+      toBoolean(legalResident), // BOOLEAN
+      toBoolean(medical), // BOOLEAN
+      medicalCity ? String(medicalCity) : null, // VARCHAR(256) nullable
+      medicalInsurance ? String(medicalInsurance) : null, // VARCHAR(256) nullable
+      String(medications || ''), // VARCHAR(256)
+      String(domesticViolenceHistory || ''), // VARCHAR(256)
+      String(socialWorker || ''), // VARCHAR(256)
+      toPhoneNumber(socialWorkerTelephone), // VARCHAR(10)
+      String(socialWorkerOfficeLocation || ''), // VARCHAR(256)
+      String(lengthOfSobriety || ''), // VARCHAR(32)
+      String(lastDrugUse || ''), // VARCHAR(256)
+      String(lastAlcoholUse || ''), // VARCHAR(256)
+      String(timeUsingDrugsAlcohol || ''), // VARCHAR(256)
+      toBoolean(beenConvicted), // BOOLEAN
+      convictedReasonAndTime ? String(convictedReasonAndTime) : null, // VARCHAR(256) nullable
+      toBoolean(presentWarrantExist), // BOOLEAN
+      String(warrantCounty || ''), // VARCHAR(256)
+      String(probationParoleOfficer || ''), // VARCHAR(256)
+      toPhoneNumber(probationParoleOfficerTelephone), // VARCHAR(10)
+      String(personalReferences || ''), // VARCHAR(256)
+      toPhoneNumber(personalReferenceTelephone), // VARCHAR(10)
+      String(futurePlansGoals || ''), // VARCHAR(1024)
+      String(lastPermanentResidenceHouseholdComposition || ''), // VARCHAR(1024)
+      String(whyNoLongerAtLastResidence || ''), // VARCHAR(1024)
+      String(whatCouldPreventHomeless || ''), // VARCHAR(1024)
     ]);
-  } catch (err) {
-    res.status(500).send(err.message);
+    res.status(200).json({ success: true, data: result });
+  } catch (err: unknown) {
+    const error = err as Error & { message?: string };
+    console.error("Error inserting initial interview:", err);
+    res.status(500).json({ error: error?.message || 'Unknown error occurred' });
   }
 });
 
