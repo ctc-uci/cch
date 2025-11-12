@@ -1,8 +1,8 @@
 import { VStack, Image, Text, Button, ButtonGroup, Box, HStack } from "@chakra-ui/react";
-import { Tabs, TabList, TabPanels, Tab} from '@chakra-ui/react';
 import { useState } from "react";
 import cch from "../../../public/cch_logo.png";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 const ClientLandingPage = () => {
     const [language, setLanguage] = useState<string | null>(null);
@@ -51,13 +51,35 @@ const ClientLandingPage = () => {
 const ChooseForm = () => {
     const [selected, setSelected] = useState<string | null>(null);
     const navigate = useNavigate();
+    const { logout } = useAuthContext();
+    
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/landing-page');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     return(
-        <VStack
-            justifyContent="center"
-            height={"100dvh"}>
-            <Text fontSize="2xl" fontWeight="bold">
-                Please Select a Form to Complete
-            </Text>
+        <Box position="relative" height={"100dvh"}>
+            <Button
+                position="absolute"
+                top={4}
+                right={4}
+                colorScheme="red"
+                variant="outline"
+                onClick={handleLogout}
+            >
+                Logout
+            </Button>
+            <VStack
+                justifyContent="center"
+                height={"100dvh"}>
+                <Text fontSize="2xl" fontWeight="bold">
+                    Please Select a Form to Complete
+                </Text>
             <ButtonGroup>
                 <VStack
                     justifyContent="center" gap = {8}>
@@ -94,7 +116,8 @@ const ChooseForm = () => {
 
             </>)}
 
-        </VStack>
+            </VStack>
+        </Box>
     )
 }
 
