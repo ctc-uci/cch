@@ -193,10 +193,14 @@ const config: Record<
 };
 
 export const formatDataWithLabels = (
-  rawData: Record<string, any>,
+  rawData: Record<string, unknown> | null | undefined,
   title: string
-): Record<string, any> => {
-  const formatted: Record<string, any> = {};
+): Record<string, unknown> => {
+  if (!rawData || typeof rawData !== "object") {
+    return {};
+  }
+
+  const formatted: Record<string, unknown> = {};
 
   const section = config[title];
   if (!section) return rawData;
@@ -223,7 +227,10 @@ export const getKeyByValue = (
   return Object.entries(section.labelMap).find(([_, val]) => val === value)?.[0];
 };
 
-export const reverseLabelKeys = (labeledObj: Record<string, any>, title: string): Record<string, any> => {
+export const reverseLabelKeys = (
+  labeledObj: Record<string, unknown>,
+  title: string
+): Record<string, unknown> => {
   const section = config[title];
 
   if (!section) return labeledObj;

@@ -21,19 +21,27 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { formatDateString } from "../../utils/dateUtils.ts";
 
-export const RequestFormPreview = ({cmId, clientEmail, onClose} : {cmId: number, clientId: number}) => {
+export const RequestFormPreview = ({
+  cmId,
+  clientEmail,
+  onClose,
+}: {
+  cmId?: number;
+  clientEmail?: string;
+  onClose: () => void;
+}) => {
   const { backend } = useBackendContext();
 
   const toast = useToast();
 
-  const [requestHistoryDates, setRequestHistoryDates] = useState([]);
+  const [requestHistoryDates, setRequestHistoryDates] = useState<string[]>([]);
   const [requestComment, setRequestComment] = useState("");
 
   useEffect(() => {
     const getData = async () => {
       try {
         const response = await backend.get("/request/activeRequests");
-        const dates = [];
+        const dates: string[] = [];
 
         for (const data of response.data) {
           dates.push(formatDateString(data.created_at));
@@ -50,6 +58,16 @@ export const RequestFormPreview = ({cmId, clientEmail, onClose} : {cmId: number,
 
   const handleSubmitRequest = async () => {
     try {
+      if (!cmId || !clientEmail) {
+        toast({
+          title: "Missing required data",
+          description: "Unable to submit the request without case manager or client information.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
       const response = await backend.get("/clients", {
         params: {
           search: clientEmail

@@ -88,12 +88,12 @@ successRouter.get("/table-data", async (req, res) => {
 });
 
 
-successRouter.get("/:clientId", async (req, res) => {
+successRouter.get("/:formId", async (req, res) => {
   try {
-    const { clientId } = req.params;
+    const { formId } = req.params;
     const children = await db.query(
-      `SELECT * FROM success_story WHERE client_id = $1`,
-      [clientId]
+      `SELECT * FROM success_story WHERE id = $1`,
+      [formId]
     );
     res.status(200).json(keysToCamel(children));
   } catch (err) {

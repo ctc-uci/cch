@@ -39,6 +39,15 @@ import { RandomSurveyTableBody } from "./RandomSurveyTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 import { SuccessStoryTableBody } from "./SuccessStoryTableBody.tsx";
 
+type FormItem = {
+  id: number;
+  title: string;
+  name?: string;
+  date?: string;
+  [key: string]: unknown;
+};
+
+type FormDataRecord = Record<string, unknown>;
 
 const FormPreview = ({
   clickedFormItem,
@@ -47,7 +56,7 @@ const FormPreview = ({
   refreshTable,
   setRefreshTable,
 }: {
-  clickedFormItem: any;
+  clickedFormItem: FormItem;
   isOpen: boolean;
   onClose: () => void;
   refreshTable: boolean;
@@ -65,11 +74,13 @@ const FormPreview = ({
 
   const toast = useToast();
 
-  const [formData, setFormData] = useState({});
-  const [newFormData, setNewFormData] = useState({});
+  const [formData, setFormData] = useState<FormDataRecord>({});
+  const [newFormData, setNewFormData] = useState<FormDataRecord>({});
 
-  const [newFormattedModifiedData, setFormattedModifiedData] = useState({});
-  const [formattedFormData, setFormattedFormData] = useState({});
+  const [newFormattedModifiedData, setFormattedModifiedData] =
+    useState<FormDataRecord>({});
+  const [formattedFormData, setFormattedFormData] =
+    useState<FormDataRecord>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitial, setIsInitial] = useState(false);
@@ -186,19 +197,25 @@ const FormPreview = ({
 
       try {
         const response = await backend.get(endpoint);
-        let normalData = response.data[0];
+        let normalData: FormDataRecord | undefined = response.data?.[0];
 
         if (formItemTitle === "Exit Surveys") {
-          normalData = response.data.data[0];
+          normalData = response.data?.data?.[0];
         } else if (formItemTitle === "Random Client Surveys") {
           normalData = response.data;
         }
 
-
+        if (!normalData || typeof normalData !== "object") {
+          setFormData({});
+          setNewFormData({});
+          setFormattedFormData({});
+          setFormattedModifiedData({});
+          return;
+        }
 
         const data = formatDataWithLabels(normalData, formItemTitle);
-        setFormData(normalData);
-        setNewFormData(normalData);
+        setFormData({ ...normalData });
+        setNewFormData({ ...normalData });
         setFormattedFormData(data); // human readable keys
         setFormattedModifiedData(data);
       } catch (error) {
@@ -209,7 +226,7 @@ const FormPreview = ({
     };
 
     getData();
-  }, [backend, clickedFormItem, refreshTable]);
+  }, [backend, formItemId, formItemTitle, refreshTable]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -292,6 +309,26 @@ const FormPreview = ({
       !isNaN(Date.parse(value))
     );
   };
+
+  const formatValueForDisplay = (value: unknown) => {
+    if (typeof value === "string") {
+      return isDate(value) ? formatDateString(value) : value;
+    }
+
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    return String(value);
+  };
+
+  const formatValueForExport = (value: unknown) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    return typeof value === "string" ? value : String(value);
+  };
   
   return (
     <Drawer
@@ -329,7 +366,8 @@ const FormPreview = ({
               fontSize="md"
             >
               {formItemName && `${formItemName} - `}
-              {formItemTitle} {formatDateString(formItemDate)}
+              {formItemTitle}{" "}
+              {formItemDate ? formatDateString(formItemDate) : ""}
             </Text>
           </HStack>
         </DrawerHeader>
@@ -351,8 +389,16 @@ const FormPreview = ({
             formItemTitle ===
               "Client Tracking Statistics (Intake Statistics)" ? (
             <RequestFormPreview
-              cmId={formData["cmId"]}
-              clientEmail={formData["email"]}
+              cmId={
+                typeof formData["cmId"] === "number"
+                  ? (formData["cmId"] as number)
+                  : undefined
+              }
+              clientEmail={
+                typeof formData["email"] === "string"
+                  ? (formData["email"] as string)
+                  : undefined
+              }
               onClose={onClose}
             />
           ) : (
@@ -394,7 +440,7 @@ const FormPreview = ({
                       const data = Object.entries(formattedFormData).map(
                         ([key, value]) => ({
                           Questions: key,
-                          Answer: value,
+                          Answer: formatValueForExport(value),
                         })
                       );
                       downloadCSV(headers, data, "form.csv");
@@ -461,9 +507,7 @@ const FormPreview = ({
                             <Tr key={key}>
                               <Td>{key}</Td>
                               <Td>
-                                {isDate(value)
-                                  ? formatDateString(value)
-                                  : value}
+                                {formatValueForDisplay(value)}
                               </Td>
                             </Tr>
                           )
