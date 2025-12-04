@@ -12,7 +12,7 @@ CREATE TABLE requests (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     client_id INT NOT NULL,
-    FOREIGN KEY (client_id) REFERENCES clients(id),
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id),
     FOREIGN KEY (updated_by) REFERENCES users(id)
 );

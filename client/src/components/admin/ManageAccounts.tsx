@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { EditIcon, TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
+import { EditIcon, SearchIcon, TriangleDownIcon, TriangleUpIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
   Checkbox,
   Flex,
+  Grid,
   HStack,
   IconButton,
+  Input,
+  InputGroup,
+  InputLeftElement,
   Spacer,
   Tab,
   Table,
@@ -102,6 +106,8 @@ export const ManageAccounts = () => {
 
   const [clientModalOpened, setClientModalOpened] = useState(false);
   const [clientModalID, setClientModalID] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const userTypeName = {
     admin: "Admin",
@@ -123,7 +129,7 @@ export const ManageAccounts = () => {
     if (checkboxMode === "hidden") {
       // State 1 -> State 2: Show checkboxes and select all
       setCheckboxMode("visible-checked");
-      const allIds = persons.map((person) => person.id);
+      const allIds = filteredPersons.map((person) => person.id);
       setSelectedRowIds(allIds);
     } else if (checkboxMode === "visible-checked") {
       // State 2 -> State 3: Keep checkboxes visible but uncheck all
@@ -142,6 +148,21 @@ export const ManageAccounts = () => {
       { ...newUser, isChecked: false, isHovered: false },
     ]);
   };
+
+  const handleClientDeleted = (deletedEmail: string) => {
+    setPersons((prev) => prev.filter((person) => person.email !== deletedEmail));
+  };
+
+  // Filter persons based on email search query
+  const filteredPersons = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return persons;
+    }
+    const query = searchQuery.toLowerCase().trim();
+    return persons.filter((person) =>
+      person.email.toLowerCase().includes(query)
+    );
+  }, [persons, searchQuery]);
 
   const handleDelete = async () => {
     try {
@@ -290,7 +311,7 @@ export const ManageAccounts = () => {
   );
 
   const table = useReactTable({
-    data: persons,
+    data: filteredPersons,
     columns,
     state: {
       sorting,
@@ -365,6 +386,8 @@ export const ManageAccounts = () => {
                   setEditDrawerOpened(false);
                   setSelectedRowIds([]);
                   setCheckboxMode("hidden");
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
                 }}
               >
                 Admins
@@ -375,6 +398,8 @@ export const ManageAccounts = () => {
                   setEditDrawerOpened(false);
                   setSelectedRowIds([]);
                   setCheckboxMode("hidden");
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
                 }}
               >
                 Case Managers
@@ -385,6 +410,8 @@ export const ManageAccounts = () => {
                   setEditDrawerOpened(false);
                   setSelectedRowIds([]);
                   setCheckboxMode("hidden");
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
                 }}
               >
                 Clients
@@ -393,24 +420,47 @@ export const ManageAccounts = () => {
           </Tabs>
         </HStack>
         <Spacer />
-        {view !== "clients" && (
-          <>
-            <Button
-              onClick={deleteOnOpen}
-              disabled={selectedRowIds.length === 0}
-              colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
-              opacity={selectedRowIds.length === 0 ? 0.5 : 1}
-            >
-              Delete ({selectedRowIds.length})
-            </Button>
-            <Button
-              colorScheme="blue"
-              onClick={onOpen}
-            >
-              Add
-            </Button>
-          </>
-        )}
+        <HStack spacing={4}>
+          {isSearchOpen && (
+            <InputGroup maxW="300px">
+              <InputLeftElement pointerEvents="none">
+                <SearchIcon color="gray.300" />
+              </InputLeftElement>
+              <Input
+                placeholder="Search by email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                bg="white"
+                autoFocus
+              />
+            </InputGroup>
+          )}
+          <IconButton
+            {...buttonStyle}
+            icon={<SearchIcon />}
+            aria-label="Search"
+            onClick={() => setIsSearchOpen(!isSearchOpen)}
+            colorScheme={isSearchOpen ? "blue" : "gray"}
+          />
+          {view !== "clients" && (
+            <>
+              <Button
+                onClick={deleteOnOpen}
+                disabled={selectedRowIds.length === 0}
+                colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
+                opacity={selectedRowIds.length === 0 ? 0.5 : 1}
+              >
+                Delete ({selectedRowIds.length})
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={onOpen}
+              >
+                Add
+              </Button>
+            </>
+          )}
+        </HStack>
       </HStack>
       {view !== "clients" && !editDrawerOpened && (
         <VStack
@@ -550,13 +600,13 @@ export const ManageAccounts = () => {
           }}
         />
       )}
-      <Flex
-        wrap="wrap"
+      <Box width="100%" overflow="scroll">
+      <Grid
+        templateColumns="repeat(2, 1fr)"
         gap="4"
-        width="100%"
       >
         {view === "clients" && !clientModalOpened ? (
-          persons.map((person, id) => (
+          filteredPersons.sort((a, b) => a.firstName.localeCompare(b.firstName)).map((person, id) => (
             <Box key={id}>
               <Box
                 p={5}
@@ -612,14 +662,18 @@ export const ManageAccounts = () => {
           <></>
         )}
         {view === "clients" && clientModalOpened ? (
-          <EditClient
-            email={clientModalID}
-            setClientModal={setClientModalOpened}
-          />
-        ) : (
-          <></>
-        )}
-      </Flex>
+          <Box gridColumn="1 / -1">
+            <EditClient
+              email={clientModalID}
+              setClientModal={setClientModalOpened}
+              onClientDeleted={handleClientDeleted}
+            />
+          </Box>
+          ) : (
+            <></>
+          )}
+        </Grid>
+      </Box>
 
       <AddPreview
         userType={view}

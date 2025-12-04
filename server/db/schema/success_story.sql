@@ -13,6 +13,6 @@ CREATE TABLE IF NOT EXISTS success_story (
     quote VARCHAR(2048) NOT NULL,
     consent BOOLEAN NOT NULL,
 
-    FOREIGN KEY(client_id) REFERENCES clients(id),
+    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE,
     FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );

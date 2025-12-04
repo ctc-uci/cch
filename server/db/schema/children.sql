@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS children (
     date_of_birth DATE NOT NULL,
     reunified BOOL NOT NULL,
     comments VARCHAR(2048),
-    FOREIGN KEY (parent_id) REFERENCES clients(id)
+    FOREIGN KEY (parent_id) REFERENCES clients(id) ON DELETE CASCADE
 );

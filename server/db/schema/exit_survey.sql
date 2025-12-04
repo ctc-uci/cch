@@ -25,6 +25,6 @@ CREATE TABLE exit_survey (
     experience_extra_notes VARCHAR(2048) NOT NULL,
 
     FOREIGN KEY(cm_id) REFERENCES case_managers(id),
-    FOREIGN KEY(client_id) REFERENCES clients(id),
+    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE,
     FOREIGN KEY(site) REFERENCES locations(id)
 );

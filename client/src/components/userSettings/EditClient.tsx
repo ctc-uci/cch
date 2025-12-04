@@ -21,7 +21,11 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import {ConfirmChangesModal} from "./ConfirmChangesModal.tsx";
 import { DeleteUserModal } from "../admin/DeleteUserModal.tsx";
 
-type EditClientProps = { email: string; setClientModal: (open: boolean) => void };
+type EditClientProps = { 
+  email: string; 
+  setClientModal: (open: boolean) => void;
+  onClientDeleted?: (deletedEmail: string) => void;
+};
 type ClientUser = {
   id: number;
   email: string;
@@ -29,7 +33,7 @@ type ClientUser = {
   [key: string]: unknown;
 };
 
-export default function EditClient({ email, setClientModal }: EditClientProps) {
+export default function EditClient({ email, setClientModal, onClientDeleted }: EditClientProps) {
   const { backend } = useBackendContext();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
@@ -63,6 +67,10 @@ export default function EditClient({ email, setClientModal }: EditClientProps) {
         isClosable: true,
         position: "bottom-right",
       });
+      // Notify parent component to update the persons grid
+      if (onClientDeleted) {
+        onClientDeleted(user.email);
+      }
       setClientModal(false);
     } catch (error) {
       console.error("Error deleting client:", error);
