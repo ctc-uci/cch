@@ -57,6 +57,7 @@ export interface Person {
   phoneNumber: string;
   email: string;
   notes: string;
+  isPending?: boolean;
 }
 
 const roles_dict = {
@@ -246,7 +247,28 @@ export const ManageAccounts = () => {
         cell: ({ row }) => {
           const firstName = row.original.firstName;
           const lastName = row.original.lastName;
-          return `${firstName} ${lastName}`;
+          const isPending = row.original.isPending;
+          return (
+            <HStack spacing={2}>
+              <Text>{`${firstName} ${lastName}`}</Text>
+              {isPending && (
+                <Tooltip label="Account pending - user has not created their account yet">
+                  <Box
+                    as="span"
+                    bg="transparent"
+                    color="gray.400"
+                    px={2}
+                    py={1}
+                    borderRadius="md"
+                    fontSize="xs"
+                    fontWeight="bold"
+                  >
+                    PENDING
+                  </Box>
+                </Tooltip>
+              )}
+            </HStack>
+          );
         },
         sortingFn: (a, b) => {
           const aValue = `${a.original.firstName} ${a.original.lastName}`;

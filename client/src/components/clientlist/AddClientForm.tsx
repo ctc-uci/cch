@@ -321,29 +321,7 @@ export const AddClientForm = ({
         comments: formData.comments,
       };
       await backend.post("/clients", clientData);
-      // Also create a corresponding user record for this client
-      try {
-        const invitePayload = {
-          email: formData.email || undefined,
-          role: "client",
-          firstName: formData.first_name || undefined,
-          lastName: formData.last_name || undefined,
-          phoneNumber: formData.phone_number || undefined,
-        };
-        // Only attempt if we have at least an email and a name
-        if (invitePayload.email && (invitePayload.firstName || invitePayload.lastName)) {
-          await backend.post("/users/invite", invitePayload);
-        }
-      } catch (userErr) {
-        console.log("User creation failed after client add:", userErr);
-        toast({
-          title: "Client Added, but User Not Created",
-          description: "The client was added, but creating the user record failed.",
-          position: "bottom-right",
-          status: "warning",
-          isClosable: true,
-        });
-      }
+
       toast({
         title: "Client Added",
         description: `Client Name has been added!`,
