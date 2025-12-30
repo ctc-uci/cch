@@ -109,6 +109,7 @@ export const ManageAccounts = () => {
   const [clientModalID, setClientModalID] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [allEmails, setAllEmails] = useState<string[]>([]);
 
   const userTypeName = {
     admin: "Admin",
@@ -387,6 +388,52 @@ export const ManageAccounts = () => {
     fetchData();
   }, [view, backend, setPersons, currentUserEmail]);
 
+  useEffect(() => {
+    const fetchAllEmails = async () => {
+      try {
+        const [adminsResponse, caseManagersResponse, clientsResponse] = await Promise.all([
+          backend.get("/admin/admins"),
+          backend.get("/admin/caseManagers"),
+          backend.get("/admin/clients"),
+        ]);
+
+        const allEmailsList: string[] = [];
+        
+        // Collect emails from admins
+        if (adminsResponse.data) {
+          adminsResponse.data.forEach((person: Person) => {
+            if (person.email && person.email !== currentUserEmail) {
+              allEmailsList.push(person.email);
+            }
+          });
+        }
+        
+        // Collect emails from case managers
+        if (caseManagersResponse.data) {
+          caseManagersResponse.data.forEach((person: Person) => {
+            if (person.email && person.email !== currentUserEmail) {
+              allEmailsList.push(person.email);
+            }
+          });
+        }
+        
+        // Collect emails from clients
+        if (clientsResponse.data) {
+          clientsResponse.data.forEach((person: Person) => {
+            if (person.email && person.email !== currentUserEmail) {
+              allEmailsList.push(person.email);
+            }
+          });
+        }
+
+        setAllEmails(allEmailsList);
+      } catch (error) {
+        console.error("Error fetching all emails: ", error);
+      }
+    };
+    fetchAllEmails();
+  }, [backend, currentUserEmail]);
+
   return (
     <VStack
       justifyContent="flex-start"
@@ -471,23 +518,21 @@ export const ManageAccounts = () => {
             colorScheme={isSearchOpen ? "blue" : "gray"}
           />
           {view !== "clients" && (
-            <>
-              <Button
-                onClick={deleteOnOpen}
-                disabled={selectedRowIds.length === 0}
-                colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
-                opacity={selectedRowIds.length === 0 ? 0.5 : 1}
-              >
-                Delete ({selectedRowIds.length})
-              </Button>
-              <Button
-                colorScheme="blue"
-                onClick={onOpen}
-              >
-                Add
-              </Button>
-            </>
+            <Button
+              onClick={deleteOnOpen}
+              disabled={selectedRowIds.length === 0}
+              colorScheme={selectedRowIds.length === 0 ? "gray" : "red"}
+              opacity={selectedRowIds.length === 0 ? 0.5 : 1}
+            >
+              Delete ({selectedRowIds.length})
+            </Button>
           )}
+          <Button
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            Add
+          </Button>
         </HStack>
       </HStack>
       {view !== "clients" && !editDrawerOpened && (
@@ -708,7 +753,7 @@ export const ManageAccounts = () => {
         isOpen={isOpen}
         onClose={onClose}
         onUserAdded={handleUserAdded}
-        existingEmails={persons.map(p => p.email)}
+        existingEmails={view === "clients" ? allEmails : persons.map(p => p.email)}
       />
     </VStack>
   );

@@ -108,6 +108,23 @@ const AddPreview = ({
           return;
         }
 
+        // Check for duplicate email in existing list (all admins, case managers, and clients)
+        if (
+          existingEmails &&
+          existingEmails.some(
+            (email) => email.toLowerCase() === newUser.email.toLowerCase()
+          )
+        ) {
+          toast({
+            title: `Duplicate Email`,
+            description: `A user with email ${newUser.email} already exists (as an admin, case manager, or client).`,
+            status: "error",
+            duration: 9000,
+            isClosable: true,
+          });
+          return;
+        }
+
         // Create client user account
         try {
           const userResponse = await backend.post("/users/create", {
