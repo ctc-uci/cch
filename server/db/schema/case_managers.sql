@@ -8,5 +8,5 @@ CREATE TABLE case_managers(
 	first_name VARCHAR(16) NOT NULL,
 	last_name VARCHAR(16) NOT NULL,
 	phone_number VARCHAR(10) NOT NULL,
-	email VARCHAR(32) NOT NULL
+	email VARCHAR(32) NOT NULL UNIQUE
 );

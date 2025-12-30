@@ -59,6 +59,20 @@ caseManagersRouter.get("/id-by-email/:email", async (req, res) => {
 caseManagersRouter.post("/", async (req, res) => {
   try {
     const { role, firstName, lastName, phoneNumber, email, notes } = req.body;
+    
+    // Check if email already exists
+    const existing = await db.query(
+      `SELECT id FROM case_managers WHERE email COLLATE "C" = $1`,
+      [email]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A case manager with email ${email} already exists.` 
+      });
+    }
+    
     const data = await db.query(
       `INSERT INTO case_managers (role, first_name, last_name, phone_number, email, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`,
       [role, firstName, lastName, phoneNumber, email, notes]
@@ -66,6 +80,13 @@ caseManagersRouter.post("/", async (req, res) => {
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {
+    // Handle unique constraint violation
+    if (err.code === '23505' || err.message?.includes('unique') || err.message?.includes('duplicate')) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A case manager with email ${req.body.email} already exists.` 
+      });
+    }
     res.status(500).send(err.message);
   }
 });

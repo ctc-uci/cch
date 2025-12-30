@@ -52,11 +52,13 @@ const AddPreview = ({
                       isOpen,
                       onClose,
                       onUserAdded,
+                      existingEmails,
                     }: {
   userType: RoleKey;
   isOpen: boolean;
   onClose: () => void;
   onUserAdded?: (newUser: UserInfo & { id: number }) => void;
+  existingEmails?: string[];
 }) => {
   const { backend } = useBackendContext();
 
@@ -142,11 +144,21 @@ const AddPreview = ({
           });
 
           return;
-        } catch (e) {
+        } catch (e: unknown) {
           console.error(e);
+          
+          // Check if it's a duplicate email error
+          const error = e as { response?: { data?: { message?: string; error?: string }; status?: number }; message?: string };
+          const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message;
+          const isDuplicateError = errorMessage?.toLowerCase().includes('duplicate') || 
+                                  errorMessage?.toLowerCase().includes('already exists') ||
+                                  error?.response?.status === 400;
+
           toast({
             title: `${title} Not Added`,
-            description: `An error occurred and the ${title.toLowerCase()} was not added`,
+            description: isDuplicateError 
+              ? (errorMessage || `A ${title.toLowerCase()} with this email already exists.`)
+              : `An error occurred and the ${title.toLowerCase()} was not added`,
             status: "error",
             duration: 9000,
             isClosable: true,
@@ -167,6 +179,18 @@ const AddPreview = ({
 
           return;
         }
+      }
+
+      // Check for duplicate email in existing list
+      if (existingEmails && existingEmails.some(email => email.toLowerCase() === newUser.email.toLowerCase())) {
+        toast({
+          title: `Duplicate Email`,
+          description: `A ${title.toLowerCase()} with email ${newUser.email} already exists.`,
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+        return;
       }
 
         try {
@@ -208,8 +232,25 @@ const AddPreview = ({
                 phoneNumber: newUser.phoneNumber,
               });
             }
-          } catch (e) {
+          } catch (e: unknown) {
             console.error("Error creating user account:", e);
+            
+            // If user creation fails due to duplicate, show error but don't fail the whole operation
+            // since case manager was already created
+            const error = e as { response?: { data?: { message?: string; error?: string } }; message?: string };
+            const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message;
+            const isDuplicateError = errorMessage?.toLowerCase().includes('duplicate') || 
+                                    errorMessage?.toLowerCase().includes('already exists');
+            
+            if (isDuplicateError) {
+              toast({
+                title: "User Account Warning",
+                description: errorMessage || "Case manager was created but user account already exists.",
+                status: "warning",
+                duration: 9000,
+                isClosable: true,
+              });
+            }
           }
 
           // Add the new user to local state with all required fields
@@ -235,12 +276,21 @@ const AddPreview = ({
             isClosable: true,
           });
         
-        } catch (e) {
+        } catch (e: unknown) {
           console.error(e);
+
+          // Check if it's a duplicate email error
+          const error = e as { response?: { data?: { message?: string; error?: string }; status?: number }; message?: string };
+          const errorMessage = error?.response?.data?.message || error?.response?.data?.error || error?.message;
+          const isDuplicateError = errorMessage?.toLowerCase().includes('duplicate') || 
+                                  errorMessage?.toLowerCase().includes('already exists') ||
+                                  error?.response?.status === 400;
 
           toast({
             title: `${title} Not Added`,
-            description: `An error occurred and the ${title.toLowerCase()} was not added`,
+            description: isDuplicateError 
+              ? (errorMessage || `A ${title.toLowerCase()} with this email already exists.`)
+              : `An error occurred and the ${title.toLowerCase()} was not added`,
             status: "error",
             duration: 9000,
             isClosable: true,

@@ -89,6 +89,19 @@ usersRouter.post("/create", async (req, res) => {
   try {
     const { email, firebaseUid, firstName, lastName, phoneNumber, role } = req.body;
 
+    // Check if email already exists
+    const existing = await db.query(
+      `SELECT id FROM users WHERE email COLLATE "C" = $1`,
+      [email]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A user with email ${email} already exists.` 
+      });
+    }
+
     const user = await db.query(
       "INSERT INTO users (email, firebase_uid, first_name, last_name, phone_number, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
       [email, firebaseUid, firstName, lastName, phoneNumber, role]
@@ -96,6 +109,13 @@ usersRouter.post("/create", async (req, res) => {
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
+    // Handle unique constraint violation
+    if (err.code === '23505' || err.message?.includes('unique') || err.message?.includes('duplicate')) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A user with email ${req.body.email} already exists.` 
+      });
+    }
     res.status(500).send(err.message);
     console.log(err);
   }
@@ -106,6 +126,19 @@ usersRouter.post("/invite", async (req, res) => {
   try {
     const { email, role, firstName, lastName, phoneNumber } = req.body;
 
+    // Check if email already exists
+    const existing = await db.query(
+      `SELECT id FROM users WHERE email COLLATE "C" = $1`,
+      [email]
+    );
+    
+    if (existing.length > 0) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A user with email ${email} already exists.` 
+      });
+    }
+
     const user = await db.query(
       "INSERT INTO users (email, role, first_name, last_name, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [email, role, firstName, lastName, phoneNumber]
@@ -113,6 +146,13 @@ usersRouter.post("/invite", async (req, res) => {
 
     res.status(200).json(keysToCamel(user));
   } catch (err) {
+    // Handle unique constraint violation
+    if (err.code === '23505' || err.message?.includes('unique') || err.message?.includes('duplicate')) {
+      return res.status(400).json({ 
+        error: "Duplicate email", 
+        message: `A user with email ${req.body.email} already exists.` 
+      });
+    }
     res.status(500).send(err.message);
     console.log(err);
   }

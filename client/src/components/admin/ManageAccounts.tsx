@@ -146,7 +146,13 @@ export const ManageAccounts = () => {
   const handleUserAdded = (newUser: Person) => {
     setPersons((prev) => [
       ...prev,
-      { ...newUser, isChecked: false, isHovered: false },
+      { 
+        ...newUser, 
+        isChecked: false, 
+        isHovered: false,
+        // Newly added admins and case managers are pending by default since they don't have firebase_uid yet
+        isPending: view === "admin" || view === "cms" ? true : newUser.isPending
+      },
     ]);
   };
 
@@ -702,6 +708,7 @@ export const ManageAccounts = () => {
         isOpen={isOpen}
         onClose={onClose}
         onUserAdded={handleUserAdded}
+        existingEmails={persons.map(p => p.email)}
       />
     </VStack>
   );
