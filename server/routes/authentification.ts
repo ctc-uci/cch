@@ -15,8 +15,8 @@ authentificationRouter.post("/verify", async (req, res) => {
     const data = await db.query(
           ` SELECT 1
         FROM auth_codes AS a
-        JOIN users AS u ON u.email = a.email
-        WHERE a.email = $1 AND a.code = $2;`,
+        JOIN users AS u ON u.email COLLATE "C" = a.email COLLATE "C"
+        WHERE a.email COLLATE "C" = $1 AND a.code = $2;`,
           [email, code]
     );
     return res.status(200).json(keysToCamel(data));
@@ -32,7 +32,7 @@ authentificationRouter.delete("/email", async (req, res) => {
     const data = await db.query(
       `DELETE FROM auth_codes AS a
                                 USING users u
-                                WHERE a.email = u.email AND a.email = $1;`,
+                                WHERE a.email COLLATE "C" = u.email COLLATE "C" AND a.email COLLATE "C" = $1;`,
       [email]
     );
     res.status(200).json(keysToCamel(data));
@@ -191,7 +191,7 @@ authentificationRouter.post("/verify-reset-code", async (req, res) => {
     const data = await db.query(
       `SELECT 1
        FROM auth_codes
-       WHERE email = $1 AND code = $2 AND valid_until > CURRENT_TIMESTAMP`,
+       WHERE email COLLATE "C" = $1 AND code = $2 AND valid_until > CURRENT_TIMESTAMP`,
       [email, code]
     );
 
@@ -218,7 +218,7 @@ authentificationRouter.post("/confirm-reset-password", async (req, res) => {
     const verifyData = await db.query(
       `SELECT 1
        FROM auth_codes
-       WHERE email = $1 AND code = $2 AND valid_until > CURRENT_TIMESTAMP`,
+       WHERE email COLLATE "C" = $1 AND code = $2 AND valid_until > CURRENT_TIMESTAMP`,
       [email, code]
     );
 
@@ -236,7 +236,7 @@ authentificationRouter.post("/confirm-reset-password", async (req, res) => {
 
     // Delete the used reset code
     await db.query(
-      `DELETE FROM auth_codes WHERE email = $1 AND code = $2`,
+      `DELETE FROM auth_codes WHERE email COLLATE "C" = $1 AND code = $2`,
       [email, code]
     );
 

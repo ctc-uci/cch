@@ -101,7 +101,7 @@ clientsRouter.get("/", async (req, res) => {
 clientsRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    const clients = await db.query(`SELECT * FROM clients WHERE email = $1`, [
+    const clients = await db.query(`SELECT * FROM clients WHERE email COLLATE "C" = $1`, [
       email,
     ]);
     res.status(200).json(keysToCamel(clients));

@@ -45,7 +45,7 @@ caseManagersRouter.get("/:id", async (req, res) => {
 caseManagersRouter.get("/id-by-email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    const data = await db.query(`SELECT id FROM case_managers WHERE email = $1`, [
+    const data = await db.query(`SELECT id FROM case_managers WHERE email COLLATE "C" = $1`, [
       email,
     ]);
 

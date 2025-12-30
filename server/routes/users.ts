@@ -38,7 +38,7 @@ usersRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
 
-    const user = await db.query("SELECT * FROM users WHERE email = $1", [
+    const user = await db.query(`SELECT * FROM users WHERE email COLLATE "C" = $1`, [
       email,
     ]);
 
@@ -69,7 +69,7 @@ usersRouter.delete("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
 
-    const user = await db.query("DELETE FROM users WHERE email = $1 RETURNING *", [
+    const user = await db.query(`DELETE FROM users WHERE email COLLATE "C" = $1 RETURNING *`, [
       email,
     ]);
 
@@ -176,7 +176,7 @@ usersRouter.put("/updateUser", async (req, res) => {
            last_name = COALESCE($2, last_name), 
            phone_number = COALESCE($3, phone_number),
            firebase_uid = COALESCE($4, firebase_uid)
-       WHERE email = $5
+       WHERE email COLLATE "C" = $5
        RETURNING *`,
        [firstName, lastName, phoneNumber, firebaseUid, email]
     );

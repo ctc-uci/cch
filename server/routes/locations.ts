@@ -26,7 +26,7 @@ locationsRouter.put("/update-location", async (req, res) => {
        SET name = $1,
            date = $2,
            caloptima_funded = $3
-       FROM case_managers cm JOIN users u ON cm.email = u.email
+       FROM case_managers cm JOIN users u ON cm.email COLLATE "C" = u.email COLLATE "C"
        WHERE l.cm_id = cm.id AND u.firebase_uid = $4`,
       [locationName, date, calOptimaFunded, uid]
     );
@@ -44,7 +44,7 @@ locationsRouter.get("/get-location", async (req, res) => {
     const location = await db.query(`SELECT l.*
                                      FROM locations l
                                             JOIN case_managers cm ON l.cm_id = cm.id
-                                            JOIN users u ON cm.email = u.email
+                                            JOIN users u ON cm.email COLLATE "C" = u.email COLLATE "C"
                                      WHERE u.firebase_uid = $1;`, [
       uid,
     ]);
