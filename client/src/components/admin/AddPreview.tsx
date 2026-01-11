@@ -129,7 +129,7 @@ const AddPreview = ({
         try {
           const userResponse = await backend.post("/users/create", {
             email: newUser.email,
-            role: "client",
+            role: "user",
             firstName: null,
             lastName: null,
             phoneNumber: null,

@@ -18,6 +18,15 @@ usersRouter.get("/", async (req, res) => {
   }
 });
 
+usersRouter.get("/clients", async (req, res) => {
+  try {
+    const users = await db.query(`SELECT * FROM users WHERE role IN ('user', 'client')`);
+    res.status(200).json(keysToCamel(users));
+  } catch (err) {
+    res.status(400).send(err.message);
+  }
+});
+
 // Get a user by ID
 usersRouter.get("/:firebaseUid", async (req, res) => {
   try {
@@ -225,3 +234,4 @@ usersRouter.put("/updateUser", async (req, res) => {
     res.status(400).send(err.message);
   }
 });
+

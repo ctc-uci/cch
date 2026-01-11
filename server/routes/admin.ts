@@ -33,17 +33,36 @@ adminRouter.get("/admins", async (req, res) => {
   }
 });
 
-// Get all clients
+// // Get all clients
+// adminRouter.get("/clients", async (req, res) => {
+//   try {
+//     const data = await db.query(`
+//         SELECT c.first_name, c.last_name, c.email, locs.name AS location FROM clients AS c
+//         INNER JOIN case_managers AS cm ON c.created_by = cm.id
+//         LEFT JOIN locations AS locs ON cm.id = locs.cm_id;
+//       `);
+//     res.status(200).json(keysToCamel(data));
+//   } catch (err) {
+//     res.status(500).send(err.message);
+//   }
+// });
+
 adminRouter.get("/clients", async (req, res) => {
   try {
     const data = await db.query(`
-        SELECT c.first_name, c.last_name, c.email, locs.name AS location FROM clients AS c
-        INNER JOIN case_managers AS cm ON c.created_by = cm.id
-        LEFT JOIN locations AS locs ON cm.id = locs.cm_id;
+        SELECT 
+          u.first_name, 
+          u.last_name, 
+          u.email as email, 
+          CASE 
+            WHEN u.email IS NULL OR u.email = '' THEN true
+            ELSE false
+          END AS is_pending
+        FROM users AS u;
       `);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(400).send(err.message);
   }
 });
 

@@ -58,6 +58,7 @@ export interface Person {
   email: string;
   notes: string;
   isPending?: boolean;
+  firebaseUid?: string | null;
 }
 
 const roles_dict = {
@@ -131,7 +132,7 @@ export const ManageAccounts = () => {
     if (checkboxMode === "hidden") {
       // State 1 -> State 2: Show checkboxes and select all
       setCheckboxMode("visible-checked");
-      const allIds = filteredPersons.map((person) => person.id);
+      const allIds = persons.map((person) => person.id);
       setSelectedRowIds(allIds);
     } else if (checkboxMode === "visible-checked") {
       // State 2 -> State 3: Keep checkboxes visible but uncheck all
@@ -161,16 +162,21 @@ export const ManageAccounts = () => {
     setPersons((prev) => prev.filter((person) => person.email !== deletedEmail));
   };
 
-  // Filter persons based on email search query
-  const filteredPersons = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return persons;
-    }
-    const query = searchQuery.toLowerCase().trim();
-    return persons.filter((person) =>
-      person.email.toLowerCase().includes(query)
-    );
-  }, [persons, searchQuery]);
+  // // Filter persons based on email search query
+  // const filteredPersons = useMemo(() => {
+  //   if (!searchQuery.trim()) {
+  //     return persons;
+  //   }
+  //   const query = searchQuery.toLowerCase().trim();
+  //   return persons.filter((person) =>
+  //     person.email && person.email.toLowerCase().includes(query)
+  //   );
+  // }, [persons, searchQuery]);
+
+  // useEffect(() => {
+  //   console.log("persons", persons);
+  //   console.log("filteredPersons", filteredPersons);
+  // }, [persons, filteredPersons]);
 
   const handleDelete = async () => {
     try {
@@ -340,7 +346,7 @@ export const ManageAccounts = () => {
   );
 
   const table = useReactTable({
-    data: filteredPersons,
+    data: persons,
     columns,
     state: {
       sorting,
@@ -374,10 +380,11 @@ export const ManageAccounts = () => {
             )
           );
         } else {
-          const response = await backend.get("/admin/clients");
+          const response = await backend.get("/users/clients");
+          console.log("response", response.data);
           setPersons(
             (response.data || []).filter(
-              (person: Person) => person.email !== currentUserEmail
+              (person: Person) => !person.email || person.email !== currentUserEmail
             )
           );
         }
@@ -394,7 +401,7 @@ export const ManageAccounts = () => {
         const [adminsResponse, caseManagersResponse, clientsResponse] = await Promise.all([
           backend.get("/admin/admins"),
           backend.get("/admin/caseManagers"),
-          backend.get("/admin/clients"),
+          backend.get("/users/clients"),
         ]);
 
         const allEmailsList: string[] = [];
@@ -441,56 +448,47 @@ export const ManageAccounts = () => {
       marginLeft="5%"
       marginRight="5%"
       height="100%"
-      overflowX="hidden"
     >
       <HStack
         width="100%"
-        overflow="hidden"
+        overflow="visible"
       >
         <HStack
           width="55%"
-          justifyContent="space-between"
-          display="inline-flex"
+          justifyContent="flex-start"
           align-items="flex-start"
         >
-          <Tabs>
+          <Tabs
+            index={view === "admin" ? 0 : view === "cms" ? 1 : 2}
+            onChange={(index) => {
+              if (index === 0) {
+                setView("admin");
+                setEditDrawerOpened(false);
+                setSelectedRowIds([]);
+                setCheckboxMode("hidden");
+                setSearchQuery("");
+                setIsSearchOpen(false);
+              } else if (index === 1) {
+                setView("cms");
+                setEditDrawerOpened(false);
+                setSelectedRowIds([]);
+                setCheckboxMode("hidden");
+                setSearchQuery("");
+                setIsSearchOpen(false);
+              } else {
+                setView("clients");
+                setEditDrawerOpened(false);
+                setSelectedRowIds([]);
+                setCheckboxMode("hidden");
+                setSearchQuery("");
+                setIsSearchOpen(false);
+              }
+            }}
+          >
             <TabList>
-              <Tab
-                onClick={() => {
-                  setView("admin");
-                  setEditDrawerOpened(false);
-                  setSelectedRowIds([]);
-                  setCheckboxMode("hidden");
-                  setSearchQuery("");
-                  setIsSearchOpen(false);
-                }}
-              >
-                Admins
-              </Tab>
-              <Tab
-                onClick={() => {
-                  setView("cms");
-                  setEditDrawerOpened(false);
-                  setSelectedRowIds([]);
-                  setCheckboxMode("hidden");
-                  setSearchQuery("");
-                  setIsSearchOpen(false);
-                }}
-              >
-                Case Managers
-              </Tab>
-              <Tab
-                onClick={() => {
-                  setView("clients");
-                  setEditDrawerOpened(false);
-                  setSelectedRowIds([]);
-                  setCheckboxMode("hidden");
-                  setSearchQuery("");
-                  setIsSearchOpen(false);
-                }}
-              >
-                Clients
-              </Tab>
+              <Tab>Admins</Tab>
+              <Tab>Case Managers</Tab>
+              <Tab>Clients</Tab>
             </TabList>
           </Tabs>
         </HStack>
@@ -673,80 +671,112 @@ export const ManageAccounts = () => {
           }}
         />
       )}
-      <Box width="100%" overflow="scroll">
-      <Grid
-        templateColumns="repeat(2, 1fr)"
-        gap="4"
-      >
-        {view === "clients" && !clientModalOpened ? (
-          filteredPersons.sort((a, b) => a.firstName.localeCompare(b.firstName)).map((person, id) => (
-            <Box key={id}>
-              <Box
-                p={5}
-                borderRadius="md"
-                boxShadow="sm"
-                bg="white"
-                borderColor="gray.100"
-                borderWidth="1px"
-              >
-                <Flex
-                  direction={"row"}
-                  justify="space-between"
-                  gap={"4"}
+      {view === "clients" && !clientModalOpened && (
+        <Grid
+          templateColumns="repeat(2, 1fr)"
+          gap={4}
+          width="100%"
+          paddingTop="24px"
+          height="50vh"
+          overflow="auto"
+        >
+          {persons.map((person, id) => {
+            const isPending = person.isPending || !person.firebaseUid || person.firebaseUid === "" || !person.email || person.email === "";
+            const pendingReason = !person.firebaseUid && "Account pending - user has not created their account yet"
+
+            return (
+              <Box key={person.id || person.email || id}>
+                <Box
+                  p={5}
+                  borderRadius="md"
+                  boxShadow="sm"
+                  bg="white"
+                  borderColor="gray.100"
+                  borderWidth="1px"
+                  position="relative"
                 >
-                  <Text
-                    textColor={"gray"}
-                    fontWeight={"bold"}
+                  <Flex justify="flex-end">
+                  {isPending && (
+                    <Tooltip label={pendingReason}>
+                      <Box
+                        bg="transparent"
+                        color="gray.400"
+                        borderRadius="md"
+                        fontSize="xs"
+                        fontWeight="bold"
+                      >
+                        PENDING
+                      </Box>
+                    </Tooltip>
+                  )}
+                  </Flex>
+                  <Flex
+                    direction={"row"}
+                    justify="space-between"
+                    gap={"4"}
+                    mb={2}
                   >
-                    EMAIL
-                  </Text>
-                  <Text textColor={"gray"}>{person.email}</Text>
-                </Flex>
-                <Flex
-                  direction={"row"}
-                  justify="space-between"
-                  gap={"4"}
-                >
-                  <Text
-                    textColor={"gray"}
-                    fontWeight={"bold"}
+                    <Text
+                      textColor={"gray"}
+                      fontWeight={"bold"}
+                    >
+                      EMAIL
+                    </Text>
+                    <Text textColor={"gray"}>{person.email || "No email"}</Text>
+                  </Flex>
+                  <Flex
+                    direction={"row"}
+                    justify="space-between"
+                    gap={"4"}
                   >
-                    PASSWORD
-                  </Text>
-                  <Text textColor={"gray"}>{"*******************"}</Text>
-                </Flex>
+                    <Text
+                      textColor={"gray"}
+                      fontWeight={"bold"}
+                    >
+                      PASSWORD
+                    </Text>
+                    <Text textColor={"gray"}>{"*******************"}</Text>
+                  </Flex>
+                  <Flex
+                    align="center"
+                    justify="flex-end"
+                    gap={2}
+                    mt={2}
+                  >
+                   <Flex
+                     align="center"
+                     justify={"center"}
+                     textColor={"brand.Blue 500"}
+                     gap={2}
+                     onClick={() => {
+                       if (person.email) {
+                         setClientModalID(person.email);
+                         setClientModalOpened(true);
+                       }
+                     }}
+                     cursor={person.email ? "pointer" : "not-allowed"}
+                     opacity={person.email ? 1 : 0.5}
+                   >
+                     <EditIcon />
+                     <Text>Edit Profile</Text>
+                   </Flex>
+                  </Flex>
+                </Box>
+
               </Box>
-              <Flex
-                align="center"
-                justify={"center"}
-                textColor={"brand.Blue 500"}
-                gap={2}
-                onClick={() => {
-                  setClientModalID(person.email);
-                  setClientModalOpened(true);
-                }}
-              >
-                <EditIcon />
-                <Text>Edit Profile</Text>
-              </Flex>
-            </Box>
-          ))
-        ) : (
-          <></>
-        )}
-        {view === "clients" && clientModalOpened ? (
-          <Box gridColumn="1 / -1">
-            <EditClient
-              email={clientModalID}
-              setClientModal={setClientModalOpened}
-              onClientDeleted={handleClientDeleted}
-            />
-          </Box>
-          ) : (
-            <></>
-          )}
+            );
+          })}
         </Grid>
-      </Box>
+      )}
+      {view === "clients" && clientModalOpened && (
+        <Box gridColumn="1 / -1">
+          <EditClient
+            email={clientModalID}
+            setClientModal={setClientModalOpened}
+            onClientDeleted={handleClientDeleted}
+          />
+        </Box>
+      )}
 
       <AddPreview
         userType={view}

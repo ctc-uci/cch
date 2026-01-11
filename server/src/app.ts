@@ -81,7 +81,7 @@ app.use("/request", requestRouter);
 app.use("/volunteers", volunteersRouter);
 app.use("/lastUpdated", lastUpdatedRouter);
 app.use("/email", emailRouter);
-app.use("/authentification", authentificationRouter)
+app.use("/authentification", authentificationRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
