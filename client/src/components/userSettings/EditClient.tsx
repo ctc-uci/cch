@@ -54,9 +54,16 @@ export default function EditClient({ email, setClientModal, onClientDeleted }: E
 
   const handleDelete = async () => {
     try {
-      // delete client record
       if (!user) return;
-      await backend.delete(`/clients/${user.id}`);
+      
+      // Try to delete from clients table if it exists
+      try {
+        await backend.delete(`/clients/${user.id}`);
+      } catch (_error) {
+        // If client doesn't exist in clients table, that's okay - just delete from users
+        console.log("Client not found in clients table, deleting from users only");
+      }
+      
       // delete corresponding user by email (also deletes Firebase if linked on server)
       await backend.delete(`/users/email/${encodeURIComponent(user.email)}`);
       toast({
@@ -88,9 +95,26 @@ export default function EditClient({ email, setClientModal, onClientDeleted }: E
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await backend.get(`/clients/email/${email}`);
-
-        setUser(response.data[0] as ClientUser);
+        // First try to fetch from clients table
+        let response = await backend.get(`/clients/email/${email}`);
+        
+        // If not found in clients table, try users table
+        if (!response.data || response.data.length === 0) {
+          response = await backend.get(`/users/email/${email}`);
+          if (response.data && response.data.length > 0) {
+            // Convert user data to client format
+            const userData = response.data[0];
+            setUser({
+              id: userData.id,
+              email: userData.email,
+              firebaseUid: userData.firebaseUid,
+              ...userData
+            } as ClientUser);
+            return;
+          }
+        } else {
+          setUser(response.data[0] as ClientUser);
+        }
       } catch (_error) {
         console.error("Error fetching data:", _error);
       }
@@ -205,6 +229,7 @@ export default function EditClient({ email, setClientModal, onClientDeleted }: E
         borderColor="gray.100"
         borderWidth="1px"
         width="100%"
+        maxW="100%"
       >
         <Text
           fontSize="sm"

@@ -162,21 +162,16 @@ export const ManageAccounts = () => {
     setPersons((prev) => prev.filter((person) => person.email !== deletedEmail));
   };
 
-  // // Filter persons based on email search query
-  // const filteredPersons = useMemo(() => {
-  //   if (!searchQuery.trim()) {
-  //     return persons;
-  //   }
-  //   const query = searchQuery.toLowerCase().trim();
-  //   return persons.filter((person) =>
-  //     person.email && person.email.toLowerCase().includes(query)
-  //   );
-  // }, [persons, searchQuery]);
-
-  // useEffect(() => {
-  //   console.log("persons", persons);
-  //   console.log("filteredPersons", filteredPersons);
-  // }, [persons, filteredPersons]);
+  // Filter persons based on email search query
+  const filteredPersons = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return persons;
+    }
+    const query = searchQuery.toLowerCase().trim();
+    return persons.filter((person) =>
+      person.email && person.email.toLowerCase().includes(query)
+    );
+  }, [persons, searchQuery]);
 
   const handleDelete = async () => {
     try {
@@ -346,7 +341,7 @@ export const ManageAccounts = () => {
   );
 
   const table = useReactTable({
-    data: persons,
+    data: filteredPersons,
     columns,
     state: {
       sorting,
@@ -381,7 +376,6 @@ export const ManageAccounts = () => {
           );
         } else {
           const response = await backend.get("/users/clients");
-          console.log("response", response.data);
           setPersons(
             (response.data || []).filter(
               (person: Person) => !person.email || person.email !== currentUserEmail
@@ -680,7 +674,7 @@ export const ManageAccounts = () => {
           height="50vh"
           overflow="auto"
         >
-          {persons.map((person, id) => {
+          {filteredPersons.map((person, id) => {
             const isPending = person.isPending || !person.firebaseUid || person.firebaseUid === "" || !person.email || person.email === "";
             const pendingReason = !person.firebaseUid && "Account pending - user has not created their account yet"
 
@@ -769,7 +763,7 @@ export const ManageAccounts = () => {
         </Grid>
       )}
       {view === "clients" && clientModalOpened && (
-        <Box gridColumn="1 / -1">
+        <Box width="100%" mt={4}>
           <EditClient
             email={clientModalID}
             setClientModal={setClientModalOpened}
