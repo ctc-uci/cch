@@ -8,6 +8,7 @@ import {
   FormControl,
   FormLabel,
   HStack,
+  IconButton,
   Input,
   Radio,
   RadioGroup,
@@ -22,6 +23,8 @@ import {
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
+import { ChevronLeftIcon } from "@chakra-ui/icons/ChevronLeft";
+import { useNavigate } from "react-router-dom";
 
 type ExitSurveyFormProps = {
   formData: ExitSurveyFormType;
@@ -29,6 +32,7 @@ type ExitSurveyFormProps = {
   setFormData: React.Dispatch<React.SetStateAction<ExitSurveyFormType>>;
   onReview: boolean;
   spanish: boolean;
+  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 
@@ -37,7 +41,8 @@ export const ExitSurveyForm = ({
   handleSubmit,
   setFormData,
   onReview,
-  spanish
+  spanish,
+  setOnReview
 }: ExitSurveyFormProps) => {
   type CaseManager = {
     id: number;
@@ -61,6 +66,7 @@ export const ExitSurveyForm = ({
   const { backend } = useBackendContext();
   const toast = useToast();
   const language = spanish ? "spanish" : "english";
+  const navigate = useNavigate();
 
   const fields = {
     english: {
@@ -196,6 +202,24 @@ export const ExitSurveyForm = ({
       mx="auto"
       p={6}
     >
+      <IconButton
+        aria-label="Back"
+        icon={<ChevronLeftIcon boxSize={8} />}
+        onClick={(e) => {
+          if (onReview) {
+            setOnReview(false);
+            return;
+          } else {
+            navigate("/choose-form");
+          }
+        }}
+        colorScheme="blue"
+        variant="ghost"
+        size="lg"
+        position="absolute"
+        left={5}
+        top={5}
+      />
       <form onSubmit={handleSubmit}>
         <VStack
           align="start"

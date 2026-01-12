@@ -162,20 +162,6 @@ export const ClientReviewPage = ({
           justifyContent={"space-between"}
           marginBottom={"100px"}
         >
-          <Button
-            position={"absolute"}
-            left={"-250px"}
-            top={"10px"}
-            height={"40px"}
-            width={"40px"}
-            color={"blue.500"}
-            backgroundColor={"transparent"}
-            onClick={() => navigate("/client-landing-page")}
-          >
-            <Box fontSize={"35px"}>
-              <IoIosArrowBack />
-            </Box>
-          </Button>
           <Box
             position="absolute"
             top="16px"

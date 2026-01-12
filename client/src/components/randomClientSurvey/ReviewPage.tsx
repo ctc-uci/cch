@@ -1,3 +1,4 @@
+import { ChevronLeftIcon } from "@chakra-ui/icons";
 import { 
     Box, 
     Button, 
@@ -27,6 +28,7 @@ import {
     ModalFooter,
     ModalBody,
     useDisclosure,
+    IconButton,
 } from "@chakra-ui/react";
 
 const qualityQuestions = [

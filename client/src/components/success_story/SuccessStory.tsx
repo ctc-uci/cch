@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Flex,
+  IconButton,
   Spacer,
   Text,
   useToast,
@@ -15,8 +16,9 @@ import { ProgressSteps } from "../ProgressSteps";
 import { SuccessScreen } from "../SuccessScreen";
 import { SuccessStoryForm } from "./SuccessStoryForm";
 import type { SuccessStoryForm as SuccessStoryFormType} from "../../types/successStory";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
+import { ChevronLeftIcon } from "@chakra-ui/icons/ChevronLeft";
 
 export type CaseManager = {
   id: number;
@@ -59,7 +61,8 @@ export const SuccessStory = () => {
     client_id: null,
   });
   const { currentUser } = useAuthContext();
-
+  const navigate = useNavigate();
+  
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -117,6 +120,23 @@ export const SuccessStory = () => {
       p={4}
       minH="100vh"
     >
+      <IconButton
+          aria-label="Back to personal"
+          icon={<ChevronLeftIcon boxSize={8} />}
+          onClick={() => {
+            if (onReview) {
+              setOnReview(false);
+            } else {
+              navigate('/choose-form');
+            }
+          }}
+          colorScheme="blue"
+          variant="ghost"
+          size="lg"
+          position="absolute"
+          left={5}
+          top={5}
+      />
       <Box
         width="60%"
         justifyContent={"center"}

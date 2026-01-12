@@ -87,7 +87,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: 
       <IconButton
           aria-label="Back to personal"
           icon={<ChevronLeftIcon boxSize={8} />}
-          onClick={() => navigate('/admin-client-forms')}
+          onClick={() => navigate('/choose-form')}
           colorScheme="blue"
           variant="ghost"
           size="lg"

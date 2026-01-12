@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { ClientReviewPage } from "./ClientReviewPage";
 import { ReviewPage } from "./ReviewPage";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { useToast } from "@chakra-ui/react";
+import { IconButton, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { RandomSurveyConfirmation } from "./RandomSurveyConfirmation";
+import { ChevronLeftIcon } from "@chakra-ui/icons/ChevronLeft";
 
 type CaseManager = {
   id: number;
@@ -123,6 +124,23 @@ export const RandomClientSurvey = () => {
     
     return (
         <>
+        <IconButton
+          aria-label="Back"
+          icon={<ChevronLeftIcon boxSize={8} />}
+          onClick={(e) => {
+            if (page === 1) {
+              navigate("/choose-form");
+            } else {
+              handleCancel();
+            }
+          }}
+          colorScheme="blue"
+          variant="ghost"
+          size="lg"
+          position="absolute"
+          left={5}
+          top={5}
+      />
             {page === 1 && (
                 <ClientReviewPage
                 surveyData={surveyData}
