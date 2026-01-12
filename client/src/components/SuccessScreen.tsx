@@ -1,11 +1,9 @@
 import { Box, Center, Text, VStack } from "@chakra-ui/react";
 import { CheckIcon } from "@chakra-ui/icons";
 import { useNavigate } from "react-router-dom";
-import { useAuthContext } from "../contexts/hooks/useAuthContext";
 
 export const SuccessScreen = () => {
   const navigate = useNavigate();
-  const { logout } = useAuthContext();
 
   return (
     <Center
@@ -13,11 +11,7 @@ export const SuccessScreen = () => {
       bg="white"
       cursor="pointer"
       onClick={async () => {
-        try {
-          await logout();
-        } finally {
-          navigate('/landing-page');
-        }
+          navigate('/choose-form');
       }}
     >
       <VStack spacing={6}>

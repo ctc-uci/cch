@@ -1,12 +1,10 @@
 import { Box, Text } from "@chakra-ui/react";
 import { MdCheckCircle } from "react-icons/md";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 const Success = () => {
     const navigate = useNavigate();
     const params = useParams();
-    const { logout } = useAuthContext();
     const text = {
         'english': {
             title: "You're all set!",
@@ -21,11 +19,7 @@ const Success = () => {
     const language = (params.language as Language) || "english";
     return(
         <Box margin={40} marginTop={10} onClick={async () => {
-          try {
-            await logout();
-          } finally {
-            navigate('/landing-page');
-          }
+          navigate('/choose-form');
         }}>
             <Box 
                 minH="calc(100vh - 80px)" 

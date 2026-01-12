@@ -161,7 +161,7 @@ export const RandomClientSurvey = () => {
                 />
             )}
 
-            {page === 3 && <RandomSurveyConfirmation onExit={() => navigate("/")} />}
+            {page === 3 && <RandomSurveyConfirmation onExit={async () => navigate("/choose-form")} />}
         </>
     );
 };

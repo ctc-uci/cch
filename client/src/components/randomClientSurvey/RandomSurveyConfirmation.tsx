@@ -1,29 +1,20 @@
 import { Box, Circle, Heading, Text } from "@chakra-ui/react"
 import { useEffect } from "react";
 import { MdCheckCircle } from "react-icons/md";
-import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
 type Props = {
   onExit: () => Promise<void>;
 };
 
 export const RandomSurveyConfirmation = ({ onExit }: Props) => {
-    const { logout } = useAuthContext();
     useEffect(() => {
-        const handleClick = async () => {
-            try {
-                await logout();
-            } catch (error) {
-                console.error(error);
-            }
-            finally {
-                onExit();
-            }
+        const handleExit = async () => {
+            onExit();
         };
 
-        window.addEventListener("click", handleClick);
-        return () => window.removeEventListener("click", handleClick);
-    }, [onExit, logout]);
+        window.addEventListener("click", handleExit);
+        return () => window.removeEventListener("click", handleExit);
+    }, [onExit]);
 
     return (
         <Box
