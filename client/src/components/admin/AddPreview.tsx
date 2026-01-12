@@ -129,7 +129,7 @@ const AddPreview = ({
         try {
           const userResponse = await backend.post("/users/create", {
             email: newUser.email,
-            role: "user",
+            role: roleDict[userType],
             firstName: null,
             lastName: null,
             phoneNumber: null,
@@ -240,7 +240,7 @@ const AddPreview = ({
                 phoneNumber: newUser.phoneNumber,
               });
             }
-            else {
+            else if (roleDict[userType] === "case manager") {
               await backend.post("/users/create", {
                 email: newUser.email,
                 role: "user",

@@ -36,7 +36,7 @@ const UserSettingsPreview = ({
       top="200px"
       left="54px"
       width="396px"
-      height="756px"
+      height="800px"
       borderRadius="12px"
       pt="80px"
       pr="32px"
@@ -160,12 +160,12 @@ const UserSettingsPreview = ({
         </Flex>
       </Stack>
       {!editing && role !== "user" && (
-        <Stack>
+        <Stack mb={2}>
           <a
             onClick={hideEditProfile}
             style={{ cursor: "pointer" }}
           >
-            <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2}  >
+            <Flex align="center" justify={'center'} textColor={'brand.Blue 500'} gap={2} >
               <EditIcon />
               <Text>Edit Profile</Text>
             </Flex>

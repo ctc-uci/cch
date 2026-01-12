@@ -37,14 +37,23 @@ const ClientLandingPage = () => {
                 <Button onClick={() => setLanguage("English")} style={language === 'English' ? { color: "white", fontWeight: "bold", backgroundColor: "#3182CE",  outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px' } : { outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px'}}>English</Button>
                 <Button onClick={() => setLanguage("Spanish")} style={language === 'Spanish' ? { color: "white", fontWeight: "bold", backgroundColor: "#3182CE",  outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px' } : {outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px'}}>Español</Button>
                 </ButtonGroup>
-            {language && (<>
+            {language === "English" ? (
+                <>
                 <Text fontSize="lg" marginTop={4} width={380} textAlign="center">
-                This survey helps us understand your needs so we can provide the best support possible. Your answers are confidential, and we’re here to assist if you need anything.</Text>
+                This survey helps us understand your needs so we can provide the best support possible. Your answers are confidential, and we're here to assist if you need anything.</Text>
                 <Button variant={"solid"} colorScheme="blue" size="lg" marginTop={4} onClick={handleContinue}>
                     Continue
                 </Button>
-            </>)}
-
+            </>)
+            : language === "Spanish" ? (
+                <>
+                <Text fontSize="lg" marginTop={4} width={380} textAlign="center">
+                Esta encuesta nos ayuda a comprender sus necesidades para que podamos brindarle el mejor apoyo posible. Sus respuestas son confidenciales y estamos a su disposición para ayudarle en lo que necesite.</Text>
+                <Button variant={"solid"} colorScheme="blue" size="lg" marginTop={4} onClick={handleContinue}>
+                    Continuar
+                </Button>
+            </>)
+            : null}
         </VStack>
 )};
 
