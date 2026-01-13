@@ -5,30 +5,35 @@ import express from "express";
 import schedule from "node-schedule"; // TODO: Keep only if scheduling cronjobs
 
 import { adminRouter } from "../routes/admin";
+import { authentificationRouter } from "../routes/authentification";
+import { calculateMonthlyStats } from "../routes/calculateMonthlyStats";
 import { caseManagerMonthlyStatsRouter } from "../routes/caseManagerMonthlyStats.js";
 import { caseManagersRouter } from "../routes/caseManagers";
 import { childRouter } from "../routes/children";
 import { clientDataRouter } from "../routes/clientData";
 import { clientsRouter } from "../routes/clients";
-import { exitSurveyRouter } from "../routes/exitSurvey";
 import { donationRouter } from "../routes/donations";
+import { exitSurveyRouter } from "../routes/exitSurvey";
+import { formQuestionsRouter } from "../routes/formQuestions";
+import { formsCombinedRouter } from "../routes/formsCombined.js";
 import { frontDeskRouter } from "../routes/frontDesk";
 import { initialInterviewRouter } from "../routes/initialInterview";
+import { intakeChildrenRouter } from "../routes/intakeChildren";
+import { intakeClientsRouter } from "../routes/intakeClients";
+import { intakeExitSurveyRouter } from "../routes/intakeExitSurvey";
+import { intakeStatsFormRouter } from "../routes/intakeStatsForm.js";
+import { intakeSuccessStoryRouter } from "../routes/intakeSuccessStory";
+import { lastUpdatedRouter } from "../routes/lastUpdated";
 import { locationsRouter } from "../routes/locations";
+import { emailRouter } from "../routes/nodemailer";
 import { randomSurveyRouter } from "../routes/randomSurvey";
+import { requestRouter } from "../routes/request.js";
 import { screenerCommentRouter } from "../routes/screenerComment";
 import { successRouter } from "../routes/successStory";
 import { unitsRouter } from "../routes/units";
 import { usersRouter } from "../routes/users";
-import { verifyToken } from "./middleware";
-import { intakeStatsFormRouter } from "../routes/intakeStatsForm.js";
-import { calculateMonthlyStats } from "../routes/calculateMonthlyStats";
-import { formsCombinedRouter } from "../routes/formsCombined.js";
-import { requestRouter } from "../routes/request.js";
 import { volunteersRouter } from "../routes/volunteers";
-import { lastUpdatedRouter } from "../routes/lastUpdated";
-import { emailRouter } from "../routes/nodemailer";
-import { authentificationRouter } from "../routes/authentification";
+import { verifyToken } from "./middleware";
 
 dotenv.config();
 
@@ -82,6 +87,11 @@ app.use("/volunteers", volunteersRouter);
 app.use("/lastUpdated", lastUpdatedRouter);
 app.use("/email", emailRouter);
 app.use("/authentification", authentificationRouter);
+app.use("/formQuestions", formQuestionsRouter);
+app.use("/intakeClients", intakeClientsRouter);
+app.use("/intakeChildren", intakeChildrenRouter);
+app.use("/intakeExitSurvey", intakeExitSurveyRouter);
+app.use("/intakeSuccessStory", intakeSuccessStoryRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);

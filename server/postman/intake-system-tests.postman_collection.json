@@ -1,0 +1,1376 @@
+{
+  "info": {
+    "_postman_id": "intake-system-tests",
+    "name": "Intake System API Tests",
+    "description": "Tests for the dynamic intake form system including form questions, intake clients, children, exit surveys, and success stories.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "questionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clientId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "childId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "exitSurveyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "successStoryId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Form Questions",
+      "item": [
+        {
+          "name": "Get All Questions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Questions have required fields', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.length > 0) {",
+                  "        pm.expect(jsonData[0]).to.have.property('id');",
+                  "        pm.expect(jsonData[0]).to.have.property('fieldKey');",
+                  "        pm.expect(jsonData[0]).to.have.property('questionText');",
+                  "        pm.expect(jsonData[0]).to.have.property('questionType');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions"]
+            }
+          }
+        },
+        {
+          "name": "Get All Questions (Include Hidden)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions?includeHidden=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions"],
+              "query": [
+                {
+                  "key": "includeHidden",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Questions by Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('All questions are in personal category', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    jsonData.forEach(q => {",
+                  "        pm.expect(q.category).to.equal('personal');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/category/personal",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "category", "personal"]
+            }
+          }
+        },
+        {
+          "name": "Create New Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test('Question created with correct data', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.fieldKey).to.equal('test_custom_field');",
+                  "    pm.expect(jsonData.questionText).to.equal('Test Custom Question');",
+                  "    pm.collectionVariables.set('questionId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"field_key\": \"test_custom_field\",\n  \"question_text\": \"Test Custom Question\",\n  \"question_type\": \"text\",\n  \"category\": \"personal\",\n  \"is_required\": false,\n  \"is_visible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions"]
+            }
+          }
+        },
+        {
+          "name": "Get Question by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns correct question', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('questionId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "{{questionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Question updated correctly', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.questionText).to.equal('Updated Test Question');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question_text\": \"Updated Test Question\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "{{questionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Question Visibility (Hide)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Question is now hidden', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.isVisible).to.equal(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_visible\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/{{questionId}}/visibility",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "{{questionId}}", "visibility"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Question Visibility (Show)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Question is now visible', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.isVisible).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_visible\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/{{questionId}}/visibility",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "{{questionId}}", "visibility"]
+            }
+          }
+        },
+        {
+          "name": "Delete Question",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/formQuestions/{{questionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["formQuestions", "{{questionId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intake Clients",
+      "item": [
+        {
+          "name": "Get All Intake Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients"]
+            }
+          }
+        },
+        {
+          "name": "Create Intake Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Client created with ID', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.collectionVariables.set('clientId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"created_by\": 1,\n  \"unit_id\": 1,\n  \"status\": \"Active\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"Client\",\n  \"date_of_birth\": \"1990-01-15\",\n  \"age\": 34,\n  \"phone_number\": \"5551234567\",\n  \"email\": \"test@example.com\",\n  \"emergency_contact_name\": \"Emergency Contact\",\n  \"emergency_contact_phone_number\": \"5559876543\",\n  \"ethnicity\": \"Non-Hispanic\",\n  \"race\": \"Caucasian\",\n  \"medical\": true,\n  \"entrance_date\": \"2024-01-01\",\n  \"estimated_exit_date\": \"2024-06-01\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients"]
+            }
+          }
+        },
+        {
+          "name": "Get Intake Client by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns correct client', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('clientId')));",
+                  "    pm.expect(jsonData.firstName).to.equal('Test');",
+                  "    pm.expect(jsonData.lastName).to.equal('Client');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients", "{{clientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Search Intake Clients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients?search=Test",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Test"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Intake Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Update returns client ID', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('clientId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Updated\",\n  \"last_name\": \"Client\",\n  \"phone_number\": \"5550001111\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients", "{{clientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Intake Client by Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients/email/test@example.com",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients", "email", "test@example.com"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intake Children",
+      "item": [
+        {
+          "name": "Get All Intake Children",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren"]
+            }
+          }
+        },
+        {
+          "name": "Create Intake Child",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Child created with correct data', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData.firstName).to.equal('Test');",
+                  "    pm.expect(jsonData.lastName).to.equal('Child');",
+                  "    pm.collectionVariables.set('childId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Test\",\n  \"last_name\": \"Child\",\n  \"parent_id\": {{clientId}},\n  \"date_of_birth\": \"2018-05-15\",\n  \"reunified\": false,\n  \"comments\": \"Test child record\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren"]
+            }
+          }
+        },
+        {
+          "name": "Get Child by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns correct child', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('childId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren/{{childId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren", "{{childId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Children by Parent ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Children belong to correct parent', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const parentId = parseInt(pm.collectionVariables.get('clientId'));",
+                  "    jsonData.forEach(child => {",
+                  "        pm.expect(child.parentId).to.equal(parentId);",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren/parent/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren", "parent", "{{clientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Intake Child",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Child updated correctly', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.reunified).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reunified\": true,\n  \"comments\": \"Updated - child reunified\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren/{{childId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren", "{{childId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Intake Child",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeChildren/{{childId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeChildren", "{{childId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intake Exit Survey",
+      "item": [
+        {
+          "name": "Get All Exit Surveys",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey"]
+            }
+          }
+        },
+        {
+          "name": "Create Exit Survey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Exit survey created with ID', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.collectionVariables.set('exitSurveyId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cmId\": 1,\n  \"name\": \"Test Client\",\n  \"site\": 1,\n  \"programDateCompletion\": \"2024-06-01\",\n  \"cchRating\": \"Excellent\",\n  \"cchLikeMost\": \"The supportive environment\",\n  \"cchCouldBeImproved\": \"More parking\",\n  \"lifeSkillsRating\": \"very helpful\",\n  \"lifeSkillsHelpfulTopics\": \"Budgeting, Resume writing\",\n  \"lifeSkillsOfferTopicsInTheFuture\": \"Interview skills\",\n  \"cmRating\": \"very helpful\",\n  \"cmChangeAbout\": \"Nothing\",\n  \"cmMostBeneficial\": \"Weekly check-ins\",\n  \"experienceTakeaway\": \"Confidence and stability\",\n  \"experienceAccomplished\": \"Got a job and saved money\",\n  \"experienceExtraNotes\": \"Thank you!\",\n  \"client_id\": {{clientId}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey"]
+            }
+          }
+        },
+        {
+          "name": "Get Exit Survey by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns correct exit survey', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('exitSurveyId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/{{exitSurveyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "{{exitSurveyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Exit Surveys by Client ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/client/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "client", "{{clientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Exit Survey Table Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/table-data",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "table-data"]
+            }
+          }
+        },
+        {
+          "name": "Search Exit Surveys",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/search-filter?search=Excellent",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "search-filter"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "Excellent"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Exit Survey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Exit survey updated', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cchRating\": \"Good\",\n  \"experienceExtraNotes\": \"Updated notes\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/{{exitSurveyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "{{exitSurveyId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Exit Survey",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeExitSurvey/{{exitSurveyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeExitSurvey", "{{exitSurveyId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Intake Success Story",
+      "item": [
+        {
+          "name": "Get All Success Stories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory"]
+            }
+          }
+        },
+        {
+          "name": "Create Success Story",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Success story created with ID', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.collectionVariables.set('successStoryId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2024-06-15\",\n  \"client_id\": {{clientId}},\n  \"name\": \"Test Client\",\n  \"cm_id\": 1,\n  \"site\": 1,\n  \"entrance_date\": \"2024-01-01\",\n  \"exit_date\": \"2024-06-01\",\n  \"previous_situation\": \"Was experiencing homelessness after job loss\",\n  \"cch_impact\": \"CCH provided stable housing and job training\",\n  \"where_now\": \"Now employed and living in permanent housing\",\n  \"tell_donors\": \"Your support changes lives. Thank you!\",\n  \"quote\": \"CCH gave me hope when I had none.\",\n  \"consent\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory"]
+            }
+          }
+        },
+        {
+          "name": "Get Success Story by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Returns correct success story', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.collectionVariables.get('successStoryId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/{{successStoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "{{successStoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Success Stories by Client ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/client/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "client", "{{clientId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Success Story Table Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/table-data",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "table-data"]
+            }
+          }
+        },
+        {
+          "name": "Search Success Stories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/search-filter?search=hope",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "search-filter"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "hope"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Success Story",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Success story updated', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.quote).to.equal('Updated quote - CCH changed my life!');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quote\": \"Updated quote - CCH changed my life!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/{{successStoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "{{successStoryId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Success Story",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeSuccessStory/{{successStoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeSuccessStory", "{{successStoryId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cleanup",
+      "item": [
+        {
+          "name": "Delete Test Client (Cleanup)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Delete successful', function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/intakeClients/{{clientId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["intakeClients", "{{clientId}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
