@@ -16,7 +16,7 @@ const pass =
 const emailSender =
   process.env.NODE_ENV === "development"
     ? `${process.env.DEV_EMAIL_FIRSTNAME} ${process.env.DEV_EMAIL_LASTNAME}`
-    : `${process.env.PROD_EMAIL_FIRSTNAMS} ${process.env.DEV_EMAIL_LASTNAME}`;
+    : `${process.env.PROD_EMAIL_FIRSTNAME} ${process.env.PROD_EMAIL_LASTNAME}`;
 const sendEmail = 
   process.env.NODE_ENV === "development"
     ? `${process.env.DEV_USERNAME}`
