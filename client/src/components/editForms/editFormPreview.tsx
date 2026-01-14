@@ -230,6 +230,32 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     onOpen();
   };
 
+  const generateFieldKey = (questionText: string, excludeId?: number): string => {
+    const baseKey = questionText
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "_")
+      .replace(/[^a-z0-9_]/g, "");
+
+    // Check if the base key already exists (excluding the current question)
+    const existingKeys = questions
+      .filter((q) => q.id !== excludeId)
+      .map((q) => q.fieldKey);
+
+    if (!existingKeys.includes(baseKey)) {
+      return baseKey;
+    }
+
+    // If duplicate exists, append a number
+    let counter = 1;
+    let newKey = `${baseKey}_${counter}`;
+    while (existingKeys.includes(newKey)) {
+      counter++;
+      newKey = `${baseKey}_${counter}`;
+    }
+    return newKey;
+  };
+
   const handleAdd = () => {
     setEditingQuestion({
       id: 0,
@@ -572,29 +598,35 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
               <Stack spacing={4}>
                 <Box>
                   <Text mb={1} fontSize="sm" fontWeight="medium">
-                    Field Key
-                  </Text>
-                  <Input
-                    value={editingQuestion.fieldKey}
-                    onChange={(e) =>
-                      setEditingQuestion({ ...editingQuestion, fieldKey: e.target.value })
-                    }
-                    placeholder="e.g., first_name"
-                    isDisabled={editingQuestion.id !== 0}
-                  />
-                </Box>
-                <Box>
-                  <Text mb={1} fontSize="sm" fontWeight="medium">
                     Question Text
                   </Text>
                   <Input
                     value={editingQuestion.questionText}
-                    onChange={(e) =>
-                      setEditingQuestion({ ...editingQuestion, questionText: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const newQuestionText = e.target.value;
+                      const newFieldKey = editingQuestion.id === 0 
+                        ? generateFieldKey(newQuestionText, editingQuestion.id)
+                        : editingQuestion.fieldKey;
+                      setEditingQuestion({ 
+                        ...editingQuestion, 
+                        questionText: newQuestionText,
+                        fieldKey: newFieldKey,
+                      });
+                    }}
                     placeholder="Enter question text"
                   />
                 </Box>
+                {/* <Box>
+                  <Text mb={1} fontSize="sm" fontWeight="medium">
+                    Field Key
+                  </Text>
+                  <Input
+                    value={editingQuestion.fieldKey}
+                    placeholder="Auto-generated from question text"
+                    isDisabled={true}
+                    bg="gray.50"
+                  />
+                </Box> */}
                 <Flex gap={4}>
                   <Box flex={1}>
                     <Text mb={1} fontSize="sm" fontWeight="medium">
