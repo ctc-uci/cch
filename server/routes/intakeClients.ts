@@ -5,8 +5,11 @@ import { db } from "../db/db-pgp";
 
 export const intakeClientsRouter = Router();
 
-// Helper function to get intake client with all responses
-const getIntakeClientWithResponses = async (clientId: number) => {
+// Helper function to get intake client with all responses (optionally filtered by form)
+const getIntakeClientWithResponses = async (
+  clientId: number,
+  formId?: number
+) => {
   // Get core client data
   const clientResult = await db.query(
     `SELECT 
@@ -26,20 +29,32 @@ const getIntakeClientWithResponses = async (clientId: number) => {
 
   const client = clientResult[0];
 
-  // Get all responses for this client
-  const responses = await db.query(
-    `SELECT 
+  // Get responses for this client (optionally filtered by form)
+  let responsesQuery = `
+    SELECT 
       ir.response_value,
+      ir.form_id,
       fq.field_key,
-      fq.question_type
+      fq.question_type,
+      if.form_key
     FROM intake_responses ir
     JOIN form_questions fq ON ir.question_id = fq.id
-    WHERE ir.client_id = $1`,
-    [clientId]
-  );
+    JOIN intake_forms if ON ir.form_id = if.id
+    WHERE ir.client_id = $1
+  `;
+  const params: (number | undefined)[] = [clientId];
 
-  // Convert responses to flat object with proper type conversion
-  const responseData: Record<string, unknown> = {};
+  if (formId) {
+    params.push(formId);
+    responsesQuery += ` AND ir.form_id = $2`;
+  }
+
+  const responses = await db.query(responsesQuery, params);
+
+  // Convert responses to object grouped by form
+  const responsesByForm: Record<string, Record<string, unknown>> = {};
+  const flatResponses: Record<string, unknown> = {};
+
   for (const resp of responses) {
     let value: unknown = resp.response_value;
 
@@ -58,17 +73,32 @@ const getIntakeClientWithResponses = async (clientId: number) => {
         value = resp.response_value || "";
     }
 
-    responseData[resp.field_key] = value;
+    // Group by form
+    if (!responsesByForm[resp.form_key]) {
+      responsesByForm[resp.form_key] = {};
+    }
+    responsesByForm[resp.form_key][resp.field_key] = value;
+
+    // Also store flat (for backwards compatibility / single form use)
+    flatResponses[resp.field_key] = value;
   }
 
-  return { ...client, ...responseData };
+  return {
+    ...client,
+    ...flatResponses,
+    formResponses: responsesByForm,
+  };
 };
 
 // Get a single intake client by ID with all responses
 intakeClientsRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const client = await getIntakeClientWithResponses(parseInt(id));
+    const { form_id } = req.query;
+    const client = await getIntakeClientWithResponses(
+      parseInt(id),
+      form_id ? parseInt(form_id as string) : undefined
+    );
 
     if (!client) {
       return res.status(404).json({ error: "Client not found" });
@@ -139,10 +169,13 @@ intakeClientsRouter.get("/", async (req, res) => {
         `SELECT 
           ir.client_id,
           ir.response_value,
+          ir.form_id,
           fq.field_key,
-          fq.question_type
+          fq.question_type,
+          if.form_key
         FROM intake_responses ir
         JOIN form_questions fq ON ir.question_id = fq.id
+        JOIN intake_forms if ON ir.form_id = if.id
         WHERE ir.client_id = ANY($1)`,
         [clientIds]
       );
@@ -210,10 +243,41 @@ intakeClientsRouter.get("/email/:email", async (req, res) => {
 });
 
 // Create a new intake client with responses
+// form_id or form_key can be provided to specify which form (defaults to client_intake)
 intakeClientsRouter.post("/", async (req, res) => {
   try {
-    const { created_by, unit_id, status, first_name, last_name, ...responses } =
-      req.body;
+    const {
+      created_by,
+      unit_id,
+      status,
+      first_name,
+      last_name,
+      form_id,
+      form_key,
+      ...responses
+    } = req.body;
+
+    // Determine the form_id to use
+    let targetFormId = form_id;
+
+    if (!targetFormId && form_key) {
+      const formResult = await db.query(
+        `SELECT id FROM intake_forms WHERE form_key = $1`,
+        [form_key]
+      );
+      if (formResult.length === 0) {
+        return res.status(400).json({ error: `Form '${form_key}' not found` });
+      }
+      targetFormId = formResult[0].id;
+    }
+
+    // Default to client_intake form (id = 1)
+    if (!targetFormId) {
+      const defaultForm = await db.query(
+        `SELECT id FROM intake_forms WHERE form_key = 'client_intake'`
+      );
+      targetFormId = defaultForm.length > 0 ? defaultForm[0].id : 1;
+    }
 
     // Insert core client data
     const clientResult = await db.query(
@@ -225,17 +289,23 @@ intakeClientsRouter.post("/", async (req, res) => {
 
     const clientId = clientResult[0].id;
 
-    // Get all form questions to map field_key to question_id
+    // Get all form questions for this form to map field_key to question_id
     const questions = await db.query(
-      `SELECT id, field_key, question_type FROM form_questions`
+      `SELECT id, field_key, question_type, form_id FROM form_questions WHERE form_id = $1`,
+      [targetFormId]
     );
 
-    const questionMap = new Map<string, { id: number; type: string }>(
+    const questionMap = new Map<
+      string,
+      { id: number; type: string; formId: number }
+    >(
       questions.map(
-        (q: { id: number; field_key: string; question_type: string }) => [
-          q.field_key,
-          { id: q.id, type: q.question_type },
-        ]
+        (q: {
+          id: number;
+          field_key: string;
+          question_type: string;
+          form_id: number;
+        }) => [q.field_key, { id: q.id, type: q.question_type, formId: q.form_id }]
       )
     );
 
@@ -254,9 +324,9 @@ intakeClientsRouter.post("/", async (req, res) => {
         }
 
         await db.query(
-          `INSERT INTO intake_responses (client_id, question_id, response_value)
-           VALUES ($1, $2, $3)`,
-          [clientId, question.id, stringValue]
+          `INSERT INTO intake_responses (client_id, form_id, question_id, response_value, submitted_at)
+           VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)`,
+          [clientId, question.formId, question.id, stringValue]
         );
       }
     }
@@ -268,12 +338,175 @@ intakeClientsRouter.post("/", async (req, res) => {
   }
 });
 
+// Submit a form for an existing client (for surveys, exit forms, etc.)
+intakeClientsRouter.post("/:id/forms", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { form_id, form_key, ...responses } = req.body;
+
+    // Verify client exists
+    const clientCheck = await db.query(
+      `SELECT id FROM intake_clients WHERE id = $1`,
+      [id]
+    );
+    if (clientCheck.length === 0) {
+      return res.status(404).json({ error: "Client not found" });
+    }
+
+    // Determine the form_id to use
+    let targetFormId = form_id;
+
+    if (!targetFormId && form_key) {
+      const formResult = await db.query(
+        `SELECT id FROM intake_forms WHERE form_key = $1`,
+        [form_key]
+      );
+      if (formResult.length === 0) {
+        return res.status(400).json({ error: `Form '${form_key}' not found` });
+      }
+      targetFormId = formResult[0].id;
+    }
+
+    if (!targetFormId) {
+      return res
+        .status(400)
+        .json({ error: "form_id or form_key is required" });
+    }
+
+    // Get all form questions for this form
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [targetFormId]
+    );
+
+    const questionMap = new Map<string, { id: number; type: string }>(
+      questions.map(
+        (q: { id: number; field_key: string; question_type: string }) => [
+          q.field_key,
+          { id: q.id, type: q.question_type },
+        ]
+      )
+    );
+
+    // Insert/update responses for each field
+    for (const [fieldKey, value] of Object.entries(responses)) {
+      const question = questionMap.get(fieldKey);
+      if (question) {
+        let stringValue: string | null = null;
+        if (value !== undefined && value !== null && value !== "") {
+          if (typeof value === "boolean") {
+            stringValue = value.toString();
+          } else if (typeof value === "number") {
+            stringValue = value.toString();
+          } else {
+            stringValue = String(value);
+          }
+        }
+
+        await db.query(
+          `INSERT INTO intake_responses (client_id, form_id, question_id, response_value, submitted_at)
+           VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+           ON CONFLICT (client_id, form_id, question_id) 
+           DO UPDATE SET response_value = $4, updated_at = CURRENT_TIMESTAMP, submitted_at = CURRENT_TIMESTAMP`,
+          [id, targetFormId, question.id, stringValue]
+        );
+      }
+    }
+
+    res.status(200).json({ success: true, clientId: parseInt(id), formId: targetFormId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err.message);
+  }
+});
+
+// Get all form submissions for a client
+intakeClientsRouter.get("/:id/forms", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get all forms that have responses for this client
+    const forms = await db.query(
+      `SELECT DISTINCT 
+        if.id, 
+        if.form_key, 
+        if.form_name,
+        MAX(ir.submitted_at) as last_submitted
+       FROM intake_responses ir
+       JOIN intake_forms if ON ir.form_id = if.id
+       WHERE ir.client_id = $1
+       GROUP BY if.id, if.form_key, if.form_name
+       ORDER BY last_submitted DESC`,
+      [id]
+    );
+
+    res.status(200).json(keysToCamel(forms));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// Get responses for a specific form for a client
+intakeClientsRouter.get("/:id/forms/:formId", async (req, res) => {
+  try {
+    const { id, formId } = req.params;
+
+    const responses = await db.query(
+      `SELECT 
+        fq.field_key,
+        fq.question_text,
+        fq.question_type,
+        ir.response_value,
+        ir.submitted_at
+       FROM intake_responses ir
+       JOIN form_questions fq ON ir.question_id = fq.id
+       WHERE ir.client_id = $1 AND ir.form_id = $2
+       ORDER BY fq.display_order`,
+      [id, formId]
+    );
+
+    // Convert to object
+    const responseData: Record<string, unknown> = {};
+    for (const resp of responses) {
+      let value: unknown = resp.response_value;
+      switch (resp.question_type) {
+        case "number":
+          value = resp.response_value ? parseFloat(resp.response_value) : null;
+          break;
+        case "boolean":
+          value = resp.response_value === "true";
+          break;
+        default:
+          value = resp.response_value || "";
+      }
+      responseData[resp.field_key] = value;
+    }
+
+    res.status(200).json(keysToCamel({
+      clientId: parseInt(id),
+      formId: parseInt(formId),
+      responses: responseData,
+      rawResponses: responses,
+    }));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Update an intake client and their responses
 intakeClientsRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { created_by, unit_id, status, first_name, last_name, ...responses } =
-      req.body;
+    const {
+      created_by,
+      unit_id,
+      status,
+      first_name,
+      last_name,
+      form_id,
+      form_key,
+      ...responses
+    } = req.body;
 
     // Update core client data
     await db.query(
@@ -288,9 +521,31 @@ intakeClientsRouter.put("/:id", async (req, res) => {
       [created_by, unit_id, status, first_name, last_name, id]
     );
 
-    // Get all form questions to map field_key to question_id
+    // Determine the form_id to use
+    let targetFormId = form_id;
+
+    if (!targetFormId && form_key) {
+      const formResult = await db.query(
+        `SELECT id FROM intake_forms WHERE form_key = $1`,
+        [form_key]
+      );
+      if (formResult.length > 0) {
+        targetFormId = formResult[0].id;
+      }
+    }
+
+    // Default to client_intake form
+    if (!targetFormId) {
+      const defaultForm = await db.query(
+        `SELECT id FROM intake_forms WHERE form_key = 'client_intake'`
+      );
+      targetFormId = defaultForm.length > 0 ? defaultForm[0].id : 1;
+    }
+
+    // Get all form questions for this form
     const questions = await db.query(
-      `SELECT id, field_key, question_type FROM form_questions`
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [targetFormId]
     );
 
     const questionMap = new Map<string, { id: number; type: string }>(
@@ -320,11 +575,11 @@ intakeClientsRouter.put("/:id", async (req, res) => {
 
         // Use upsert to insert or update
         await db.query(
-          `INSERT INTO intake_responses (client_id, question_id, response_value)
-           VALUES ($1, $2, $3)
-           ON CONFLICT (client_id, question_id) 
-           DO UPDATE SET response_value = $3, updated_at = CURRENT_TIMESTAMP`,
-          [id, question.id, stringValue]
+          `INSERT INTO intake_responses (client_id, form_id, question_id, response_value)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (client_id, form_id, question_id) 
+           DO UPDATE SET response_value = $4, updated_at = CURRENT_TIMESTAMP`,
+          [id, targetFormId, question.id, stringValue]
         );
       }
     }
@@ -346,4 +601,3 @@ intakeClientsRouter.delete("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-

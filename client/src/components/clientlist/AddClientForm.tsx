@@ -51,11 +51,15 @@ interface FormQuestion {
 interface AddClientFormProps {
   onClientAdded: () => void;
   setShowUnfinishedAlert: (e: boolean) => void;
+  formKey?: string; // Which form to use (defaults to 'client_intake')
+  formTitle?: string; // Custom title for the drawer
 }
 
 export const AddClientForm = ({
   onClientAdded,
   setShowUnfinishedAlert,
+  formKey = "client_intake",
+  formTitle = "Add Client",
 }: AddClientFormProps) => {
   const {
     isOpen: isAlertOpen,
@@ -116,12 +120,13 @@ export const AddClientForm = ({
     setErrors({});
   }, [questions]);
 
-  // Load form questions on mount
+  // Load form questions for the specified form on mount
   useEffect(() => {
     const loadQuestions = async () => {
       try {
         setIsLoadingQuestions(true);
-        const response = await backend.get("/formQuestions");
+        // Load questions for the specific form using form key
+        const response = await backend.get(`/formQuestions/form/${formKey}`);
         const qs = Array.isArray(response.data) ? response.data : [];
         setQuestions(qs);
         setFormData(initializeFormData(qs));
@@ -129,7 +134,7 @@ export const AddClientForm = ({
         console.error("Failed to load form questions:", err);
         toast({
           title: "Error Loading Form",
-          description: "Could not load form questions. Please try again.",
+          description: `Could not load form questions for '${formKey}'. Please try again.`,
           status: "error",
           position: "bottom-right",
         });
@@ -138,7 +143,7 @@ export const AddClientForm = ({
       }
     };
     loadQuestions();
-  }, [backend, toast]);
+  }, [backend, toast, formKey]);
 
   // Load reference data (units and case managers)
   useEffect(() => {
@@ -291,11 +296,12 @@ export const AddClientForm = ({
         }
       });
 
-      await backend.post("/intakeClients", clientData);
+      // Include form_key in the request so backend knows which form's questions to use
+      await backend.post("/intakeClients", { ...clientData, form_key: formKey });
 
       toast({
-        title: "Client Added",
-        description: `${formData.first_name} ${formData.last_name} has been added!`,
+        title: "Form Submitted",
+        description: `${formData.first_name || "Client"} ${formData.last_name || ""} has been added!`.trim(),
         position: "bottom-right",
         status: "success",
       });
@@ -444,8 +450,8 @@ export const AddClientForm = ({
         colorScheme="blue"
         onClick={onOpen}
       >
-        {!formInProgress && <Text>Add Client</Text>}
-        {formInProgress && <Text>Edit New Client</Text>}
+        {!formInProgress && <Text>{formTitle}</Text>}
+        {formInProgress && <Text>Edit {formTitle}</Text>}
       </Button>
       <Drawer
         isOpen={isOpen}
@@ -463,7 +469,7 @@ export const AddClientForm = ({
                 fontSize="md"
                 mt="2px"
               >
-                Add Client
+                {formTitle}
               </Text>
             </HStack>
           </DrawerHeader>
