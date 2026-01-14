@@ -8,8 +8,6 @@ import { useRoleContext } from "../contexts/hooks/useRoleContext";
 import { User } from "../types/user";
 
 
-
-
 export const Navbar = () => {
   const { role } = useRoleContext();
   const { logout } = useAuthContext();
@@ -34,6 +32,7 @@ export const Navbar = () => {
         <>
           {makeNavTabs("Client Statistics", "/admin-client-list")}
           {makeNavTabs("Client Forms", "/admin-client-forms")}
+          {makeNavTabs("Edit Forms", "/edit-forms-selector")}
           {makeNavTabs("Monthly Statistics", "/monthly-statistics")}
           {makeNavTabs("Donations", "/donations")}
           {makeNavTabs("Volunteer Tracking", "/volunteer-tracking")}

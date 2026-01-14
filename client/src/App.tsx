@@ -48,6 +48,7 @@ import { InitialScreenerTable } from "./components/initialScreener/initialScreen
 import CommentForm from "./components/initialScreener/commentForm";
 import {AdminFormsHub} from "./components/adminClientForms/adminFormsHub"
 import { ClientLandingPage, ChooseForm } from "./components/clientLandingPage/ClientLandingPage";
+import { EditFormPage } from "./components/editForms/editFormPage";
 
 const App = () => {
 
@@ -254,6 +255,10 @@ const App = () => {
                     to="/landing-page"
                     replace
                   />}
+                />
+                <Route
+                  path="/edit-forms-selector"
+                  element={<ProtectedRoute element={<EditFormPage />} allowedRoles={['admin']} />}
                 />
 
               </Routes>

@@ -128,6 +128,7 @@ formQuestionsRouter.put("/:id", async (req, res) => {
       options,
       is_required,
       is_visible,
+      is_core,
       display_order,
       validation_rules,
     } = req.body;
@@ -142,7 +143,12 @@ formQuestionsRouter.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Question not found" });
     }
 
-    if (existing[0].is_core && is_visible === false) {
+    // If setting is_core to true, ensure is_visible is also true
+    // If is_core is true and trying to hide, prevent it
+    const finalIsCore = is_core !== undefined ? is_core : existing[0].is_core;
+    const finalIsVisible = is_visible !== undefined ? is_visible : existing[0].is_visible;
+
+    if (finalIsCore && finalIsVisible === false) {
       return res.status(400).json({ error: "Cannot hide core questions" });
     }
 
@@ -155,10 +161,11 @@ formQuestionsRouter.put("/:id", async (req, res) => {
         options = COALESCE($5, options),
         is_required = COALESCE($6, is_required),
         is_visible = COALESCE($7, is_visible),
-        display_order = COALESCE($8, display_order),
-        validation_rules = COALESCE($9, validation_rules),
+        is_core = COALESCE($8, is_core),
+        display_order = COALESCE($9, display_order),
+        validation_rules = COALESCE($10, validation_rules),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
+      WHERE id = $11
       RETURNING *`,
       [
         field_key,
@@ -167,7 +174,8 @@ formQuestionsRouter.put("/:id", async (req, res) => {
         category,
         options ? JSON.stringify(options) : null,
         is_required,
-        is_visible,
+        finalIsVisible,
+        finalIsCore,
         display_order,
         validation_rules ? JSON.stringify(validation_rules) : null,
         id,

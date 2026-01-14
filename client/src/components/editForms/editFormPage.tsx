@@ -1,0 +1,40 @@
+import { Heading, Stack } from "@chakra-ui/react";
+
+import { EditFormPreview } from "./editFormPreview";
+import { EditFormSelector } from "./editFormSelector";
+import { FormType } from "../../types/form";
+import { useState } from "react";
+
+export const EditFormPage = () => {
+  const [formType, setFormType] = useState<FormType | null>(null);
+  return (
+    <Stack
+      overflowX="hidden"
+      p="2% 4%"
+    >
+      <Stack
+        direction="column"
+        gap={4}
+      >
+        <Heading
+          as="h1"
+          size="xl"
+          mb={8}
+        >
+          Choose a Form to Edit
+        </Heading>
+        <Stack
+          direction="row"
+          gap={4}
+          width="100%"
+          justifyContent="space-between"
+        >
+          <EditFormSelector formType={formType} setFormType={setFormType} />
+          <EditFormPreview formType={formType} />
+        </Stack>
+      </Stack>
+    </Stack>
+  );
+};
+
+export default EditFormPage;
