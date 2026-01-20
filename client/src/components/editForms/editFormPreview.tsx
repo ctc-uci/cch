@@ -21,6 +21,10 @@ import {
   Divider,
   Tooltip,
   Icon,
+  FormControl,
+  FormLabel,
+  Textarea,
+  Heading,
 } from "@chakra-ui/react";
 import { FormType } from "../../types/form";
 import { useEffect, useState, useCallback } from "react";
@@ -189,6 +193,8 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   const { backend } = useBackendContext();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [previewFormData, setPreviewFormData] = useState<Record<string, string>>({});
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -546,13 +552,183 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     );
   }
 
+  const renderPreviewField = (question: FormQuestion) => {
+    const { fieldKey, questionType, options, questionText } = question;
+    const value = previewFormData[fieldKey] || "";
+
+    switch (questionType) {
+      case "select":
+        return (
+          <Select
+            placeholder="Select option"
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          >
+            {options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        );
+
+      case "boolean":
+        return (
+          <Select
+            placeholder="Select option"
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          >
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </Select>
+        );
+
+      case "date":
+        return (
+          <Input
+            type="date"
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          />
+        );
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            placeholder={`Enter ${questionText.toLowerCase()}`}
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          />
+        );
+
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={`Enter ${questionText.toLowerCase()}`}
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          />
+        );
+
+      case "text":
+      default:
+        return (
+          <Input
+            placeholder={`Enter ${questionText.toLowerCase()}`}
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          />
+        );
+    }
+  };
+
+  const handlePreviewToggle = () => {
+    if (!isPreviewMode) {
+      // Initialize preview form data when entering preview mode
+      const initialData: Record<string, string> = {};
+      questions.forEach((q) => {
+        initialData[q.fieldKey] = "";
+      });
+      setPreviewFormData(initialData);
+    }
+    setIsPreviewMode(!isPreviewMode);
+  };
+
+  const categoryNames: Record<string, string> = {
+    personal: "Personal Information",
+    contact: "Contact Information",
+    program: "Program Information",
+    demographics: "Demographics",
+    housing: "Housing History",
+    exit: "Exit Information",
+  };
+
+  const categoryOrder = [
+    "personal",
+    "contact",
+    "program",
+    "demographics",
+    "housing",
+    "exit",
+  ];
+
+  const groupedQuestions = questions
+    .filter((q) => q.isVisible)
+    .reduce<Record<string, FormQuestion[]>>((acc, q) => {
+      const categoryKey = q.category;
+      if (!acc[categoryKey]) {
+        acc[categoryKey] = [];
+      }
+      acc[categoryKey]!.push(q);
+      return acc;
+    }, {});
+
+  // Forms that support preview mode
+  const previewableForms: FormType[] = [
+    "Initial Screeners",
+    "Exit Surveys",
+    "Success Stories",
+    "Random Client Surveys",
+  ];
+
+  // Preview mode view
+  if (isPreviewMode && formType && previewableForms.includes(formType)) {
+    return (
+      <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4}>
+        <Flex justifyContent="space-between" alignItems="center">
+          <Heading size="md">Preview: {formType} Form</Heading>
+          <Button colorScheme="blue" onClick={handlePreviewToggle} size="sm">
+            Back to Edit
+          </Button>
+        </Flex>
+
+        <Divider />
+
+        <Stack spacing={6} overflowY="auto" flex={1}>
+          {categoryOrder.map((category) => {
+            const categoryQuestions = groupedQuestions[category];
+            if (!categoryQuestions || categoryQuestions.length === 0) return null;
+
+            return (
+              <Box key={category}>
+                <Heading size="sm" mb={4} color="blue.600">
+                  {categoryNames[category] || category}
+                </Heading>
+                <Stack spacing={4}>
+                  {categoryQuestions
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map((question) => (
+                      <FormControl key={question.id} isRequired={question.isRequired}>
+                        <FormLabel>{question.questionText}</FormLabel>
+                        {renderPreviewField(question)}
+                      </FormControl>
+                    ))}
+                </Stack>
+              </Box>
+            );
+          })}
+        </Stack>
+      </Stack>
+    );
+  }
+
+  // Edit mode view
   return (
     <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4}>
       <Flex justifyContent="space-between" alignItems="center">
         <Text fontSize="13pt" fontWeight="bold">Edit {formType} Form</Text>
-        <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={handleAdd} size="sm">
-          Add Question
-        </Button>
+        <Flex gap={2}>
+          {formType && previewableForms.includes(formType) && (
+            <Button colorScheme="blue" onClick={handlePreviewToggle} size="sm">
+              Preview Form
+            </Button>
+          )}
+          <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={handleAdd} size="sm">
+            Add Question
+          </Button>
+        </Flex>
       </Flex>
 
       <Divider />
