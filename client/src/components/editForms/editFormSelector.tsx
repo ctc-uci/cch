@@ -7,11 +7,12 @@ export const EditFormSelector = ({ formType, setFormType }: { formType: FormType
       <Flex
         flexDirection="column"
         gap={4}
+        width={["100%", "100%", "400px"]}
       >
         <Button
           variant={formType === "Initial Screeners" ? "solid" : "outline"}
           colorScheme="blue"
-          width="400px"
+          width="100%"
           onClick={() => setFormType("Initial Screeners")}
         >
           Initial Screener Form
@@ -19,7 +20,7 @@ export const EditFormSelector = ({ formType, setFormType }: { formType: FormType
         <Button
           variant={formType === "Exit Surveys" ? "solid" : "outline"}
           colorScheme="blue"
-          width="400px"
+          width="100%"
           onClick={() => setFormType("Exit Surveys")}
         >
           Exit Survey Form
@@ -27,7 +28,7 @@ export const EditFormSelector = ({ formType, setFormType }: { formType: FormType
         <Button
           variant={formType === "Success Stories" ? "solid" : "outline"}
           colorScheme="blue"
-          width="400px"
+          width="100%"
           onClick={() => setFormType("Success Stories")}
         >
           Success Story Form
@@ -35,7 +36,7 @@ export const EditFormSelector = ({ formType, setFormType }: { formType: FormType
         <Button
           variant={formType === "Random Client Surveys" ? "solid" : "outline"}
           colorScheme="blue"
-          width="400px"
+          width="100%"
           onClick={() => setFormType("Random Client Surveys")}
         >
           Random Client Survey Form

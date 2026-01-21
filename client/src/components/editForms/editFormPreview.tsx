@@ -781,7 +781,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
   if (!formType) {
     return (
-      <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%">
+      <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" minWidth="400px">
         <Text fontSize="13pt" fontWeight="bold">Select a Form to Edit</Text>
       </Stack>
     );
@@ -801,7 +801,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
         const gridData = value ? JSON.parse(value) : {};
         
         return (
-          <Box overflowX="auto">
+          <Box overflowX="auto" minWidth="400px">
             <Table variant="simple" size="sm">
               <Thead>
                 <Tr>
@@ -1004,7 +1004,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   // Preview mode view
   if (isPreviewMode && formType && previewableForms.includes(formType)) {
     return (
-      <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4}>
+      <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4} minWidth="400px">
         <Flex justifyContent="space-between" alignItems="center">
           <Heading size="md">Preview: {formType} Form</Heading>
           <Button colorScheme="blue" onClick={handlePreviewToggle} size="sm">
@@ -1034,7 +1034,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
   // Edit mode view
   return (
-    <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4}>
+    <Stack border="1.5px solid rgb(87, 134, 178)" borderRadius="md" p={4} height="100%" width="100%" spacing={4} minWidth="400px">
       <Flex justifyContent="space-between" alignItems="center">
         <Text fontSize="13pt" fontWeight="bold">Edit {formType} Form</Text>
         <Flex gap={2}>

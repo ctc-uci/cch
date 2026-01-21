@@ -1,4 +1,4 @@
-import { Heading, Stack } from "@chakra-ui/react";
+import { Box, Heading, Stack } from "@chakra-ui/react";
 
 import { EditFormPreview } from "./editFormPreview";
 import { EditFormSelector } from "./editFormSelector";
@@ -24,13 +24,15 @@ export const EditFormPage = () => {
           Choose a Form to Edit
         </Heading>
         <Stack
-          direction="row"
-          gap={4}
+          direction={["column", "column", "row"]}
+          spacing={4}
           width="100%"
-          justifyContent="space-between"
+          alignItems={["stretch", "stretch", "flex-start"]}
         >
           <EditFormSelector formType={formType} setFormType={setFormType} />
-          <EditFormPreview formType={formType} />
+          <Box width={["100%", "100%", "auto"]} flex={["none", "none", "1"]}>
+            <EditFormPreview formType={formType} />
+          </Box>
         </Stack>
       </Stack>
     </Stack>
