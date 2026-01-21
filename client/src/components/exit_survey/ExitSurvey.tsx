@@ -109,6 +109,7 @@ export const ExitSurvey = () => {
               handleSubmit={handleSubmit}
               setFormData={setFormData}
               onReview={onReview}
+              setOnReview={setOnReview}
               spanish={language === "spanish"}
             />
           </Box>

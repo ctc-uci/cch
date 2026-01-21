@@ -446,14 +446,14 @@ export const ClientReviewPage = ({
 
       case "text_block":
         return (
-          <Text fontSize="sm" color="gray.700" fontStyle="italic" py={2}>
+          <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
             {question.questionText}
           </Text>
         );
 
       case "header":
         return (
-          <Heading size="md" color="blue.600" mb={2} mt={4}>
+          <Heading size="lg" color="#0099D2" mb={2} mt={4}>
             {question.questionText}
           </Heading>
         );
@@ -618,7 +618,7 @@ export const ClientReviewPage = ({
           </VStack>
         </Box>
       </Box>
-      <Heading
+      {/* <Heading
         color={"#3182CE"}
         textAlign={"center"}
         fontSize={"30px"}
@@ -639,7 +639,7 @@ export const ClientReviewPage = ({
         welcome your comments. Please fill out this questionnaire. Thank you!
       </Text>
       <Divider width={"277.906px"} height={"1.011px"} background={"rgba(0, 0, 0, 0.20)"} marginBottom={"30px"}/>
-      
+       */}
       <OrderedList style={{ fontSize: "18px", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
         {visibleQuestions.map((question) => {
           const isDisplayOnly =
