@@ -14,7 +14,6 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { ProgressSteps } from "../ProgressSteps";
 import { SuccessScreen } from "../SuccessScreen";
 import { SuccessStoryForm } from "./SuccessStoryForm";
-import type { SuccessStoryForm as SuccessStoryFormType} from "../../types/successStory";
 import { useParams } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
@@ -43,60 +42,30 @@ export const SuccessStory = () => {
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
   const language = params.language || "english";
-  const [formData, setFormData] = useState<SuccessStoryFormType>({
-    name: "",
-    site: 0,
-    cm_id: 0,
-    entrance_date: new Date(),
-    exit_date: new Date(),
-    date: new Date(),
-    previous_situation: "",
-    cch_impact: "",
-    where_now: "",
-    tell_donors: "",
-    quote: "",
-    consent: false,
-    client_id: null,
-  });
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const { currentUser } = useAuthContext();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!onReview) {
-      const form = event.currentTarget;
-      const formDataObj = new FormData(form);
-      const data = Object.fromEntries(formDataObj);
-      const typedFormData: SuccessStoryFormType = {
-        name: String(data.name || ""),
-        site: Number(data.site || 0),
-        cm_id: Number(data.cm_id || 0),
-        entrance_date: new Date(data.entrance_date as string),
-        exit_date: new Date(data.exit_date as string),
-        date: new Date(data.date as string),
-        previous_situation: String(data.previous_situation || ""),
-        cch_impact: String(data.cch_impact || ""),
-        where_now: String(data.where_now || ""),
-        tell_donors: String(data.tell_donors || ""),
-        quote: String(data.quote || ""),
-        consent: formDataObj.has("consent"),
-        client_id: null,
-      };
-      setFormData(typedFormData);
       setOnReview(true);
     } else {
       try {
         const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
         const client = response.data?.[0];
-        formData.client_id = client.id;
-        await backend.post("/successStory", formData);
+        const payload = {
+          ...formData,
+          client_id: client?.id,
+        };
+        await backend.post("/successStory", payload);
         toast({
           title: "Form submitted",
           description: `Thanks for your feedback!`,
           status: "success",
         });
         setSubmitted(true);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error submitting success story:", error);
         toast({
           title: "An error occurred",
@@ -150,8 +119,11 @@ export const SuccessStory = () => {
             maxW={onReview ? "800px" : "auto"}
           >
             <SuccessStoryForm
-              onSubmit={handleSubmit}
+              formData={formData}
+              handleSubmit={handleSubmit}
+              setFormData={setFormData}
               onReview={onReview}
+              setOnReview={setOnReview}
               spanish={language === "spanish"}
             />
           </Box>
