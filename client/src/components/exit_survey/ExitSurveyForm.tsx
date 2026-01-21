@@ -406,7 +406,7 @@ export const ExitSurveyForm = ({
 
       case "header":
         return (
-          <Heading size="lg" color="#0099D2" mb={2} mt={4}>
+          <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
             {questionText}
           </Heading>
         );
