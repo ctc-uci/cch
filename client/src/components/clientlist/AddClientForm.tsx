@@ -24,6 +24,13 @@ import {
   Textarea,
   useDisclosure,
   useToast,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Radio,
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -35,13 +42,18 @@ interface FormOption {
   label: string;
 }
 
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
 interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea";
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
   category: string;
-  options?: FormOption[];
+  options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
   isCore: boolean;
@@ -91,12 +103,28 @@ export const AddClientForm = ({
   >([]);
 
   // Helper function to check if a field is empty
-  const isFieldEmpty = (value: unknown): boolean => {
-    return (
-      value === null ||
-      value === undefined ||
-      (typeof value === "string" && value.trim() === "")
-    );
+  const isFieldEmpty = (value: unknown, questionType?: string): boolean => {
+    if (value === null || value === undefined) {
+      return true;
+    }
+    
+    if (typeof value === "string") {
+      if (value.trim() === "") {
+        return true;
+      }
+      
+      // For rating grids, check if it's an empty JSON object
+      if (questionType === "rating_grid") {
+        try {
+          const parsed = JSON.parse(value);
+          return Object.keys(parsed).length === 0;
+        } catch {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   };
 
   // Initialize form data based on questions
@@ -106,7 +134,11 @@ export const AddClientForm = ({
       unit_id: "",
     };
     qs.forEach((q) => {
-      initial[q.fieldKey] = "";
+      if (q.questionType === "rating_grid") {
+        initial[q.fieldKey] = "{}";
+      } else {
+        initial[q.fieldKey] = "";
+      }
     });
     return initial;
   };
@@ -248,7 +280,7 @@ export const AddClientForm = ({
 
     // Check required questions
     questions.forEach((q) => {
-      if (q.isRequired && isFieldEmpty(formData[q.fieldKey])) {
+      if (q.isRequired && isFieldEmpty(formData[q.fieldKey], q.questionType)) {
         newErrors[q.fieldKey] = true;
       }
     });
@@ -322,6 +354,95 @@ export const AddClientForm = ({
     const isInvalid = errors[fieldKey];
 
     switch (questionType) {
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig || !gridConfig.rows || !gridConfig.columns) {
+          return <Text color="red.500">Invalid rating grid configuration</Text>;
+        }
+        
+        const gridData = value ? JSON.parse(value) : {};
+        
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th></Th>
+                  {gridConfig.columns.map((col) => (
+                    <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
+                      {col.label}
+                    </Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td width="200px" fontSize="12px" color="#000">
+                      {row.label}
+                    </Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          onChange={() => {
+                            const newData = { ...gridData, [row.key]: col.value };
+                            handleFieldChange(fieldKey, JSON.stringify(newData));
+                          }}
+                          sx={{
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "6px",
+                            border: "2px solid",
+                            borderColor: isInvalid ? "red.500" : "gray.300",
+                            _checked: {
+                              background: "blue.500",
+                              borderColor: "blue.500",
+                            },
+                            _hover: {
+                              borderColor: "gray.500",
+                            },
+                          }}
+                        />
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {isInvalid && (
+              <Text color="red.500" fontSize="sm" mt={2}>
+                Please complete all required ratings.
+              </Text>
+            )}
+          </Box>
+        );
+      }
+
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder="Select case manager"
+            value={value}
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+          >
+            {caseManagers.map((cm) => {
+              const firstName = cm.firstName || cm.first_name || "";
+              const lastName = cm.lastName || cm.last_name || "";
+              const fullName = `${firstName} ${lastName}`.trim();
+              return (
+                <option key={cm.id} value={cm.id}>
+                  {fullName || `Case Manager ${cm.id}`}
+                </option>
+              );
+            })}
+          </Select>
+        );
+
       case "select":
         return (
           <Select
@@ -331,7 +452,7 @@ export const AddClientForm = ({
             errorBorderColor="red.500"
             onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
           >
-            {options?.map((opt) => (
+            {(options as FormOption[])?.map((opt) => (
               <option
                 key={opt.value}
                 value={opt.value}

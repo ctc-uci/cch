@@ -1,12 +1,12 @@
 DROP TABLE IF EXISTS form_questions CASCADE;
 
-CREATE TYPE question_type AS ENUM ('text', 'number', 'boolean', 'date', 'select', 'textarea');
+CREATE TYPE question_type AS ENUM ('text', 'number', 'boolean', 'date', 'select', 'textarea', 'rating_grid', 'case_manager_select');
 CREATE TYPE question_category AS ENUM ('personal', 'contact', 'housing', 'demographics', 'program', 'exit');
 
 CREATE TABLE form_questions (
     id SERIAL NOT NULL PRIMARY KEY,
-    field_key VARCHAR(64) NOT NULL UNIQUE,  -- unique identifier for the field (e.g., 'first_name', 'ethnicity')
-    question_text VARCHAR(256) NOT NULL,     -- the label shown to users
+    field_key VARCHAR(512) NOT NULL UNIQUE,  -- unique identifier for the field (e.g., 'first_name', 'ethnicity')
+    question_text VARCHAR(512) NOT NULL,     -- the label shown to users
     question_type question_type NOT NULL,    -- type of input field
     category question_category NOT NULL,     -- grouping for form sections
     options JSONB,                           -- for 'select' type: array of {value, label} options

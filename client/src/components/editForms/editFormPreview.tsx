@@ -25,6 +25,13 @@ import {
   FormLabel,
   Textarea,
   Heading,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Radio,
 } from "@chakra-ui/react";
 import { FormType } from "../../types/form";
 import { useEffect, useState, useCallback } from "react";
@@ -55,13 +62,18 @@ interface FormOption {
   label: string;
 }
 
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
 interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea";
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
   category: string;
-  options?: FormOption[];
+  options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
   isCore: boolean;
@@ -136,9 +148,17 @@ const SortableQuestionItem = ({
               Order: {question.displayOrder}
               {question.isRequired && " | Required"}
             </Text>
-            {question.options && question.options.length > 0 && (
+            {question.options && 
+             question.questionType !== "rating_grid" &&
+             Array.isArray(question.options) &&
+             question.options.length > 0 && (
               <Text fontSize="sm" color="gray.500">
-                Options: {question.options.map((opt) => opt.label).join(", ")}
+                Options: {(question.options as FormOption[]).map((opt) => opt.label).join(", ")}
+              </Text>
+            )}
+            {question.questionType === "rating_grid" && question.options && (
+              <Text fontSize="sm" color="gray.500">
+                Rating Grid: {(question.options as RatingGridConfig).rows.length} rows × {(question.options as RatingGridConfig).columns.length} columns
               </Text>
             )}
           </Stack>
@@ -195,6 +215,15 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [previewFormData, setPreviewFormData] = useState<Record<string, string>>({});
+  const [caseManagers, setCaseManagers] = useState<
+    Array<{
+      id: number;
+      firstName?: string;
+      lastName?: string;
+      first_name?: string;
+      last_name?: string;
+    }>
+  >([]);
   const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : 4;
 
   const sensors = useSensors(
@@ -226,11 +255,47 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     } finally {
       setIsLoading(false);
     }
-  }, [formType, backend, toast]);
+  }, [formType, formId, backend, toast]);
 
   useEffect(() => {
     loadQuestions();
   }, [loadQuestions]);
+
+  // Load case managers for case_manager_select questions
+  useEffect(() => {
+    const loadCaseManagers = async () => {
+      try {
+        const response = await backend.get("/caseManagers");
+        const cmList: Array<{
+          id: number;
+          firstName?: string;
+          lastName?: string;
+          first_name?: string;
+          last_name?: string;
+        }> = Array.isArray(response.data)
+          ? response.data.map(
+              (cm: {
+                id: number | string;
+                firstName?: string;
+                lastName?: string;
+                first_name?: string;
+                last_name?: string;
+              }) => ({
+                id: Number(cm.id),
+                firstName: cm.firstName,
+                lastName: cm.lastName,
+                first_name: cm.first_name,
+                last_name: cm.last_name,
+              })
+            ).filter((cm) => !Number.isNaN(cm.id))
+          : [];
+        setCaseManagers(cmList);
+      } catch (err) {
+        console.error("Failed to load case managers:", err);
+      }
+    };
+    loadCaseManagers();
+  }, [backend]);
 
   const handleEdit = (question: FormQuestion) => {
     setEditingQuestion({ ...question });
@@ -282,7 +347,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     if (!editingQuestion) return;
 
     try {
-      if (editingQuestion.questionType === "select" && !editingQuestion.options?.length) {
+      if (editingQuestion.questionType === "select" && !(editingQuestion.options as FormOption[])?.length) {
         toast({
           title: "Error",
           description: "Select type questions require at least one option",
@@ -290,6 +355,39 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           duration: 3000,
         });
         return;
+      }
+
+      if (editingQuestion.questionType === "rating_grid") {
+        const config = editingQuestion.options as RatingGridConfig | undefined;
+        if (!config || !config.rows?.length || !config.columns?.length) {
+          toast({
+            title: "Error",
+            description: "Rating grid questions require at least one row and one column",
+            status: "error",
+            duration: 3000,
+          });
+          return;
+        }
+        // Validate that all rows have labels
+        if (config.rows.some((row) => !row.label.trim())) {
+          toast({
+            title: "Error",
+            description: "All rows must have labels",
+            status: "error",
+            duration: 3000,
+          });
+          return;
+        }
+        // Validate that all columns have labels and values
+        if (config.columns.some((col) => !col.label.trim() || !col.value.trim())) {
+          toast({
+            title: "Error",
+            description: "All columns must have both labels and values",
+            status: "error",
+            duration: 3000,
+          });
+          return;
+        }
       }
 
       // Check for duplicate order numbers and swap if needed
@@ -468,16 +566,18 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   };
 
   const addOption = () => {
-    if (!editingQuestion) return;
+    if (!editingQuestion || editingQuestion.questionType !== "select") return;
+    const currentOptions = editingQuestion.options as FormOption[] | undefined;
     setEditingQuestion({
       ...editingQuestion,
-      options: [...(editingQuestion.options || []), { value: "", label: "" }],
+      options: [...(currentOptions || []), { value: "", label: "" }],
     });
   };
 
   const updateOption = (index: number, field: "value" | "label", value: string) => {
-    if (!editingQuestion || !editingQuestion.options) return;
-    const newOptions = [...editingQuestion.options];
+    if (!editingQuestion || editingQuestion.questionType !== "select" || !editingQuestion.options) return;
+    const currentOptions = editingQuestion.options as FormOption[];
+    const newOptions = [...currentOptions];
     const currentOption = newOptions[index];
     if (!currentOption) return;
     newOptions[index] = { 
@@ -488,8 +588,9 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   };
 
   const removeOption = (index: number) => {
-    if (!editingQuestion || !editingQuestion.options) return;
-    const newOptions = editingQuestion.options.filter((_, i) => i !== index);
+    if (!editingQuestion || editingQuestion.questionType !== "select" || !editingQuestion.options) return;
+    const currentOptions = editingQuestion.options as FormOption[];
+    const newOptions = currentOptions.filter((_, i) => i !== index);
     setEditingQuestion({ ...editingQuestion, options: newOptions });
   };
 
@@ -559,6 +660,91 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     const value = previewFormData[fieldKey] || "";
 
     switch (questionType) {
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig || !gridConfig.rows || !gridConfig.columns) {
+          return <Text color="red.500">Invalid rating grid configuration</Text>;
+        }
+        
+        const gridData = value ? JSON.parse(value) : {};
+        
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th></Th>
+                  {gridConfig.columns.map((col) => (
+                    <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
+                      {col.label}
+                    </Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td width="200px" fontSize="12px" color="#000">
+                      {row.label}
+                    </Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          onChange={() => {
+                            const newData = { ...gridData, [row.key]: col.value };
+                            setPreviewFormData({
+                              ...previewFormData,
+                              [fieldKey]: JSON.stringify(newData),
+                            });
+                          }}
+                          sx={{
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "6px",
+                            border: "2px solid",
+                            borderColor: "gray.300",
+                            _checked: {
+                              background: "blue.500",
+                              borderColor: "blue.500",
+                            },
+                            _hover: {
+                              borderColor: "gray.500",
+                            },
+                          }}
+                        />
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        );
+      }
+
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder="Select case manager"
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          >
+            {caseManagers.map((cm) => {
+              const firstName = cm.firstName || cm.first_name || "";
+              const lastName = cm.lastName || cm.last_name || "";
+              const fullName = `${firstName} ${lastName}`.trim();
+              return (
+                <option key={cm.id} value={cm.id}>
+                  {fullName || `Case Manager ${cm.id}`}
+                </option>
+              );
+            })}
+          </Select>
+        );
+
       case "select":
         return (
           <Select
@@ -566,7 +752,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
             value={value}
             onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
           >
-            {options?.map((opt) => (
+            {(options as FormOption[])?.map((opt) => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -631,7 +817,11 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       // Initialize preview form data when entering preview mode
       const initialData: Record<string, string> = {};
       questions.forEach((q) => {
-        initialData[q.fieldKey] = "";
+        if (q.questionType === "rating_grid") {
+          initialData[q.fieldKey] = "{}";
+        } else {
+          initialData[q.fieldKey] = "";
+        }
       });
       setPreviewFormData(initialData);
     }
@@ -812,13 +1002,33 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                     </Text>
                     <Select
                       value={editingQuestion.questionType}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        const newType = e.target.value as FormQuestion["questionType"];
+                        let newOptions: FormOption[] | RatingGridConfig | undefined;
+                        
+                        if (newType === "select") {
+                          newOptions = [{ value: "", label: "" }];
+                        } else if (newType === "rating_grid") {
+                          newOptions = {
+                            rows: [{ key: "row1", label: "" }],
+                            columns: [
+                              { value: "1", label: "Very Poor" },
+                              { value: "2", label: "Poor" },
+                              { value: "3", label: "Neutral" },
+                              { value: "4", label: "Good" },
+                              { value: "5", label: "Excellent" },
+                            ],
+                          };
+                        } else {
+                          newOptions = undefined;
+                        }
+                        
                         setEditingQuestion({
                           ...editingQuestion,
-                          questionType: e.target.value as FormQuestion["questionType"],
-                          options: e.target.value === "select" ? [{ value: "", label: "" }] : undefined,
-                        })
-                      }
+                          questionType: newType,
+                          options: newOptions,
+                        });
+                      }}
                     >
                       <option value="text">Text</option>
                       <option value="textarea">Textarea</option>
@@ -826,6 +1036,8 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                       <option value="boolean">Boolean</option>
                       <option value="date">Date</option>
                       <option value="select">Select</option>
+                      <option value="rating_grid">Rating Grid</option>
+                      <option value="case_manager_select">Case Manager Select</option>
                     </Select>
                   </Box>
                   <Box flex={1}>
@@ -847,6 +1059,17 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                     </Select>
                   </Box>
                 </Flex>
+                {editingQuestion.questionType === "case_manager_select" && (
+                  <Box p={3} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
+                    <Flex alignItems="start" gap={2}>
+                      <Icon as={FaInfoCircle} color="blue.500" mt={0.5} />
+                      <Text fontSize="sm" color="blue.700">
+                        This question type will automatically populate with all case managers from the database. 
+                        No manual configuration needed.
+                      </Text>
+                    </Flex>
+                  </Box>
+                )}
                 {editingQuestion.questionType === "select" && (
                   <Box>
                     <Flex justifyContent="space-between" alignItems="center" mb={2}>
@@ -858,7 +1081,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                       </Button>
                     </Flex>
                     <Stack spacing={2}>
-                      {editingQuestion.options?.map((option, index) => (
+                      {(editingQuestion.options as FormOption[])?.map((option, index) => (
                         <Flex key={index} gap={2}>
                           <Input
                             placeholder="Value"
@@ -880,6 +1103,150 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                           />
                         </Flex>
                       ))}
+                    </Stack>
+                  </Box>
+                )}
+                {editingQuestion.questionType === "rating_grid" && (
+                  <Box>
+                    <Text fontSize="sm" fontWeight="medium" mb={3}>
+                      Rating Grid Configuration
+                    </Text>
+                    <Stack spacing={4}>
+                      <Box>
+                        <Flex justifyContent="space-between" alignItems="center" mb={2}>
+                          <Text fontSize="sm" fontWeight="medium">
+                            Rows (Categories/Questions)
+                          </Text>
+                          <Button
+                            size="xs"
+                            onClick={() => {
+                              if (!editingQuestion.options) return;
+                              const config = editingQuestion.options as RatingGridConfig;
+                              const newRows = [
+                                ...config.rows,
+                                { key: `row${config.rows.length + 1}`, label: "" },
+                              ];
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                options: { ...config, rows: newRows },
+                              });
+                            }}
+                          >
+                            Add Row
+                          </Button>
+                        </Flex>
+                        <Stack spacing={2}>
+                          {(editingQuestion.options as RatingGridConfig)?.rows.map((row, index) => (
+                            <Flex key={row.key} gap={2}>
+                              <Input
+                                placeholder="Row label (e.g., The service you received from your case manager.)"
+                                value={row.label}
+                                onChange={(e) => {
+                                  if (!editingQuestion.options) return;
+                                  const config = editingQuestion.options as RatingGridConfig;
+                                  const newRows = [...config.rows];
+                                  newRows[index] = { ...row, label: e.target.value };
+                                  setEditingQuestion({
+                                    ...editingQuestion,
+                                    options: { ...config, rows: newRows },
+                                  });
+                                }}
+                                size="sm"
+                              />
+                              <IconButton
+                                icon={<DeleteIcon />}
+                                aria-label="Remove row"
+                                size="sm"
+                                onClick={() => {
+                                  if (!editingQuestion.options) return;
+                                  const config = editingQuestion.options as RatingGridConfig;
+                                  const newRows = config.rows.filter((_, i) => i !== index);
+                                  setEditingQuestion({
+                                    ...editingQuestion,
+                                    options: { ...config, rows: newRows },
+                                  });
+                                }}
+                              />
+                            </Flex>
+                          ))}
+                        </Stack>
+                      </Box>
+                      <Box>
+                        <Flex justifyContent="space-between" alignItems="center" mb={2}>
+                          <Text fontSize="sm" fontWeight="medium">
+                            Columns (Rating Options)
+                          </Text>
+                          <Button
+                            size="xs"
+                            onClick={() => {
+                              if (!editingQuestion.options) return;
+                              const config = editingQuestion.options as RatingGridConfig;
+                              const newColumns = [
+                                ...config.columns,
+                                { value: `${config.columns.length + 1}`, label: "" },
+                              ];
+                              setEditingQuestion({
+                                ...editingQuestion,
+                                options: { ...config, columns: newColumns },
+                              });
+                            }}
+                          >
+                            Add Column
+                          </Button>
+                        </Flex>
+                        <Stack spacing={2}>
+                          {(editingQuestion.options as RatingGridConfig)?.columns.map((col, index) => (
+                            <Flex key={col.value} gap={2}>
+                              <Input
+                                placeholder="Value"
+                                value={col.value}
+                                onChange={(e) => {
+                                  if (!editingQuestion.options) return;
+                                  const config = editingQuestion.options as RatingGridConfig;
+                                  const newColumns = [...config.columns];
+                                  newColumns[index] = { ...col, value: e.target.value };
+                                  setEditingQuestion({
+                                    ...editingQuestion,
+                                    options: { ...config, columns: newColumns },
+                                  });
+                                }}
+                                size="sm"
+                                width="100px"
+                              />
+                              <Input
+                                placeholder="Label (e.g., Very Poor)"
+                                value={col.label}
+                                onChange={(e) => {
+                                  if (!editingQuestion.options) return;
+                                  const config = editingQuestion.options as RatingGridConfig;
+                                  const newColumns = [...config.columns];
+                                  newColumns[index] = { ...col, label: e.target.value };
+                                  setEditingQuestion({
+                                    ...editingQuestion,
+                                    options: { ...config, columns: newColumns },
+                                  });
+                                }}
+                                size="sm"
+                                flex={1}
+                              />
+                              <IconButton
+                                icon={<DeleteIcon />}
+                                aria-label="Remove column"
+                                size="sm"
+                                onClick={() => {
+                                  if (!editingQuestion.options) return;
+                                  const config = editingQuestion.options as RatingGridConfig;
+                                  const newColumns = config.columns.filter((_, i) => i !== index);
+                                  setEditingQuestion({
+                                    ...editingQuestion,
+                                    options: { ...config, columns: newColumns },
+                                  });
+                                }}
+                              />
+                            </Flex>
+                          ))}
+                        </Stack>
+                      </Box>
                     </Stack>
                   </Box>
                 )}
