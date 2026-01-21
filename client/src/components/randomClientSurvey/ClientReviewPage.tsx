@@ -5,7 +5,6 @@ import {
   HStack,
   Input,
   Radio,
-  RadioGroup,
   Select,
   Text,
   Textarea,
@@ -22,49 +21,37 @@ import {
   Td,
   Box,
   Circle,
+  Spinner,
 } from "@chakra-ui/react";
 
 import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
+import { useEffect, useState } from "react";
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
-const qualityQuestions = [
-  "The service you received from your case manager.",
-  "The quality of the service in the CCH program.",
-  "The cleanliness of your unit.",
-  "The quality of your unit.",
-  "The quality of your entrance into the CCH program.",
-  "The overall experience at CCH."
-];
+// Types for dynamic form questions
+interface FormOption {
+  value: string;
+  label: string;
+}
 
-const qualityQuestionNames = [
-  "cm_qos",
-  "cch_qos",
-  "clean",
-  "unit_quality",
-  "entry_quality",
-  "overall_experience",
-];
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
 
-type SurveyData = {
-  date: string | Date;
-  cch_qos: number;
-  cm_qos: number;
-  courteous?: boolean;
-  informative?: boolean;
-  prompt_and_helpful?: boolean;
-  entry_quality: number;
-  unit_quality: number;
-  clean: number;
-  overall_experience: number;
-  case_meeting_frequency: string;
-  lifeskills?: boolean;
-  recommend?: boolean;
-  recommend_reasoning: string;
-  make_cch_more_helpful: string;
-  cm_id: number;
-  cm_feedback: string;
-  other_comments: string;
-};
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
+  category: string;
+  options?: FormOption[] | RatingGridConfig;
+  isRequired: boolean;
+  isVisible: boolean;
+  isCore: boolean;
+  displayOrder: number;
+}
 
 type CaseManager = {
   id: number;
@@ -73,29 +60,27 @@ type CaseManager = {
   lastName: string;
   phone_number: string;
   email: string;
-};
-
-type ErrorState = {
-  qualityQuestions: boolean;
-  courteous: boolean;
-  informative: boolean;
-  prompt_and_helpful: boolean;
-  case_meeting_frequency: boolean;
-  lifeskills: boolean;
-  recommend: boolean;
-  recommend_reasoning: boolean;
-  date: boolean;
-  cm_id: boolean;
+  first_name?: string;
+  last_name?: string;
 };
 
 type ClientReviewPageProps = {
-  surveyData: SurveyData;
-  setSurveyData: React.Dispatch<React.SetStateAction<SurveyData>>;
-  errors: ErrorState;
-  setErrors: React.Dispatch<React.SetStateAction<ErrorState>>;
+  surveyData: Record<string, unknown>;
+  setSurveyData: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+  errors: Record<string, boolean>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNext: () => void;
   caseManagers: CaseManager[];
 };
+
+const categoryOrder = [
+  "personal",
+  "contact",
+  "program",
+  "demographics",
+  "housing",
+  "exit",
+];
 
 export const ClientReviewPage = ({
   surveyData,
@@ -104,26 +89,73 @@ export const ClientReviewPage = ({
   setErrors,
   onNext,
   caseManagers
-}: ClientReviewPageProps)  => {
+}: ClientReviewPageProps) => {
   const toast = useToast();
   const navigate = useNavigate();
+  const { backend } = useBackendContext();
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load form questions for Random Client Surveys (form_id = 4)
+  useEffect(() => {
+    const loadQuestions = async () => {
+      try {
+        setIsLoading(true);
+        const response = await backend.get("/formQuestions/form/4");
+        const qs = Array.isArray(response.data) ? response.data : [];
+        setQuestions(qs.sort((a: FormQuestion, b: FormQuestion) => a.displayOrder - b.displayOrder));
+      } catch (err) {
+        console.error("Failed to load form questions:", err);
+        toast({
+          title: "Error Loading Form",
+          description: "Could not load form questions. Please try again.",
+          status: "error",
+          duration: 5000,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadQuestions();
+  }, [backend, toast]);
+
+  // Helper function to check if a field is empty
+  const isFieldEmpty = (value: unknown, questionType?: string): boolean => {
+    if (value === null || value === undefined) {
+      return true;
+    }
+    
+    if (typeof value === "string") {
+      if (value.trim() === "") {
+        return true;
+      }
+      
+      // For rating grids, check if it's an empty JSON object
+      if (questionType === "rating_grid") {
+        try {
+          const parsed = JSON.parse(value);
+          return Object.keys(parsed).length === 0;
+        } catch {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
 
   const handleValidateAndNext = async () => {
-    const newErrors: ErrorState = {
-      qualityQuestions: qualityQuestionNames.some((key) => {
-        const val = surveyData[key as keyof SurveyData];
-        return typeof val !== "number" || val < 1 || val > 5;
-      }),
-      courteous: typeof surveyData.courteous !== "boolean",
-      informative: typeof surveyData.informative !== "boolean",
-      prompt_and_helpful: typeof surveyData.prompt_and_helpful !== "boolean",
-      case_meeting_frequency: !surveyData.case_meeting_frequency,
-      lifeskills: typeof surveyData.lifeskills !== "boolean",
-      recommend: typeof surveyData.recommend !== "boolean",
-      recommend_reasoning: !surveyData.recommend_reasoning.trim(),
-      date: !surveyData.date,
-      cm_id: !surveyData.cm_id,
-    };
+    const newErrors: Record<string, boolean> = {};
+
+    // Validate all required questions
+    questions.forEach((q) => {
+      if (q.isRequired) {
+        const value = surveyData[q.fieldKey];
+        if (isFieldEmpty(value, q.questionType)) {
+          newErrors[q.fieldKey] = true;
+        }
+      }
+    });
 
     setErrors(newErrors);
 
@@ -141,6 +173,311 @@ export const ClientReviewPage = ({
 
     onNext();
   };
+
+  const renderField = (question: FormQuestion) => {
+    const { fieldKey, questionType, options } = question;
+    const value = surveyData[fieldKey] ?? "";
+    const isInvalid = errors[fieldKey];
+
+    switch (questionType) {
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig || !gridConfig.rows || !gridConfig.columns) {
+          return <Text color="red.500">Invalid rating grid configuration</Text>;
+        }
+        
+        const gridData = (typeof value === "string" && value) ? JSON.parse(value) : {};
+        
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th></Th>
+                  {gridConfig.columns.map((col) => (
+                    <Th 
+                      key={col.value} 
+                      textAlign="center" 
+                      fontSize="12px" 
+                      color="#808080"
+                      fontStyle="normal"
+                      fontWeight="400"
+                      lineHeight="normal"
+                      padding="4px"
+                    >
+                      {col.label}
+                    </Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td
+                      width="200px"
+                      color="#000"
+                      fontSize="12px"
+                      fontStyle="normal"
+                      fontWeight="400"
+                      lineHeight="150%"
+                    >
+                      {row.label}
+                    </Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          onChange={() => {
+                            const newData = { ...gridData, [row.key]: col.value };
+                            setSurveyData((prev) => ({
+                              ...prev,
+                              [fieldKey]: JSON.stringify(newData),
+                            }));
+                          }}
+                          sx={{
+                            width: "24px",
+                            height: "24px",
+                            borderRadius: "6px",
+                            border: "2px solid",
+                            borderColor: isInvalid ? "red.500" : "gray.300",
+                            background: gridData[row.key] === col.value ? "blue.500" : "white",
+                            _checked: {
+                              background: "blue.500",
+                              borderColor: "blue.500",
+                            },
+                            _hover: {
+                              borderColor: "gray.500",
+                            },
+                            _focus: {
+                              boxShadow: "none",
+                            },
+                          }}
+                        />
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+            {isInvalid && (
+              <Text color="red.500" fontSize="sm" mt={2}>
+                Please complete all required ratings.
+              </Text>
+            )}
+          </Box>
+        );
+      }
+
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder="Select your case manager"
+            value={String(value || "")}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: Number(e.target.value),
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          >
+            {caseManagers.map((cm) => {
+              const firstName = cm.firstName || cm.first_name || "";
+              const lastName = cm.lastName || cm.last_name || "";
+              const fullName = `${firstName} ${lastName}`.trim();
+              return (
+                <option key={cm.id} value={cm.id}>
+                  {fullName || `Case Manager ${cm.id}`}
+                </option>
+              );
+            })}
+          </Select>
+        );
+
+      case "select": {
+        const selectOptions = options as FormOption[] | undefined;
+        return (
+          <Select
+            placeholder="Select option"
+            value={String(value || "")}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          >
+            {selectOptions?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        );
+      }
+
+      case "boolean": {
+        // Check if value is explicitly set (not undefined/null)
+        const hasValue = surveyData[fieldKey] !== undefined && surveyData[fieldKey] !== null;
+        const boolValue = hasValue && (surveyData[fieldKey] === true || surveyData[fieldKey] === "true");
+        return (
+          <HStack spacing={4}>
+            {["yes", "no"].map((option) => {
+              const isSelected = hasValue && boolValue === (option === "yes");
+              return (
+                <Button
+                  key={option}
+                  onClick={() =>
+                    setSurveyData((prev) => ({
+                      ...prev,
+                      [fieldKey]: option === "yes",
+                    }))
+                  }
+                  variant="outline"
+                  width="89px"
+                  height="28px"
+                  borderColor={isSelected ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
+                  borderRadius="6.985px"
+                  color={isSelected ? "white" : "black"}
+                  textAlign="center"
+                  fontSize="10.588px"
+                  fontStyle="normal"
+                  fontWeight="400"
+                  lineHeight="normal"
+                  bg={isSelected ? "blue.500" : "transparent"}
+                  _hover={{
+                    bg: isSelected ? "blue.600" : "gray.100",
+                  }}
+                  px={6}
+                  py={2}
+                >
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </Button>
+              );
+            })}
+          </HStack>
+        );
+      }
+
+      case "date":
+        return (
+          <Input
+            type="date"
+            placeholder="Date"
+            value={
+              typeof value === "string"
+                ? value
+                : value instanceof Date
+                ? value.toISOString().slice(0, 10)
+                : ""
+            }
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          />
+        );
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            value={typeof value === "number" ? value : typeof value === "string" ? value : ""}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value ? Number(e.target.value) : "",
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          />
+        );
+
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            value={String(value || "")}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            borderRadius="14px"
+            fontSize="16px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            resize="none"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          />
+        );
+
+      case "text":
+      default:
+        return (
+          <Input
+            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            value={String(value || "")}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          />
+        );
+    }
+  };
+
+  // Group questions by category
+  const groupedQuestions = questions
+    .filter((q) => q.isVisible)
+    .reduce<Record<string, FormQuestion[]>>((acc, q) => {
+      const categoryKey = q.category;
+      if (!acc[categoryKey]) {
+        acc[categoryKey] = [];
+      }
+      acc[categoryKey]!.push(q);
+      return acc;
+    }, {});
+
+  if (isLoading) {
+    return (
+      <VStack
+        sx={{ width: 700, marginX: "auto", padding: "20px" }}
+        alignItems="center"
+        justifyContent="center"
+        minH="400px"
+      >
+        <Spinner size="xl" color="blue.500" />
+        <Text>Loading form...</Text>
+      </VStack>
+    );
+  }
 
   return (
     <VStack
@@ -186,41 +523,41 @@ export const ClientReviewPage = ({
             zIndex={0}
           />
           <VStack>
-          <Circle
-            size={"32px"}
-            backgroundColor={"blue.500"}
-            border="1px solid #3182CE"
-            color={"white"}
-          >
-            1
-          </Circle>
-          <Text
-            fontSize={"12px"}
-            fontStyle={"normal"}
-            fontWeight={"400"}
-            lineHeight={"16px"}
-          >
-            Client Review
-          </Text>
+            <Circle
+              size={"32px"}
+              backgroundColor={"blue.500"}
+              border="1px solid #3182CE"
+              color={"white"}
+            >
+              1
+            </Circle>
+            <Text
+              fontSize={"12px"}
+              fontStyle={"normal"}
+              fontWeight={"400"}
+              lineHeight={"16px"}
+            >
+              Client Review
+            </Text>
           </VStack>
           <VStack>
-          <Circle
-            size={"32px"}
-            backgroundColor={"white"}
-            border="1px"
-            borderColor={"blue.500"}
-            color={"blue.500"}
-          >
-            2
-          </Circle>
-          <Text
-            fontSize={"12px"}
-            fontStyle={"normal"}
-            fontWeight={"400"}
-            lineHeight={"16px"}
-          >
-            Review
-          </Text>
+            <Circle
+              size={"32px"}
+              backgroundColor={"white"}
+              border="1px"
+              borderColor={"blue.500"}
+              color={"blue.500"}
+            >
+              2
+            </Circle>
+            <Text
+              fontSize={"12px"}
+              fontStyle={"normal"}
+              fontWeight={"400"}
+              lineHeight={"16px"}
+            >
+              Review
+            </Text>
           </VStack>
         </Box>
       </Box>
@@ -245,815 +582,56 @@ export const ClientReviewPage = ({
         welcome your comments. Please fill out this questionnaire. Thank you!
       </Text>
       <Divider width={"277.906px"} height={"1.011px"} background={"rgba(0, 0, 0, 0.20)"} marginBottom={"30px"}/>
-        <FormControl display="none">
-          <Input name="courteous" value={String(surveyData.courteous)} readOnly />
-          <Input name="informative" value={String(surveyData.informative)} readOnly />
-          <Input name="prompt_and_helpful" value={String(surveyData.prompt_and_helpful)} readOnly />
-          <Input name="lifeskill" value={String(surveyData.lifeskills)} readOnly />
-          <Input name="recommend" value={String(surveyData.recommend)} readOnly />
-          {qualityQuestionNames.map((name) => (
-            <Input
-              key={name}
-              name={name}
-              value={String(surveyData[name as keyof SurveyData] ?? "")}
-              readOnly
-            />
-          ))}
-        </FormControl>
-        <OrderedList style={{ fontSize: "18px", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
-          <ListItem marginBottom={"50px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"14px"}
-            >
-              Please rate the quality of your experience in each category
-            </Heading>
-            <Table variant={"simple"}>
-              <Thead>
-                <Tr>
-                  <Th></Th>
-                    {["Very Poor", "Poor", "Neutral", "Good", "Excellent"].map((label) => (
-                      <Th 
-                        key={label} 
-                        textAlign={"center"}
-                        fontSize={"12px"}
-                        color={"#808080"}
-                        fontStyle={"normal"}
-                        fontWeight={"400"}
-                        lineHeight={"normal"}
-                        padding={"4px"}
-                        >
-                        {label}
-                      </Th>
-                    ))}
-                </Tr>
-              </Thead>
-              <Tbody>
-                {qualityQuestions.map((question, qIdx) => (
-                    <Tr key={qIdx}>
-                      <Td
-                        width={"200px"}
-                        color={"#000"}
-                        fontSize={"12px"}
-                        fontStyle={"normal"}
-                        fontWeight={"400"}
-                        lineHeight={"150%"}
-                      >
-                        {question}
-                      </Td>
-                      {["1", "2", "3", "4", "5"].map((value) => (
-                        <Td key={value} textAlign="center">
-                            <Radio
-                              name={qualityQuestionNames[qIdx]}
-                              value={value}
-                              isChecked={String(surveyData[qualityQuestionNames[qIdx] as keyof SurveyData]) === value}
-                              onChange={() =>
-                                setSurveyData((prev) => ({
-                                  ...prev,
-                                  [qualityQuestionNames[qIdx] as keyof SurveyData]: Number(value),
-                                }))
-                              }
-                              sx={{
-                                width: "24px",
-                                height: "24px",
-                                borderRadius: "6px",
-                                border: "2px solid",
-                                borderColor: "gray.300",
-                                background: String(surveyData[qualityQuestionNames[qIdx] as keyof SurveyData]) === value ? "blue.500" : "white",
-                                _checked: {
-                                  background: "blue.500",
-                                  borderColor: "blue.500",
-                                },
-                                _hover: {
-                                  borderColor: "gray.500",
-                                },
-                                _focus: {
-                                  boxShadow: "none",
-                                },
-                              }}
-                            />
-                        </Td>
-                      ))}
-                    </Tr>
-                ))}
-              </Tbody>
-            </Table>
-            {errors.qualityQuestions && (
-              <Text color="red.500" fontSize="sm" mt={2}>
-                Please rate all 6 quality categories.
-              </Text>
-            )}
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"14px"}
-            >
-              Is your case manager...
-            </Heading>
-            <FormControl>
-            <VStack
-              align="start"
-              spacing={"14px"}
-            >
-                <Text
+      
+      <OrderedList style={{ fontSize: "18px", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
+        {categoryOrder.map((category) => {
+          const categoryQuestions = groupedQuestions[category];
+          if (!categoryQuestions || categoryQuestions.length === 0) return null;
+
+          return categoryQuestions
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((question) => (
+              <ListItem key={question.id} marginBottom={question.questionType === "rating_grid" ? "50px" : "30px"}>
+                <Heading
                   color={"#000"}
-                  textAlign={"center"}
                   fontSize={"16px"}
                   fontStyle={"normal"}
                   fontWeight={"400"}
-                  lineHeight={"normal"}
+                  lineHeight={"150%"}
+                  marginBottom={question.questionType === "rating_grid" ? "14px" : "30px"}
                 >
-                  Courteous?
-                </Text>
-                <HStack spacing={4}>
-                  {["yes", "no"].map((option) => (
-                    <Button
-                      key={option}
-                      onClick={() =>
-                        setSurveyData((prev) => ({
-                          ...prev,
-                          courteous: option === "yes",
-                        }))
-                      }
-                      variant="outline"
-                      width={"89px"}
-                      height={"28px"}
-                      borderColor={surveyData.courteous === (option === "yes") ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
-                      borderRadius={"6.985px"}
-                      color={surveyData.courteous === (option === "yes") ? "white" : "black"}
-                      textAlign={"center"}
-                      fontSize={"10.588px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      bg={surveyData.courteous === (option === "yes") ? "blue.500" : "transparent"}
-                      _hover={{
-                        bg: surveyData.courteous === (option === "yes") ? "blue.600" : "gray.100",
-                      }}
-                      px={6}
-                      py={2}
-                    >
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </Button>
-                  ))}
-                </HStack>
-                {errors.courteous && (
-                  <Text color="red.500" fontSize="sm" mt={1}>
-                    Please answer if your case manager was courteous.
-                  </Text>
-                )}
-                <Text
-                  color={"#000"}
-                  textAlign={"center"}
-                  fontSize={"16px"}
-                  fontStyle={"normal"}
-                  fontWeight={"400"}
-                  lineHeight={"normal"}
-                >Informative?
-                </Text>
-                <HStack spacing={4}>
-                  {["yes", "no"].map((option) => (
-                    <Button
-                      key={option}
-                      onClick={() =>
-                        setSurveyData((prev) => ({
-                          ...prev,
-                          informative: option === "yes",
-                        }))
-                      }
-                      variant="outline"
-                      width={"89px"}
-                      height={"28px"}
-                      borderColor={surveyData.informative === (option === "yes") ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
-                      borderRadius={"6.985px"}
-                      color={surveyData.informative === (option === "yes") ? "white" : "black"}
-                      textAlign={"center"}
-                      fontSize={"10.588px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      bg={surveyData.informative === (option === "yes") ? "blue.500" : "transparent"}
-                      _hover={{
-                        bg: surveyData.informative === (option === "yes") ? "blue.600" : "gray.100",
-                      }}
-                      px={6}
-                      py={2}
-                    >
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </Button>
-                  ))}
-                </HStack>
-                {errors.informative && (
-                  <Text color="red.500" fontSize="sm" mt={1}>
-                    Please answer if your case manager was informative.
-                  </Text>
-                )}
-                <Text
-                  color={"#000"}
-                  textAlign={"center"}
-                  fontSize={"16px"}
-                  fontStyle={"normal"}
-                  fontWeight={"400"}
-                  lineHeight={"normal"}
-                >
-                  Prompt and helpful?
-                </Text>
-                <HStack spacing={4}>
-                  {["yes", "no"].map((option) => (
-                    <Button
-                      key={option}
-                      onClick={() =>
-                        setSurveyData((prev) => ({
-                          ...prev,
-                          prompt_and_helpful: option === "yes",
-                        }))
-                      }
-                      variant="outline"
-                      width={"89px"}
-                      height={"28px"}
-                      borderColor={surveyData.prompt_and_helpful === (option === "yes") ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
-                      borderRadius={"6.985px"}
-                      color={surveyData.prompt_and_helpful === (option === "yes") ? "white" : "black"}
-                      textAlign={"center"}
-                      fontSize={"10.588px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      bg={surveyData.prompt_and_helpful === (option === "yes") ? "blue.500" : "transparent"}
-                      _hover={{
-                        bg: surveyData.prompt_and_helpful === (option === "yes") ? "blue.600" : "gray.100",
-                      }}
-                      px={6}
-                      py={2}
-                    >
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </Button>
-                  ))}
-                </HStack>
-                {errors.prompt_and_helpful && (
-                  <Text color="red.500" fontSize="sm" mt={1}>
-                    Please answer if your case manager was prompt and helpful.
-                  </Text>
-                )}
-            </VStack>
-          </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"14px"}
-            >
-              How frequently do you have case meetings?
-            </Heading>
-            <FormControl>
-              <RadioGroup 
-                name="case_meeting_frequency"
-                value={surveyData.case_meeting_frequency}
-                onChange={(val) =>
-                  setSurveyData((prev) => ({
-                    ...prev,
-                    case_meeting_frequency: val,
-                  }))
-                }
-              >
-                <HStack spacing={10}>
-                  {["never", "rarely", "occasionally", "often", "always"].map((option) => (
-                    <VStack key={option}>
-                      <Text
-                        color="var(--gray-600, #4A5568)"
-                        fontSize="12px"
-                        fontStyle="normal"
-                        fontWeight="400"
-                        lineHeight="normal"
-                        marginBottom="19px"
-                      >
-                        {option.charAt(0).toUpperCase() + option.slice(1)}
-                      </Text>
-                      <Radio
-                        value={option}
-                        sx={{
-                          width: "24px",
-                          height: "24px",
-                          borderRadius: "6px",
-                          border: "2px solid",
-                          borderColor: "gray.300",
-                          _checked: {
-                            background: "blue.500",
-                            borderColor: "blue.500",
-                          },
-                          _hover: {
-                            borderColor: "gray.500",
-                          },
-                          _focus: {
-                            boxShadow: "none",
-                          },
-                        }}
-                      />
-                    </VStack>
-                  ))}
-                  {/* <VStack>
-                    <Text
-                      color={"var(--gray-600, #4A5568)"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      marginBottom={"19px"}
-                    >
-                      Never
+                  {question.questionText}
+                </Heading>
+                <FormControl isRequired={question.isRequired} isInvalid={errors[question.fieldKey]}>
+                  {renderField(question)}
+                  {errors[question.fieldKey] && (
+                    <Text color="red.500" fontSize="sm" mt={1}>
+                      This field is required.
                     </Text>
-                    <Radio 
-                      value="never"
-                      sx={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
-                        border: "2px solid",
-                        borderColor: "gray.300",
-                        _checked: {
-                          background: "blue.500",
-                          borderColor: "blue.500",
-                        },
-                        _hover: {
-                          borderColor: "gray.500",
-                        },
-                        _focus: {
-                          boxShadow: "none",
-                        },
-                      }}
-                    />
-                  </VStack> */}
-                  {/* <VStack>
-                    <Text
-                      color={"var(--gray-600, #4A5568)"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      marginBottom={"19px"}
-                    >
-                      Rarely
-                    </Text>
-                    <Radio 
-                      value="rarely"
-                      sx={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
-                        border: "2px solid",
-                        borderColor: "gray.300",
-                        _checked: {
-                          background: "blue.500",
-                          borderColor: "blue.500",
-                        },
-                        _hover: {
-                          borderColor: "gray.500",
-                        },
-                        _focus: {
-                          boxShadow: "none",
-                        },
-                      }}
-                    />
-                  </VStack>
-                  <VStack>
-                    <Text
-                      color={"var(--gray-600, #4A5568)"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      marginBottom={"19px"}
-                    >
-                      Occasionally
-                    </Text>
-                    <Radio 
-                      value="occasionally"
-                      sx={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
-                        border: "2px solid",
-                        borderColor: "gray.300",
-                        _checked: {
-                          background: "blue.500",
-                          borderColor: "blue.500",
-                        },
-                        _hover: {
-                          borderColor: "gray.500",
-                        },
-                        _focus: {
-                          boxShadow: "none",
-                        },
-                      }}
-                    />
-                  </VStack>
-                  <VStack>
-                    <Text
-                      color={"var(--gray-600, #4A5568)"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      marginBottom={"19px"}
-                    >
-                      Often
-                    </Text>
-                    <Radio 
-                      value="often"
-                      sx={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
-                        border: "2px solid",
-                        borderColor: "gray.300",
-                        _checked: {
-                          background: "blue.500",
-                          borderColor: "blue.500",
-                        },
-                        _hover: {
-                          borderColor: "gray.500",
-                        },
-                        _focus: {
-                          boxShadow: "none",
-                        },
-                      }}
-                    />
-                  </VStack>
-                  <VStack>
-                    <Text
-                      color={"var(--gray-600, #4A5568)"}
-                      fontFamily={"Inter"}
-                      fontSize={"12px"}
-                      fontStyle={"normal"}
-                      fontWeight={"400"}
-                      lineHeight={"normal"}
-                      marginBottom={"19px"}
-                    >
-                      Always
-                    </Text>
-                    <Radio 
-                      value="always"
-                      sx={{
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "6px",
-                        border: "2px solid",
-                        borderColor: "gray.300",
-                        _checked: {
-                          background: "blue.500",
-                          borderColor: "blue.500",
-                        },
-                        _hover: {
-                          borderColor: "gray.500",
-                        },
-                        _focus: {
-                          boxShadow: "none",
-                        },
-                      }}
-                    />
-                  </VStack> */}
-                </HStack>
-              </RadioGroup>
-              {errors.case_meeting_frequency && (
-                <Text color="red.500" fontSize="sm" mt={2}>
-                  Please select how frequently you meet with your case manager.
-                </Text>
-              )}
-            </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Were the Lifeskills classes beneficial to you?
-            </Heading>
-            <HStack spacing={4}>
-                {["yes", "no"].map((option) => (
-                  <Button
-                    key={option}
-                    onClick={() =>
-                      setSurveyData((prev) => ({
-                        ...prev,
-                        lifeskills: option === "yes",
-                      }))
-                    }
-                    variant="outline"
-                    width={"89px"}
-                    height={"28px"}
-                    borderColor={surveyData.lifeskills === (option === "yes") ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
-                    borderRadius={"6.985px"}
-                    color={surveyData.lifeskills === (option === "yes") ? "white" : "black"}
-                    textAlign={"center"}
-                    fontSize={"10.588px"}
-                    fontStyle={"normal"}
-                    fontWeight={"400"}
-                    lineHeight={"normal"}
-                    bg={surveyData.lifeskills === (option === "yes") ? "blue.500" : "transparent"}
-                    _hover={{
-                      bg: surveyData.lifeskills === (option === "yes") ? "blue.600" : "gray.100",
-                    }}
-                    px={6}
-                    py={2}
-                  >
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </Button>
-                ))}
-              </HStack>
-              {errors.lifeskills && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  Please answer whether Lifeskills classes were beneficial.
-                </Text>
-              )}
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Would you recommend CCH to a friend?
-            </Heading>
-            <HStack spacing={4} marginBottom={"30px"}>
-              {["yes", "no"].map((option) => (
-                <Button
-                  key={option}
-                  onClick={() =>
-                    setSurveyData((prev) => ({
-                      ...prev,
-                      recommend: option === "yes",
-                    }))
-                  }
-                  variant="outline"
-                  width={"89px"}
-                  height={"28px"}
-                  borderColor={surveyData.recommend === (option === "yes") ? "blue.500" : "blue.solid var(--gray-600, #4A5568)"}
-                  borderRadius={"6.985px"}
-                  color={surveyData.recommend === (option === "yes") ? "white" : "black"}
-                  textAlign={"center"}
-                  fontSize={"10.588px"}
-                  fontStyle={"normal"}
-                  fontWeight={"400"}
-                  lineHeight={"normal"}
-                  bg={surveyData.recommend === (option === "yes") ? "blue.500" : "transparent"}
-                  _hover={{
-                    bg: surveyData.recommend === (option === "yes") ? "blue.600" : "gray.100",
-                  }}
-                  px={6}
-                  py={2}
-                >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </Button>
-              ))}
-            </HStack>
-            {errors.recommend && (
-              <Text color="red.500" fontSize="sm" mt={1}>
-                Please indicate if you would recommend CCH.
-              </Text>
-            )}
-            <Box pl={6} mt={2}>
-              <Heading
-                color={"#000"}
-                fontSize={"16px"}
-                fontStyle={"normal"}
-                fontWeight={"400"}
-                lineHeight={"150%"}
-                marginBottom={"14px"}
-              >
-                <Text as="span" fontSize="18px" fontWeight="600" mr={1}>
-                  5a.
-                </Text>
-                Why or why not?
-              </Heading>
-              <FormControl>
-                <Textarea
-                  name="recommend_reasoning"
-                  onChange={(e) =>
-                    setSurveyData((prev) => ({
-                      ...prev,
-                      recommend_reasoning: e.target.value,
-                    }))
-                  }
-                  value={surveyData.recommend_reasoning}
-                  resize={"none"}
-                  fontSize={"16px"}
-                  borderRadius={"14px"}
-                  borderColor={"blue.solid var(--gray-600, #4A5568)"}
-                />
-                {errors.recommend_reasoning && (
-                  <Text color="red.500" fontSize="sm" mt={1}>
-                    Please explain your recommendation.
-                  </Text>
-                )}
-              </FormControl>
-            </Box>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              If you entered our program because of a referral, how might we
-              have made CCH more helpful?
-            </Heading>
-            <FormControl>
-            <Textarea
-              name="make_cch_more_helpful"
-              value={surveyData.make_cch_more_helpful}
-              onChange={(e) =>
-                setSurveyData((prev) => ({
-                  ...prev,
-                  make_cch_more_helpful: e.target.value,
-                }))
-              }
-              borderRadius={"14px"}
-              fontSize={"16px"}
-              borderColor={"blue.solid var(--gray-600, #4A5568)"}
-              resize={"none"}
-            />
-          </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Who is your case manager?
-            </Heading>
-            <FormControl>
-              <Select
-                name="cm_id"
-                placeholder="Select your case manager"
-                value={surveyData.cm_id}
-                onChange={(e) =>
-                  setSurveyData((prev) => ({
-                    ...prev,
-                    cm_id: Number(e.target.value),
-                  }))
-                }
-                borderRadius={"14px"}
-                borderColor={"blue.solid var(--gray-600, #4A5568)"}
-              >
-                {caseManagers.map((manager: CaseManager) => (
-                  <option
-                    key={manager.id}
-                    value={manager.id}
-                  >
-                    {manager.firstName} {manager.lastName}
-                  </option>
-                ))}
-              </Select>
-               {errors.cm_id && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  Please select your case manager.
-                </Text>
-              )}
-            </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Is there any feedback you want your case manager to know?
-            </Heading>
-            <FormControl>
-              <Textarea
-                name="cm_feedback"
-                value={surveyData.cm_feedback}
-                onChange={(e) =>
-                  setSurveyData((prev) => ({
-                    ...prev,
-                    cm_feedback: e.target.value,
-                  }))
-                }
-                borderRadius={"14px"}
-                fontSize={"16px"}
-                borderColor={"blue.solid var(--gray-600, #4A5568)"}
-                resize={"none"}
-              />
-            </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Please share any additional comments or suggestions.
-            </Heading>
-            <FormControl>
-              <Textarea
-                name="other_comments"
-                value={surveyData.other_comments}
-                onChange={(e) =>
-                  setSurveyData((prev) => ({
-                    ...prev,
-                    other_comments: e.target.value,
-                  }))
-                }
-                borderRadius={"14px"}
-                fontSize={"16px"}
-                borderColor={"blue.solid var(--gray-600, #4A5568)"}
-                resize={"none"}
-              />
-            </FormControl>
-          </ListItem>
-          <ListItem marginBottom={"30px"}>
-            <Heading
-              color={"#000"}
-              fontSize={"16px"}
-              fontStyle={"normal"}
-              fontWeight={"400"}
-              lineHeight={"150%"}
-              marginBottom={"30px"}
-            >
-              Date of Program Completion
-            </Heading>
-            <FormControl>
-              <Input
-                name="date"
-                type="date"
-                placeholder="Date"
-                value={
-                  typeof surveyData.date === "string"
-                    ? surveyData.date
-                    : surveyData.date.toISOString().slice(0, 10)
-                }
-                onChange={(e) =>
-                  setSurveyData((prev) => ({
-                    ...prev,
-                    date: e.target.value,
-                  }))
-                }
-                borderRadius={"14px"}
-                borderColor={"blue.solid var(--gray-600, #4A5568)"}
-              />
-              {errors.date && (
-                <Text color="red.500" fontSize="sm" mt={1}>
-                  Please select your program completion date.
-                </Text>
-              )}
-            </FormControl>
-          </ListItem>
-        </OrderedList>
-        <Box
-          width={"100%"}
-          display={"flex"}
-          justifyContent={"flex-end"}
+                  )}
+                </FormControl>
+              </ListItem>
+            ));
+        })}
+      </OrderedList>
+      
+      <Box
+        width={"100%"}
+        display={"flex"}
+        justifyContent={"flex-end"}
+      >
+        <Button
+          onClick={handleValidateAndNext}
+          color={"white"}
+          backgroundColor={"blue.500"}
+          fontSize={"20px"}
+          borderRadius={"6px"}
+          width={"150px"}
+          height={"50px"}
         >
-          <Button
-            onClick={handleValidateAndNext}
-            color={"white"}
-            backgroundColor={"blue.500"}
-            fontSize={"20px"}
-            borderRadius={"6px"}
-            width={"150px"}
-            height={"50px"}
-          >
-            Review
-          </Button>
-        </Box>
-      {/* </form> */}
+          Review
+        </Button>
+      </Box>
     </VStack>
   );
 };
