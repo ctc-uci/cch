@@ -487,7 +487,7 @@ export const ExitSurveyForm = ({
               return <Box key={question.id}>{renderField(question)}</Box>;
             }
             return (
-              <FormControl key={question.id} isRequired={question.isRequired}>
+              <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
                 <FormLabel>{question.questionText}</FormLabel>
                 {renderField(question)}
               </FormControl>

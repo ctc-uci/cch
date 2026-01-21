@@ -454,7 +454,7 @@ export const InterviewScreeningForm = ({
           // Special handling for boolean/checkbox questions
           if (question.questionType === "boolean") {
             return (
-              <FormControl key={question.id} isRequired={question.isRequired}>
+              <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
                 <FormLabel>{question.questionText}</FormLabel>
                 {renderField(question)}
               </FormControl>
@@ -462,7 +462,7 @@ export const InterviewScreeningForm = ({
           }
 
           return (
-            <FormControl key={question.id} isRequired={question.isRequired}>
+            <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
               <FormLabel>{question.questionText}</FormLabel>
               {renderField(question)}
             </FormControl>

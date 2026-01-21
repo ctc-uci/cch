@@ -7,7 +7,9 @@ CREATE TABLE intake_responses (
     client_id INT NOT NULL,
     question_id INT NOT NULL,
     response_value TEXT,  -- stored as text, parsed based on question_type
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    session_id UUID,  -- groups responses from the same survey submission
+    form_id INT NOT NULL,
+    submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES intake_clients(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES form_questions(id) ON DELETE RESTRICT,
@@ -17,4 +19,5 @@ CREATE TABLE intake_responses (
 -- Create indexes for faster lookups
 CREATE INDEX idx_intake_responses_client ON intake_responses(client_id);
 CREATE INDEX idx_intake_responses_question ON intake_responses(question_id);
+CREATE INDEX idx_intake_responses_session ON intake_responses(session_id);
 

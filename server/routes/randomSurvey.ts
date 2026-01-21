@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp"; // TODO: replace this db with
-import { verifyRole } from "../src/middleware";
+// import { verifyRole } from "../src/middleware";
 
 export const randomSurveyRouter = Router();
 
@@ -114,80 +114,107 @@ randomSurveyRouter.get("/:id", async (req, res) => {
   }
 });
 
-// Create new randomSurvey
+// Create new randomSurvey - now posts to intake_responses with form_id = 4
 randomSurveyRouter.post("/", async (req, res) => {
   try {
-    const {
-      date,
-      cch_qos,
-      cm_qos,
-      courteous,
-      informative,
-      prompt_and_helpful,
-      entry_quality,
-      unit_quality,
-      clean,
-      overall_experience,
-      case_meeting_frequency,
-      lifeskills,
-      recommend,
-      recommend_reasoning,
-      make_cch_more_helpful,
-      cm_id,
-      cm_feedback,
-      other_comments,
-    } = req.body;
+    const surveyData = req.body;
+    const formId = 4; // Random Client Survey form_id
 
-    const query = `
-        INSERT INTO random_survey_table ( 
-            date, 
-            cch_qos, 
-            cm_qos, 
-            courteous, 
-            informative, 
-            prompt_and_helpful, 
-            entry_quality, 
-            unit_quality, 
-            clean, 
-            overall_experience, 
-            case_meeting_frequency, 
-            lifeskills, 
-            recommend, 
-            recommend_reasoning, 
-            make_cch_more_helpful, 
-            cm_id, 
-            cm_feedback, 
-            other_comments
-        )
-        VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
-        )
-        RETURNING id;
-    `;
+    // Extract cm_id if available (for case_manager_select field)
+    let cmId: number | null = null;
+    if (surveyData.cm_id !== undefined) {
+      cmId = typeof surveyData.cm_id === 'number' ? surveyData.cm_id : Number(surveyData.cm_id);
+    }
+    // Also check for case_manager field (if that's the field_key)
+    if (!cmId && surveyData.case_manager !== undefined) {
+      cmId = typeof surveyData.case_manager === 'number' ? surveyData.case_manager : Number(surveyData.case_manager);
+    }
 
-    const data = await db.query(query, [
-      date,
-      cch_qos,
-      cm_qos,
-      courteous,
-      informative,
-      prompt_and_helpful,
-      entry_quality,
-      unit_quality,
-      clean,
-      overall_experience,
-      case_meeting_frequency,
-      lifeskills,
-      recommend,
-      recommend_reasoning,
-      make_cch_more_helpful,
-      cm_id,
-      cm_feedback,
-      other_comments,
-    ]);
+    // Get first unit_id as default (or use 1 if none exists)
+    let unitId = 1;
+    try {
+      const units = await db.query("SELECT id FROM units LIMIT 1");
+      if (units.length > 0) {
+        unitId = units[0].id;
+      }
+    } catch {
+      // Use default unitId = 1
+    }
 
-    res.status(200).json({ id: data[0].id });
+    // Get all form questions for form_id = 4 to map field_key to question_id
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [formId]
+    );
+
+    const questionMap = new Map<string, { id: number; type: string }>(
+      questions.map(
+        (q: { id: number; field_key: string; question_type: string }) => [
+          q.field_key,
+          { id: q.id, type: q.question_type },
+        ]
+      )
+    );
+
+    // Find case_manager_select field to extract cm_id for created_by
+    if (!cmId) {
+      for (const q of questions) {
+        if (q.question_type === 'case_manager_select' && surveyData[q.field_key] !== undefined) {
+          const cmValue = surveyData[q.field_key];
+          cmId = typeof cmValue === 'number' ? cmValue : Number(cmValue);
+          if (!isNaN(cmId)) {
+            break;
+          }
+        }
+      }
+    }
+    const createdBy = cmId || 1;
+
+    // Create a minimal client entry for the anonymous survey
+    const clientResult = await db.query(
+      `INSERT INTO intake_clients (created_by, unit_id, status, first_name, last_name)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id`,
+      [createdBy, unitId, "Active", "Random Survey", new Date().toISOString().slice(0, 10)]
+    );
+
+    const clientId = clientResult[0].id;
+
+    // Generate a unique session_id for this survey submission
+    // All responses from this submission will share the same session_id
+    const sessionIdResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId = sessionIdResult[0].session_id;
+
+    // Insert responses for each field that has a corresponding question
+    // All responses use the same session_id to group them together
+    for (const [fieldKey, value] of Object.entries(surveyData)) {
+
+      const question = questionMap.get(fieldKey);
+      if (question && value !== undefined && value !== null && value !== "") {
+        // Convert value to string for storage
+        let stringValue: string;
+        if (typeof value === "boolean") {
+          stringValue = value.toString();
+        } else if (typeof value === "number") {
+          stringValue = value.toString();
+        } else if (typeof value === "object") {
+          // For rating grids and other objects, stringify
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
+
+        await db.query(
+          `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [clientId, question.id, stringValue, formId, sessionId]
+        );
+      }
+    }
+
+    res.status(200).json({ id: clientId });
   } catch (err) {
+    console.error("Error creating random survey:", err);
     res.status(500).send(err.message);
   }
 });

@@ -368,6 +368,20 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     />
                 );
 
+            case "text_block":
+                return (
+                    <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
+                        {question.questionText}
+                    </Text>
+                );
+
+            case "header":
+                return (
+                    <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
+                        {question.questionText}
+                    </Heading>
+                );
+
             case "text":
             default:
                 return (
@@ -478,7 +492,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             borderRadius={"16px"}
             marginBottom={"70px"}
         >
-        <Heading
+        {/* <Heading
             color={"#3182CE"}
             textAlign={"center"}
             fontSize={"24.405px"}
@@ -500,7 +514,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             welcome your comments. Please fill out this questionnaire. Thank you!
         </Text>
         <Divider width={"277.906px"} height={"1.011px"} background={"rgba(0, 0, 0, 0.20)"} marginBottom={"30px"}/>
-        
+         */}
         <OrderedList style={{ fontSize: "14px", fontWeight: "600"}} spacing={"4"}>
             {visibleQuestions.map((question) => {
                 const isDisplayOnly = question.questionType === "text_block" || question.questionType === "header";

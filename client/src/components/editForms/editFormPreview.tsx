@@ -501,12 +501,16 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
       if (editingQuestion.id === 0) {
         // Create new question
+        // Ensure text_block and header are never required
+        const isRequired = (editingQuestion.questionType === "text_block" || editingQuestion.questionType === "header") 
+          ? false 
+          : editingQuestion.isRequired;
         await backend.post("/formQuestions", {
           field_key: editingQuestion.fieldKey,
           question_text: editingQuestion.questionText,
           question_type: editingQuestion.questionType,
           options: editingQuestion.options || null,
-          is_required: editingQuestion.isRequired,
+          is_required: isRequired,
           is_visible: editingQuestion.isVisible,
           is_core: editingQuestion.isCore,
           display_order: editingQuestion.displayOrder,
@@ -520,12 +524,16 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
         });
       } else {
         // Update existing question
+        // Ensure text_block and header are never required
+        const isRequired = (editingQuestion.questionType === "text_block" || editingQuestion.questionType === "header") 
+          ? false 
+          : editingQuestion.isRequired;
         await backend.put(`/formQuestions/${editingQuestion.id}`, {
           field_key: editingQuestion.fieldKey,
           question_text: editingQuestion.questionText,
           question_type: editingQuestion.questionType,
           options: editingQuestion.options || null,
-          is_required: editingQuestion.isRequired,
+          is_required: isRequired,
           is_visible: editingQuestion.isVisible,
           is_core: editingQuestion.isCore,
           display_order: editingQuestion.displayOrder,
@@ -555,13 +563,17 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           );
           
           // Retry with the unique field key
+          // Ensure text_block and header are never required
+          const isRequired = (editingQuestion.questionType === "text_block" || editingQuestion.questionType === "header") 
+            ? false 
+            : editingQuestion.isRequired;
           if (editingQuestion.id === 0) {
             await backend.post("/formQuestions", {
               field_key: uniqueFieldKey,
               question_text: editingQuestion.questionText,
               question_type: editingQuestion.questionType,
               options: editingQuestion.options || null,
-              is_required: editingQuestion.isRequired,
+              is_required: isRequired,
               is_visible: editingQuestion.isVisible,
               is_core: editingQuestion.isCore,
               display_order: editingQuestion.displayOrder,
@@ -573,7 +585,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
               question_text: editingQuestion.questionText,
               question_type: editingQuestion.questionType,
               options: editingQuestion.options || null,
-              is_required: editingQuestion.isRequired,
+              is_required: isRequired,
               is_visible: editingQuestion.isVisible,
               is_core: editingQuestion.isCore,
               display_order: editingQuestion.displayOrder,

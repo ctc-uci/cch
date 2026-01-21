@@ -668,7 +668,7 @@ export const ClientReviewPage = ({
               >
                 {question.questionText}
               </Heading>
-              <FormControl isRequired={question.isRequired} isInvalid={errors[question.fieldKey]}>
+              <FormControl isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"} isInvalid={errors[question.fieldKey]}>
                 {renderField(question)}
                 {errors[question.fieldKey] && (
                   <Text color="red.500" fontSize="sm" mt={1}>

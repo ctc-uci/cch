@@ -482,7 +482,7 @@ export const SuccessStoryForm = ({
             // Special handling for boolean/checkbox questions
             if (question.questionType === "boolean") {
               return (
-                <FormControl key={question.id} isRequired={question.isRequired}>
+                <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
                   <HStack spacing={2} alignItems="center">
                     {renderField(question)}
                     <FormLabel mb={0}>{question.questionText}</FormLabel>
@@ -492,7 +492,7 @@ export const SuccessStoryForm = ({
             }
 
             return (
-              <FormControl key={question.id} isRequired={question.isRequired}>
+              <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
                 <FormLabel>{question.questionText}</FormLabel>
                 {renderField(question)}
               </FormControl>
