@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Box,
@@ -11,36 +11,15 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
 import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
 import { ProgressSteps } from "../ProgressSteps.tsx";
 import { SuccessScreen } from "../SuccessScreen.tsx";
 import { useParams } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
-const initialFormData = {
-  name: "",
-  cmId: 0,
-  site: 0,
-  programDateCompletion: "",
-  client_id: 0,
-  cchRating: "",
-  cchLikeMost: "",
-  cchCouldBeImproved: "",
-  lifeSkillsRating: "",
-  lifeSkillsHelpfulTopics: "",
-  lifeSkillsOfferTopicsInTheFuture: "",
-  cmRating: "",
-  cmChangeAbout: "",
-  cmMostBeneficial: "",
-  experienceTakeaway: "",
-  experienceAccomplished: "",
-  experienceExtraNotes: "",
-};
-
 export const ExitSurvey = () => {
   const [onReview, setOnReview] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ExitSurveyFormType>(initialFormData);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const { backend } = useBackendContext();
   const toast = useToast();
   const [submitted, setSubmitted] = useState<boolean>(false);
@@ -59,8 +38,11 @@ export const ExitSurvey = () => {
       try {
         const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
         const client = response.data?.[0];
-        formData.client_id = client.id;
-        await backend.post("/exitSurvey", formData);
+        const payload = {
+          ...formData,
+          client_id: client?.id,
+        };
+        await backend.post("/exitSurvey", payload);
         toast({
           title: "Form submitted",
           description: `Thanks for your feedback!`,

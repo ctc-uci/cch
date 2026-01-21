@@ -1,528 +1,482 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
-  Divider,
-  Flex,
   FormControl,
   FormLabel,
   HStack,
+  Heading,
   Input,
   Radio,
-  RadioGroup,
   Select,
-  Spacer,
-  Stack,
+  Spinner,
+  Table,
+  Tbody,
+  Td,
   Text,
   Textarea,
+  Th,
+  Thead,
+  Tr,
   useToast,
   VStack,
 } from "@chakra-ui/react";
-
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
-import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
 
 type ExitSurveyFormProps = {
-  formData: ExitSurveyFormType;
+  formData: Record<string, unknown>;
   handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  setFormData: React.Dispatch<React.SetStateAction<ExitSurveyFormType>>;
+  setFormData: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
   onReview: boolean;
   spanish: boolean;
 };
 
+interface FormOption {
+  value: string;
+  label: string;
+}
+
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType:
+    | "text"
+    | "number"
+    | "boolean"
+    | "date"
+    | "select"
+    | "textarea"
+    | "rating_grid"
+    | "case_manager_select"
+    | "site_location"
+    | "text_block"
+    | "header";
+  options?: FormOption[] | RatingGridConfig;
+  isRequired: boolean;
+  isVisible: boolean;
+  isCore: boolean;
+  displayOrder: number;
+}
+
+type CaseManager = {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  first_name?: string;
+  last_name?: string;
+};
+
+type Location = { id: number; name: string };
 
 export const ExitSurveyForm = ({
   formData,
   handleSubmit,
   setFormData,
   onReview,
-  spanish
+  spanish,
 }: ExitSurveyFormProps) => {
-  type CaseManager = {
-    id: number;
-    role: string;
-    firstName: string;
-    lastName: string;
-    phone_number: string;
-    email: string;
-  };
-
-  type Location = {
-    id: number;
-    cm_id: number;
-    name: string;
-    date: Date;
-    caloptima_funded: boolean;
-  };
-
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
   const { backend } = useBackendContext();
   const toast = useToast();
   const language = spanish ? "spanish" : "english";
 
-  const fields = {
-    english: {
-      title: "Exit Survey",
-      subtitle: "We are committed to providing you with the best help possible, so we welcome your comments. Please fill out this questionnaire. Thank you!",
-      name: "1. What is your name?",
-      site: "2. What was your site?",
-      cm: "3. Who is your case manager?",
-      overallProgram: "Overall Program",
-      lifeSkills: "Life Skills",
-      caseManagement: "Case Management",
-      outcome: "Outcome",
-      programDateCompletion: "4. Date of Program Completion",
-      overallRating: "1. How would you rate Colette's Children's Home overall?",
-      overallLikeMost: "2. What did you like most about Colette’s Children’s Home?",
-      overallCouldBeImproved: "3. What would make Colette’s Children’s home better?",
-      lifeSkillsRating: "1. How helpful were the Life Skills Meetings?",
-      lifeSkillsHelpfulTopics: "2. What topics were the most helpful for you?",
-      lifeSkillsOfferTopicsInTheFuture: "3. What topics would you like CCH to offer in the future?",
-      cmRating: "1. How helpful was case management?",
-      cmChangeAbout: "2. What would you change about your case management?",
-      cmMostBeneficial: "3. What was the most beneficial part of your case management?",
-      outcomeFutureChange: "1. How do you think that your experience at CCH will change your future?",
-      outcomeAccomplished: "2. What have you learned/accomplished while during your stay?",
-      outcomeExtraNotes: "3. What else would you like us to know?",
-      submit: "Next",
-      namePlaceholder: "Enter your name",
-      sitePlaceholder: "Select Location",
-      cmPlaceholder: "Select case manager",
-      enterResponse: "Enter your response...",
-      unsatisfactory: "Unsatisfactory",
-      fair: "Fair",
-      good: "Good",
-      excellent: "Excellent",
-      notVeryHelpfulAtAll: "Not Very Helpful At All",
-      notVeryHelful: "Not Very Helpful",
-      helpful: "Helpful",
-      veryHelpful: "Very Helpful",
-    },
-    spanish: {
-      title: "Encuesta de Salida",
-      subtitle: "Estamos comprometidos a brindarle la mejor ayuda posible, por lo que agradecemos sus comentarios. Por favor, complete este cuestionario. ¡Gracias!",
-      name: "1. ¿Cuál es tu nombre?",
-      site: "2. ¿Cuál fue tu sitio?",
-      cm: "3. ¿Quién es tu administrador de casos?",
-      overallProgram: "Programa General",
-      lifeSkills: "Habilidades para la Vida",
-      caseManagement: "Gestión de Casos",
-      outcome: "Resultado",
-      programDateCompletion: "4. Fecha de finalización del programa",
-      overallRating: "1. ¿Cómo calificarías el Hogar Infantil Colette en general?",
-      overallLikeMost: "2. ¿Qué te gustó más del Hogar Infantil Colette?",
-      overallCouldBeImproved: "3. ¿Qué podría mejorar el Hogar Infantil Colette?",
-      lifeSkillsRating: "1. ¿Qué tan útiles fueron las Reuniones de Habilidades para la Vida?",
-      lifeSkillsHelpfulTopics: "2. ¿Qué temas fueron los más útiles para ti?",
-      lifeSkillsOfferTopicsInTheFuture: "3. ¿Qué temas te gustaría que CCH ofreciera en el futuro?",
-      cmRating: "1. ¿Qué tan útil fue la gestión de casos?",
-      cmChangeAbout: "2. ¿Qué cambiarías sobre tu gestión de casos?",
-      cmMostBeneficial: "3. ¿Cuál fue la parte más beneficiosa de tu gestión de casos?",
-      outcomeFutureChange: "1. ¿Cómo crees que tu experiencia en CCH cambiará tu futuro?",
-      outcomeAccomplished: "2. ¿Qué has aprendido/logrado durante tu estancia?",
-      outcomeExtraNotes: "3. ¿Qué más te gustaría que supiéramos?",
-      submit: "Siguiente",
-      namePlaceholder: "Escribe su nombre",
-      sitePlaceholder: "Selecciona el sitio",
-      cmPlaceholder: "Selecciona el administrador de casos",
-      enterResponse: "Escribe su respuesta...",
-      unsatisfactory: "Insatisfactorio",
-      fair: "Regular",
-      good: "Bueno",
-      excellent: "Excelente",
-      notAtAllHelpful: "Nada útil",
-      slightlyHelpful: "Poco útil",
-      moderatelyHelpful: "Moderadamente útil",
-      veryHelpful: "Muy útil",
-      extremelyHelpful: "Sumamente útil",
-    },
-  }
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
-    const getLocations = async () => {
+    let mounted = true;
+    const loadQuestions = async () => {
       try {
-        const response = await backend.get("/locations");
-        setLocations(response.data);
-      } catch (e) {
-        toast({
-          title: "An error occurred",
-          description: `Locations were not fetched: ${e.message}`,
-          status: "error",
+        setIsLoading(true);
+        const resp = await backend.get("/formQuestions/form/2");
+        if (!mounted) return;
+        const qs = Array.isArray(resp.data) ? resp.data : [];
+        const sorted = qs.sort(
+          (a: FormQuestion, b: FormQuestion) => a.displayOrder - b.displayOrder
+        );
+        setQuestions(sorted);
+        // initialize defaults only once
+        const init: Record<string, unknown> = {};
+        sorted.forEach((q) => {
+          if (q.questionType === "rating_grid") {
+            init[q.fieldKey] = "{}";
+          } else {
+            init[q.fieldKey] = formData[q.fieldKey] ?? "";
+          }
         });
+        setFormData((prev) => ({ ...init, ...prev }));
+      } catch (e) {
+        console.error(e);
+        if (mounted) {
+          toast({
+            title: "Error loading questions",
+            description: "Could not load exit survey questions.",
+            status: "error",
+          });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
+    loadQuestions();
+    return () => {
+      mounted = false;
+    };
+    // We intentionally exclude formData to avoid re-initializing on every state change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backend, setFormData, toast]);
 
-    const getCaseManagers = async () => {
+  useEffect(() => {
+    const loadRefs = async () => {
       try {
-        const response = await backend.get("/caseManagers");
-        setCaseManagers(response.data);
+        const [cms, locs] = await Promise.all([
+          backend.get("/caseManagers"),
+          backend.get("/locations"),
+        ]);
+        const cmList: CaseManager[] = Array.isArray(cms.data)
+          ? (cms.data as Array<{
+              id: number | string;
+              firstName?: string;
+              lastName?: string;
+              first_name?: string;
+              last_name?: string;
+            }>).map((cm) => ({
+              id: Number(cm.id),
+              firstName: cm.firstName ?? cm.first_name,
+              lastName: cm.lastName ?? cm.last_name,
+            }))
+          : [];
+        const locList: Location[] = Array.isArray(locs.data)
+          ? (locs.data as Array<{ id: number | string; name: string }>)
+              .map((l) => ({ id: Number(l.id), name: l.name }))
+              .filter((l: Location) => !Number.isNaN(l.id))
+          : [];
+        setCaseManagers(cmList);
+        setLocations(locList);
       } catch (e) {
+        console.error(e);
         toast({
-          title: "An error occurred",
-          description: `Case Managers were not fetched: ${e.message}`,
+          title: "Error loading data",
+          description: "Could not load case managers or locations.",
           status: "error",
         });
       }
     };
-    getLocations();
-    getCaseManagers();
+    loadRefs();
   }, [backend, toast]);
 
-  const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-        >
-      | { target: { name: string; value: string | number | Date } }
-  ) => {
-    const { name, value } = e.target;
+  const renderField = (question: FormQuestion) => {
+    const { fieldKey, questionType, options, questionText } = question;
+    const value = formData[fieldKey];
+    const disabled = onReview;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    switch (questionType) {
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig?.rows || !gridConfig?.columns) {
+          return <Text color="red.500">Invalid rating grid</Text>;
+        }
+        const gridData = typeof value === "string" && value ? JSON.parse(value) : {};
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th></Th>
+                  {gridConfig.columns.map((col) => (
+                    <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
+                      {col.label}
+                    </Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td width="200px" fontSize="12px" color="#000">
+                      {row.label}
+                    </Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          isDisabled={disabled}
+                          onChange={() => {
+                            const newData = { ...gridData, [row.key]: col.value };
+                            setFormData((prev) => ({
+                              ...prev,
+                              [fieldKey]: JSON.stringify(newData),
+                            }));
+                          }}
+                        />
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        );
+      }
+
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona el administrador de casos" : "Select case manager"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {caseManagers.map((cm) => {
+              const name = `${cm.firstName ?? ""} ${cm.lastName ?? ""}`.trim() || `Case Manager ${cm.id}`;
+              return (
+                <option key={cm.id} value={cm.id}>
+                  {name}
+                </option>
+              );
+            })}
+          </Select>
+        );
+
+      case "site_location":
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona el sitio" : "Select location"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.name}>
+                {loc.name}
+              </option>
+            ))}
+          </Select>
+        );
+
+      case "select": {
+        const opts = options as FormOption[] | undefined;
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona una opción" : "Select option"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {opts?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        );
+      }
+
+      case "boolean": {
+        const boolValue =
+          value === true || value === "true" || value === "yes" || value === "Yes";
+        const hasValue = value !== undefined && value !== null && value !== "";
+        return (
+          <HStack spacing={4}>
+            {["yes", "no"].map((option) => {
+              const isSelected = hasValue && boolValue === (option === "yes");
+              return (
+                <Button
+                  key={option}
+                  variant="outline"
+                  width="89px"
+                  height="32px"
+                  borderColor={isSelected ? "blue.500" : "gray.400"}
+                  borderRadius="8px"
+                  color={isSelected ? "white" : "black"}
+                  bg={isSelected ? "blue.500" : "transparent"}
+                  _hover={{ bg: isSelected ? "blue.600" : "gray.100" }}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      [fieldKey]: option === "yes",
+                    }))
+                  }
+                  isDisabled={disabled}
+                >
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </Button>
+              );
+            })}
+          </HStack>
+        );
+      }
+
+      case "date":
+        return (
+          <Input
+            type="date"
+            value={
+              typeof value === "string"
+                ? value
+                : value instanceof Date
+                ? value.toISOString().slice(0, 10)
+                : ""
+            }
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            value={
+              typeof value === "number"
+                ? value
+                : typeof value === "string"
+                ? value
+                : ""
+            }
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={
+              language === "spanish" ? "Escribe su respuesta..." : "Enter your response..."
+            }
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "text_block":
+        return (
+          <Text fontSize="sm" color="gray.700" fontStyle="italic" py={2}>
+            {questionText}
+          </Text>
+        );
+
+      case "header":
+        return (
+          <Heading size="md" color="blue.600" mb={2} mt={4}>
+            {questionText}
+          </Heading>
+        );
+
+      case "text":
+      default:
+        return (
+          <Input
+            placeholder={
+              language === "spanish"
+                ? `Escribe ${questionText.toLowerCase()}`
+                : `Enter ${questionText.toLowerCase()}`
+            }
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+    }
   };
 
-  const handleRadioChange = (name: string) => (value: string) => {
-    handleChange({
-      target: { name, value },
-    } as React.ChangeEvent<HTMLInputElement>);
-  };
+  const visibleQuestions = questions
+    .filter((q) => q.isVisible)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  if (isLoading) {
+    return (
+      <VStack align="center" justify="center" minH="300px">
+        <Spinner size="lg" color="blue.500" />
+        <Text>Loading exit survey...</Text>
+      </VStack>
+    );
+  }
 
   return (
-    <Box
-      maxW="800px"
-      mx="auto"
-      p={6}
-    >
+    <Box maxW="800px" mx="auto" p={6}>
       <form onSubmit={handleSubmit}>
-        <VStack
-          align="start"
-          spacing={6}
-        >
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-          >
-            {fields[language].title}
-          </Text>
-          <Text>
-            {fields[language].subtitle}
-          </Text>
+        <VStack spacing={6} align="stretch">
+          {/* <Box>
+            <Text fontSize="4xl" fontWeight="bold" color="#0099D2">
+              {language === "spanish" ? "Encuesta de Salida" : "Exit Survey"}
+            </Text>
+            <Text color="#0099D2" mt={2}>
+              {language === "spanish"
+                ? "Estamos comprometidos a brindarle la mejor ayuda posible, por lo que agradecemos sus comentarios. Por favor, complete este cuestionario. ¡Gracias!"
+                : "We are committed to providing you with the best help possible, so we welcome your comments. Please fill out this questionnaire. Thank you!"}
+            </Text>
+          </Box> */}
 
-          <Divider />
-
-          <Stack
-            direction={["column", "row"]}
-            spacing={4}
-            w="100%"
-          >
-            <FormControl isRequired>
-              <FormLabel>{fields[language].name}</FormLabel>
-              <Input
-                name="name"
-                placeholder={fields[language].namePlaceholder}
-                onChange={handleChange}
-                value={formData.name}
-                isDisabled={onReview}
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>{fields[language].site}</FormLabel>
-              <Select
-                name="site"
-                placeholder={fields[language].sitePlaceholder}
-                onChange={handleChange}
-                value={formData.site}
-                isDisabled={onReview}
-              >
-                {locations.map((loc) => (
-                  <option
-                    key={loc.id}
-                    value={loc.id}
-                  >
-                    {loc.name}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-
-          <Stack
-            direction={["column", "row"]}
-            spacing={4}
-            w="100%"
-          >
-            <FormControl isRequired>
-              <FormLabel>{fields[language].cm}</FormLabel>
-              <Select
-                name="cmId"
-                placeholder={fields[language].cmPlaceholder}
-                onChange={handleChange}
-                value={formData.cmId}
-                isDisabled={onReview}
-              >
-                {caseManagers.map((cm) => (
-                  <option
-                    key={cm.id}
-                    value={cm.id.toString()}
-                  >
-                    {cm.firstName} {cm.lastName}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-
-          <FormControl isRequired>
-            <FormLabel>{fields[language].programDateCompletion}</FormLabel>
-            <Input
-              name="programDateCompletion"
-              type="date"
-              onChange={handleChange}
-              value={formData.programDateCompletion}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <Divider />
-
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-            pt={4}
-          >
-            {fields[language].overallProgram}
-          </Text>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].overallRating}
-            </FormLabel>
-            <RadioGroup
-              name="cchRating"
-              value={formData.cchRating}
-              onChange={handleRadioChange("cchRating")}
-              isDisabled={onReview}
-            >
-              <HStack spacing={6}>
-                <Radio value="Unsatisfactory">{fields[language].unsatisfactory}</Radio>
-                <Radio value="Fair">{fields[language].fair}</Radio>
-                <Radio value="Good">{fields[language].good}</Radio>
-                <Radio value="Excellent">{fields[language].excellent}</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].overallLikeMost}
-            </FormLabel>
-            <Textarea
-              name="cchLikeMost"
-              placeholder={fields[language].enterResponse}
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.cchLikeMost}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].overallCouldBeImproved}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="cchCouldBeImproved"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.cchCouldBeImproved}
-            />
-          </FormControl>
-
-          <Divider />
-
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-            pt={4}
-          >
-            Life Skills
-          </Text>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].lifeSkillsRating}
-            </FormLabel>
-            <RadioGroup
-              name="lifeSkillsRating"
-              onChange={handleRadioChange("lifeSkillsRating")}
-              isDisabled={onReview}
-              value={formData.lifeSkillsRating}
-            >
-              <HStack spacing={6}>
-                <Radio value="not at all helpful">
-                  {fields[language].notAtAllHelpful}
-                </Radio>
-                <Radio value="slightly helpful">{fields[language].slightlyHelpful}</Radio>
-                <Radio value="moderately helpful">{fields[language].moderatelyHelpful}</Radio>
-                <Radio value="very helpful">{fields[language].veryHelpful}</Radio>
-                <Radio value="extremely helpful">{fields[language].extremelyHelpful}</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].lifeSkillsHelpfulTopics}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="lifeSkillsHelpfulTopics"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.lifeSkillsHelpfulTopics}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].lifeSkillsOfferTopicsInTheFuture}
-            </FormLabel>
-            <Textarea
-              name="lifeSkillsOfferTopicsInTheFuture"
-              placeholder={fields[language].enterResponse}
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.lifeSkillsOfferTopicsInTheFuture}
-            />
-          </FormControl>
-
-          <Divider />
-
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-            pt={4}
-          >
-            {fields[language].caseManagement}
-          </Text>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].cmRating}
-            </FormLabel>
-            <RadioGroup
-              name="cmRating"
-              onChange={handleRadioChange("cmRating")}
-              isDisabled={onReview}
-              value={formData.cmRating}
-            >
-              <HStack spacing={6}>
-                <Radio value="not at all helpful">
-                  {fields[language].notAtAllHelpful}
-                </Radio>
-                <Radio value="slightly helpful">{fields[language].slightlyHelpful}</Radio>
-                <Radio value="moderately helpful">{fields[language].moderatelyHelpful}</Radio>
-                <Radio value="very helpful">{fields[language].veryHelpful}</Radio>
-                <Radio value="extremely helpful">{fields[language].extremelyHelpful}</Radio>
-              </HStack>
-            </RadioGroup>
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].cmChangeAbout}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="cmChangeAbout"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.cmChangeAbout}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].cmMostBeneficial}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="cmMostBeneficial"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.cmMostBeneficial}
-            />
-          </FormControl>
-
-          <Divider />
-
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-            pt={4}
-          >
-            {fields[language].outcome}
-          </Text>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].outcomeFutureChange}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="experienceTakeaway"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.experienceTakeaway}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].outcomeAccomplished}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="experienceAccomplished"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.experienceAccomplished}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              {fields[language].outcomeExtraNotes}
-            </FormLabel>
-            <Textarea
-              placeholder={fields[language].enterResponse}
-              name="experienceExtraNotes"
-              onChange={handleChange}
-              isDisabled={onReview}
-              value={formData.experienceExtraNotes}
-            />
-          </FormControl>
-
-          <Spacer />
+          {visibleQuestions.map((question) => {
+            const isDisplayOnly =
+              question.questionType === "text_block" ||
+              question.questionType === "header";
+            if (isDisplayOnly) {
+              return <Box key={question.id}>{renderField(question)}</Box>;
+            }
+            return (
+              <FormControl key={question.id} isRequired={question.isRequired}>
+                <FormLabel>{question.questionText}</FormLabel>
+                {renderField(question)}
+              </FormControl>
+            );
+          })}
 
           {!onReview && (
-            <Flex
-              justifyContent="flex-end"
-              width="100%"
-            >
-              <Button
-                type="submit"
-                size="lg"
-                colorScheme="blue"
-              >
-                {fields[language].submit}
+            <HStack justify="flex-end">
+              <Button size="lg" colorScheme="blue" type="submit">
+                {language === "spanish" ? "Siguiente" : "Next"}
               </Button>
-            </Flex>
+            </HStack>
           )}
         </VStack>
       </form>
