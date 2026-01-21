@@ -204,7 +204,7 @@ const App = () => {
                 />
                   <Route
                     path ="/personal/:language?"
-                    element = {<ProtectedRoute element={<PersonalInformation hidden={false}/>} allowedRoles={['client']}/>}
+                    element = {<ProtectedRoute element={<PersonalInformation hidden={false} />} allowedRoles={['client']}/>}
                   />
                   <Route
                     path ="/financial/:language?"

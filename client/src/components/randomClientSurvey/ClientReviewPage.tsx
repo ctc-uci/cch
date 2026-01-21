@@ -462,7 +462,7 @@ export const ClientReviewPage = ({
         return (
           <Input
             type="number"
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={typeof value === "number" ? value : typeof value === "string" ? value : ""}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -480,7 +480,7 @@ export const ClientReviewPage = ({
       case "textarea":
         return (
           <Textarea
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -501,7 +501,7 @@ export const ClientReviewPage = ({
       default:
         return (
           <Input
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({

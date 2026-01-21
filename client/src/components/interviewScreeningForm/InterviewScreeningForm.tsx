@@ -410,8 +410,8 @@ export const InterviewScreeningForm = ({
           <Input
             placeholder={
               language === "spanish"
-                ? `Escribe ${questionText.toLowerCase()}`
-                : `Enter ${questionText.toLowerCase()}`
+                ? "Escribe tu respuesta"
+                : "Enter response"
             }
             value={value ? String(value) : ""}
             onChange={(e) =>

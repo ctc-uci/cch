@@ -346,7 +346,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 return (
                     <Input
                         type="number"
-                        placeholder={`Enter ${question.questionText.toLowerCase()}`}
+                        placeholder="Enter response"
                         fontSize="13px"
                         isReadOnly
                         value={typeof value === "number" ? value : typeof value === "string" ? value : ""}
@@ -358,7 +358,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             case "textarea":
                 return (
                     <Textarea
-                        placeholder={`Enter ${question.questionText.toLowerCase()}`}
+                        placeholder="Enter response"
                         fontSize="13px"
                         isReadOnly
                         value={String(value || "")}
@@ -372,7 +372,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             default:
                 return (
                     <Input
-                        placeholder={`Enter ${question.questionText.toLowerCase()}`}
+                        placeholder="Enter response"
                         fontSize="13px"
                         isReadOnly
                         value={String(value || "")}

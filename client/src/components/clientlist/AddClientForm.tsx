@@ -554,7 +554,7 @@ export const AddClientForm = ({
         return (
           <Input
             type="number"
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={value}
             isInvalid={isInvalid}
             errorBorderColor="red.500"
@@ -565,7 +565,7 @@ export const AddClientForm = ({
       case "textarea":
         return (
           <Textarea
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={value}
             isInvalid={isInvalid}
             errorBorderColor="red.500"
@@ -591,7 +591,7 @@ export const AddClientForm = ({
       default:
         return (
           <Input
-            placeholder={`Enter ${question.questionText.toLowerCase()}`}
+            placeholder="Enter response"
             value={value}
             isInvalid={isInvalid}
             errorBorderColor="red.500"

@@ -386,7 +386,7 @@ export const SuccessStoryForm = ({
         return (
           <Textarea
             placeholder={
-              language === "spanish" ? "Escribe su respuesta..." : "Enter your response..."
+              language === "spanish" ? "Escribe tu respuesta" : "Enter response"
             }
             value={value ? String(value) : ""}
             onChange={(e) =>
@@ -419,8 +419,8 @@ export const SuccessStoryForm = ({
           <Input
             placeholder={
               language === "spanish"
-                ? `Escribe ${questionText.toLowerCase()}`
-                : `Enter ${questionText.toLowerCase()}`
+                ? "Escribe tu respuesta"
+                : "Enter response"
             }
             value={value ? String(value) : ""}
             onChange={(e) =>
