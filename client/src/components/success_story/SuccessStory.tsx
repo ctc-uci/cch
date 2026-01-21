@@ -52,11 +52,32 @@ export const SuccessStory = () => {
       setOnReview(true);
     } else {
       try {
-        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
-        const client = response.data?.[0];
+        // Try to get client from intakeClients first, then fall back to clients table
+        // If not found, backend will create one automatically
+        let clientData = null;
+        try {
+          const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(currentUser?.email || "")}`);
+          if (intakeResponse.data && intakeResponse.data.length > 0) {
+            clientData = intakeResponse.data[0];
+          }
+        } catch {
+          // If intakeClients doesn't have the client, try the old clients table
+          try {
+            const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+            if (response.data && response.data.length > 0) {
+              clientData = response.data[0];
+            }
+          } catch {
+            // Client not found in either table - backend will create one
+          }
+        }
+
+        // Include email so backend can create client if needed
+        // Include client_id if found, otherwise backend will create one
         const payload = {
           ...formData,
-          client_id: client?.id,
+          email: currentUser?.email,
+          ...(clientData && { client_id: clientData.id }),
         };
         await backend.post("/successStory", payload);
         toast({
@@ -65,11 +86,12 @@ export const SuccessStory = () => {
           status: "success",
         });
         setSubmitted(true);
-      } catch (error: any) {
-        console.error("Error submitting success story:", error);
+      } catch (err: unknown) {
+        const error = err as Error & { message?: string };
+        console.error("Error submitting success story:", err);
         toast({
           title: "An error occurred",
-          description: `Success story response was not created: ${error.message}`,
+          description: `Success story response was not created: ${error?.message || 'Unknown error occurred'}`,
           status: "error",
         });
       }

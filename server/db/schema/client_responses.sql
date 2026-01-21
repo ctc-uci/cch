@@ -12,8 +12,7 @@ CREATE TABLE intake_responses (
     submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (client_id) REFERENCES intake_clients(id) ON DELETE CASCADE,
-    FOREIGN KEY (question_id) REFERENCES form_questions(id) ON DELETE RESTRICT,
-    UNIQUE(client_id, question_id)  -- one response per question per client
+    FOREIGN KEY (question_id) REFERENCES form_questions(id) ON DELETE RESTRICT
 );
 
 -- Create indexes for faster lookups
