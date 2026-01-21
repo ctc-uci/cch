@@ -1,362 +1,171 @@
-import { Box, Input, Radio, RadioGroup, Stack, Button, Select, IconButton } from '@chakra-ui/react';
-import { useForm } from '../../contexts/formContext';
-import StepperComponent from './stepperComponent';
+import { Box, Button, Flex, IconButton, Text, useToast, VStack } from '@chakra-ui/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { InterviewScreeningFormProps } from './types';
 import { ChevronLeftIcon } from '@chakra-ui/icons/ChevronLeft';
+import { InterviewScreeningForm } from './InterviewScreeningForm';
+import { useState } from 'react';
+import { useBackendContext } from '../../contexts/hooks/useBackendContext';
+import { useAuthContext } from '../../contexts/hooks/useAuthContext';
+import { useForm } from '../../contexts/formContext';
+import { SuccessScreen } from '../SuccessScreen';
 
-const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden }: InterviewScreeningFormProps) => {
-  const { formData, setFormData } = useForm();
+const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _hidden }: InterviewScreeningFormProps) => {
   const navigate = useNavigate();
   const params = useParams();
+  const { backend } = useBackendContext();
+  const { currentUser } = useAuthContext();
+  const { formData } = useForm();
+  const toast = useToast();
+  const [onReview, setOnReview] = useState<boolean>(false);
+  const [submitted, setSubmitted] = useState<boolean>(false);
   type Language = 'english' | 'spanish';
   const language = ((params.language as string) === 'spanish' ? 'spanish' : 'english') as Language;
-  const fields = {
-    'english': {
-      title: "Personal Information",
-      firstName: "What is your first name?",
-      lastName: "What is your last name?",
-      dateOfBirth: "Date of birth?",
-      age: "What is your age?",
-      ethnicity: "What is your ethnicity?",
-      phoneNumber: "Phone number",
-      email: "Email",
-      ssnLastFour: "What is the last four digits of your SSN?",
-      city: "What city do you live in?",
-      veteran: "Are you a U.S. Veteran?",
-      disabled: "Do you have any disabilities?",
-      currentAddress: "What is your current address?",
-      lastPermAddress: "What was your previous address?",
-      reasonForLeavingPermAddress: "What was the reason for leaving prior address?",
-      whereResideLastNight: "Where did you reside last night?",
-      currentlyHomeless: "Are you currently homeless?",
-      prevAppliedToCch: "Have you applied to Colette's Children's Home before?",
-      prevInCch: "Have you been in Colette's Children's Home shelter before?",
-      fatherName: "What is your father's name?",
-      numberOfChildren: "How many children do you have?",
-      childName: "What is your child's name?",
-      childDOB: "Child's date of birth",
-      childrenAge: "Age",
-      custodyOfChild: "Custody of Child",
-      nextButton: "Next",
-    },
-    'spanish': {
-      title: "Información Personal",
-      nextButton: "Siguiente",
-      firstName: "¿Cuál es tu nombre?",
-      lastName: "¿Cuál es tu apellido?",
-      dateOfBirth: "¿Fecha de nacimiento?",
-      age: "¿Cuál es tu edad?",
-      ethnicity: "¿Cuál es tu etnia?",
-      phoneNumber: "Número de teléfono",
-      email: "Correo electrónico",
-      ssnLastFour: "¿Cuáles son los últimos cuatro dígitos de tu número de seguro social?",
-      city: "¿En qué ciudad vives?",
-      veteran: "¿Eres un veterano de EE. UU.?",
-      disabled: "¿Tienes alguna discapacidad?",
-      currentAddress: "¿Cuál es tu dirección actual?",
-      lastPermAddress: "¿Cuál fue tu dirección anterior?",
-      reasonForLeavingPermAddress: "¿Cuál fue la razón para dejar la dirección anterior?",
-      whereResideLastNight: "¿Dónde residiste anoche?",
-      currentlyHomeless: "¿Actualmente estás sin hogar?",
-      prevAppliedToCch: "¿Has solicitado a Colette's Children's Home antes?",
-      prevInCch: "¿Has estado en el refugio de Colette's Children's Home antes?",
-      fatherName: "¿Cuál es el nombre de tu padre?",
-      numberOfChildren: "¿Cuántos hijos tienes?",
-      childName: "¿Cuál es el nombre de tu hijo?",
-      childDOB: "Fecha de nacimiento del niño",
-      childrenAge: "Edad",
-      custodyOfChild: "Custodia del niño",
-    }
-  }
 
-  const radioOptions = {
-    'english': {
-      yes: "Yes",
-      no: "No",
-      unsure: "Unsure"
-    },
-    'spanish': {
-      yes: "Sí",
-      no: "No",
-      unsure: "No estoy seguro"
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (onReview) {
+      try {
+        if (!currentUser?.email) {
+          toast({
+            title: "Authentication Error",
+            description: "An error has occurred. Please re-login to continue.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser.email)}`);
+        const clientData = response.data?.[0];
+        if (!clientData) {
+          toast({
+            title: "Error",
+            description: "Client data not found. Please try again.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        const payload = {
+          ...formData,
+          name: formData.firstName + " " + formData.lastName,
+          client_id: clientData.id,
+        };
+        const submitResponse = await backend.post("/initialInterview", payload);
+        if (submitResponse.status === 200) {
+          toast({
+            title: "Form submitted",
+            description: "Thank you for completing the interview screening form!",
+            status: "success",
+          });
+          setSubmitted(true);
+        }
+      } catch (err: unknown) {
+        const error = err as Error & { message?: string };
+        console.log("error", error?.message);
+        toast({
+          title: "Error",
+          description: error?.message || "An error occurred while submitting the form.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    } else {
+      setOnReview(true);
     }
   };
+
+  if (submitted) {
+    return <SuccessScreen />;
+  }
+
   return (
-    <Box width={'70%'} margin={'auto'} marginTop={16} padding={4} borderRadius={8} boxShadow="0 0 10px 1px grey" backgroundColor="white">
-      <IconButton
-          aria-label="Back to personal"
-          icon={<ChevronLeftIcon boxSize={8} />}
-          onClick={() => navigate('/admin-client-forms')}
-          colorScheme="blue"
-          variant="ghost"
-          size="lg"
-          position="absolute"
-          left={5}
-          top={0}
-      />
-      <Box width={'90%'} margin={'auto'} marginTop={4} padding={4} borderRadius={8}  backgroundColor="white">
-        {!hidden && <StepperComponent step_index={1} />}
-      </Box>
-    <Box marginTop={5}>
-      <h1 style={{fontSize: "28px", color: "#3182CE"}}>{fields[language].title}</h1>
-      <Stack className="personal-information-form" spacing={4} paddingTop={5}>
+    <Box
+      bg={onReview ? "#E7F0F4" : "transparent"}
+      p={4}
+      minH="100vh"
+    >
+      <Box width={'70%'} margin={'auto'} marginTop={16} padding={4} borderRadius={8} boxShadow="0 0 10px 1px grey" backgroundColor="white">
+        <IconButton
+            aria-label="Back to personal"
+            icon={<ChevronLeftIcon boxSize={8} />}
+            onClick={onReview ? () => setOnReview(false) : () => navigate('/admin-client-forms')}
+            colorScheme="blue"
+            variant="ghost"
+            size="lg"
+            position="absolute"
+            left={5}
+            top={0}
+        />
+        {onReview && (
+          <Text
+            fontSize="4xl"
+            color="blue.400"
+            pl={4}
+            mx="auto"
+            fontWeight="normal"
+            mb={4}
+          >
+            Review
+          </Text>
+        )}
+        <VStack spacing={4} align="stretch">
+          <Box
+            maxH={onReview ? "100vh" : "auto"}
+            overflowY={onReview ? "auto" : "visible"}
+            bg={onReview ? "white" : "transparent"}
+            borderRadius={onReview ? "xl" : "none"}
+            boxShadow={onReview ? "sm" : "none"}
+            p={onReview ? 8 : 0}
+            mx={onReview ? "auto" : 0}
+            width={onReview ? "100%" : "auto"}
+          >
+            <form onSubmit={handleSubmit}>
+              <InterviewScreeningForm
+                onReview={onReview}
+                spanish={language === 'spanish'}
+              />
+              {!onReview && (
+                <Flex justify="flex-end" mt={6}>
+                  <Button size="lg" colorScheme="blue" type="submit">
+                    {language === "spanish" ? "Revisar" : "Review"}
+                  </Button>
+                </Flex>
+              )}
+            </form>
+          </Box>
 
-        <Stack direction="row" spacing={8}>
-          <Stack spacing={4} flex={1}>
-            <label><strong>1.</strong> {fields[language].firstName}</label>
-            <Input
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            />
-          </Stack>
-          <Stack spacing={4} flex={1}>
-            <label><strong>2.</strong> {fields[language].lastName}</label>
-            <Input
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            />
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={8}>
-          <Stack spacing={4} flex={1}>
-            <label><strong>3.</strong> {fields[language].dateOfBirth}</label>
-            <Input
-              placeholder="mm/dd/yy"
-              size="md"
-              type="date"
-              value={formData.dateOfBirth}
-              onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-            />
-          </Stack >
-          <Stack spacing={4} flex={1}>
-            <label><strong>4.</strong> {fields[language].age}</label>
-            <Input
-              type="number"
-              value={formData.age}
-              onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-            />
-          </Stack>
-          <Stack spacing={4} flex={1}>
-            <label><strong>5.</strong> {fields[language].ethnicity}</label>
-            <Input
-              value={formData.ethnicity}
-              onChange={(e) => setFormData({ ...formData, ethnicity: e.target.value })}
-            />
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={8}>
-          <Stack spacing={4} flex={1}>
-            <label><strong>6.</strong> {fields[language].phoneNumber}</label>
-            <Input
-              type="tel"
-              value={formData.phoneNumber}
-              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-            />
-          </Stack>
-          <Stack spacing={4} flex={1}>
-            <label><strong>7.</strong> {fields[language].email}</label>
-            <Input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={8}>
-          <Stack spacing={4} flex={1}>
-            <label><strong>8.</strong> {fields[language].ssnLastFour}</label>
-            <Input
-              type="number"
-              maxLength={4}
-              value={formData.ssnLastFour}
-              onChange={(e) => setFormData({ ...formData, ssnLastFour: e.target.value })}
-            />
-          </Stack>
-          <Stack spacing={4} flex={1}>
-            <label><strong>9.</strong> {fields[language].city}</label>
-            <Input
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-          </Stack>
-        </Stack>
-        <Stack direction="row" spacing={8}>
-          <Stack spacing={4} flex={1}>
-            <label><strong>10.</strong> {fields[language].veteran}</label>
-            <RadioGroup
-              value={formData.veteran}
-              onChange={(value) => setFormData({ ...formData, veteran: value })}
-              colorScheme="blue"
+          {onReview && (
+            <Flex
+              justifyContent="space-between"
+              alignItems="center"
+              width="100%"
             >
-              <Stack direction="row" spacing={6} justify="start">
-                <Radio size="md" value="yes">{radioOptions[language].yes}</Radio>
-                <Radio size="md" value="no">{radioOptions[language].no}</Radio>
-                <Radio size="md" value="unsure">{radioOptions[language].unsure}</Radio>
-              </Stack>
-            </RadioGroup>
-          </Stack>
-          <Stack spacing={4} flex={1}>
-            <label><strong>11.</strong> {fields[language].disabled}</label>
-            <RadioGroup
-              value={formData.disabled}
-              onChange={(value) => setFormData({ ...formData, disabled: value })}
-              colorScheme="blue"
-            >
-              <Stack direction="row" spacing={6} justify="start">
-                <Radio size="md" value="yes">{radioOptions[language].yes}</Radio>
-                <Radio size="md" value="no">{radioOptions[language].no}</Radio>
-                <Radio size="md" value="unsure">{radioOptions[language].unsure}</Radio>
-              </Stack>
-            </RadioGroup>
-          </Stack>
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>12.</strong> {fields[language].currentAddress}</label>
-          <Input
-            value={formData.currentAddress}
-            onChange={(e) => setFormData({ ...formData, currentAddress: e.target.value })}
-          />
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>13.</strong> {fields[language].lastPermAddress}</label>
-          <Input
-            value={formData.lastPermAddress}
-            onChange={(e) => setFormData({ ...formData, lastPermAddress: e.target.value })}
-          />
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>14.</strong> {fields[language].reasonForLeavingPermAddress}</label>
-          <Input
-            value={formData.reasonForLeavingPermAddress}
-            onChange={(e) => setFormData({ ...formData, reasonForLeavingPermAddress: e.target.value })}
-          />
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>15.</strong> {fields[language].whereResideLastNight}</label>
-          <Input
-            value={formData.whereResideLastNight}
-            onChange={(e) => setFormData({ ...formData, whereResideLastNight: e.target.value })}
-          />
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>16.</strong> {fields[language].currentlyHomeless}</label>
-          <RadioGroup
-            value={formData.currentlyHomeless}
-            onChange={(value) => setFormData({ ...formData, currentlyHomeless: value })}
-            colorScheme="blue"
-          >
-            <Stack direction="row" spacing={6} justify="start">
-              <Radio size="md" value="yes">{radioOptions[language].yes}</Radio>
-              <Radio size="md" value="no">{radioOptions[language].no}</Radio>
-              <Radio size="md" value="unsure">{radioOptions[language].unsure}</Radio>
-            </Stack>
-          </RadioGroup>
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>17.</strong> {fields[language].prevAppliedToCch}</label>
-          <RadioGroup
-            value={formData.prevAppliedToCch}
-            onChange={(value) => setFormData({ ...formData, prevAppliedToCch: value })}
-            colorScheme="blue"
-          >
-            <Stack direction="row" spacing={6} justify="start">
-              <Radio size="md" value="yes">{radioOptions[language].yes}</Radio>
-              <Radio size="md" value="no">{radioOptions[language].no}</Radio>
-              <Radio size="md" value="unsure">{radioOptions[language].unsure}</Radio>
-            </Stack>
-          </RadioGroup>
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>18.</strong> {fields[language].prevInCch}</label>
-          <RadioGroup
-            value={formData.prevInCch}
-            onChange={(value) => setFormData({ ...formData, prevInCch: value })}
-            colorScheme="blue"
-          >
-            <Stack direction="row" spacing={6} justify="start">
-              <Radio size="md" value="yes">{radioOptions[language].yes}</Radio>
-              <Radio size="md" value="no">{radioOptions[language].no}</Radio>
-              <Radio size="md" value="unsure">{radioOptions[language].unsure}</Radio>
-            </Stack>
-          </RadioGroup>
-        </Stack>
-      </Stack>
-      <Box marginTop={5}>
-        <h1 style={{fontSize: "28px", color: "#3182CE"}}>Family Information</h1>
-      </Box>
+              <Button
+                onClick={() => setOnReview(false)}
+                bg="#C4C4C4"
+                size="lg"
+              >
+                Cancel
+              </Button>
 
-      <Stack spacing={4} paddingTop={5}>
-        <Stack spacing={4}>
-          <label><strong>1.</strong> {fields[language].fatherName}</label>
-          <Input
-            value={formData.fatherName}
-            onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
-          />
-        </Stack>
-        <Stack spacing={4}>
-          <label><strong>2.</strong> {fields[language].numberOfChildren}</label>
-          <RadioGroup
-            value={formData.numberOfChildren}
-            onChange={(value) => setFormData({ ...formData, numberOfChildren: value })}
-            colorScheme="blue"
-          >
-            <Stack direction="row" spacing={6} justify="start">
-              <Radio size="md" value="0">{language === 'spanish' ? 'Ninguno' : 'None'}</Radio>
-              <Radio size="md" value="1">1</Radio>
-              <Radio size="md" value="2">2</Radio>
-              <Radio size="md" value="3+">3+</Radio>
-            </Stack>
-          </RadioGroup>
-        </Stack>
-
-        <Stack spacing={4}>
-
-          <Stack direction="row" spacing={8}>
-            <Stack spacing={4} flex={1}>
-            <label><strong>3.</strong> {fields[language].childName}</label>
-              <Input
-
-                value={formData.childName}
-                onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
-              />
-            </Stack>
-            <Stack spacing={4} flex={1}>
-              <label>{fields[language].childDOB}</label>
-              <Input
-                type="date"
-                placeholder={fields[language].childDOB}
-                value={formData.childDOB}
-                onChange={(e) => setFormData({ ...formData, childDOB: e.target.value })}
-              />
-            </Stack>
-            <Stack spacing={4} flex={1}>
-              <label>{fields[language].childrenAge}</label>
-              <Input
-                type="number"
-
-                value={formData.childrenAge}
-                onChange={(e) => setFormData({ ...formData, childrenAge: e.target.value })}
-              />
-            </Stack>
-          </Stack>
-          <label>{fields[language].custodyOfChild}</label>
-          <Select
-            placeholder={language === 'spanish' ? 'Selecciona el estado de custodia' : 'Select custody status'}
-            value={formData.custodyOfChild}
-            onChange={(e) => setFormData({ ...formData, custodyOfChild: e.target.value })}
-          >
-            <option value="yes">{radioOptions[language].yes}</option>
-            <option value="no">{radioOptions[language].no}</option>
-          </Select>
-        </Stack>
-      </Stack>
-      </Box>
-      <Box marginTop={5} display="flex" justifyContent="flex-end">
-
-      {!hidden &&
-        <Button colorScheme="blue" onClick={() => {navigate(`/financial/${language}`)}}>{fields[language].nextButton}</Button>
-      }
+              <Button
+                size="lg"
+                colorScheme="blue"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }}
+              >
+                Submit
+              </Button>
+            </Flex>
+          )}
+        </VStack>
       </Box>
     </Box>
   );

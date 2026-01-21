@@ -369,7 +369,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       fieldKey: "",
       questionText: "",
       questionType: "text",
-      isRequired: true,
+      isRequired: false,
       isVisible: true,
       isCore: false,
       displayOrder: questions.length > 0 ? Math.max(...questions.map(q => q.displayOrder)) + 1 : 1,
