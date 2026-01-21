@@ -195,6 +195,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [previewFormData, setPreviewFormData] = useState<Record<string, string>>({});
+  const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : 4;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -211,7 +212,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     if (!formType) return;
     try {
       setIsLoading(true);
-      const response = await backend.get(`/formQuestions?includeHidden=true`);
+      const response = await backend.get(`/formQuestions/form/${formId}?includeHidden=true`);
       const qs = Array.isArray(response.data) ? response.data : [];
       setQuestions(qs.sort((a: FormQuestion, b: FormQuestion) => a.displayOrder - b.displayOrder));
     } catch (err) {
@@ -334,6 +335,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           is_visible: editingQuestion.isVisible,
           is_core: editingQuestion.isCore,
           display_order: editingQuestion.displayOrder,
+          form_id: formId,
         });
         toast({
           title: "Success",

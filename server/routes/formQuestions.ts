@@ -57,6 +57,27 @@ formQuestionsRouter.get("/category/:category", async (req, res) => {
   }
 });
 
+// Get questions by form type
+formQuestionsRouter.get("/form/:formId", async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const { includeHidden } = req.query;
+
+    const queryStr = `
+      SELECT * FROM form_questions
+      WHERE form_id = $1
+      ${includeHidden !== "true" ? "AND is_visible = true" : ""}
+      ORDER BY display_order ASC
+    `;
+
+    const questions = await db.query(queryStr, [formId]);
+    res.status(200).json(keysToCamel(questions));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+
 // Create a new question
 formQuestionsRouter.post("/", async (req, res) => {
   try {
@@ -71,6 +92,7 @@ formQuestionsRouter.post("/", async (req, res) => {
       is_core,
       display_order,
       validation_rules,
+      form_id,
     } = req.body;
 
     // Get the max display_order if not provided
@@ -88,19 +110,21 @@ formQuestionsRouter.post("/", async (req, res) => {
         question_text,
         question_type,
         category,
+        form_id,
         options,
         is_required,
         is_visible,
         is_core,
         display_order,
         validation_rules
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         field_key,
         question_text,
         question_type,
         category,
+        form_id,
         options ? JSON.stringify(options) : null,
         is_required ?? true,
         is_visible ?? true,
