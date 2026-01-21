@@ -1082,12 +1082,18 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>
-            {editingQuestion?.id === 0 ? "Add New Question" : "Edit Question"}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSave();
+          }}
+        >
+          <ModalContent>
+            <ModalHeader>
+              {editingQuestion?.id === 0 ? "Add New Question" : "Edit Question"}
+            </ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
             {editingQuestion && (
               <Stack spacing={4}>
                 <Box>
@@ -1462,14 +1468,15 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
             )}
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" mr={3} onClick={onClose}>
+            <Button variant="ghost" mr={3} onClick={onClose} type="button">
               Cancel
             </Button>
-            <Button colorScheme="blue" onClick={handleSave}>
+            <Button colorScheme="blue" type="submit">
               Save
             </Button>
           </ModalFooter>
         </ModalContent>
+        </form>
       </Modal>
     </Stack>
   );
