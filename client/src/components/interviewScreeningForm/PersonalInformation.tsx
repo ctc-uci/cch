@@ -90,16 +90,13 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
       minH="100vh"
     >
       <Box width={'70%'} margin={'auto'} marginTop={16} padding={4} borderRadius={8} boxShadow="0 0 10px 1px grey" backgroundColor="white">
-        <IconButton
+      <IconButton
             aria-label="Back to personal"
             icon={<ChevronLeftIcon boxSize={8} />}
             onClick={onReview ? () => setOnReview(false) : () => navigate('/admin-client-forms')}
             colorScheme="blue"
             variant="ghost"
             size="lg"
-            position="absolute"
-            left={5}
-            top={0}
         />
         {onReview && (
           <Text
@@ -127,6 +124,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
             <form onSubmit={handleSubmit}>
               <InterviewScreeningForm
                 onReview={onReview}
+                setOnReview={setOnReview}
                 spanish={language === 'spanish'}
               />
               {!onReview && (
