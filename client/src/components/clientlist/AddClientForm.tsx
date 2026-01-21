@@ -17,6 +17,7 @@ import {
   DrawerOverlay,
   Grid,
   HStack,
+  Heading,
   Input,
   Select,
   Spinner,
@@ -51,8 +52,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
-  category: string;
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
@@ -101,9 +101,20 @@ export const AddClientForm = ({
       last_name?: string;
     }>
   >([]);
+  const [locations, setLocations] = useState<
+    Array<{
+      id: number;
+      name: string;
+    }>
+  >([]);
 
   // Helper function to check if a field is empty
   const isFieldEmpty = (value: unknown, questionType?: string): boolean => {
+    // Display-only types are never considered empty
+    if (questionType === "text_block" || questionType === "header") {
+      return false;
+    }
+    
     if (value === null || value === undefined) {
       return true;
     }
@@ -134,6 +145,10 @@ export const AddClientForm = ({
       unit_id: "",
     };
     qs.forEach((q) => {
+      // Display-only types don't need form data
+      if (q.questionType === "text_block" || q.questionType === "header") {
+        return;
+      }
       if (q.questionType === "rating_grid") {
         initial[q.fieldKey] = "{}";
       } else {
@@ -172,13 +187,14 @@ export const AddClientForm = ({
     loadQuestions();
   }, [backend, toast]);
 
-  // Load reference data (units and case managers)
+  // Load reference data (units, case managers, and locations)
   useEffect(() => {
     const loadReferences = async () => {
       try {
-        const [unitsRes, cmsRes] = await Promise.all([
+        const [unitsRes, cmsRes, locationsRes] = await Promise.all([
           backend.get("/units"),
           backend.get("/caseManagers"),
+          backend.get("/locations"),
         ]);
         const unitList: Array<{ id: number; name: string }> = Array.isArray(
           unitsRes.data
@@ -218,6 +234,27 @@ export const AddClientForm = ({
               .filter((cm) => !Number.isNaN(cm.id))
           : [];
         setCaseManagers(cmList);
+        
+        // Load locations
+        const locList: Array<{
+          id: number;
+          name: string;
+        }> = Array.isArray(locationsRes.data)
+          ? locationsRes.data.map(
+              (loc: {
+                id: number | string;
+                name: string;
+              }) => ({
+                id: Number(loc.id),
+                name: loc.name,
+              })
+            ).filter((loc) => !Number.isNaN(loc.id))
+          : [];
+        // Get unique location names
+        const uniqueLocations = Array.from(
+          new Map(locList.map((loc) => [loc.name, loc])).values()
+        );
+        setLocations(uniqueLocations);
       } catch (_e) {
         // If we can't load references, skip pre-validation
       }
@@ -280,6 +317,10 @@ export const AddClientForm = ({
 
     // Check required questions
     questions.forEach((q) => {
+      // Skip validation for display-only types
+      if (q.questionType === "text_block" || q.questionType === "header") {
+        return;
+      }
       if (q.isRequired && isFieldEmpty(formData[q.fieldKey], q.questionType)) {
         newErrors[q.fieldKey] = true;
       }
@@ -308,6 +349,10 @@ export const AddClientForm = ({
 
       // Add all form responses
       questions.forEach((q) => {
+        // Skip display-only types
+        if (q.questionType === "text_block" || q.questionType === "header") {
+          return;
+        }
         const value = formData[q.fieldKey];
         if (value !== undefined && value !== "") {
           switch (q.questionType) {
@@ -443,6 +488,23 @@ export const AddClientForm = ({
           </Select>
         );
 
+      case "site_location":
+        return (
+          <Select
+            placeholder="Select site location"
+            value={value}
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+            onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+          >
+            {locations.map((loc: { id: number; name: string }) => (
+              <option key={loc.id} value={loc.name}>
+                {loc.name}
+              </option>
+            ))}
+          </Select>
+        );
+
       case "select":
         return (
           <Select
@@ -511,6 +573,20 @@ export const AddClientForm = ({
           />
         );
 
+      case "text_block":
+        return (
+          <Text fontSize="sm" color="gray.700" fontStyle="italic" py={2}>
+            {question.questionText}
+          </Text>
+        );
+
+      case "header":
+        return (
+          <Heading size="md" color="blue.600" mb={2} mt={4}>
+            {question.questionText}
+          </Heading>
+        );
+
       case "text":
       default:
         return (
@@ -525,38 +601,9 @@ export const AddClientForm = ({
     }
   };
 
-  // Group questions by category
-  const groupedQuestions = questions.reduce<Record<string, FormQuestion[]>>(
-    (acc, q) => {
-      const categoryKey = q.category;
-      if (!acc[categoryKey]) {
-        acc[categoryKey] = [];
-      }
-      acc[categoryKey]!.push(q);
-      return acc;
-    },
-    {}
-  );
-
-  // Category display names
-  const categoryNames: Record<string, string> = {
-    personal: "Personal Information",
-    contact: "Contact Information",
-    program: "Program Information",
-    demographics: "Demographics",
-    housing: "Housing History",
-    exit: "Exit Information",
-  };
-
-  // Category order
-  const categoryOrder = [
-    "personal",
-    "contact",
-    "program",
-    "demographics",
-    "housing",
-    "exit",
-  ];
+  const visibleQuestions = questions
+    .filter((q) => q.isVisible)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 
   return (
     <>
@@ -689,49 +736,34 @@ export const AddClientForm = ({
                   </Grid>
                 </Box>
 
-                {/* Dynamic Questions by Category */}
-                {categoryOrder.map((category) => {
-                  const categoryQuestions = groupedQuestions[category];
-                  if (!categoryQuestions || categoryQuestions.length === 0)
-                    return null;
+                {/* Dynamic Questions (ordered by displayOrder) */}
+                {visibleQuestions.map((question) => {
+                  const isDisplayOnly =
+                    question.questionType === "text_block" ||
+                    question.questionType === "header";
+
+                  if (isDisplayOnly) {
+                    return (
+                      <Box key={question.id} py={2}>
+                        {renderField(question)}
+                      </Box>
+                    );
+                  }
 
                   return (
-                    <Box key={category}>
-                      <Box
-                        py={4}
-                        borderBottom="1px solid"
-                        borderColor="gray.300"
-                      >
-                        <Text
-                          fontWeight="bold"
-                          fontSize="sm"
-                          color="gray.600"
-                          textTransform="uppercase"
-                        >
-                          {categoryNames[category] ?? category}
+                    <Box
+                      key={question.id}
+                      py={3}
+                      borderBottom="1px solid"
+                      borderColor="gray.200"
+                    >
+                      <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
+                        <Text fontWeight="medium">
+                          {question.questionText}
+                          {question.isRequired && " *"}
                         </Text>
-                      </Box>
-
-                      {categoryQuestions.map((question) => (
-                        <Box
-                          key={question.id}
-                          py={3}
-                          borderBottom="1px solid"
-                          borderColor="gray.200"
-                        >
-                          <Grid
-                            templateColumns="1fr 1fr"
-                            gap={5}
-                            alignItems="center"
-                          >
-                            <Text fontWeight="medium">
-                              {question.questionText}
-                              {question.isRequired && " *"}
-                            </Text>
-                            {renderField(question)}
-                          </Grid>
-                        </Box>
-                      ))}
+                        {renderField(question)}
+                      </Grid>
                     </Box>
                   );
                 })}

@@ -44,8 +44,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
-  category: string;
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
@@ -73,15 +72,6 @@ type ClientReviewPageProps = {
   caseManagers: CaseManager[];
 };
 
-const categoryOrder = [
-  "personal",
-  "contact",
-  "program",
-  "demographics",
-  "housing",
-  "exit",
-];
-
 export const ClientReviewPage = ({
   surveyData,
   setSurveyData,
@@ -95,6 +85,12 @@ export const ClientReviewPage = ({
   const { backend } = useBackendContext();
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [locations, setLocations] = useState<
+    Array<{
+      id: number;
+      name: string;
+    }>
+  >([]);
 
   // Load form questions for Random Client Surveys (form_id = 4)
   useEffect(() => {
@@ -118,6 +114,37 @@ export const ClientReviewPage = ({
     };
     loadQuestions();
   }, [backend, toast]);
+
+  // Load locations for site_location questions
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const response = await backend.get("/locations");
+        const locList: Array<{
+          id: number;
+          name: string;
+        }> = Array.isArray(response.data)
+          ? response.data.map(
+              (loc: {
+                id: number | string;
+                name: string;
+              }) => ({
+                id: Number(loc.id),
+                name: loc.name,
+              })
+            ).filter((loc) => !Number.isNaN(loc.id))
+          : [];
+        // Get unique location names
+        const uniqueLocations = Array.from(
+          new Map(locList.map((loc) => [loc.name, loc])).values()
+        );
+        setLocations(uniqueLocations);
+      } catch (err) {
+        console.error("Failed to load locations:", err);
+      }
+    };
+    loadLocations();
+  }, [backend]);
 
   // Helper function to check if a field is empty
   const isFieldEmpty = (value: unknown, questionType?: string): boolean => {
@@ -299,6 +326,30 @@ export const ClientReviewPage = ({
           </Select>
         );
 
+      case "site_location":
+        return (
+          <Select
+            placeholder="Select site location"
+            value={String(value || "")}
+            onChange={(e) =>
+              setSurveyData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            borderRadius="14px"
+            borderColor="blue.solid var(--gray-600, #4A5568)"
+            isInvalid={isInvalid}
+            errorBorderColor="red.500"
+          >
+            {locations.map((loc: { id: number; name: string }) => (
+              <option key={loc.id} value={loc.name}>
+                {loc.name}
+              </option>
+            ))}
+          </Select>
+        );
+
       case "select": {
         const selectOptions = options as FormOption[] | undefined;
         return (
@@ -393,6 +444,20 @@ export const ClientReviewPage = ({
           />
         );
 
+      case "text_block":
+        return (
+          <Text fontSize="sm" color="gray.700" fontStyle="italic" py={2}>
+            {question.questionText}
+          </Text>
+        );
+
+      case "header":
+        return (
+          <Heading size="md" color="blue.600" mb={2} mt={4}>
+            {question.questionText}
+          </Heading>
+        );
+
       case "number":
         return (
           <Input
@@ -453,17 +518,9 @@ export const ClientReviewPage = ({
     }
   };
 
-  // Group questions by category
-  const groupedQuestions = questions
+  const visibleQuestions = questions
     .filter((q) => q.isVisible)
-    .reduce<Record<string, FormQuestion[]>>((acc, q) => {
-      const categoryKey = q.category;
-      if (!acc[categoryKey]) {
-        acc[categoryKey] = [];
-      }
-      acc[categoryKey]!.push(q);
-      return acc;
-    }, {});
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 
   if (isLoading) {
     return (
@@ -584,34 +641,43 @@ export const ClientReviewPage = ({
       <Divider width={"277.906px"} height={"1.011px"} background={"rgba(0, 0, 0, 0.20)"} marginBottom={"30px"}/>
       
       <OrderedList style={{ fontSize: "18px", fontWeight: "600", marginBottom: "130px"}} spacing={"4"}>
-        {categoryOrder.map((category) => {
-          const categoryQuestions = groupedQuestions[category];
-          if (!categoryQuestions || categoryQuestions.length === 0) return null;
+        {visibleQuestions.map((question) => {
+          const isDisplayOnly =
+            question.questionType === "text_block" || question.questionType === "header";
 
-          return categoryQuestions
-            .sort((a, b) => a.displayOrder - b.displayOrder)
-            .map((question) => (
-              <ListItem key={question.id} marginBottom={question.questionType === "rating_grid" ? "50px" : "30px"}>
-                <Heading
-                  color={"#000"}
-                  fontSize={"16px"}
-                  fontStyle={"normal"}
-                  fontWeight={"400"}
-                  lineHeight={"150%"}
-                  marginBottom={question.questionType === "rating_grid" ? "14px" : "30px"}
-                >
-                  {question.questionText}
-                </Heading>
-                <FormControl isRequired={question.isRequired} isInvalid={errors[question.fieldKey]}>
-                  {renderField(question)}
-                  {errors[question.fieldKey] && (
-                    <Text color="red.500" fontSize="sm" mt={1}>
-                      This field is required.
-                    </Text>
-                  )}
-                </FormControl>
-              </ListItem>
-            ));
+          if (isDisplayOnly) {
+            return (
+              <Box key={question.id} mb={question.questionType === "header" ? 4 : 2}>
+                {renderField(question)}
+              </Box>
+            );
+          }
+
+          return (
+            <ListItem
+              key={question.id}
+              marginBottom={question.questionType === "rating_grid" ? "50px" : "30px"}
+            >
+              <Heading
+                color={"#000"}
+                fontSize={"16px"}
+                fontStyle={"normal"}
+                fontWeight={"400"}
+                lineHeight={"150%"}
+                marginBottom={question.questionType === "rating_grid" ? "14px" : "30px"}
+              >
+                {question.questionText}
+              </Heading>
+              <FormControl isRequired={question.isRequired} isInvalid={errors[question.fieldKey]}>
+                {renderField(question)}
+                {errors[question.fieldKey] && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    This field is required.
+                  </Text>
+                )}
+              </FormControl>
+            </ListItem>
+          );
         })}
       </OrderedList>
       

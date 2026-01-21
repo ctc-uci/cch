@@ -47,8 +47,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
-  category: string;
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
@@ -74,21 +73,18 @@ type ReviewPageProps = {
   onCancel: () => void;
 };
 
-const categoryOrder = [
-  "personal",
-  "contact",
-  "program",
-  "demographics",
-  "housing",
-  "exit",
-];
-
 export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: ReviewPageProps) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { backend } = useBackendContext();
     const toast = useToast();
     const [questions, setQuestions] = useState<FormQuestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [locations, setLocations] = useState<
+        Array<{
+            id: number;
+            name: string;
+        }>
+    >([]);
 
     // Load form questions for Random Client Surveys (form_id = 4)
     useEffect(() => {
@@ -112,6 +108,37 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
         };
         loadQuestions();
     }, [backend, toast]);
+
+    // Load locations for site_location questions
+    useEffect(() => {
+        const loadLocations = async () => {
+            try {
+                const response = await backend.get("/locations");
+                const locList: Array<{
+                    id: number;
+                    name: string;
+                }> = Array.isArray(response.data)
+                    ? response.data.map(
+                          (loc: {
+                              id: number | string;
+                              name: string;
+                          }) => ({
+                              id: Number(loc.id),
+                              name: loc.name,
+                          })
+                      ).filter((loc) => !Number.isNaN(loc.id))
+                    : [];
+                // Get unique location names
+                const uniqueLocations = Array.from(
+                    new Map(locList.map((loc) => [loc.name, loc])).values()
+                );
+                setLocations(uniqueLocations);
+            } catch (err) {
+                console.error("Failed to load locations:", err);
+            }
+        };
+        loadLocations();
+    }, [backend]);
 
     const renderField = (question: FormQuestion) => {
         const { fieldKey, questionType, options } = question;
@@ -216,6 +243,25 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                                 </option>
                             );
                         })}
+                    </Select>
+                );
+            }
+
+            case "site_location": {
+                return (
+                    <Select
+                        placeholder="Select site location"
+                        value={String(value || "")}
+                        isDisabled
+                        fontSize="13px"
+                        borderRadius="14px"
+                        borderColor="blue.solid var(--gray-600, #4A5568)"
+                    >
+                        {locations.map((loc: { id: number; name: string }) => (
+                            <option key={loc.id} value={loc.name}>
+                                {loc.name}
+                            </option>
+                        ))}
                     </Select>
                 );
             }
@@ -337,17 +383,9 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
         }
     };
 
-    // Group questions by category
-    const groupedQuestions = questions
+    const visibleQuestions = questions
         .filter((q) => q.isVisible)
-        .reduce<Record<string, FormQuestion[]>>((acc, q) => {
-            const categoryKey = q.category;
-            if (!acc[categoryKey]) {
-                acc[categoryKey] = [];
-            }
-            acc[categoryKey]!.push(q);
-            return acc;
-        }, {});
+        .sort((a, b) => a.displayOrder - b.displayOrder);
 
     if (isLoading) {
         return (
@@ -464,29 +502,32 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
         <Divider width={"277.906px"} height={"1.011px"} background={"rgba(0, 0, 0, 0.20)"} marginBottom={"30px"}/>
         
         <OrderedList style={{ fontSize: "14px", fontWeight: "600"}} spacing={"4"}>
-            {categoryOrder.map((category) => {
-                const categoryQuestions = groupedQuestions[category];
-                if (!categoryQuestions || categoryQuestions.length === 0) return null;
-
-                return categoryQuestions
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map((question) => (
-                        <ListItem key={question.id} marginBottom={question.questionType === "rating_grid" ? "50px" : "30px"}>
-                            <Heading
-                                color={"#000"}
-                                fontSize={"13px"}
-                                fontStyle={"normal"}
-                                fontWeight={"400"}
-                                lineHeight={"150%"}
-                                marginBottom={question.questionType === "rating_grid" ? "16px" : "16px"}
-                            >
-                                {question.questionText}
-                            </Heading>
-                            <FormControl>
-                                {renderField(question)}
-                            </FormControl>
-                        </ListItem>
-                    ));
+            {visibleQuestions.map((question) => {
+                const isDisplayOnly = question.questionType === "text_block" || question.questionType === "header";
+                if (isDisplayOnly) {
+                    return (
+                        <Box key={question.id} mb={question.questionType === "header" ? 4 : 2}>
+                            {renderField(question)}
+                        </Box>
+                    );
+                }
+                return (
+                    <ListItem key={question.id} marginBottom={question.questionType === "rating_grid" ? "50px" : "30px"}>
+                        <Heading
+                            color={"#000"}
+                            fontSize={"13px"}
+                            fontStyle={"normal"}
+                            fontWeight={"400"}
+                            lineHeight={"150%"}
+                            marginBottom={question.questionType === "rating_grid" ? "16px" : "16px"}
+                        >
+                            {question.questionText}
+                        </Heading>
+                        <FormControl>
+                            {renderField(question)}
+                        </FormControl>
+                    </ListItem>
+                );
             })}
         </OrderedList>
         </VStack>

@@ -37,24 +37,13 @@ formQuestionsRouter.get("/:id", async (req, res) => {
   }
 });
 
-// Get questions by category
-formQuestionsRouter.get("/category/:category", async (req, res) => {
-  try {
-    const { category } = req.params;
-    const { includeHidden } = req.query;
-
-    const queryStr = `
-      SELECT * FROM form_questions
-      WHERE category = $1
-      ${includeHidden !== "true" ? "AND is_visible = true" : ""}
-      ORDER BY display_order ASC
-    `;
-
-    const questions = await db.query(queryStr, [category]);
-    res.status(200).json(keysToCamel(questions));
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
+// Category-based grouping was removed; keep this route for backward compatibility
+// but return a clear error.
+formQuestionsRouter.get("/category/:category", async (_req, res) => {
+  return res.status(410).json({
+    error:
+      "Category support has been removed from form_questions. Fetch all questions and render by display_order instead.",
+  });
 });
 
 // Get questions by form type
@@ -85,7 +74,6 @@ formQuestionsRouter.post("/", async (req, res) => {
       field_key,
       question_text,
       question_type,
-      category,
       options,
       is_required,
       is_visible,
@@ -109,7 +97,6 @@ formQuestionsRouter.post("/", async (req, res) => {
         field_key,
         question_text,
         question_type,
-        category,
         form_id,
         options,
         is_required,
@@ -117,13 +104,12 @@ formQuestionsRouter.post("/", async (req, res) => {
         is_core,
         display_order,
         validation_rules
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
       [
         field_key,
         question_text,
         question_type,
-        category,
         form_id,
         options ? JSON.stringify(options) : null,
         is_required ?? true,
@@ -148,7 +134,6 @@ formQuestionsRouter.put("/:id", async (req, res) => {
       field_key,
       question_text,
       question_type,
-      category,
       options,
       is_required,
       is_visible,
@@ -159,7 +144,7 @@ formQuestionsRouter.put("/:id", async (req, res) => {
 
     // Check if this is a core question - can't hide core questions
     const existing = await db.query(
-      `SELECT is_core FROM form_questions WHERE id = $1`,
+      `SELECT is_core, is_visible FROM form_questions WHERE id = $1`,
       [id]
     );
 
@@ -181,21 +166,19 @@ formQuestionsRouter.put("/:id", async (req, res) => {
         field_key = COALESCE($1, field_key),
         question_text = COALESCE($2, question_text),
         question_type = COALESCE($3, question_type),
-        category = COALESCE($4, category),
-        options = COALESCE($5, options),
-        is_required = COALESCE($6, is_required),
-        is_visible = COALESCE($7, is_visible),
-        is_core = COALESCE($8, is_core),
-        display_order = COALESCE($9, display_order),
-        validation_rules = COALESCE($10, validation_rules),
+        options = COALESCE($4, options),
+        is_required = COALESCE($5, is_required),
+        is_visible = COALESCE($6, is_visible),
+        is_core = COALESCE($7, is_core),
+        display_order = COALESCE($8, display_order),
+        validation_rules = COALESCE($9, validation_rules),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $11
+      WHERE id = $10
       RETURNING *`,
       [
         field_key,
         question_text,
         question_type,
-        category,
         options ? JSON.stringify(options) : null,
         is_required,
         finalIsVisible,

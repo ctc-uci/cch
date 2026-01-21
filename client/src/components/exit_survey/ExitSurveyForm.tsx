@@ -132,10 +132,11 @@ export const ExitSurveyForm = ({
       fair: "Regular",
       good: "Bueno",
       excellent: "Excelente",
-      notVeryHelpfulAtAll: "No Muy Útil en Absoluto",
-      notVeryHelful: "No Muy Útil",
-      helpful: "Útil",
-      veryHelpful: "Muy Útil",
+      notAtAllHelpful: "Nada útil",
+      slightlyHelpful: "Poco útil",
+      moderatelyHelpful: "Moderadamente útil",
+      veryHelpful: "Muy útil",
+      extremelyHelpful: "Sumamente útil",
     },
   }
 
@@ -363,12 +364,13 @@ export const ExitSurveyForm = ({
               value={formData.lifeSkillsRating}
             >
               <HStack spacing={6}>
-                <Radio value="not very helpful at all">
-                  Not Very Helpful At All
+                <Radio value="not at all helpful">
+                  {fields[language].notAtAllHelpful}
                 </Radio>
-                <Radio value="not very helpful">Not Very Helpful</Radio>
-                <Radio value="helpful">Helpful</Radio>
-                <Radio value="very helpful">Very Helpful</Radio>
+                <Radio value="slightly helpful">{fields[language].slightlyHelpful}</Radio>
+                <Radio value="moderately helpful">{fields[language].moderatelyHelpful}</Radio>
+                <Radio value="very helpful">{fields[language].veryHelpful}</Radio>
+                <Radio value="extremely helpful">{fields[language].extremelyHelpful}</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>
@@ -420,12 +422,13 @@ export const ExitSurveyForm = ({
               value={formData.cmRating}
             >
               <HStack spacing={6}>
-                <Radio value="not very helpful at all">
-                  {fields[language].notVeryHelpfulAtAll}
+                <Radio value="not at all helpful">
+                  {fields[language].notAtAllHelpful}
                 </Radio>
-                <Radio value="not very helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
-                <Radio value="helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
-                <Radio value="very helpful">{fields[language].notVeryHelpfulAtAll}</Radio>
+                <Radio value="slightly helpful">{fields[language].slightlyHelpful}</Radio>
+                <Radio value="moderately helpful">{fields[language].moderatelyHelpful}</Radio>
+                <Radio value="very helpful">{fields[language].veryHelpful}</Radio>
+                <Radio value="extremely helpful">{fields[language].extremelyHelpful}</Radio>
               </HStack>
             </RadioGroup>
           </FormControl>

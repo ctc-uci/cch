@@ -71,8 +71,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
-  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select";
-  category: string;
+  questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
   isVisible: boolean;
@@ -142,7 +141,6 @@ const SortableQuestionItem = ({
               {question.isCore && <Badge colorScheme="purple">Core</Badge>}
               {!question.isVisible && <Badge colorScheme="red">Hidden</Badge>}
               <Badge colorScheme="blue">{question.questionType}</Badge>
-              <Badge>{question.category}</Badge>
             </Flex>
             <Text fontSize="sm" color="gray.600">
               Order: {question.displayOrder}
@@ -224,6 +222,12 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       last_name?: string;
     }>
   >([]);
+  const [locations, setLocations] = useState<
+    Array<{
+      id: number;
+      name: string;
+    }>
+  >([]);
   const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : 4;
 
   const sensors = useSensors(
@@ -297,6 +301,37 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     loadCaseManagers();
   }, [backend]);
 
+  // Load locations for site_location questions
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const response = await backend.get("/locations");
+        const locList: Array<{
+          id: number;
+          name: string;
+        }> = Array.isArray(response.data)
+          ? response.data.map(
+              (loc: {
+                id: number | string;
+                name: string;
+              }) => ({
+                id: Number(loc.id),
+                name: loc.name,
+              })
+            ).filter((loc) => !Number.isNaN(loc.id))
+          : [];
+        // Get unique location names
+        const uniqueLocations = Array.from(
+          new Map(locList.map((loc) => [loc.name, loc])).values()
+        );
+        setLocations(uniqueLocations);
+      } catch (err) {
+        console.error("Failed to load locations:", err);
+      }
+    };
+    loadLocations();
+  }, [backend]);
+
   const handleEdit = (question: FormQuestion) => {
     setEditingQuestion({ ...question });
     onOpen();
@@ -334,13 +369,40 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       fieldKey: "",
       questionText: "",
       questionType: "text",
-      category: "personal",
       isRequired: true,
       isVisible: true,
       isCore: false,
       displayOrder: questions.length > 0 ? Math.max(...questions.map(q => q.displayOrder)) + 1 : 1,
     });
     onOpen();
+  };
+
+  const ensureUniqueFieldKey = async (fieldKey: string, excludeId?: number): Promise<string> => {
+    try {
+      // Check if field key exists in database
+      const response = await backend.get("/formQuestions?includeHidden=true");
+      const allQuestions = Array.isArray(response.data) ? response.data : [];
+      const existingKeys = allQuestions
+        .filter((q: FormQuestion) => q.id !== excludeId)
+        .map((q: FormQuestion) => q.fieldKey);
+
+      if (!existingKeys.includes(fieldKey)) {
+        return fieldKey;
+      }
+
+      // If duplicate exists, append a number
+      let counter = 1;
+      let newKey = `${fieldKey}_${counter}`;
+      while (existingKeys.includes(newKey)) {
+        counter++;
+        newKey = `${fieldKey}_${counter}`;
+      }
+      return newKey;
+    } catch (err) {
+      console.error("Failed to check for duplicate field keys:", err);
+      // If check fails, return original key and let backend handle the error
+      return fieldKey;
+    }
   };
 
   const handleSave = async () => {
@@ -390,6 +452,23 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
         }
       }
 
+      // Ensure field key is unique across all forms
+      const uniqueFieldKey = await ensureUniqueFieldKey(
+        editingQuestion.fieldKey,
+        editingQuestion.id === 0 ? undefined : editingQuestion.id
+      );
+
+      // Update field key if it was changed
+      if (uniqueFieldKey !== editingQuestion.fieldKey) {
+        editingQuestion.fieldKey = uniqueFieldKey;
+        toast({
+          title: "Field Key Adjusted",
+          description: `Field key changed to "${uniqueFieldKey}" to avoid duplicates`,
+          status: "info",
+          duration: 3000,
+        });
+      }
+
       // Check for duplicate order numbers and swap if needed
       const duplicateQuestion = questions.find(
         (q) => q.id !== editingQuestion.id && q.displayOrder === editingQuestion.displayOrder
@@ -405,7 +484,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           field_key: duplicateQuestion.fieldKey,
           question_text: duplicateQuestion.questionText,
           question_type: duplicateQuestion.questionType,
-          category: duplicateQuestion.category,
           options: duplicateQuestion.options || null,
           is_required: duplicateQuestion.isRequired,
           is_visible: duplicateQuestion.isVisible,
@@ -427,7 +505,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           field_key: editingQuestion.fieldKey,
           question_text: editingQuestion.questionText,
           question_type: editingQuestion.questionType,
-          category: editingQuestion.category,
           options: editingQuestion.options || null,
           is_required: editingQuestion.isRequired,
           is_visible: editingQuestion.isVisible,
@@ -447,7 +524,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           field_key: editingQuestion.fieldKey,
           question_text: editingQuestion.questionText,
           question_type: editingQuestion.questionType,
-          category: editingQuestion.category,
           options: editingQuestion.options || null,
           is_required: editingQuestion.isRequired,
           is_visible: editingQuestion.isVisible,
@@ -468,12 +544,68 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       loadQuestions();
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
-      toast({
-        title: "Error",
-        description: error.response?.data?.error || "Failed to save question",
-        status: "error",
-        duration: 3000,
-      });
+      const errorMessage = error.response?.data?.error || "Failed to save question";
+      
+      // If it's a duplicate key error, try to fix it automatically
+      if (errorMessage.includes("duplicate key") || errorMessage.includes("field_key")) {
+        try {
+          const uniqueFieldKey = await ensureUniqueFieldKey(
+            editingQuestion.fieldKey,
+            editingQuestion.id === 0 ? undefined : editingQuestion.id
+          );
+          
+          // Retry with the unique field key
+          if (editingQuestion.id === 0) {
+            await backend.post("/formQuestions", {
+              field_key: uniqueFieldKey,
+              question_text: editingQuestion.questionText,
+              question_type: editingQuestion.questionType,
+              options: editingQuestion.options || null,
+              is_required: editingQuestion.isRequired,
+              is_visible: editingQuestion.isVisible,
+              is_core: editingQuestion.isCore,
+              display_order: editingQuestion.displayOrder,
+              form_id: formId,
+            });
+          } else {
+            await backend.put(`/formQuestions/${editingQuestion.id}`, {
+              field_key: uniqueFieldKey,
+              question_text: editingQuestion.questionText,
+              question_type: editingQuestion.questionType,
+              options: editingQuestion.options || null,
+              is_required: editingQuestion.isRequired,
+              is_visible: editingQuestion.isVisible,
+              is_core: editingQuestion.isCore,
+              display_order: editingQuestion.displayOrder,
+            });
+          }
+          
+          toast({
+            title: "Success",
+            description: `Question saved with field key "${uniqueFieldKey}" (adjusted to avoid duplicates)`,
+            status: "success",
+            duration: 3000,
+          });
+          
+          onClose();
+          setEditingQuestion(null);
+          loadQuestions();
+        } catch (_retryErr) {
+          toast({
+            title: "Error",
+            description: errorMessage,
+            status: "error",
+            duration: 3000,
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          status: "error",
+          duration: 3000,
+        });
+      }
     }
   };
 
@@ -745,6 +877,21 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           </Select>
         );
 
+      case "site_location":
+        return (
+          <Select
+            placeholder="Select site location"
+            value={value}
+            onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
+          >
+            {locations.map((loc: { id: number; name: string }) => (
+              <option key={loc.id} value={loc.name}>
+                {loc.name}
+              </option>
+            ))}
+          </Select>
+        );
+
       case "select":
         return (
           <Select
@@ -800,6 +947,20 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           />
         );
 
+      case "text_block":
+        return (
+          <Text fontSize="sm" color="black" py={2}>
+            {questionText}
+          </Text>
+        );
+
+      case "header":
+        return (
+          <Heading size="md" color="blue.600" mb={2} mt={4}>
+            {questionText}
+          </Heading>
+        );
+
       case "text":
       default:
         return (
@@ -828,34 +989,9 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     setIsPreviewMode(!isPreviewMode);
   };
 
-  const categoryNames: Record<string, string> = {
-    personal: "Personal Information",
-    contact: "Contact Information",
-    program: "Program Information",
-    demographics: "Demographics",
-    housing: "Housing History",
-    exit: "Exit Information",
-  };
-
-  const categoryOrder = [
-    "personal",
-    "contact",
-    "program",
-    "demographics",
-    "housing",
-    "exit",
-  ];
-
-  const groupedQuestions = questions
+  const visibleQuestions = questions
     .filter((q) => q.isVisible)
-    .reduce<Record<string, FormQuestion[]>>((acc, q) => {
-      const categoryKey = q.category;
-      if (!acc[categoryKey]) {
-        acc[categoryKey] = [];
-      }
-      acc[categoryKey]!.push(q);
-      return acc;
-    }, {});
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 
   // Forms that support preview mode
   const previewableForms: FormType[] = [
@@ -878,27 +1014,17 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
         <Divider />
 
-        <Stack spacing={6} overflowY="auto" flex={1}>
-          {categoryOrder.map((category) => {
-            const categoryQuestions = groupedQuestions[category];
-            if (!categoryQuestions || categoryQuestions.length === 0) return null;
-
+        <Stack spacing={4} overflowY="auto" flex={1}>
+          {visibleQuestions.map((question) => {
+            const isDisplayOnly = question.questionType === "text_block" || question.questionType === "header";
+            if (isDisplayOnly) {
+              return <Box key={question.id}>{renderPreviewField(question)}</Box>;
+            }
             return (
-              <Box key={category}>
-                <Heading size="sm" mb={4} color="blue.600">
-                  {categoryNames[category] || category}
-                </Heading>
-                <Stack spacing={4}>
-                  {categoryQuestions
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map((question) => (
-                      <FormControl key={question.id} isRequired={question.isRequired}>
-                        <FormLabel>{question.questionText}</FormLabel>
-                        {renderPreviewField(question)}
-                      </FormControl>
-                    ))}
-                </Stack>
-              </Box>
+              <FormControl key={question.id} isRequired={question.isRequired}>
+                <FormLabel>{question.questionText}</FormLabel>
+                {renderPreviewField(question)}
+              </FormControl>
             );
           })}
         </Stack>
@@ -1030,32 +1156,17 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                         });
                       }}
                     >
-                      <option value="text">Text</option>
-                      <option value="textarea">Textarea</option>
-                      <option value="number">Number</option>
-                      <option value="boolean">Boolean</option>
+                      <option value="text">Text Input</option>
+                      <option value="textarea">Textarea Input</option>
+                      <option value="number">Number Input</option>
+                      <option value="boolean">Yes or No</option>
                       <option value="date">Date</option>
                       <option value="select">Select</option>
                       <option value="rating_grid">Rating Grid</option>
-                      <option value="case_manager_select">Case Manager Select</option>
-                    </Select>
-                  </Box>
-                  <Box flex={1}>
-                    <Text mb={1} fontSize="sm" fontWeight="medium">
-                      Category
-                    </Text>
-                    <Select
-                      value={editingQuestion.category}
-                      onChange={(e) =>
-                        setEditingQuestion({ ...editingQuestion, category: e.target.value })
-                      }
-                    >
-                      <option value="personal">Personal</option>
-                      <option value="contact">Contact</option>
-                      <option value="housing">Housing</option>
-                      <option value="demographics">Demographics</option>
-                      <option value="program">Program</option>
-                      <option value="exit">Exit</option>
+                      <option value="case_manager_select">Case Manager</option>
+                      <option value="site_location">Site Location</option>
+                      <option value="text_block">Text Block</option>
+                      <option value="header">Header</option>
                     </Select>
                   </Box>
                 </Flex>
@@ -1066,6 +1177,29 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                       <Text fontSize="sm" color="blue.700">
                         This question type will automatically populate with all case managers from the database. 
                         No manual configuration needed.
+                      </Text>
+                    </Flex>
+                  </Box>
+                )}
+                {editingQuestion.questionType === "site_location" && (
+                  <Box p={3} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
+                    <Flex alignItems="start" gap={2}>
+                      <Icon as={FaInfoCircle} color="blue.500" mt={0.5} />
+                      <Text fontSize="sm" color="blue.700">
+                        This question type will automatically populate with all unique site location names from the database. 
+                        No manual configuration needed.
+                      </Text>
+                    </Flex>
+                  </Box>
+                )}
+                {(editingQuestion.questionType === "text_block" || editingQuestion.questionType === "header") && (
+                  <Box p={3} bg="blue.50" borderRadius="md" border="1px solid" borderColor="blue.200">
+                    <Flex alignItems="start" gap={2}>
+                      <Icon as={FaInfoCircle} color="blue.500" mt={0.5} />
+                      <Text fontSize="sm" color="blue.700">
+                        This is a display-only element. The text you enter will be shown in the form but won't collect any data.
+                        {editingQuestion.questionType === "header" && " Use this to create section headers."}
+                        {editingQuestion.questionType === "text_block" && " Use this to add explanatory text or instructions."}
                       </Text>
                     </Flex>
                   </Box>
@@ -1297,6 +1431,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                     onChange={(e) =>
                       setEditingQuestion({ ...editingQuestion, isRequired: e.target.checked })
                     }
+                    isDisabled={editingQuestion.questionType === "text_block" || editingQuestion.questionType === "header"}
                   >
                     Required
                   </Checkbox>
