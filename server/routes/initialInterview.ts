@@ -263,306 +263,119 @@ initialInterviewRouter.patch("/app-status/:id", async (req, res) => {
   }
 });
 
+// Create new initial interview - now posts to intake_responses with form_id = 1
 initialInterviewRouter.post("/", async (req, res) => {
   try {
-    // Helper functions to match SQL types
-    const toInt = (value: unknown): number => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') {
-        const parsed = parseInt(value, 10);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      return 0;
-    };
+    const formData = req.body;
+    const formId = 1; // Initial Interview Screening form_id
+    let clientId = formData.client_id;
 
-    const toBoolean = (value: unknown): boolean => {
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
-        const lower = value.toLowerCase();
-        return lower === 'yes' || lower === 'true' || lower === '1';
-      }
-      return false;
-    };
+    // If client_id is not provided, try to find or create intake_client
+    if (!clientId) {
+      // Try to find client in intake_clients by email (from form data or user)
+      const email = formData.email || formData.emailAddress;
+      if (email) {
+        const existingClients = await db.query(
+          `SELECT DISTINCT c.id 
+           FROM intake_clients c
+           JOIN intake_responses ir ON c.id = ir.client_id
+           JOIN form_questions fq ON ir.question_id = fq.id
+           WHERE fq.field_key = 'email' AND ir.response_value = $1
+           LIMIT 1`,
+          [email]
+        );
 
-    const toNumeric = (value: unknown): number => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') {
-        const parsed = parseFloat(value);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      return 0;
-    };
+        if (existingClients.length > 0) {
+          clientId = existingClients[0].id;
+        } else {
+          // Create a new intake_client entry
+          // Extract first_name and last_name from form data
+          const firstName = formData.firstName || formData.first_name || "Unknown";
+          const lastName = formData.lastName || formData.last_name || "Client";
+          
+          // Get first unit_id as default
+          let unitId = 1;
+          try {
+            const units = await db.query("SELECT id FROM units LIMIT 1");
+            if (units.length > 0) {
+              unitId = units[0].id;
+            }
+          } catch {
+            // Use default unitId = 1
+          }
 
-    const toDate = (value: unknown): string => {
-      if (!value) {
-        const defaultDate = new Date().toISOString();
-        return defaultDate.split('T')[0] ?? '1970-01-01';
-      }
-      if (typeof value === 'string') {
-        // If it's already in YYYY-MM-DD format, return it
-        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-        // Try to parse and format
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          const isoString = date.toISOString();
-          const datePart = isoString.split('T')[0];
-          return datePart ?? '1970-01-01';
+          // Use default created_by = 1 if no case manager is found
+          const createdBy = 1;
+
+          const clientResult = await db.query(
+            `INSERT INTO intake_clients (created_by, unit_id, status, first_name, last_name)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+            [createdBy, unitId, "Active", firstName, lastName]
+          );
+
+          clientId = clientResult[0].id;
         }
+      } else {
+        return res.status(400).json({ error: "client_id or email is required" });
       }
-      const defaultDate = new Date().toISOString();
-      return defaultDate.split('T')[0] ?? '1970-01-01';
-    };
+    }
 
-    const toPhoneNumber = (value: unknown): string => {
-      if (!value) return '';
-      const cleaned = String(value).replace(/\D/g, '');
-      return cleaned.slice(0, 10);
-    };
+    // Get all form questions for form_id = 1 to map field_key to question_id
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [formId]
+    );
 
-    const toEmail = (value: unknown): string => {
-      if (!value) return '';
-      return String(value).slice(0, 32);
-    };
+    const questionMap = new Map<string, { id: number; type: string }>(
+      questions.map(
+        (q: { id: number; field_key: string; question_type: string }) => [
+          q.field_key,
+          { id: q.id, type: q.question_type },
+        ]
+      )
+    );
 
-    const toMaritalStatus = (value: unknown): 'single' | 'married' | 'divorced' | 'widowed' => {
-      const validStatuses: Array<'single' | 'married' | 'divorced' | 'widowed'> = ['single', 'married', 'divorced', 'widowed'];
-      if (typeof value === 'string') {
-        const lower = value.toLowerCase();
-        const found = validStatuses.find(s => s === lower);
-        if (found) return found;
+    // Generate a unique session_id for this interview submission
+    // All responses from this submission will share the same session_id
+    const sessionIdResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId = sessionIdResult[0].session_id;
+
+    // Insert responses for each field that has a corresponding question
+    // All responses use the same session_id to group them together
+    for (const [fieldKey, value] of Object.entries(formData)) {
+      // Skip non-response fields
+      if (fieldKey === 'client_id' || fieldKey === 'name') {
+        continue;
       }
-      return 'single';
-    };
 
-    const toEthnicity = (value: unknown): 'Non-Hispanic' | 'Hispanic' | 'Refused' => {
-      const validEthnicities: Array<'Non-Hispanic' | 'Hispanic' | 'Refused'> = ['Non-Hispanic', 'Hispanic', 'Refused'];
-      if (typeof value === 'string') {
-        const found = validEthnicities.find(e => e === value);
-        if (found) return found;
-        // Handle common variations
-        if (value.toLowerCase().includes('hispanic')) return 'Hispanic';
-        if (value.toLowerCase().includes('refused')) return 'Refused';
+      const question = questionMap.get(fieldKey);
+      if (question && value !== undefined && value !== null && value !== "") {
+        // Convert value to string for storage
+        let stringValue: string;
+        if (typeof value === "boolean") {
+          stringValue = value.toString();
+        } else if (typeof value === "number") {
+          stringValue = value.toString();
+        } else if (typeof value === "object") {
+          // For rating grids and other objects, stringify
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
+
+        await db.query(
+          `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [clientId, question.id, stringValue, formId, sessionId]
+        );
       }
-      return 'Refused';
-    };
+    }
 
-    const {
-      client_id,
-      applicantType,
-      name,
-      age,
-      date,
-      phoneNumber,
-      maritalStatus,
-      dateOfBirth,
-      email,
-      ssnLastFour,
-      ethnicity,
-      veteran,
-      disabled,
-      currentAddress,
-      lastPermAddress,
-      reasonForLeavingPermAddress,
-      whereResideLastNight,
-      currentlyHomeless,
-      eventLeadingToHomelessness,
-      howLongExperiencingHomelessness,
-      prevAppliedToCch,
-      whenPrevAppliedToCch,
-      prevInCch,
-      whenPrevInCch,
-      childName,
-      childDob,
-      custodyOfChild,
-      fatherName,
-      nameSchoolChildrenAttend,
-      cityOfSchool,
-      howHearAboutCch,
-      programsBeenInBefore,
-      monthlyIncome,
-      sourcesOfIncome,
-      monthlyBills,
-      currentlyEmployed,
-      lastEmployer,
-      lastEmployedDate,
-      educationHistory,
-      transportation,
-      legalResident,
-      medical,
-      medicalCity,
-      medicalInsurance,
-      medications,
-      domesticViolenceHistory,
-      socialWorker,
-      socialWorkerTelephone,
-      socialWorkerOfficeLocation,
-      lengthOfSobriety,
-      lastDrugUse,
-      lastAlcoholUse,
-      timeUsingDrugsAlcohol,
-      beenConvicted,
-      convictedReasonAndTime,
-      presentWarrantExist,
-      warrantCounty,
-      probationParoleOfficer,
-      probationParoleOfficerTelephone,
-      personalReferences,
-      personalReferenceTelephone,
-      futurePlansGoals,
-      lastPermanentResidenceHouseholdComposition,
-      whyNoLongerAtLastResidence,
-      whatCouldPreventHomeless,
-    } = req.body;
-
-    const query = `
-      INSERT INTO initial_interview (
-        client_id,
-        applicant_type,
-        name,
-        age,
-        date,
-        phone_number,
-        marital_status,
-        date_of_birth,
-        email,
-        ssn_last_four,
-        ethnicity,
-        veteran,
-        disabled,
-        current_address,
-        last_perm_address,
-        reason_for_leaving_perm_address,
-        where_reside_last_night,
-        currently_homeless,
-        event_leading_to_homelessness,
-        how_long_experiencing_homelessness,
-        prev_applied_to_cch,
-        when_prev_applied_to_cch,
-        prev_in_cch,
-        when_prev_in_cch,
-        child_name,
-        child_dob,
-        custody_of_child,
-        father_name,
-        name_school_children_attend,
-        city_of_school,
-        how_hear_about_cch,
-        programs_been_in_before,
-        monthly_income,
-        sources_of_income,
-        monthly_bills,
-        currently_employed,
-        last_employer,
-        last_employed_date,
-        education_history,
-        transportation,
-        legal_resident,
-        medical,
-        medical_city,
-        medical_insurance,
-        medications,
-        domestic_violence_history,
-        social_worker,
-        social_worker_telephone,
-        social_worker_office_location,
-        length_of_sobriety,
-        last_drug_use,
-        last_alcohol_use,
-        time_using_drugs_alcohol,
-        been_convicted,
-        convicted_reason_and_time,
-        present_warrant_exist,
-        warrant_county,
-        probation_parole_officer,
-        probation_parole_officer_telephone,
-        personal_references,
-        personal_reference_telephone,
-        future_plans_goals,
-        last_permanent_residence_household_composition,
-        why_no_longer_at_last_residence,
-        what_could_prevent_homeless
-      ) VALUES (
-                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                 $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                 $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-                 $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-                 $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-                 $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
-                 $61, $62, $63, $64, $65
-               );
-    `;
-
-    const result = await db.query(query, [
-      toInt(client_id), // INT - client_id
-      String(applicantType || ''), // VARCHAR(256)
-      String(name || ''), // VARCHAR(256)
-      toInt(age), // INT
-      toDate(date), // DATE
-      toPhoneNumber(phoneNumber), // VARCHAR(10)
-      toMaritalStatus(maritalStatus), // ENUM
-      toDate(dateOfBirth), // DATE
-      toEmail(email), // VARCHAR(32)
-      toInt(ssnLastFour), // INT
-      toEthnicity(ethnicity), // ENUM
-      toBoolean(veteran), // BOOLEAN
-      toBoolean(disabled), // BOOLEAN
-      String(currentAddress || ''), // VARCHAR(256)
-      String(lastPermAddress || ''), // VARCHAR(256)
-      String(reasonForLeavingPermAddress || ''), // VARCHAR(256)
-      String(whereResideLastNight || ''), // VARCHAR(1024)
-      toBoolean(currentlyHomeless), // BOOLEAN
-      eventLeadingToHomelessness ? String(eventLeadingToHomelessness) : null, // VARCHAR(256) nullable
-      String(howLongExperiencingHomelessness || ''), // VARCHAR(256)
-      toBoolean(prevAppliedToCch), // BOOLEAN
-      whenPrevAppliedToCch ? String(whenPrevAppliedToCch) : null, // VARCHAR(256) nullable
-      toBoolean(prevInCch), // BOOLEAN
-      whenPrevInCch ? String(whenPrevInCch) : null, // VARCHAR(256) nullable
-      String(childName || ''), // VARCHAR(256)
-      toDate(childDob), // DATE
-      toBoolean(custodyOfChild), // BOOLEAN
-      String(fatherName || ''), // VARCHAR(256)
-      String(nameSchoolChildrenAttend || ''), // VARCHAR(256)
-      String(cityOfSchool || ''), // VARCHAR(256)
-      String(howHearAboutCch || ''), // VARCHAR(1024)
-      String(programsBeenInBefore || ''), // VARCHAR(1024)
-      toNumeric(monthlyIncome), // NUMERIC
-      String(sourcesOfIncome || ''), // VARCHAR(1024)
-      String(monthlyBills || ''), // VARCHAR(1024)
-      toBoolean(currentlyEmployed), // BOOLEAN
-      String(lastEmployer || ''), // VARCHAR(1024)
-      toDate(lastEmployedDate), // DATE
-      String(educationHistory || ''), // VARCHAR(1024)
-      String(transportation || ''), // VARCHAR(256)
-      toBoolean(legalResident), // BOOLEAN
-      toBoolean(medical), // BOOLEAN
-      medicalCity ? String(medicalCity) : null, // VARCHAR(256) nullable
-      medicalInsurance ? String(medicalInsurance) : null, // VARCHAR(256) nullable
-      String(medications || ''), // VARCHAR(256)
-      String(domesticViolenceHistory || ''), // VARCHAR(256)
-      String(socialWorker || ''), // VARCHAR(256)
-      toPhoneNumber(socialWorkerTelephone), // VARCHAR(10)
-      String(socialWorkerOfficeLocation || ''), // VARCHAR(256)
-      String(lengthOfSobriety || ''), // VARCHAR(32)
-      String(lastDrugUse || ''), // VARCHAR(256)
-      String(lastAlcoholUse || ''), // VARCHAR(256)
-      String(timeUsingDrugsAlcohol || ''), // VARCHAR(256)
-      toBoolean(beenConvicted), // BOOLEAN
-      convictedReasonAndTime ? String(convictedReasonAndTime) : null, // VARCHAR(256) nullable
-      toBoolean(presentWarrantExist), // BOOLEAN
-      String(warrantCounty || ''), // VARCHAR(256)
-      String(probationParoleOfficer || ''), // VARCHAR(256)
-      toPhoneNumber(probationParoleOfficerTelephone), // VARCHAR(10)
-      String(personalReferences || ''), // VARCHAR(256)
-      toPhoneNumber(personalReferenceTelephone), // VARCHAR(10)
-      String(futurePlansGoals || ''), // VARCHAR(1024)
-      String(lastPermanentResidenceHouseholdComposition || ''), // VARCHAR(1024)
-      String(whyNoLongerAtLastResidence || ''), // VARCHAR(1024)
-      String(whatCouldPreventHomeless || ''), // VARCHAR(1024)
-    ]);
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, client_id: clientId, session_id: sessionId });
   } catch (err: unknown) {
     const error = err as Error & { message?: string };
-    console.error("Error inserting initial interview:", err);
+    console.error("Error creating initial interview:", err);
     res.status(500).json({ error: error?.message || 'Unknown error occurred' });
   }
 });
@@ -778,8 +591,9 @@ initialInterviewRouter.put("/:id", async (req, res) => {
     );
 
     return res.status(200).json(keysToCamel(result));
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error & { message?: string };
     console.error("Error", err);
-    return res.status(500).send(err.message);
+    return res.status(500).send(error?.message || 'Unknown error occurred');
   }
 });
