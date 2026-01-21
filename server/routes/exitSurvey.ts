@@ -2,7 +2,6 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
-import { verifyRole } from "../src/middleware";
 
 export const exitSurveyRouter = Router();
 
@@ -112,60 +111,120 @@ exitSurveyRouter.get("/:clientId", async (req, res) => {
   }
 });
 
+// Create new exit survey - now posts to intake_responses with form_id = 2
 exitSurveyRouter.post("/", async (req, res) => {
   try {
-    const {
-      cmId,
-      name,
-      site,
-      programDateCompletion,
-      cchRating,
-      cchLikeMost,
-      cchCouldBeImproved,
-      lifeSkillsRating,
-      lifeSkillsHelpfulTopics,
-      lifeSkillsOfferTopicsInTheFuture,
-      cmRating,
-      cmChangeAbout,
-      cmMostBeneficial,
-      experienceTakeaway,
-      experienceAccomplished,
-      experienceExtraNotes,
-      client_id,
-    } = req.body;
+    const formData = req.body;
+    const formId = 2; // Exit Survey form_id
+    let clientId = formData.client_id;
 
-    const data = await db.query(
-      `INSERT INTO exit_survey (
-        cm_id, name, site, program_date_completion, cch_rating, cch_like_most, cch_could_be_improved,
-        life_skills_rating, life_skills_helpful_topics, life_skills_offer_topics_in_the_future, cm_rating, cm_change_about,
-        cm_most_beneficial, experience_takeaway, experience_accomplished, experience_extra_notes, client_id
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-      ) RETURNING id`,
-      [
-        cmId,
-        name,
-        site,
-        programDateCompletion,
-        cchRating,
-        cchLikeMost,
-        cchCouldBeImproved,
-        lifeSkillsRating,
-        lifeSkillsHelpfulTopics,
-        lifeSkillsOfferTopicsInTheFuture,
-        cmRating,
-        cmChangeAbout,
-        cmMostBeneficial,
-        experienceTakeaway,
-        experienceAccomplished,
-        experienceExtraNotes,
-        client_id,
-      ]
+    // If client_id is not provided, try to find or create intake_client
+    if (!clientId) {
+      // Try to find client in intake_clients by email (from form data or user)
+      const email = formData.email || formData.emailAddress;
+      if (email) {
+        const existingClients = await db.query(
+          `SELECT DISTINCT c.id 
+           FROM intake_clients c
+           JOIN intake_responses ir ON c.id = ir.client_id
+           JOIN form_questions fq ON ir.question_id = fq.id
+           WHERE fq.field_key = 'email' AND ir.response_value = $1
+           LIMIT 1`,
+          [email]
+        );
+
+        if (existingClients.length > 0) {
+          clientId = existingClients[0].id;
+        } else {
+          // Create a new intake_client entry
+          // Extract first_name and last_name from form data
+          const firstName = formData.firstName || formData.first_name || formData.name?.split(' ')[0] || "Unknown";
+          const lastName = formData.lastName || formData.last_name || formData.name?.split(' ').slice(1).join(' ') || "Client";
+          
+          // Get first unit_id as default
+          let unitId = 1;
+          try {
+            const units = await db.query("SELECT id FROM units LIMIT 1");
+            if (units.length > 0) {
+              unitId = units[0].id;
+            }
+          } catch {
+            // Use default unitId = 1
+          }
+
+          // Extract cm_id from form data if available, otherwise use default
+          const createdBy = formData.cmId || formData.cm_id || 1;
+
+          const clientResult = await db.query(
+            `INSERT INTO intake_clients (created_by, unit_id, status, first_name, last_name)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING id`,
+            [createdBy, unitId, "Active", firstName, lastName]
+          );
+
+          clientId = clientResult[0].id;
+        }
+      } else {
+        return res.status(400).json({ error: "client_id or email is required" });
+      }
+    }
+
+    // Get all form questions for form_id = 2 to map field_key to question_id
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [formId]
     );
 
-    res.status(200).json(data[0]);
-  } catch (err) {
-    res.status(500).send(err.message);
+    const questionMap = new Map<string, { id: number; type: string }>(
+      questions.map(
+        (q: { id: number; field_key: string; question_type: string }) => [
+          q.field_key,
+          { id: q.id, type: q.question_type },
+        ]
+      )
+    );
+
+    // Generate a unique session_id for this exit survey submission
+    // All responses from this submission will share the same session_id
+    const sessionIdResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId = sessionIdResult[0].session_id;
+
+    // Insert responses for each field that has a corresponding question
+    // All responses use the same session_id to group them together
+    for (const [fieldKey, value] of Object.entries(formData)) {
+      // Skip non-response fields
+      if (fieldKey === 'client_id' || fieldKey === 'name') {
+        continue;
+      }
+
+      const question = questionMap.get(fieldKey);
+      if (question && value !== undefined && value !== null && value !== "") {
+        // Convert value to string for storage
+        let stringValue: string;
+        if (typeof value === "boolean") {
+          stringValue = value.toString();
+        } else if (typeof value === "number") {
+          stringValue = value.toString();
+        } else if (typeof value === "object") {
+          // For rating grids and other objects, stringify
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
+        }
+
+        await db.query(
+          `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [clientId, question.id, stringValue, formId, sessionId]
+        );
+      }
+    }
+
+    res.status(200).json({ success: true, client_id: clientId, session_id: sessionId });
+  } catch (err: unknown) {
+    const error = err as Error & { message?: string };
+    console.error("Error creating exit survey:", err);
+    res.status(500).json({ error: error?.message || 'Unknown error occurred' });
   }
 });
 
@@ -192,7 +251,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
       date,
     } = req.body;
 
-    const user = await db.query(
+    await db.query(
       `UPDATE exit_survey
       SET cm_id = COALESCE($2, cm_id),
       name = COALESCE($3, name),
@@ -242,7 +301,7 @@ exitSurveyRouter.put("/:id", async (req, res) => {
 exitSurveyRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await db.query("DELETE FROM exit_survey WHERE id = $1", [id]);
+    await db.query("DELETE FROM exit_survey WHERE id = $1", [id]);
     res.sendStatus(200);
   } catch (err) {
     res.status(500).send(err.message);
