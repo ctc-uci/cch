@@ -311,6 +311,88 @@ intakeResponsesRouter.get("/session/:sessionId", async (req, res) => {
   }
 });
 
+// Update form responses by session_id
+intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const formData = req.body;
+
+    // Verify session exists and get form_id
+    const sessionCheck = await db.query(
+      `SELECT form_id FROM intake_responses WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+
+    if (sessionCheck.length === 0) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    const formId = sessionCheck[0].form_id;
+
+    // Get all form questions for this form to map field_key to question_id
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [formId]
+    );
+
+    const questionMap = new Map(
+      questions.map((q: { id: number; field_key: string; question_type: string }) => [
+        q.field_key,
+        { id: q.id, type: q.question_type },
+      ])
+    );
+
+    // Helper to convert snake_case to camelCase and vice versa
+    const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+    const toCamelCase = (str: string) => str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+
+    // Update responses for each field
+    for (const [fieldKey, value] of Object.entries(formData)) {
+      // Skip metadata fields
+      if (['sessionId', 'session_id', 'clientId', 'client_id', 'submittedAt', 'submitted_at', 
+           'firstName', 'first_name', 'lastName', 'last_name', 'formId', 'form_id'].includes(fieldKey)) {
+        continue;
+      }
+
+      // Try both camelCase and snake_case versions
+      const snakeKey = toSnakeCase(fieldKey);
+      const camelKey = toCamelCase(fieldKey);
+      const question = questionMap.get(snakeKey) || questionMap.get(camelKey) || questionMap.get(fieldKey);
+
+      if (question && value !== undefined && value !== null) {
+        // Convert value to string for storage
+        let stringValue: string | null = null;
+        if (value !== "") {
+          if (typeof value === "boolean") {
+            stringValue = value.toString();
+          } else if (typeof value === "number") {
+            stringValue = value.toString();
+          } else if (typeof value === "object") {
+            // For rating grids and other objects, stringify
+            stringValue = JSON.stringify(value);
+          } else {
+            stringValue = String(value);
+          }
+        }
+
+        // Update or insert response
+        const questionId = (question as { id: number; type: string }).id;
+        await db.query(
+          `UPDATE intake_responses 
+           SET response_value = $1, updated_at = CURRENT_TIMESTAMP
+           WHERE session_id = $2 AND question_id = $3`,
+          [stringValue, sessionId, questionId]
+        );
+      }
+    }
+
+    res.status(200).json({ success: true, session_id: sessionId });
+  } catch (err) {
+    console.error("Error updating intake responses:", err);
+    res.status(500).send(err.message);
+  }
+});
+
 // Get form questions for a specific form_id (for building dynamic columns)
 intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
   try {

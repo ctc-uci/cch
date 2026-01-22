@@ -343,15 +343,110 @@ const FormPreview = ({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+
+    // Convert value based on input type
+    let processedValue: unknown = value;
+    if (type === "number") {
+      processedValue = value === "" ? null : parseFloat(value);
+    } else if (type === "checkbox") {
+      processedValue = (e.target as HTMLInputElement).checked;
+    }
 
     setNewFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
   };
 
   const handleSaveForm = async () => {
+    // Handle dynamic forms (intake_responses)
+    if (isDynamicForm && sessionId) {
+      try {
+        const payload: Record<string, unknown> = {};
+
+        // Map form questions to get correct field_key format
+        formQuestions.forEach((question) => {
+          const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+          const value = newFormData[camelKey] ?? newFormData[question.fieldKey];
+          
+          if (value !== undefined && value !== null) {
+            // Use the original field_key from the question
+            payload[question.fieldKey] = value;
+          }
+        });
+
+        await backend.put(`/intakeResponses/session/${sessionId}`, payload);
+
+        toast({
+          title: "Successfully submitted form",
+          description: `${formItemTitle} Form - ${new Date().toLocaleString()}`,
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
+
+        setRefreshTable((prev) => !prev);
+        setIsEditing(false);
+        
+        // Reload the data to reflect changes
+        const response = await backend.get(`/intakeResponses/session/${sessionId}`);
+        const normalData = response.data;
+        const formId = getFormId(formItemTitle);
+        if (formId && normalData) {
+          const questionsResponse = await backend.get(`/intakeResponses/form/${formId}/questions`);
+          const questions = questionsResponse.data || [];
+          setFormQuestions(questions);
+
+          const formatted: FormDataRecord = {};
+          questions
+            .filter((q: { isVisible: boolean; questionType: string }) => 
+              q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+            .sort((a: { displayOrder: number }, b: { displayOrder: number }) => 
+              a.displayOrder - b.displayOrder)
+            .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
+              const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+              const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+              
+              if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+                const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
+                if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
+                  const gridData = value as Record<string, unknown>;
+                  gridConfig.rows.forEach((row) => {
+                    const rowValue = gridData[row.key];
+                    if (rowValue !== undefined && rowValue !== null) {
+                      const column = gridConfig.columns?.find(col => col.value === rowValue);
+                      const displayValue = column ? column.label : String(rowValue);
+                      formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                    }
+                  });
+                } else {
+                  formatted[question.questionText] = value;
+                }
+              } else {
+                formatted[question.questionText] = value;
+              }
+            });
+
+          setFormData({ ...normalData });
+          setNewFormData({ ...normalData });
+          setFormattedFormData(formatted);
+          setFormattedModifiedData(formatted);
+        }
+      } catch (error) {
+        console.error("Error updating dynamic form:", error);
+        toast({
+          title: "Did Not Save Changes",
+          description: `There was an error while saving changes`,
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
+      return;
+    }
+
+    // Handle legacy forms
     let endpoint = "";
 
     switch (formItemTitle) {
@@ -397,7 +492,6 @@ const FormPreview = ({
         isClosable: true,
       });
 
-      onClose();
       setRefreshTable((prev) => !prev);
       setFormattedFormData(newFormattedModifiedData);
       setFormData(newFormData);
