@@ -25,20 +25,44 @@ import {
 
 import type { TableType } from "../../../types/form.ts";
 
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: string;
+  displayOrder: number;
+  isVisible: boolean;
+}
+
 interface FilterProps {
   setFilterQuery: React.Dispatch<React.SetStateAction<string[]>>;
+  formQuestions?: FormQuestion[]; // For dynamic forms
 }
 
 export const FilterTemplate = ({
   setFilterQuery,
   type,
+  formQuestions,
 }: FilterProps & TableType) => {
   const toast = useToast();
   const [nextId, setNextId] = useState(2);
 
   let columns = [];
-
-  if (type === "initialScreener") {
+  
+  // If formQuestions are provided, use them to build dynamic columns
+  // This takes precedence over hardcoded type-based columns
+  if (formQuestions && formQuestions.length > 0) {
+    columns = formQuestions
+      .filter(q => q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((question) => ({
+        name: question.questionText,
+        value: question.fieldKey, // Use field_key for filtering
+        type: question.questionType === 'number' ? 'number' : 
+              question.questionType === 'date' ? 'date' : 
+              question.questionType === 'boolean' ? 'boolean' : 'string',
+      }));
+  } else if (type === "initialScreener") {
     columns = [
       { name: "Name", value: "initial_interview.name", type: "string" },
       { name: "Age", value: "initial_interview.age", type: "string" },

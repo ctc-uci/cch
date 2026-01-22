@@ -13,6 +13,15 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 import { Dispatch, SetStateAction } from "react";
 
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: string;
+  displayOrder: number;
+  isVisible: boolean;
+}
+
 interface TableControlsProps {
   searchKey: string;
   setSearchKey: (value: string) => void;
@@ -23,6 +32,7 @@ interface TableControlsProps {
   onExport?: () => void;
   filterType: string;
   showExportCount?: boolean;
+  formQuestions?: FormQuestion[]; // For dynamic forms
 }
 
 export const TableControls = ({
@@ -35,6 +45,7 @@ export const TableControls = ({
   onExport,
   filterType,
   showExportCount = false,
+  formQuestions,
 }: TableControlsProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +68,7 @@ export const TableControls = ({
             }
           }}
           type={filterType}
+          formQuestions={formQuestions}
         />
       </HStack>
 

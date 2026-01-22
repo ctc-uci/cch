@@ -50,7 +50,69 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
     }
 
     if (filter) {
-      sessionQuery += ` AND ${filter}`;
+      // Parse filter to handle dynamic field_keys
+      // Filters come in format like: "AND field_key ILIKE '%value%'"
+      // We need to convert field_key filters to check intake_responses.response_value
+      const filterStr = String(filter);
+      
+      // Get all field_keys for this form to identify which filters are dynamic fields
+      const formQuestions = await db.query(
+        `SELECT field_key FROM form_questions WHERE form_id = $1`,
+        [formId]
+      );
+      const fieldKeys = formQuestions.map((q: { field_key: string }) => q.field_key);
+      
+      // Parse and convert filter queries
+      // Split by AND/OR and process each condition
+      const filterParts = filterStr.split(/(\s+(?:AND|OR)\s+)/i);
+      const convertedFilters: string[] = [];
+      
+      for (let i = 0; i < filterParts.length; i++) {
+        const part = filterParts[i]?.trim();
+        if (!part) continue;
+        
+        // Skip AND/OR operators
+        if (/^(AND|OR)$/i.test(part)) {
+          convertedFilters.push(part);
+          continue;
+        }
+        
+        // Check if this is a field_key filter (not a table.column format)
+        const matchingFieldKey = fieldKeys.find((fk: string) => part.includes(fk) && !part.includes('.'));
+        
+        if (matchingFieldKey) {
+          // Extract field_key, operator, and value from filter
+          // Format: "field_key ILIKE '%value%'" or "field_key = 'value'"
+          const match = part.match(/(\w+)\s+(ILIKE|LIKE|=|!=|>|<|>=|<=)\s+['"]?([^'"]*)['"]?/i);
+          if (match && match[1] && match[2] && match[3]) {
+            const fieldKey = match[1];
+            const operator = match[2];
+            const value = match[3];
+            const escapedValue = value.replace(/'/g, "''");
+            const paramIndex = queryParams.length + 1;
+            
+            // Convert to subquery that checks intake_responses
+            // Find sessions where there's a response with matching field_key and value
+            convertedFilters.push(`ir.session_id IN (
+              SELECT DISTINCT ir2.session_id 
+              FROM intake_responses ir2
+              JOIN form_questions fq2 ON ir2.question_id = fq2.id
+              WHERE ir2.form_id = $${paramIndex}
+              AND fq2.field_key = $${paramIndex + 1}
+              AND ir2.response_value::TEXT ${operator} $${paramIndex + 2}
+            )`);
+            queryParams.push(formId, fieldKey, operator === 'ILIKE' || operator === 'LIKE' ? `%${escapedValue}%` : escapedValue);
+          } else {
+            // If parsing fails, keep original filter
+            convertedFilters.push(part);
+          }
+        } else {
+          // Keep non-field_key filters as-is (like ic.first_name, etc.)
+          convertedFilters.push(part);
+        }
+      }
+      
+      sessionQuery += ` AND ${convertedFilters.join(' ')}`;
     }
 
     sessionQuery += ` ORDER BY ir.submitted_at DESC`;
@@ -91,7 +153,7 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
     );
 
     // Group responses by session_id
-    const responsesBySession: Record<string, any> = {};
+    const responsesBySession: Record<string, Record<string, unknown>> = {};
     
     for (const session of sessions) {
       const sessionId = session.session_id;

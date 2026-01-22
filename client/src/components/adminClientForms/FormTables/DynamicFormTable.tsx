@@ -316,6 +316,7 @@ export const DynamicFormTable = ({
         onExport={onPressCSVButton}
         filterType={formName.toLowerCase().replace(/\s+/g, "")}
         showExportCount={true}
+        formQuestions={formQuestions}
       />
       <Box
         width={"100%"}
