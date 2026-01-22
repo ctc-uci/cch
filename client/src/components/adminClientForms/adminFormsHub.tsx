@@ -190,11 +190,11 @@ export const AdminFormsHub = () => {
                   <DynamicFormTable
                     formId={tab.formId}
                     formName={tab.label}
-                    selectedRowIds={selectedRowIds}
-                    setSelectedRowIds={setSelectedRowIds}
-                    deletedRowIds={deletedRowIds}
-                  />
-                </TabPanel>
+                  selectedRowIds={selectedRowIds}
+                  setSelectedRowIds={setSelectedRowIds}
+                  deletedRowIds={deletedRowIds}
+                />
+              </TabPanel>
               ))}
             </TabPanels>
           </Tabs>

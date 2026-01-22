@@ -216,6 +216,101 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
   }
 });
 
+// Get a single form response by session_id
+intakeResponsesRouter.get("/session/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+
+    // Get session info
+    const sessionResult = await db.query(
+      `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, ic.first_name, ic.last_name
+      FROM intake_responses ir
+      JOIN intake_clients ic ON ir.client_id = ic.id
+      WHERE ir.session_id = $1
+      LIMIT 1`,
+      [sessionId]
+    );
+
+    if (sessionResult.length === 0) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    const session = sessionResult[0];
+    const formId = session.form_id;
+
+    // Get all responses for this session
+    const responses = await db.query(
+      `SELECT 
+        ir.response_value,
+        ir.submitted_at,
+        fq.field_key,
+        fq.question_text,
+        fq.question_type,
+        fq.display_order,
+        fq.options
+      FROM intake_responses ir
+      JOIN form_questions fq ON ir.question_id = fq.id
+      WHERE ir.session_id = $1
+      ORDER BY fq.display_order ASC`,
+      [sessionId]
+    );
+
+    // Build response object
+    const responseData: Record<string, unknown> = {
+      sessionId: session.session_id,
+      session_id: session.session_id,
+      clientId: session.client_id,
+      client_id: session.client_id,
+      submittedAt: session.submitted_at,
+      submitted_at: session.submitted_at,
+      firstName: session.first_name,
+      first_name: session.first_name,
+      lastName: session.last_name,
+      last_name: session.last_name,
+      formId: formId,
+      form_id: formId,
+    };
+
+    // Add response values
+    for (const resp of responses) {
+      let value: unknown = resp.response_value;
+
+      // Convert based on question type
+      switch (resp.question_type) {
+        case "number":
+          value = resp.response_value ? parseFloat(resp.response_value) : null;
+          break;
+        case "boolean":
+          value = resp.response_value === "true";
+          break;
+        case "date":
+          value = resp.response_value || null;
+          break;
+        case "rating_grid":
+          try {
+            value = JSON.parse(resp.response_value);
+          } catch {
+            value = resp.response_value || "";
+          }
+          break;
+        default:
+          value = resp.response_value || "";
+      }
+
+      // Use camelCase field_key
+      const camelFieldKey = toCamel(resp.field_key);
+      responseData[camelFieldKey] = value;
+      // Also keep snake_case for compatibility
+      responseData[resp.field_key] = value;
+    }
+
+    res.status(200).json(keysToCamel(responseData));
+  } catch (err) {
+    console.error("Error fetching intake response:", err);
+    res.status(500).send(err.message);
+  }
+});
+
 // Get form questions for a specific form_id (for building dynamic columns)
 intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
   try {

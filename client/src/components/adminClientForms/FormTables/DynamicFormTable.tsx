@@ -340,13 +340,14 @@ export const DynamicFormTable = ({
             checkboxMode={checkboxMode}
             setCheckboxMode={setCheckboxMode}
             onRowClick={(row) => {
-              const formItem: Form = {
+              const formItem: Form & { sessionId?: string } = {
                 ...row,
                 hashedId: row.id,
                 date: row.submittedAt || '',
                 name: `${row.firstName} ${row.lastName}`,
                 title: formName as Form['title'],
                 id: row.id,
+                sessionId: row.sessionId, // Pass sessionId for dynamic forms
               };
               setClickedFormItem(formItem);
               onOpen();

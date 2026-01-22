@@ -38,12 +38,14 @@ import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RandomSurveyTableBody } from "./RandomSurveyTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 import { SuccessStoryTableBody } from "./SuccessStoryTableBody.tsx";
+import { DynamicFormTableBody } from "./DynamicFormTableBody.tsx";
 
 type FormItem = {
   id: number;
   title: string;
   name?: string;
   date?: string;
+  sessionId?: string; // For dynamic forms using intake_responses
   [key: string]: unknown;
 };
 
@@ -70,12 +72,39 @@ const FormPreview = ({
     title: formItemTitle,
     name: formItemName,
     date: formItemDate,
+    sessionId,
   } = clickedFormItem;
 
   const toast = useToast();
 
   const [formData, setFormData] = useState<FormDataRecord>({});
   const [newFormData, setNewFormData] = useState<FormDataRecord>({});
+  const [formQuestions, setFormQuestions] = useState<Array<{
+    id: number;
+    fieldKey: string;
+    questionText: string;
+    questionType: string;
+    displayOrder: number;
+    isVisible: boolean;
+    options?: unknown;
+  }>>([]);
+  
+  // Check if this is a dynamic form (uses intake_responses)
+  const isDynamicForm = sessionId && (
+    formItemTitle === "Initial Screener Form" ||
+    formItemTitle === "Success Story Form" ||
+    formItemTitle === "Client Exit Survey Form" ||
+    formItemTitle === "Random Client Survey Form"
+  );
+  
+  // Map form titles to form_ids
+  const getFormId = (title: string): number | null => {
+    if (title === "Initial Screener Form") return 1;
+    if (title === "Client Exit Survey Form") return 2;
+    if (title === "Success Story Form") return 3;
+    if (title === "Random Client Survey Form") return 4;
+    return null;
+  };
 
   const [newFormattedModifiedData, setFormattedModifiedData] =
     useState<FormDataRecord>({});
@@ -104,6 +133,18 @@ const FormPreview = ({
   }
 
   const renderTableBody = () => {
+    // Use dynamic table body for dynamic forms
+    if (isDynamicForm && formQuestions.length > 0) {
+      return (
+        <DynamicFormTableBody
+          formData={newFormData}
+          formQuestions={formQuestions}
+          handleChange={handleChange}
+        />
+      );
+    }
+
+    // Legacy table bodies for non-dynamic forms
     switch (formItemTitle) {
       case "Initial Screeners":
         return (
@@ -165,8 +206,78 @@ const FormPreview = ({
     setIsEditing(false);
     setIsLoading(true);
 
-    setIsInitial(formItemTitle === "Initial Screeners");
+    setIsInitial(formItemTitle === "Initial Screeners" || formItemTitle === "Initial Screener Form");
     const getData = async () => {
+      // Handle dynamic forms (intake_responses)
+      if (isDynamicForm && sessionId) {
+        try {
+          // Fetch form response by session_id
+          const response = await backend.get(`/intakeResponses/session/${sessionId}`);
+          const normalData = response.data;
+
+          if (!normalData || typeof normalData !== "object") {
+            setFormData({});
+            setNewFormData({});
+            setFormattedFormData({});
+            setFormattedModifiedData({});
+            setIsLoading(false);
+            return;
+          }
+
+          // Fetch form questions to build dynamic display
+          const formId = getFormId(formItemTitle);
+          if (formId) {
+            const questionsResponse = await backend.get(`/intakeResponses/form/${formId}/questions`);
+            const questions = questionsResponse.data || [];
+            setFormQuestions(questions);
+
+            // Format data using question texts as labels
+            const formatted: FormDataRecord = {};
+
+            questions
+              .filter((q: { isVisible: boolean; questionType: string }) => 
+                q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+              .sort((a: { displayOrder: number }, b: { displayOrder: number }) => 
+                a.displayOrder - b.displayOrder)
+              .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
+                const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+                const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+                
+                // For rating grids, expand into separate rows for each grid row
+                if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+                  const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
+                  if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
+                    const gridData = value as Record<string, unknown>;
+                    gridConfig.rows.forEach((row) => {
+                      const rowValue = gridData[row.key];
+                      if (rowValue !== undefined && rowValue !== null) {
+                        const column = gridConfig.columns?.find(col => col.value === rowValue);
+                        const displayValue = column ? column.label : String(rowValue);
+                        formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                      }
+                    });
+                  } else {
+                    formatted[question.questionText] = value;
+                  }
+                } else {
+                  formatted[question.questionText] = value;
+                }
+              });
+
+            setFormData({ ...normalData });
+            setNewFormData({ ...normalData });
+            setFormattedFormData(formatted);
+            setFormattedModifiedData(formatted);
+          }
+        } catch (error) {
+          console.error("Error fetching dynamic form data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Handle legacy forms
       let endpoint = "";
       switch (formItemTitle) {
         case "Initial Screeners":
@@ -192,6 +303,7 @@ const FormPreview = ({
           break;
         default:
           console.error("Unknown form title:", formItemTitle);
+          setIsLoading(false);
           return;
       }
 
@@ -226,7 +338,7 @@ const FormPreview = ({
     };
 
     getData();
-  }, [backend, formItemId, formItemTitle, refreshTable]);
+  }, [backend, formItemId, formItemTitle, refreshTable, isDynamicForm, sessionId]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -311,12 +423,23 @@ const FormPreview = ({
   };
 
   const formatValueForDisplay = (value: unknown) => {
+    // Rating grids are already expanded into separate rows in formattedFormData,
+    // so they'll come through as strings - no special handling needed
     if (typeof value === "string") {
       return isDate(value) ? formatDateString(value) : value;
     }
 
     if (value === null || value === undefined) {
       return "";
+    }
+
+    // Handle other object types
+    if (value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
     }
 
     return String(value);
@@ -365,9 +488,21 @@ const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItemName && `${formItemName} - `}
-              {formItemTitle}{" "}
-              {formItemDate ? formatDateString(formItemDate) : ""}
+              {(() => {
+                // If formItemName contains "unknown client", remove it and show only what's after "-"
+                if (formItemName && formItemName.toLowerCase().includes("unknown")) {
+                  // Extract everything after the "-" separator
+                  const parts = formItemName.split(" - ");
+                  if (parts.length > 1) {
+                    return parts.slice(1).join(" - ");
+                  }
+                  // If no "-" separator, just show the form title
+                  return formItemTitle;
+                }
+                // If formItemName doesn't contain "unknown", show it normally
+                return formItemName ? `${formItemName} - ${formItemTitle}` : formItemTitle;
+              })()}
+              {formItemDate ? ` ${formatDateString(formItemDate)}` : ""}
             </Text>
           </HStack>
         </DrawerHeader>
@@ -482,6 +617,7 @@ const FormPreview = ({
                 borderColor="gray.200"
                 borderRadius="12px"
                 overflowY="auto"
+                overflowX="auto"
               >
                 <Table variant="simple">
                   <Thead>
@@ -489,12 +625,18 @@ const FormPreview = ({
                       <Th
                         fontSize="md"
                         color="gray.700"
+                        maxWidth="300px"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
                       >
                         Question
                       </Th>
                       <Th
                         fontSize="md"
                         color="gray.700"
+                        maxWidth="400px"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
                       >
                         Answer
                       </Th>
@@ -505,8 +647,20 @@ const FormPreview = ({
                       ? Object.entries(newFormattedModifiedData).map(
                           ([key, value]) => (
                             <Tr key={key}>
-                              <Td>{key}</Td>
-                              <Td>
+                              <Td
+                                maxWidth="300px"
+                                whiteSpace="normal"
+                                wordBreak="break-word"
+                                overflowWrap="break-word"
+                              >
+                                {key}
+                              </Td>
+                              <Td
+                                maxWidth="400px"
+                                whiteSpace="normal"
+                                wordBreak="break-word"
+                                overflowWrap="break-word"
+                              >
                                 {formatValueForDisplay(value)}
                               </Td>
                             </Tr>

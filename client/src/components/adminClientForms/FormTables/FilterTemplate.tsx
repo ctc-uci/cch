@@ -48,7 +48,7 @@ export const FilterTemplate = ({
   const [nextId, setNextId] = useState(2);
 
   let columns = [];
-  
+
   // If formQuestions are provided, use them to build dynamic columns
   // This takes precedence over hardcoded type-based columns
   if (formQuestions && formQuestions.length > 0) {
