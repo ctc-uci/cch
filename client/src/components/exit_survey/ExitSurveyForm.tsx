@@ -37,17 +37,19 @@ type ExitSurveyFormProps = {
 interface FormOption {
   value: string;
   label: string;
+  labelSpanish?: string;
 }
 
 interface RatingGridConfig {
-  rows: Array<{ key: string; label: string }>;
-  columns: Array<{ value: string; label: string }>;
+  rows: Array<{ key: string; label: string; labelSpanish?: string }>;
+  columns: Array<{ value: string; label: string; labelSpanish?: string }>;
 }
 
 interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
+  questionTextSpanish?: string;
   questionType:
     | "text"
     | "number"
@@ -180,9 +182,11 @@ export const ExitSurveyForm = ({
   }, [backend, toast]);
 
   const renderField = (question: FormQuestion) => {
-    const { fieldKey, questionType, options, questionText } = question;
+    const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
     const value = formData[fieldKey];
     const disabled = onReview;
+    // Use Spanish text if language is Spanish and Spanish text is available
+    const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
 
     switch (questionType) {
       case "rating_grid": {
@@ -197,38 +201,44 @@ export const ExitSurveyForm = ({
               <Thead>
                 <Tr>
                   <Th></Th>
-                  {gridConfig.columns.map((col) => (
-                    <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
-                      {col.label}
-                    </Th>
-                  ))}
+                  {gridConfig.columns.map((col) => {
+                    const columnLabel = language === "spanish" && col.labelSpanish ? col.labelSpanish : col.label;
+                    return (
+                      <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
+                        {columnLabel}
+                      </Th>
+                    );
+                  })}
                 </Tr>
               </Thead>
               <Tbody>
-                {gridConfig.rows.map((row) => (
-                  <Tr key={row.key}>
-                    <Td width="200px" fontSize="12px" color="#000">
-                      {row.label}
-                    </Td>
-                    {gridConfig.columns.map((col) => (
-                      <Td key={col.value} textAlign="center">
-                        <Radio
-                          name={`${fieldKey}_${row.key}`}
-                          value={col.value}
-                          isChecked={gridData[row.key] === col.value}
-                          isDisabled={disabled}
-                          onChange={() => {
-                            const newData = { ...gridData, [row.key]: col.value };
-                            setFormData((prev) => ({
-                              ...prev,
-                              [fieldKey]: JSON.stringify(newData),
-                            }));
-                          }}
-                        />
+                {gridConfig.rows.map((row) => {
+                  const rowLabel = language === "spanish" && row.labelSpanish ? row.labelSpanish : row.label;
+                  return (
+                    <Tr key={row.key}>
+                      <Td width="200px" fontSize="12px" color="#000">
+                        {rowLabel}
                       </Td>
-                    ))}
-                  </Tr>
-                ))}
+                      {gridConfig.columns.map((col) => (
+                        <Td key={col.value} textAlign="center">
+                          <Radio
+                            name={`${fieldKey}_${row.key}`}
+                            value={col.value}
+                            isChecked={gridData[row.key] === col.value}
+                            isDisabled={disabled}
+                            onChange={() => {
+                              const newData = { ...gridData, [row.key]: col.value };
+                              setFormData((prev) => ({
+                                ...prev,
+                                [fieldKey]: JSON.stringify(newData),
+                              }));
+                            }}
+                          />
+                        </Td>
+                      ))}
+                    </Tr>
+                  );
+                })}
               </Tbody>
             </Table>
           </Box>
@@ -294,11 +304,14 @@ export const ExitSurveyForm = ({
             }
             isDisabled={disabled}
           >
-            {opts?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
+            {opts?.map((opt) => {
+              const optionLabel = language === "spanish" && opt.labelSpanish ? opt.labelSpanish : opt.label;
+              return (
+                <option key={opt.value} value={opt.value}>
+                  {optionLabel}
+                </option>
+              );
+            })}
           </Select>
         );
       }
@@ -400,14 +413,14 @@ export const ExitSurveyForm = ({
       case "text_block":
         return (
           <Text fontSize="sm" color="gray.700" fontStyle="italic" py={2}>
-            {questionText}
+            {displayQuestionText}
           </Text>
         );
 
       case "header":
         return (
           <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
-            {questionText}
+            {displayQuestionText}
           </Heading>
         );
 
@@ -486,9 +499,10 @@ export const ExitSurveyForm = ({
             if (isDisplayOnly) {
               return <Box key={question.id}>{renderField(question)}</Box>;
             }
+            const displayText = language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText;
             return (
               <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
-                <FormLabel>{question.questionText}</FormLabel>
+                <FormLabel>{displayText}</FormLabel>
                 {renderField(question)}
               </FormControl>
             );

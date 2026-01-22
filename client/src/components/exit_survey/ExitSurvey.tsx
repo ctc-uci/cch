@@ -24,7 +24,8 @@ export const ExitSurvey = () => {
   const toast = useToast();
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
-  const language = params.language || "english";
+  const languageParam = params.language || "English";
+  const language = languageParam.toLowerCase();
   const { currentUser } = useAuthContext();
 
 

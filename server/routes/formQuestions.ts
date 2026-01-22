@@ -73,6 +73,7 @@ formQuestionsRouter.post("/", async (req, res) => {
     const {
       field_key,
       question_text,
+      question_text_spanish,
       question_type,
       options,
       is_required,
@@ -96,6 +97,7 @@ formQuestionsRouter.post("/", async (req, res) => {
       `INSERT INTO form_questions (
         field_key,
         question_text,
+        question_text_spanish,
         question_type,
         form_id,
         options,
@@ -104,11 +106,12 @@ formQuestionsRouter.post("/", async (req, res) => {
         is_core,
         display_order,
         validation_rules
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *`,
       [
         field_key,
         question_text,
+        question_text_spanish || null,
         question_type,
         form_id,
         options ? JSON.stringify(options) : null,
@@ -133,6 +136,7 @@ formQuestionsRouter.put("/:id", async (req, res) => {
     const {
       field_key,
       question_text,
+      question_text_spanish,
       question_type,
       options,
       is_required,
@@ -165,19 +169,21 @@ formQuestionsRouter.put("/:id", async (req, res) => {
       `UPDATE form_questions SET
         field_key = COALESCE($1, field_key),
         question_text = COALESCE($2, question_text),
-        question_type = COALESCE($3, question_type),
-        options = COALESCE($4, options),
-        is_required = COALESCE($5, is_required),
-        is_visible = COALESCE($6, is_visible),
-        is_core = COALESCE($7, is_core),
-        display_order = COALESCE($8, display_order),
-        validation_rules = COALESCE($9, validation_rules),
+        question_text_spanish = COALESCE($3, question_text_spanish),
+        question_type = COALESCE($4, question_type),
+        options = COALESCE($5, options),
+        is_required = COALESCE($6, is_required),
+        is_visible = COALESCE($7, is_visible),
+        is_core = COALESCE($8, is_core),
+        display_order = COALESCE($9, display_order),
+        validation_rules = COALESCE($10, validation_rules),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $10
+      WHERE id = $11
       RETURNING *`,
       [
         field_key,
         question_text,
+        question_text_spanish !== undefined ? question_text_spanish : null,
         question_type,
         options ? JSON.stringify(options) : null,
         is_required,
