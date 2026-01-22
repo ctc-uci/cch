@@ -44,6 +44,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
+  questionTextSpanish?: string;
   questionType:
     | "text"
     | "number"
@@ -116,8 +117,8 @@ export const InterviewScreeningForm = ({
         console.error(e);
         if (mounted) {
           toast({
-            title: "Error loading questions",
-            description: "Could not load interview screening questions.",
+            title: language === "spanish" ? "Error al cargar preguntas" : "Error loading questions",
+            description: language === "spanish" ? "No se pudieron cargar las preguntas de la entrevista de selección." : "Could not load interview screening questions.",
             status: "error",
           });
         }
@@ -165,8 +166,8 @@ export const InterviewScreeningForm = ({
       } catch (e) {
         console.error(e);
         toast({
-          title: "Error loading data",
-          description: "Could not load case managers or locations.",
+          title: language === "spanish" ? "Error al cargar datos" : "Error loading data",
+          description: language === "spanish" ? "No se pudieron cargar los administradores de casos o las ubicaciones." : "Could not load case managers or locations.",
           status: "error",
         });
       }
@@ -175,9 +176,11 @@ export const InterviewScreeningForm = ({
   }, [backend, toast]);
 
   const renderField = (question: FormQuestion) => {
-    const { fieldKey, questionType, options, questionText } = question;
+    const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
     const value = formData[fieldKey as keyof typeof formData];
     const disabled = onReview;
+    // Use Spanish text if language is Spanish and Spanish text is available
+    const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
 
     switch (questionType) {
       case "rating_grid": {
@@ -306,6 +309,9 @@ export const InterviewScreeningForm = ({
           <HStack spacing={4}>
             {["yes", "no"].map((option) => {
               const isSelected = hasValue && boolValue === (option === "yes");
+              const optionLabel = language === "spanish" 
+                ? (option === "yes" ? "Sí" : "No")
+                : (option.charAt(0).toUpperCase() + option.slice(1));
               return (
                 <Button
                   key={option}
@@ -325,7 +331,7 @@ export const InterviewScreeningForm = ({
                   }
                   isDisabled={disabled}
                 >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                  {optionLabel}
                 </Button>
               );
             })}
@@ -393,14 +399,14 @@ export const InterviewScreeningForm = ({
       case "text_block":
         return (
           <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
-            {questionText}
+            {displayQuestionText}
           </Text>
         );
 
       case "header":
         return (
           <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
-            {questionText}
+            {displayQuestionText}
           </Heading>
         );
 
@@ -434,7 +440,7 @@ export const InterviewScreeningForm = ({
     return (
       <VStack align="center" justify="center" minH="300px">
         <Spinner size="lg" color="blue.500" />
-        <Text>Loading interview screening form...</Text>
+        <Text>{language === "spanish" ? "Cargando formulario de entrevista de selección..." : "Loading interview screening form..."}</Text>
       </VStack>
     );
   }
@@ -455,7 +461,7 @@ export const InterviewScreeningForm = ({
           if (question.questionType === "boolean") {
             return (
               <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
-                <FormLabel>{question.questionText}</FormLabel>
+                <FormLabel>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
                 {renderField(question)}
               </FormControl>
             );
@@ -463,7 +469,7 @@ export const InterviewScreeningForm = ({
 
           return (
             <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
-              <FormLabel>{question.questionText}</FormLabel>
+              <FormLabel>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
               {renderField(question)}
             </FormControl>
           );

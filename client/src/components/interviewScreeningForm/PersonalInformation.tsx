@@ -17,7 +17,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
   const [onReview, setOnReview] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   type Language = 'english' | 'spanish';
-  const language = ((params.language as string) === 'spanish' ? 'spanish' : 'english') as Language;
+  const language = (params.language?.toLowerCase() === 'spanish' ? 'spanish' : 'english') as Language;
 
   // Helper function to reset form to initial empty state
   const resetFormData = useCallback(() => {
@@ -145,8 +145,8 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
           resetFormData();
           
           toast({
-            title: "Form submitted",
-            description: "Thank you for completing the interview screening form!",
+            title: language === "spanish" ? "Formulario enviado" : "Form submitted",
+            description: language === "spanish" ? "¡Gracias por completar el formulario de entrevista de selección!" : "Thank you for completing the interview screening form!",
             status: "success",
           });
           setSubmitted(true);
@@ -155,8 +155,10 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
         const error = err as Error & { message?: string };
         console.log("error", error?.message);
         toast({
-          title: "Error",
-          description: error?.message || "An error occurred while submitting the form.",
+          title: language === "spanish" ? "Error" : "Error",
+          description: language === "spanish" 
+            ? (error?.message || "Ocurrió un error al enviar el formulario.")
+            : (error?.message || "An error occurred while submitting the form."),
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -195,7 +197,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
             fontWeight="normal"
             mb={4}
           >
-            Review
+            {language === "spanish" ? "Revisar" : "Review"}
           </Text>
         )}
         <VStack spacing={4} align="stretch">
@@ -235,7 +237,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
                 bg="#C4C4C4"
                 size="lg"
               >
-                Cancel
+                {language === "spanish" ? "Cancelar" : "Cancel"}
               </Button>
 
               <Button
@@ -246,7 +248,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
                   handleSubmit(e);
                 }}
               >
-                Submit
+                {language === "spanish" ? "Enviar" : "Submit"}
               </Button>
             </Flex>
           )}
