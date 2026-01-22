@@ -18,23 +18,34 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
     const { search, page, filter } = req.query;
 
     // First, get all unique sessions for this form_id
-    let sessionQuery = `
-      SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ic.first_name, ic.last_name
-      FROM intake_responses ir
-      JOIN intake_clients ic ON ir.client_id = ic.id
-      WHERE ir.form_id = $1
-    `;
-
-    const stringSearch = search ? `'%${String(search)}%'` : null;
+    // If search is provided, find sessions where any response value matches
+    let sessionQuery: string;
+    const queryParams: unknown[] = [formId];
 
     if (search) {
-      sessionQuery += `
+      const stringSearch = `%${String(search)}%`;
+      queryParams.push(stringSearch);
+      
+      // Search across all response values, client names, session_id, and submitted_at
+      sessionQuery = `
+        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ic.first_name, ic.last_name
+        FROM intake_responses ir
+        JOIN intake_clients ic ON ir.client_id = ic.id
+        WHERE ir.form_id = $1
         AND (
-          ic.first_name::TEXT ILIKE ${stringSearch}
-          OR ic.last_name::TEXT ILIKE ${stringSearch}
-          OR ir.session_id::TEXT ILIKE ${stringSearch}
-          OR ir.submitted_at::TEXT ILIKE ${stringSearch}
+          ic.first_name::TEXT ILIKE $2
+          OR ic.last_name::TEXT ILIKE $2
+          OR ir.session_id::TEXT ILIKE $2
+          OR ir.submitted_at::TEXT ILIKE $2
+          OR ir.response_value::TEXT ILIKE $2
         )
+      `;
+    } else {
+      sessionQuery = `
+        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ic.first_name, ic.last_name
+        FROM intake_responses ir
+        JOIN intake_clients ic ON ir.client_id = ic.id
+        WHERE ir.form_id = $1
       `;
     }
 
@@ -45,10 +56,11 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
     sessionQuery += ` ORDER BY ir.submitted_at DESC`;
 
     if (page) {
-      sessionQuery += ` LIMIT ${page}`;
+      queryParams.push(page);
+      sessionQuery += ` LIMIT $${queryParams.length}`;
     }
 
-    const sessions = await db.query(sessionQuery, [formId]);
+    const sessions = await db.query(sessionQuery, queryParams);
 
     if (sessions.length === 0) {
       return res.status(200).json([]);
