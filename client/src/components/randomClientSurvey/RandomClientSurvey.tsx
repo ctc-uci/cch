@@ -3,7 +3,7 @@ import { ClientReviewPage } from "./ClientReviewPage";
 import { ReviewPage } from "./ReviewPage";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useToast } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { RandomSurveyConfirmation } from "./RandomSurveyConfirmation";
 
 type CaseManager = {
@@ -19,11 +19,15 @@ export const RandomClientSurvey = () => {
     const [page, setPage] = useState(1);
     const { backend } = useBackendContext();
     const toast = useToast();
+    const params = useParams();
 
     const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
     const navigate = useNavigate();
     const [errors, setErrors] = useState<Record<string, boolean>>({});
     const [surveyData, setSurveyData] = useState<Record<string, unknown>>({});
+    
+    // Get language from URL params, default to English if not specified
+    const language = params.language === "Spanish" ? "spanish" : "english";
 
     useEffect(() => {
         const fetchCaseManagers = async () => {
@@ -74,6 +78,7 @@ export const RandomClientSurvey = () => {
                 setErrors={setErrors}
                 onNext={() => setPage(2)}
                 caseManagers={caseManagers}
+                language={language}
                 />
             )}
 
@@ -83,6 +88,7 @@ export const RandomClientSurvey = () => {
                 caseManagers={caseManagers}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
+                language={language}
                 />
             )}
 

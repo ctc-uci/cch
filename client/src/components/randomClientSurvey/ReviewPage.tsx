@@ -2,7 +2,6 @@ import {
     Box, 
     Button, 
     Circle, 
-    Divider, 
     FormControl, 
     Heading, 
     HStack, 
@@ -47,6 +46,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
+  questionTextSpanish?: string;
   questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
@@ -71,9 +71,10 @@ type ReviewPageProps = {
   caseManagers: CaseManager[];
   onSubmit: () => Promise<void> | void;
   onCancel: () => void;
+  language: "english" | "spanish";
 };
 
-export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: ReviewPageProps) => {
+export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel, language }: ReviewPageProps) => {
     const { isOpen, onOpen, onClose } = useDisclosure();
     const { backend } = useBackendContext();
     const toast = useToast();
@@ -141,8 +142,10 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
     }, [backend]);
 
     const renderField = (question: FormQuestion) => {
-        const { fieldKey, questionType, options } = question;
+        const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
         const value = surveyData[fieldKey];
+        // Use Spanish text if language is Spanish and Spanish text is available
+        const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
 
         switch (questionType) {
             case "rating_grid": {
@@ -226,7 +229,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 const cmId = typeof value === "number" ? value : typeof value === "string" ? Number(value) : null;
                 return (
                     <Select
-                        placeholder="Select your case manager"
+                        placeholder={language === "spanish" ? "Seleccione su administrador de casos" : "Select your case manager"}
                         value={String(cmId || "")}
                         isDisabled
                         fontSize="13px"
@@ -250,7 +253,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             case "site_location": {
                 return (
                     <Select
-                        placeholder="Select site location"
+                        placeholder={language === "spanish" ? "Seleccione la ubicación del sitio" : "Select site location"}
                         value={String(value || "")}
                         isDisabled
                         fontSize="13px"
@@ -270,7 +273,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 const selectOptions = options as FormOption[] | undefined;
                 return (
                     <Select
-                        placeholder="Select option"
+                        placeholder={language === "spanish" ? "Seleccione una opción" : "Select option"}
                         value={String(value || "")}
                         isDisabled
                         fontSize="13px"
@@ -293,6 +296,9 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     <HStack spacing={4}>
                         {["yes", "no"].map((option) => {
                             const isSelected = hasValue && boolValue === (option === "yes");
+                            const optionLabel = language === "spanish" 
+                                ? (option === "yes" ? "Sí" : "No")
+                                : (option.charAt(0).toUpperCase() + option.slice(1));
                             return (
                                 <Button
                                     key={option}
@@ -315,7 +321,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                                     py={2}
                                     isDisabled
                                 >
-                                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                                    {optionLabel}
                                 </Button>
                             );
                         })}
@@ -327,7 +333,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 return (
                     <Input
                         type="date"
-                        placeholder="Date"
+                        placeholder={language === "spanish" ? "Fecha" : "Date"}
                         fontSize="13px"
                         isReadOnly
                         value={
@@ -346,7 +352,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 return (
                     <Input
                         type="number"
-                        placeholder="Enter response"
+                        placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
                         fontSize="13px"
                         isReadOnly
                         value={typeof value === "number" ? value : typeof value === "string" ? value : ""}
@@ -358,7 +364,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             case "textarea":
                 return (
                     <Textarea
-                        placeholder="Enter response"
+                        placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
                         fontSize="13px"
                         isReadOnly
                         value={String(value || "")}
@@ -371,14 +377,14 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             case "text_block":
                 return (
                     <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
-                        {question.questionText}
+                        {displayQuestionText}
                     </Text>
                 );
 
             case "header":
                 return (
                     <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
-                        {question.questionText}
+                        {displayQuestionText}
                     </Heading>
                 );
 
@@ -386,7 +392,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             default:
                 return (
                     <Input
-                        placeholder="Enter response"
+                        placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
                         fontSize="13px"
                         isReadOnly
                         value={String(value || "")}
@@ -412,7 +418,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 minH="400px"
             >
                 <Spinner size="xl" color="blue.500" />
-                <Text>Loading review...</Text>
+                <Text>{language === "spanish" ? "Cargando revisión..." : "Loading review..."}</Text>
             </VStack>
         );
     }
@@ -535,7 +541,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                             lineHeight={"150%"}
                             marginBottom={question.questionType === "rating_grid" ? "16px" : "16px"}
                         >
-                            {question.questionText}
+                            {language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}
                         </Heading>
                         <FormControl>
                             {renderField(question)}
@@ -559,7 +565,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             width={"150px"}
             height={"50px"}
           >
-            Cancel
+            {language === "spanish" ? "Cancelar" : "Cancel"}
           </Button>
           <Button
             onClick={() => {
@@ -572,7 +578,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
             width={"150px"}
             height={"50px"}
           >
-            Submit
+            {language === "spanish" ? "Enviar" : "Submit"}
           </Button>
         </HStack>
         <Modal isOpen={isOpen} onClose={onClose} isCentered>
@@ -601,7 +607,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     fontWeight={"600"}
                     lineHeight={"28px"}
                 >
-                    Are you sure you want to cancel?
+                    {language === "spanish" ? "¿Está seguro de que desea cancelar?" : "Are you sure you want to cancel?"}
                 </Heading>
                 <Text
                     color={"#000"}
@@ -610,7 +616,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     fontWeight={"400"}
                     lineHeight={"150%"}
                 >
-                    You will be led back to the form to edit
+                    {language === "spanish" ? "Será llevado de vuelta al formulario para editar" : "You will be led back to the form to edit"}
                 </Text>
                 </Box>
             </ModalBody>
@@ -632,7 +638,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                 width={"154px"}
                 height={"48px"}
             >
-                No
+                {language === "spanish" ? "No" : "No"}
             </Button>
             <Button
                 backgroundColor={"var(--blue-500, #3182CE)"}
@@ -649,7 +655,7 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel }: Rev
                     onClose();
                 }}
             >
-                Yes
+                {language === "spanish" ? "Sí" : "Yes"}
             </Button>
             </ModalFooter>
         </ModalContent>

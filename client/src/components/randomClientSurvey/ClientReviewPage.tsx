@@ -44,6 +44,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
+  questionTextSpanish?: string;
   questionType: "text" | "number" | "boolean" | "date" | "select" | "textarea" | "rating_grid" | "case_manager_select" | "site_location" | "text_block" | "header";
   options?: FormOption[] | RatingGridConfig;
   isRequired: boolean;
@@ -70,6 +71,7 @@ type ClientReviewPageProps = {
   setErrors: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onNext: () => void;
   caseManagers: CaseManager[];
+  language: "english" | "spanish";
 };
 
 export const ClientReviewPage = ({
@@ -78,7 +80,8 @@ export const ClientReviewPage = ({
   errors,
   setErrors,
   onNext,
-  caseManagers
+  caseManagers,
+  language
 }: ClientReviewPageProps) => {
   const toast = useToast();
   const navigate = useNavigate();
@@ -189,8 +192,8 @@ export const ClientReviewPage = ({
     const hasError = Object.values(newErrors).some((e) => e);
     if (hasError) {
       toast({
-        title: "Missing required fields",
-        description: "Please complete all required questions before submitting.",
+        title: language === "spanish" ? "Campos requeridos faltantes" : "Missing required fields",
+        description: language === "spanish" ? "Por favor complete todas las preguntas requeridas antes de enviar." : "Please complete all required questions before submitting.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -202,9 +205,11 @@ export const ClientReviewPage = ({
   };
 
   const renderField = (question: FormQuestion) => {
-    const { fieldKey, questionType, options } = question;
+    const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
     const value = surveyData[fieldKey] ?? "";
     const isInvalid = errors[fieldKey];
+    // Use Spanish text if language is Spanish and Spanish text is available
+    const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
 
     switch (questionType) {
       case "rating_grid": {
@@ -290,7 +295,7 @@ export const ClientReviewPage = ({
             </Table>
             {isInvalid && (
               <Text color="red.500" fontSize="sm" mt={2}>
-                Please complete all required ratings.
+                {language === "spanish" ? "Por favor complete todas las calificaciones requeridas." : "Please complete all required ratings."}
               </Text>
             )}
           </Box>
@@ -300,7 +305,7 @@ export const ClientReviewPage = ({
       case "case_manager_select":
         return (
           <Select
-            placeholder="Select your case manager"
+            placeholder={language === "spanish" ? "Seleccione su administrador de casos" : "Select your case manager"}
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -329,7 +334,7 @@ export const ClientReviewPage = ({
       case "site_location":
         return (
           <Select
-            placeholder="Select site location"
+            placeholder={language === "spanish" ? "Seleccione la ubicación del sitio" : "Select site location"}
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -354,7 +359,7 @@ export const ClientReviewPage = ({
         const selectOptions = options as FormOption[] | undefined;
         return (
           <Select
-            placeholder="Select option"
+            placeholder={language === "spanish" ? "Seleccione una opción" : "Select option"}
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -384,6 +389,9 @@ export const ClientReviewPage = ({
           <HStack spacing={4}>
             {["yes", "no"].map((option) => {
               const isSelected = hasValue && boolValue === (option === "yes");
+              const optionLabel = language === "spanish" 
+                ? (option === "yes" ? "Sí" : "No")
+                : (option.charAt(0).toUpperCase() + option.slice(1));
               return (
                 <Button
                   key={option}
@@ -411,7 +419,7 @@ export const ClientReviewPage = ({
                   px={6}
                   py={2}
                 >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                  {optionLabel}
                 </Button>
               );
             })}
@@ -423,7 +431,7 @@ export const ClientReviewPage = ({
         return (
           <Input
             type="date"
-            placeholder="Date"
+            placeholder={language === "spanish" ? "Fecha" : "Date"}
             value={
               typeof value === "string"
                 ? value
@@ -447,14 +455,14 @@ export const ClientReviewPage = ({
       case "text_block":
         return (
           <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
-            {question.questionText}
+            {displayQuestionText}
           </Text>
         );
 
       case "header":
         return (
           <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
-            {question.questionText}
+            {displayQuestionText}
           </Heading>
         );
 
@@ -462,7 +470,7 @@ export const ClientReviewPage = ({
         return (
           <Input
             type="number"
-            placeholder="Enter response"
+            placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
             value={typeof value === "number" ? value : typeof value === "string" ? value : ""}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -480,7 +488,7 @@ export const ClientReviewPage = ({
       case "textarea":
         return (
           <Textarea
-            placeholder="Enter response"
+            placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -501,7 +509,7 @@ export const ClientReviewPage = ({
       default:
         return (
           <Input
-            placeholder="Enter response"
+            placeholder={language === "spanish" ? "Escribe tu respuesta" : "Enter response"}
             value={String(value || "")}
             onChange={(e) =>
               setSurveyData((prev) => ({
@@ -666,13 +674,13 @@ export const ClientReviewPage = ({
                 lineHeight={"150%"}
                 marginBottom={question.questionType === "rating_grid" ? "14px" : "30px"}
               >
-                {question.questionText}
+                {language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}
               </Heading>
               <FormControl isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"} isInvalid={errors[question.fieldKey]}>
                 {renderField(question)}
                 {errors[question.fieldKey] && (
                   <Text color="red.500" fontSize="sm" mt={1}>
-                    This field is required.
+                    {language === "spanish" ? "Este campo es obligatorio." : "This field is required."}
                   </Text>
                 )}
               </FormControl>
@@ -695,7 +703,7 @@ export const ClientReviewPage = ({
           width={"150px"}
           height={"50px"}
         >
-          Review
+          {language === "spanish" ? "Revisar" : "Review"}
         </Button>
       </Box>
     </VStack>
