@@ -28,10 +28,10 @@ const ClientLandingPage = () => {
             height={"100dvh"}>
             <Image src={cch} alt="CCH Logo" height={300}  />
             <Text fontSize="2xl" fontWeight="bold">
-                Welcome!
+                {language === 'Spanish' ? '¡Bienvenido!' : 'Welcome!'}
             </Text>
             <Text fontSize="lg">
-                Choose your language.
+                {language === 'Spanish' ? 'Elija su idioma.' : 'Choose your language.'}
             </Text>
             <ButtonGroup size='md' isAttached variant='ghost' colorScheme="blue" marginTop={4} style={{outlineColor:"#3182CE", outlineWidth:'2px'}} >
                 <Button onClick={() => setLanguage("English")} style={language === 'English' ? { color: "white", fontWeight: "bold", backgroundColor: "#3182CE",  outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px' } : { outlineColor:"#3182CE", outlineWidth:'1px', outlineOffset:'0px'}}>English</Button>
@@ -39,9 +39,12 @@ const ClientLandingPage = () => {
                 </ButtonGroup>
             {language && (<>
                 <Text fontSize="lg" marginTop={4} width={380} textAlign="center">
-                This survey helps us understand your needs so we can provide the best support possible. Your answers are confidential, and we’re here to assist if you need anything.</Text>
+                {language === 'Spanish' 
+                    ? 'Esta encuesta nos permite comprender sus necesidades para brindarle el mejor apoyo posible. Sus respuestas son confidenciales y estamos a su disposición para asistir cualquier duda.'
+                    : "This survey helps us understand your needs so we can provide the best support possible. Your answers are confidential, and we're here to assist if you need anything."}
+                </Text>
                 <Button variant={"solid"} colorScheme="blue" size="lg" marginTop={4} onClick={handleContinue}>
-                    Continue
+                    {language === 'Spanish' ? 'Continuar' : 'Continue'}
                 </Button>
             </>)}
 
