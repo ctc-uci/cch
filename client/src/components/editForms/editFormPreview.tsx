@@ -440,11 +440,11 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           });
           return;
         }
-        // Validate that all columns have labels and values
-        if (config.columns.some((col) => !col.label.trim() || !col.value.trim())) {
+        // Validate that all columns have labels (value will match label automatically)
+        if (config.columns.some((col) => !col.label.trim())) {
           toast({
             title: "Error",
-            description: "All columns must have both labels and values",
+            description: "All columns must have labels",
             status: "error",
             duration: 3000,
           });
@@ -1156,11 +1156,11 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                           newOptions = {
                             rows: [{ key: "row1", label: "" }],
                             columns: [
-                              { value: "1", label: "Very Poor" },
-                              { value: "2", label: "Poor" },
-                              { value: "3", label: "Neutral" },
-                              { value: "4", label: "Good" },
-                              { value: "5", label: "Excellent" },
+                              { value: "Very Poor", label: "Very Poor" },
+                              { value: "Poor", label: "Poor" },
+                              { value: "Neutral", label: "Neutral" },
+                              { value: "Good", label: "Good" },
+                              { value: "Excellent", label: "Excellent" },
                             ],
                           };
                         } else {
@@ -1335,7 +1335,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                               const config = editingQuestion.options as RatingGridConfig;
                               const newColumns = [
                                 ...config.columns,
-                                { value: `${config.columns.length + 1}`, label: "" },
+                                { value: "", label: "" },
                               ];
                               setEditingQuestion({
                                 ...editingQuestion,
@@ -1350,29 +1350,15 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                           {(editingQuestion.options as RatingGridConfig)?.columns.map((col, index) => (
                             <Flex key={col.value} gap={2}>
                               <Input
-                                placeholder="Value"
-                                value={col.value}
-                                onChange={(e) => {
-                                  if (!editingQuestion.options) return;
-                                  const config = editingQuestion.options as RatingGridConfig;
-                                  const newColumns = [...config.columns];
-                                  newColumns[index] = { ...col, value: e.target.value };
-                                  setEditingQuestion({
-                                    ...editingQuestion,
-                                    options: { ...config, columns: newColumns },
-                                  });
-                                }}
-                                size="sm"
-                                width="100px"
-                              />
-                              <Input
                                 placeholder="Label (e.g., Very Poor)"
                                 value={col.label}
                                 onChange={(e) => {
                                   if (!editingQuestion.options) return;
                                   const config = editingQuestion.options as RatingGridConfig;
                                   const newColumns = [...config.columns];
-                                  newColumns[index] = { ...col, label: e.target.value };
+                                  const newLabel = e.target.value;
+                                  // Automatically set value to match label
+                                  newColumns[index] = { ...col, label: newLabel, value: newLabel };
                                   setEditingQuestion({
                                     ...editingQuestion,
                                     options: { ...config, columns: newColumns },
