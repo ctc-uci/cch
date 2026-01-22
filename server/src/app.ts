@@ -21,6 +21,7 @@ import { initialInterviewRouter } from "../routes/initialInterview";
 import { intakeChildrenRouter } from "../routes/intakeChildren";
 import { intakeClientsRouter } from "../routes/intakeClients";
 import { intakeExitSurveyRouter } from "../routes/intakeExitSurvey";
+import { intakeResponsesRouter } from "../routes/intakeResponses";
 import { intakeStatsFormRouter } from "../routes/intakeStatsForm.js";
 import { intakeSuccessStoryRouter } from "../routes/intakeSuccessStory";
 import { lastUpdatedRouter } from "../routes/lastUpdated";
@@ -92,6 +93,7 @@ app.use("/intakeClients", intakeClientsRouter);
 app.use("/intakeChildren", intakeChildrenRouter);
 app.use("/intakeExitSurvey", intakeExitSurveyRouter);
 app.use("/intakeSuccessStory", intakeSuccessStoryRouter);
+app.use("/intakeResponses", intakeResponsesRouter);
 
 app.listen(SERVER_PORT, () => {
   console.info(`Server listening on ${SERVER_PORT}`);
