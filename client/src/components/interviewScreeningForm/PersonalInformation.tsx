@@ -3,9 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { InterviewScreeningFormProps } from './types';
 import { ChevronLeftIcon } from '@chakra-ui/icons/ChevronLeft';
 import { InterviewScreeningForm } from './InterviewScreeningForm';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useBackendContext } from '../../contexts/hooks/useBackendContext';
-import { useAuthContext } from '../../contexts/hooks/useAuthContext';
 import { useForm } from '../../contexts/formContext';
 import { SuccessScreen } from '../SuccessScreen';
 
@@ -13,59 +12,138 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
   const navigate = useNavigate();
   const params = useParams();
   const { backend } = useBackendContext();
-  const { currentUser } = useAuthContext();
-  const { formData } = useForm();
+  const { formData, setFormData } = useForm();
   const toast = useToast();
   const [onReview, setOnReview] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   type Language = 'english' | 'spanish';
   const language = ((params.language as string) === 'spanish' ? 'spanish' : 'english') as Language;
 
+  // Helper function to reset form to initial empty state
+  const resetFormData = useCallback(() => {
+    setFormData({
+      applicantType: "",
+      firstName: "",
+      lastName: "",
+      name: "",
+      age: "",
+      date: new Date().toISOString(),
+      phoneNumber: "",
+      maritalStatus: "",
+      dateOfBirth: "",
+      email: "",
+      ssnLastFour: "",
+      ethnicity: "",
+      veteran: "",
+      disabled: "",
+      currentAddress: "",
+      lastPermAddress: "",
+      reasonForLeavingPermAddress: "",
+      whereResideLastNight: "",
+      currentlyHomeless: "",
+      eventLeadingToHomelessness: "",
+      howLongExperiencingHomelessness: "",
+      prevAppliedToCch: "",
+      whenPrevAppliedToCch: "",
+      prevInCch: "",
+      whenPrevInCch: "",
+      childName: "",
+      childDOB: "",
+      city: "",
+      custodyOfChild: "",
+      fatherName: "",
+      nameSchoolChildrenAttend: "",
+      cityOfSchool: "",
+      howHearAboutCch: "",
+      programsBeenInBefore: "",
+      monthlyIncome: "",
+      sourcesOfIncome: "",
+      monthlyBills: "",
+      estimateAmountBills: "",
+      currentlyEmployed: "",
+      lastEmployer: "",
+      lastEmployedDate: "",
+      childrenAge: "",
+      educationHistory: "",
+      dateOfEducation: "",
+      transportation: "",
+      legalResident: "",
+      medical: "",
+      medicalCity: "",
+      medicalInsurance: "",
+      medicalConditions: "",
+      medications: "",
+      domesticViolenceHistory: "",
+      socialWorker: "",
+      socialWorkerTelephone: "",
+      socialWorkerOfficeLocation: "",
+      lengthOfSobriety: "",
+      lastDrugUse: "",
+      lastAlcoholUse: "",
+      timeUsingDrugsAlcohol: "",
+      beenConvicted: "",
+      convictedReasonAndTime: "",
+      presentWarrantExist: "",
+      warrantCounty: "",
+      probationParoleOfficer: "",
+      probationParoleOfficerTelephone: "",
+      personalReferences: "",
+      personalReferenceTelephone: "",
+      futurePlansGoals: "",
+      lastPermanentResidenceHouseholdComposition: "",
+      whyNoLongerAtLastResidence: "",
+      whatCouldPreventHomeless: "",
+    });
+  }, [setFormData]);
+
+  // Reset form when component mounts (when navigating back to the form)
+  useEffect(() => {
+    resetFormData();
+  }, [resetFormData]);
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     if (onReview) {
       try {
-        if (!currentUser?.email) {
-          toast({
-            title: "Authentication Error",
-            description: "An error has occurred. Please re-login to continue.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-          return;
-        }
-
+        // Get email from form data
+        const formEmail = formData.email || (formData as unknown as Record<string, unknown>).emailAddress as string | undefined;
+        
         // Try to get client from intakeClients first, then fall back to clients table
         // If not found, backend will create one automatically
         let clientData = null;
-        try {
-          const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(currentUser.email)}`);
-          if (intakeResponse.data && intakeResponse.data.length > 0) {
-            clientData = intakeResponse.data[0];
-          }
-        } catch {
-          // If intakeClients doesn't have the client, try the old clients table
+        if (formEmail) {
           try {
-            const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser.email)}`);
-            if (response.data && response.data.length > 0) {
-              clientData = response.data[0];
+            const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(formEmail)}`);
+            if (intakeResponse.data && intakeResponse.data.length > 0) {
+              clientData = intakeResponse.data[0];
             }
           } catch {
-            // Client not found in either table - backend will create one
+            // If intakeClients doesn't have the client, try the old clients table
+            try {
+              const response = await backend.get(`/clients/email/${encodeURIComponent(formEmail)}`);
+              if (response.data && response.data.length > 0) {
+                clientData = response.data[0];
+              }
+            } catch {
+              // Client not found in either table - backend will create one
+            }
           }
         }
 
-        // Include email so backend can create client if needed
+        // Include email from form data so backend can create client if needed
         // Include client_id if found, otherwise backend will create one
         const payload = {
           ...formData,
           name: formData.firstName + " " + formData.lastName,
-          email: currentUser.email,
+          // Use the email from the form data
+          email: formEmail,
           ...(clientData && { client_id: clientData.id }),
         };
         const submitResponse = await backend.post("/initialInterview", payload);
         if (submitResponse.status === 200) {
+          // Reset form data to initial empty state
+          resetFormData();
+          
           toast({
             title: "Form submitted",
             description: "Thank you for completing the interview screening form!",
