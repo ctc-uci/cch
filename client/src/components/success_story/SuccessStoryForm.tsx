@@ -48,6 +48,7 @@ interface FormQuestion {
   id: number;
   fieldKey: string;
   questionText: string;
+  questionTextSpanish?: string;
   questionType:
     | "text"
     | "number"
@@ -123,8 +124,8 @@ export const SuccessStoryForm = ({
         console.error(e);
         if (mounted) {
           toast({
-            title: "Error loading questions",
-            description: "Could not load success story questions.",
+            title: language === "spanish" ? "Error al cargar preguntas" : "Error loading questions",
+            description: language === "spanish" ? "No se pudieron cargar las preguntas de la historia de éxito." : "Could not load success story questions.",
             status: "error",
           });
         }
@@ -172,8 +173,8 @@ export const SuccessStoryForm = ({
       } catch (e) {
         console.error(e);
         toast({
-          title: "Error loading data",
-          description: "Could not load case managers or locations.",
+          title: language === "spanish" ? "Error al cargar datos" : "Error loading data",
+          description: language === "spanish" ? "No se pudieron cargar los administradores de casos o las ubicaciones." : "Could not load case managers or locations.",
           status: "error",
         });
       }
@@ -182,9 +183,11 @@ export const SuccessStoryForm = ({
   }, [backend, toast]);
 
   const renderField = (question: FormQuestion) => {
-    const { fieldKey, questionType, options, questionText } = question;
+    const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
     const value = formData[fieldKey];
     const disabled = onReview;
+    // Use Spanish text if language is Spanish and Spanish text is available
+    const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
 
     switch (questionType) {
       case "rating_grid": {
@@ -313,6 +316,9 @@ export const SuccessStoryForm = ({
           <HStack spacing={4}>
             {["yes", "no"].map((option) => {
               const isSelected = hasValue && boolValue === (option === "yes");
+              const optionLabel = language === "spanish" 
+                ? (option === "yes" ? "Sí" : "No")
+                : (option.charAt(0).toUpperCase() + option.slice(1));
               return (
                 <Button
                   key={option}
@@ -332,7 +338,7 @@ export const SuccessStoryForm = ({
                   }
                   isDisabled={disabled}
                 >
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                  {optionLabel}
                 </Button>
               );
             })}
@@ -402,14 +408,14 @@ export const SuccessStoryForm = ({
       case "text_block":
         return (
           <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
-            {questionText}
+            {displayQuestionText}
           </Text>
         );
 
       case "header":
         return (
           <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
-            {questionText}
+            {displayQuestionText}
           </Heading>
         );
 
@@ -443,7 +449,7 @@ export const SuccessStoryForm = ({
     return (
       <VStack align="center" justify="center" minH="300px">
         <Spinner size="lg" color="blue.500" />
-        <Text>Loading success story form...</Text>
+        <Text>{language === "spanish" ? "Cargando formulario de historia de éxito..." : "Loading success story form..."}</Text>
       </VStack>
     );
   }
@@ -485,7 +491,7 @@ export const SuccessStoryForm = ({
                 <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
                   <HStack spacing={2} alignItems="center">
                     {renderField(question)}
-                    <FormLabel mb={0}>{question.questionText}</FormLabel>
+                    <FormLabel mb={0}>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
                   </HStack>
                 </FormControl>
               );
@@ -493,7 +499,7 @@ export const SuccessStoryForm = ({
 
             return (
               <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
-                <FormLabel>{question.questionText}</FormLabel>
+                <FormLabel>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
                 {renderField(question)}
               </FormControl>
             );

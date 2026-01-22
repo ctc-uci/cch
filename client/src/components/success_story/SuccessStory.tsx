@@ -41,7 +41,7 @@ export const SuccessStory = () => {
   const [onReview, setOnReview] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
-  const language = params.language || "english";
+  const language = params.language?.toLowerCase() === "spanish" ? "spanish" : "english";
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const { currentUser } = useAuthContext();
 
@@ -81,8 +81,8 @@ export const SuccessStory = () => {
         };
         await backend.post("/successStory", payload);
         toast({
-          title: "Form submitted",
-          description: `Thanks for your feedback!`,
+          title: language === "spanish" ? "Formulario enviado" : "Form submitted",
+          description: language === "spanish" ? "¡Gracias por sus comentarios!" : "Thanks for your feedback!",
           status: "success",
         });
         setSubmitted(true);
@@ -90,8 +90,10 @@ export const SuccessStory = () => {
         const error = err as Error & { message?: string };
         console.error("Error submitting success story:", err);
         toast({
-          title: "An error occurred",
-          description: `Success story response was not created: ${error?.message || 'Unknown error occurred'}`,
+          title: language === "spanish" ? "Ocurrió un error" : "An error occurred",
+          description: language === "spanish" 
+            ? `No se pudo crear la respuesta de la historia de éxito: ${error?.message || 'Error desconocido'}`
+            : `Success story response was not created: ${error?.message || 'Unknown error occurred'}`,
           status: "error",
         });
       }
@@ -122,7 +124,7 @@ export const SuccessStory = () => {
             mx="auto"
             fontWeight="normal"
           >
-            Review
+            {language === "spanish" ? "Revisar" : "Review"}
           </Text>
         )}
         <VStack
@@ -161,7 +163,7 @@ export const SuccessStory = () => {
                 bg="#C4C4C4"
                 size="lg"
               >
-                Cancel
+                {language === "spanish" ? "Cancelar" : "Cancel"}
               </Button>
 
               <Button
@@ -174,7 +176,7 @@ export const SuccessStory = () => {
                   );
                 }}
               >
-                Submit
+                {language === "spanish" ? "Enviar" : "Submit"}
               </Button>
             </Flex>
           )}
