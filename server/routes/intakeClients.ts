@@ -246,7 +246,8 @@ intakeClientsRouter.post("/", async (req, res) => {
         // Convert value to string for storage
         let stringValue: string;
         if (typeof value === "boolean") {
-          stringValue = value.toString();
+          // Convert boolean to "yes" or "no" instead of "true" or "false"
+          stringValue = value ? "yes" : "no";
         } else if (typeof value === "number") {
           stringValue = value.toString();
         } else {
@@ -310,7 +311,8 @@ intakeClientsRouter.put("/:id", async (req, res) => {
         let stringValue: string | null = null;
         if (value !== undefined && value !== null && value !== "") {
           if (typeof value === "boolean") {
-            stringValue = value.toString();
+            // Convert boolean to "yes" or "no" instead of "true" or "false"
+            stringValue = value ? "yes" : "no";
           } else if (typeof value === "number") {
             stringValue = value.toString();
           } else {

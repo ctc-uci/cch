@@ -364,7 +364,8 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
         let stringValue: string | null = null;
         if (value !== "") {
           if (typeof value === "boolean") {
-            stringValue = value.toString();
+            // Convert boolean to "yes" or "no" instead of "true" or "false"
+            stringValue = value ? "yes" : "no";
           } else if (typeof value === "number") {
             stringValue = value.toString();
           } else if (typeof value === "object") {

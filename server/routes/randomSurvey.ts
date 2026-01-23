@@ -194,7 +194,8 @@ randomSurveyRouter.post("/", async (req, res) => {
         // Convert value to string for storage
         let stringValue: string;
         if (typeof value === "boolean") {
-          stringValue = value.toString();
+          // Convert boolean to "yes" or "no" instead of "true" or "false"
+          stringValue = value ? "yes" : "no";
         } else if (typeof value === "number") {
           stringValue = value.toString();
         } else if (typeof value === "object") {
@@ -204,11 +205,12 @@ randomSurveyRouter.post("/", async (req, res) => {
           stringValue = String(value);
         }
 
-        await db.query(
+        const response = await db.query(
           `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
-           VALUES ($1, $2, $3, $4, $5)`,
+           VALUES ($1, $2, $3, $4, $5) RETURNING *`,
           [clientId, question.id, stringValue, formId, sessionId]
         );
+        console.log("response", response);
       }
     }
 
