@@ -205,12 +205,11 @@ randomSurveyRouter.post("/", async (req, res) => {
           stringValue = String(value);
         }
 
-        const response = await db.query(
+        await db.query(
           `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
            VALUES ($1, $2, $3, $4, $5) RETURNING *`,
           [clientId, question.id, stringValue, formId, sessionId]
         );
-        console.log("response", response);
       }
     }
 
