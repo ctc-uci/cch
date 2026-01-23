@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
-import { Box, Textarea } from "@chakra-ui/react";
+import { Box, Textarea, useToast } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../../utils/snakeCase";
@@ -97,21 +97,30 @@ interface ClientProps {
 
 function Comments({ clientId }: ClientProps) {
   const { backend } = useBackendContext();
+  const toast = useToast();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [client, setClient] = useState<Client>(emptyClient);
-
-  // Fetch client data by id
-  const fetchClient = async (id: number) => {
-    try {
-      const response = await backend.get(`/clients/${id}`);
-      setClient(response.data[0]);
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
+  const [isSaving, setIsSaving] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    const fetchClient = async (id: number) => {
+      try {
+        const response = await backend.get(`/clients/${id}`);
+        setClient(response.data[0]);
+      } catch (err: unknown) {
+        const error = err as { message?: string };
+        console.error("Error fetching client:", error.message);
+        toast({
+          title: "Error loading comments",
+          description: error.message || "Failed to load client comments.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
     const fetchData = async () => {
       setLoading(true);
       if (clientId) {
@@ -120,19 +129,71 @@ function Comments({ clientId }: ClientProps) {
       setLoading(false);
     };
     fetchData();
-  }, [clientId]);
+  }, [clientId, backend, toast]);
 
   const handleSaveChanges = async () => {
+    if (!client || !client.id) {
+      return;
+    }
+    
     try {
-      if (!client) {
-        return;
-      }
+      setIsSaving(true);
       const clientData = toSnakeCase(client);
       await backend.put(`/clients/${client.id}`, clientData);
-    } catch (error: any) {
+      
+      toast({
+        title: "Comments saved",
+        description: "Your comments have been saved successfully.",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       console.error("Error updating client information:", error.message);
+      toast({
+        title: "Error saving comments",
+        description: error.message || "Failed to save comments. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setClient({ ...client, comments: e.target.value });
+    
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Auto-save after 2 seconds of no typing (debounced)
+    saveTimeoutRef.current = setTimeout(() => {
+      handleSaveChanges();
+    }, 2000);
+  };
+
+  const handleBlur = () => {
+    // Clear any pending timeout and save immediately
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    handleSaveChanges();
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Box
@@ -147,8 +208,16 @@ function Comments({ clientId }: ClientProps) {
         fontSize="md"
         value={client.comments}
         placeholder="Type Here"
-        onChange={(e) => setClient({ ...client, comments: e.target.value })}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        isDisabled={loading || isSaving}
+        opacity={isSaving ? 0.7 : 1}
       />
+      {isSaving && (
+        <Box mt={2} fontSize="sm" color="gray.500">
+          Saving...
+        </Box>
+      )}
     </Box>
   );
 }
