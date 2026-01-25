@@ -1,4 +1,4 @@
-import { Box, Image, VStack, Text} from "@chakra-ui/react";
+import { Box, Image, VStack, Text, Spinner, Center} from "@chakra-ui/react";
 import cch from "../../../public/cch_logo.png";
 import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
@@ -8,10 +8,10 @@ import { useEffect } from "react";
 export const LandingPage = () => {
     const navigate = useNavigate();
     const { currentUser, initialized } = useAuthContext();
-    const { role } = useRoleContext();
+    const { role, loading: roleLoading } = useRoleContext();
 
     useEffect(() => {
-        if (initialized && currentUser) {
+        if (initialized && !roleLoading && currentUser) {
             // Redirect based on role
             if (role === "admin") {
                 navigate("/admin-client-list", { replace: true });
@@ -19,11 +19,15 @@ export const LandingPage = () => {
                 navigate("/clientlist", { replace: true });
             }
         }
-    }, [currentUser, role, initialized, navigate]);
+    }, [currentUser, role, initialized, roleLoading, navigate]);
 
-    // Show loading if not initialized or if user is logged in (while redirecting)
-    if (!initialized || (currentUser && !role)) {
-        return null; // Or show a spinner
+    // Show loading spinner while auth or role is being determined
+    if (!initialized || roleLoading) {
+        return (
+            <Center height="100vh">
+                <Spinner size="xl" color="#0099D2" />
+            </Center>
+        );
     }
 
     return (

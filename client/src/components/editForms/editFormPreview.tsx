@@ -693,9 +693,18 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       return;
     }
 
+    const newVisibility = !question.isVisible;
+    
+    // Optimistically update the local state to avoid page reload/scroll jump
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === question.id ? { ...q, isVisible: newVisibility } : q
+      )
+    );
+
     try {
       await backend.patch(`/formQuestions/${question.id}/visibility`, {
-        is_visible: !question.isVisible,
+        is_visible: newVisibility,
       });
       toast({
         title: "Success",
@@ -703,8 +712,13 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
         status: "success",
         duration: 3000,
       });
-      loadQuestions();
     } catch (err) {
+      // Revert the optimistic update on error
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === question.id ? { ...q, isVisible: question.isVisible } : q
+        )
+      );
       const error = err as { response?: { data?: { error?: string } } };
       toast({
         title: "Error",
