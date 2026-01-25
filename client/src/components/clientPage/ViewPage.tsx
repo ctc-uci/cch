@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Box,
   Button,
@@ -81,7 +81,9 @@ export interface Children {
   id: number;
   firstName: string;
   lastName: string;
-  dateOfBirth: number;
+  parentId: number;
+  dateOfBirth: string;
+  reunified: boolean;
   comments: string;
 }
 
@@ -182,16 +184,23 @@ export const ViewPage = () => {
     })
   }
 
-  useEffect(() => {
-    const fetchChildren = async (id: number) => {
-      try {
-        const response = await backend.get(`/children/${id}`);
-        setChildren(response.data);
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
+  const fetchChildren = useCallback(async (id: number) => {
+    try {
+      const response = await backend.get(`/children/${id}`);
+      setChildren(response.data);
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Failed to fetch children");
+    }
+  }, [backend]);
 
+  const refreshChildren = useCallback(() => {
+    if (params.id) {
+      fetchChildren(parseInt(params.id));
+    }
+  }, [params.id, fetchChildren]);
+
+  useEffect(() => {
     const fetchClient = async (id: number) => {
       try {
         const response = await backend.get(`/clients/${id}`);
@@ -224,7 +233,7 @@ export const ViewPage = () => {
     };
 
     fetchData();
-  }, [backend, params.id]);
+  }, [backend, params.id, fetchChildren]);
 
   if (loading) return <Box>Loading...</Box>;
   if (error) return <Box>Error: {error}</Box>;
@@ -315,7 +324,7 @@ export const ViewPage = () => {
         </TabList>
         <TabPanels>
           <TabPanel>
-            <ChildrenCards items={children} />
+            <ChildrenCards items={children} parentId={client.id} onRefresh={refreshChildren} />
           </TabPanel>
           <TabPanel>
             <Forms forms={[...formItems]} />
