@@ -463,12 +463,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       // Update field key if it was changed
       if (uniqueFieldKey !== editingQuestion.fieldKey) {
         editingQuestion.fieldKey = uniqueFieldKey;
-        toast({
-          title: "Field Key Adjusted",
-          description: `Field key changed to "${uniqueFieldKey}" to avoid duplicates`,
-          status: "info",
-          duration: 3000,
-        });
       }
 
       // Check for duplicate order numbers and swap if needed
@@ -600,7 +594,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
           
           toast({
             title: "Success",
-            description: `Question saved with field key "${uniqueFieldKey}" (adjusted to avoid duplicates)`,
+            description: "Question saved successfully",
             status: "success",
             duration: 3000,
           });
