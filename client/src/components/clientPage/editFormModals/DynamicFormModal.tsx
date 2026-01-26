@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -215,18 +215,6 @@ export default function DynamicFormModal({
     if (!isEditing) {
       // Display mode
       if (question.questionType === 'date' && displayValue) {
-        // Parse date string as local date to avoid timezone issues
-        const dateStr = String(displayValue).split('T')[0];
-        if (dateStr) {
-          const parts = dateStr.split('-');
-          if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
-            const year = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-            const day = parseInt(parts[2], 10);
-            const localDate = new Date(year, month, day);
-            return localDate.toLocaleDateString("en-US");
-          }
-        }
         return new Date(displayValue).toLocaleDateString("en-US");
       }
       if (question.questionType === 'boolean') {
@@ -294,26 +282,6 @@ export default function DynamicFormModal({
     }
 
     if (question.questionType === 'date') {
-      // Parse date string as local date to avoid timezone issues
-      let dateInputValue = '';
-      if (displayValue) {
-        const dateStr = String(displayValue).split('T')[0];
-        if (dateStr) {
-          const parts = dateStr.split('-');
-          if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
-            // Use the date string directly if it's already in YYYY-MM-DD format
-            dateInputValue = dateStr;
-          } else {
-            // Fallback: parse as local date
-            const dateObj = new Date(displayValue);
-            const year = dateObj.getFullYear();
-            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-            const day = String(dateObj.getDate()).padStart(2, '0');
-            dateInputValue = `${year}-${month}-${day}`;
-          }
-        }
-      }
-      
       return (
         <Input
           variant="unstyled"
@@ -324,7 +292,7 @@ export default function DynamicFormModal({
           border="1px solid"
           borderColor="#3182CE"
           type="date"
-          value={dateInputValue}
+          value={displayValue ? new Date(displayValue).toISOString().split('T')[0] : ''}
           onChange={(e) => handleFieldChange(question.fieldKey, e.target.value)}
         />
       );
@@ -512,22 +480,10 @@ export default function DynamicFormModal({
             <Table variant="simple" sx={{ tableLayout: "fixed", width: "100%" }}>
               <Thead bg="gray.50">
                 <Tr>
-                  <Th 
-                    fontSize="md" 
-                    color="black"
-                    width="40%"
-                    whiteSpace="normal"
-                    wordBreak="break-word"
-                  >
+                  <Th fontSize="md" color="black">
                     Question
                   </Th>
-                  <Th 
-                    fontSize="md" 
-                    color="black"
-                    width="60%"
-                    whiteSpace="normal"
-                    wordBreak="break-word"
-                  >
+                  <Th fontSize="md" color="black">
                     Answer
                   </Th>
                 </Tr>
@@ -538,25 +494,8 @@ export default function DynamicFormModal({
                   const isTextarea = question.questionType === 'textarea';
                   return (
                     <Tr key={question.id}>
-                      <Td 
-                        p={4}
-                        width="40%"
-                        whiteSpace="normal"
-                        wordBreak="break-word"
-                        overflowWrap="break-word"
-                        verticalAlign="top"
-                      >
-                        {question.questionText}
-                      </Td>
-                      <Td 
-                        p={4} 
-                        bgColor={isEditing ? "#EDF2F7" : "white"}
-                        width="60%"
-                        whiteSpace="normal"
-                        wordBreak="break-word"
-                        overflowWrap="break-word"
-                        verticalAlign="top"
-                      >
+                      <Td p={4}>{question.questionText}</Td>
+                      <Td p={4} bgColor={isEditing ? "#EDF2F7" : "white"}>
                         <Box 
                           w="100%" 
                           minH={isRatingGrid || isTextarea ? "auto" : cellHeight} 
