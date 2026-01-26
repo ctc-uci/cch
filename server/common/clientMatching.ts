@@ -194,31 +194,7 @@ export function extractClientFields(formData: Record<string, unknown>): {
     'birthDate', 
     'birth_date'
   ]) as string | Date | null;
-
-  // Log extracted fields for debugging (only if fields are missing)
-  if (!firstName || !lastName || !phoneNumber || !dateOfBirth) {
-    // Check actual values for debugging
-    const lastNameValues = {
-      lastName: formData.lastName,
-      last_name: formData.last_name,
-      what_is_your_last_name: formData.what_is_your_last_name,
-    };
-    
-    console.log("Missing client fields - extracted:", {
-      firstName,
-      lastName,
-      phoneNumber,
-      dateOfBirth,
-      lastNameValues, // Show actual values
-      availableKeys: Object.keys(formData).filter(k => 
-        k.toLowerCase().includes('name') || 
-        k.toLowerCase().includes('phone') || 
-        k.toLowerCase().includes('birth') ||
-        k.toLowerCase().includes('dob')
-      ),
-    });
-  }
-
+  
   return {
     firstName,
     lastName,

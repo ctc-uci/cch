@@ -4,14 +4,14 @@ DROP TABLE IF EXISTS intake_responses;
 -- Separate from original clients table for safe rollback
 CREATE TABLE intake_responses (
     id SERIAL NOT NULL PRIMARY KEY,
-    client_id INT NOT NULL,
+    client_id INT,  -- references clients.id when form data matches a client (nullable for unmatched forms)
     question_id INT NOT NULL,
     response_value TEXT,  -- stored as text, parsed based on question_type
     session_id UUID,  -- groups responses from the same survey submission
     form_id INT NOT NULL,
     submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (client_id) REFERENCES intake_clients(id) ON DELETE CASCADE,
+    FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
     FOREIGN KEY (question_id) REFERENCES form_questions(id) ON DELETE RESTRICT
 );
 
