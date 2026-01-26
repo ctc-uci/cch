@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
+import { matchClient, extractClientFields } from "../common/clientMatching";
 
 export const initialInterviewRouter = Router();
 
@@ -241,9 +242,9 @@ initialInterviewRouter.get("/id/:id", async (req, res) => {
     if (isUUID) {
       // Fetch from intake_responses using session_id
       const sessionResult = await db.query(
-        `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, ic.first_name, ic.last_name
+        `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, c.first_name, c.last_name
         FROM intake_responses ir
-        JOIN intake_clients ic ON ir.client_id = ic.id
+        LEFT JOIN clients c ON ir.client_id = c.id
         WHERE ir.session_id = $1 AND ir.form_id = 1
         LIMIT 1`,
         [id]
@@ -273,7 +274,9 @@ initialInterviewRouter.get("/id/:id", async (req, res) => {
         id: session.session_id,
         client_id: session.client_id,
         date: session.submitted_at,
-        name: `${session.first_name || ''} ${session.last_name || ''}`.trim() || 'Unknown',
+        name: session.first_name && session.last_name 
+          ? `${session.first_name} ${session.last_name}`.trim() 
+          : 'Unknown',
       };
 
       // Convert responses to form data
@@ -336,58 +339,6 @@ initialInterviewRouter.post("/", async (req, res) => {
   try {
     const formData = req.body;
     const formId = 1; // Initial Interview Screening form_id
-    let clientId = formData.client_id;
-
-    // If client_id is not provided, try to find or create intake_client
-    if (!clientId) {
-      // Try to find client in intake_clients by email (from form data or user)
-      const email = formData.email || formData.emailAddress;
-      if (email) {
-        const existingClients = await db.query(
-          `SELECT DISTINCT c.id 
-           FROM intake_clients c
-           JOIN intake_responses ir ON c.id = ir.client_id
-           JOIN form_questions fq ON ir.question_id = fq.id
-           WHERE fq.field_key = 'email' AND ir.response_value = $1
-           LIMIT 1`,
-          [email]
-        );
-
-        if (existingClients.length > 0) {
-          clientId = existingClients[0].id;
-        } else {
-          // Create a new intake_client entry
-          // Extract first_name and last_name from form data
-          const firstName = formData.firstName || formData.first_name || "Unknown";
-          const lastName = formData.lastName || formData.last_name || "Client";
-          
-          // Get first unit_id as default
-          let unitId = 1;
-          try {
-            const units = await db.query("SELECT id FROM units LIMIT 1");
-            if (units.length > 0) {
-              unitId = units[0].id;
-            }
-          } catch {
-            // Use default unitId = 1
-          }
-
-          // Use default created_by = 1 if no case manager is found
-          const createdBy = 1;
-
-          const clientResult = await db.query(
-            `INSERT INTO intake_clients (created_by, unit_id, status, first_name, last_name)
-             VALUES ($1, $2, $3, $4, $5)
-             RETURNING id`,
-            [createdBy, unitId, "Active", firstName, lastName]
-          );
-
-          clientId = clientResult[0].id;
-        }
-      } else {
-        return res.status(400).json({ error: "client_id or email is required" });
-      }
-    }
 
     // Get all form questions for form_id = 1 to map field_key to question_id
     const questions = await db.query(
@@ -403,6 +354,19 @@ initialInterviewRouter.post("/", async (req, res) => {
         ]
       )
     );
+
+    // Match client from clients table (excluding random client survey - form_id = 4)
+    // form_id = 1 is Initial Interview, so we should match
+    const clientFields = extractClientFields(formData);
+    const matchedClientId = await matchClient(
+      clientFields.firstName,
+      clientFields.lastName,
+      clientFields.phoneNumber,
+      clientFields.dateOfBirth
+    );
+
+    // Use matched client ID if found, otherwise use NULL (client_id now references clients table)
+    const finalClientId = matchedClientId || null;
 
     // Generate a unique session_id for this interview submission
     // All responses from this submission will share the same session_id
@@ -436,12 +400,12 @@ initialInterviewRouter.post("/", async (req, res) => {
         await db.query(
           `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
            VALUES ($1, $2, $3, $4, $5)`,
-          [clientId, question.id, stringValue, formId, sessionId]
+          [finalClientId, question.id, stringValue, formId, sessionId]
         );
       }
     }
 
-    res.status(200).json({ success: true, client_id: clientId, session_id: sessionId });
+    res.status(200).json({ success: true, client_id: finalClientId, session_id: sessionId });
   } catch (err: unknown) {
     const error = err as Error & { message?: string };
     console.error("Error creating initial interview:", err);

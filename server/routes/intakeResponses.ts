@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
+import { matchClient, extractClientFields } from "../common/clientMatching";
 
 // Helper function to convert snake_case to camelCase
 const toCamel = (string: string) => {
@@ -28,13 +29,13 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
       
       // Search across all response values, client names, session_id, and submitted_at
       sessionQuery = `
-        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ic.first_name, ic.last_name
+        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, c.first_name, c.last_name
         FROM intake_responses ir
-        JOIN intake_clients ic ON ir.client_id = ic.id
+        LEFT JOIN clients c ON ir.client_id = c.id
         WHERE ir.form_id = $1
         AND (
-          ic.first_name::TEXT ILIKE $2
-          OR ic.last_name::TEXT ILIKE $2
+          c.first_name::TEXT ILIKE $2
+          OR c.last_name::TEXT ILIKE $2
           OR ir.session_id::TEXT ILIKE $2
           OR ir.submitted_at::TEXT ILIKE $2
           OR ir.response_value::TEXT ILIKE $2
@@ -42,9 +43,9 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
       `;
     } else {
       sessionQuery = `
-        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ic.first_name, ic.last_name
+        SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, c.first_name, c.last_name
         FROM intake_responses ir
-        JOIN intake_clients ic ON ir.client_id = ic.id
+        LEFT JOIN clients c ON ir.client_id = c.id
         WHERE ir.form_id = $1
       `;
     }
@@ -145,7 +146,7 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
         ic.last_name
       FROM intake_responses ir
       JOIN form_questions fq ON ir.question_id = fq.id
-      JOIN intake_clients ic ON ir.client_id = ic.id
+      LEFT JOIN clients c ON ir.client_id = c.id
       WHERE ir.session_id = ANY($1::uuid[])
       AND ir.form_id = $2
       ORDER BY ir.submitted_at DESC, fq.display_order ASC`,
@@ -164,10 +165,10 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
         client_id: session.client_id,
         submittedAt: session.submitted_at,
         submitted_at: session.submitted_at,
-        firstName: session.first_name,
-        first_name: session.first_name,
-        lastName: session.last_name,
-        last_name: session.last_name,
+        firstName: session.first_name || null,
+        first_name: session.first_name || null,
+        lastName: session.last_name || null,
+        last_name: session.last_name || null,
       };
     }
 
@@ -223,9 +224,9 @@ intakeResponsesRouter.get("/session/:sessionId", async (req, res) => {
 
     // Get session info
     const sessionResult = await db.query(
-      `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, ic.first_name, ic.last_name
+      `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, c.first_name, c.last_name
       FROM intake_responses ir
-      JOIN intake_clients ic ON ir.client_id = ic.id
+      LEFT JOIN clients c ON ir.client_id = c.id
       WHERE ir.session_id = $1
       LIMIT 1`,
       [sessionId]
@@ -263,10 +264,10 @@ intakeResponsesRouter.get("/session/:sessionId", async (req, res) => {
       client_id: session.client_id,
       submittedAt: session.submitted_at,
       submitted_at: session.submitted_at,
-      firstName: session.first_name,
-      first_name: session.first_name,
-      lastName: session.last_name,
-      last_name: session.last_name,
+      firstName: session.first_name || null,
+      first_name: session.first_name || null,
+      lastName: session.last_name || null,
+      last_name: session.last_name || null,
       formId: formId,
       form_id: formId,
     };
@@ -329,6 +330,18 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
 
     const formId = sessionCheck[0].form_id;
 
+    // Match client from clients table (excluding random client survey - form_id = 4)
+    let finalClientId: number | null = null;
+    if (formId !== 4) {
+      const clientFields = extractClientFields(formData);
+      finalClientId = await matchClient(
+        clientFields.firstName,
+        clientFields.lastName,
+        clientFields.phoneNumber,
+        clientFields.dateOfBirth
+      );
+    }
+
     // Get all form questions for this form to map field_key to question_id
     const questions = await db.query(
       `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
@@ -380,9 +393,9 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
         const questionId = (question as { id: number; type: string }).id;
         await db.query(
           `UPDATE intake_responses 
-           SET response_value = $1, updated_at = CURRENT_TIMESTAMP
+           SET response_value = $1, updated_at = CURRENT_TIMESTAMP, client_id = $4
            WHERE session_id = $2 AND question_id = $3`,
-          [stringValue, sessionId, questionId]
+          [stringValue, sessionId, questionId, finalClientId]
         );
       }
     }

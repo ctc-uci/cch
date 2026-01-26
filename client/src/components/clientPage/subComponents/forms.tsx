@@ -10,17 +10,15 @@ import {
   Tr,
   useDisclosure,
 } from "@chakra-ui/react";
-import { FormsProps } from "../types";
+import { FormsProps, FormItems } from "../types";
 import PrintForm from "../../printForm/PrintForm";
-import ExitSurveyModal from "../editFormModals/ExitSurveyModal";
-import SuccessStoryModal from "../editFormModals/SuccessStoryModal";
-import InitialInterviewModal from "../editFormModals/InitialInterviewModal";
+import DynamicFormModal from "../editFormModals/DynamicFormModal";
 
 function Forms({ forms }: FormsProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedForm, setSelectedForm] = useState<any>(null);
+  const [selectedForm, setSelectedForm] = useState<FormItems | null>(null);
 
-  const handleRowClick = (form: any) => {
+  const handleRowClick = (form: FormItems) => {
 
     if (form.type === "Exit Survey") {
       setSelectedForm(form);
@@ -96,33 +94,36 @@ function Forms({ forms }: FormsProps) {
         </Table>
       </TableContainer>
       {selectedForm && selectedForm.type === "Exit Survey" && (
-        <ExitSurveyModal
+        <DynamicFormModal
           form={selectedForm}
           isOpen={isOpen}
           onClose={() => {
             setSelectedForm(null);
             onClose();
           }}
+          formId={2}
         />
       )}
       {selectedForm && selectedForm.type === "Success Story" && (
-        <SuccessStoryModal
+        <DynamicFormModal
           form={selectedForm}
           isOpen={isOpen}
           onClose={() => {
             setSelectedForm(null);
             onClose();
           }}
+          formId={3}
         />
       )}
       {selectedForm && selectedForm.type === "Initial Interview" && (
-        <InitialInterviewModal
+        <DynamicFormModal
           form={selectedForm}
           isOpen={isOpen}
           onClose={() => {
             setSelectedForm(null);
             onClose();
           }}
+          formId={1}
         />
       )}
     </Box>
