@@ -512,10 +512,22 @@ export default function DynamicFormModal({
             <Table variant="simple" sx={{ tableLayout: "fixed", width: "100%" }}>
               <Thead bg="gray.50">
                 <Tr>
-                  <Th fontSize="md" color="black">
+                  <Th 
+                    fontSize="md" 
+                    color="black"
+                    width="40%"
+                    whiteSpace="normal"
+                    wordBreak="break-word"
+                  >
                     Question
                   </Th>
-                  <Th fontSize="md" color="black">
+                  <Th 
+                    fontSize="md" 
+                    color="black"
+                    width="60%"
+                    whiteSpace="normal"
+                    wordBreak="break-word"
+                  >
                     Answer
                   </Th>
                 </Tr>
@@ -526,8 +538,25 @@ export default function DynamicFormModal({
                   const isTextarea = question.questionType === 'textarea';
                   return (
                     <Tr key={question.id}>
-                      <Td p={4}>{question.questionText}</Td>
-                      <Td p={4} bgColor={isEditing ? "#EDF2F7" : "white"}>
+                      <Td 
+                        p={4}
+                        width="40%"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
+                        overflowWrap="break-word"
+                        verticalAlign="top"
+                      >
+                        {question.questionText}
+                      </Td>
+                      <Td 
+                        p={4} 
+                        bgColor={isEditing ? "#EDF2F7" : "white"}
+                        width="60%"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
+                        overflowWrap="break-word"
+                        verticalAlign="top"
+                      >
                         <Box 
                           w="100%" 
                           minH={isRatingGrid || isTextarea ? "auto" : cellHeight} 

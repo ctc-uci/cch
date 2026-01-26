@@ -142,8 +142,8 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
         fq.question_text,
         fq.question_type,
         fq.display_order,
-        ic.first_name,
-        ic.last_name
+        c.first_name,
+        c.last_name
       FROM intake_responses ir
       JOIN form_questions fq ON ir.question_id = fq.id
       LEFT JOIN clients c ON ir.client_id = c.id

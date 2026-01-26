@@ -152,47 +152,60 @@ export function extractClientFields(formData: Record<string, unknown>): {
   phoneNumber: string | null;
   dateOfBirth: string | Date | null;
 } {
-  // Try various field key formats (check both camelCase and snake_case)
-  // Also handle empty strings as null
-  const getValue = (keys: string[]): string | null => {
-    for (const key of keys) {
-      const value = formData[key];
-      if (value !== undefined && value !== null && value !== "") {
-        const strValue = String(value).trim();
-        if (strValue !== "") {
-          return strValue;
+  // Try various field key formats using "contains" matching
+  // This allows matching field keys like "what_is_your_first_name" by searching for keys containing "first" and "name"
+  // Excludes secondary person fields (child, father, mother, spouse, etc.) to only match the primary person
+  const getValueByContains = (searchTerms: string[][], excludeTerms: string[] = []): string | null => {
+    // searchTerms is an array of arrays, where each inner array contains terms that must all be present
+    // e.g., [['first', 'name']] means the key must contain both "first" AND "name"
+    // excludeTerms are terms that, if present, should exclude this field (e.g., "child", "father", "mother")
+    
+    // Default exclusion terms for secondary person fields
+    const defaultExcludeTerms = ['child', 'children', 'father', 'mother', 'parent', 'spouse', 'partner', 'guardian', 'emergency'];
+    const allExcludeTerms = [...defaultExcludeTerms, ...excludeTerms.map(t => t.toLowerCase())];
+    
+    for (const termGroup of searchTerms) {
+      for (const [key, value] of Object.entries(formData)) {
+        const lowerKey = key.toLowerCase();
+        
+        // Check if all terms in this group are present in the key
+        const allTermsMatch = termGroup.every(term => lowerKey.includes(term.toLowerCase()));
+        
+        // Exclude if key contains any exclusion terms (indicating it's not the primary person)
+        const containsExcludedTerm = allExcludeTerms.some(excludeTerm => lowerKey.includes(excludeTerm));
+        
+        if (allTermsMatch && !containsExcludedTerm && value !== undefined && value !== null && value !== "") {
+          const strValue = String(value).trim();
+          if (strValue !== "") {
+            // Return the first valid match found
+            return strValue;
+          }
         }
       }
     }
     return null;
   };
 
-  const firstName = getValue([
-    'firstName', 'first_name', 'firstname', 'first name'
+  // Try to find firstName - keys containing "first" and "name"
+  const firstName = getValueByContains([
+    ['first', 'name'],  // Matches: firstName, first_name, what_is_your_first_name, etc.
   ]);
 
-  // Check multiple variations including the snake_case question format
-  const lastName = getValue([
-    'lastName', 
-    'last_name', 
-    'lastname', 
-    'last name',
-    'what_is_your_last_name',  // Add the actual field key from the form
-    'whatIsYourLastName'        // camelCase version
+  // Try to find lastName - keys containing "last" and "name"
+  // Exclude keys that also contain "first" to avoid matching firstName fields
+  const lastName = getValueByContains([
+    ['last', 'name'],  // Matches: lastName, last_name, what_is_your_last_name, what_is_your_last_name_1, etc.
   ]);
 
-  const phoneNumber = getValue([
-    'phoneNumber', 
-    'phone_number', 
-    'phone'
+  // Try to find phoneNumber - keys containing "phone"
+  const phoneNumber = getValueByContains([
+    ['phone'],  // Matches: phoneNumber, phone_number, what_is_your_phone_number, etc.
   ]);
 
-  const dateOfBirth = getValue([
-    'dateOfBirth', 
-    'date_of_birth', 
-    'dob', 
-    'birthDate', 
-    'birth_date'
+  // Try to find dateOfBirth - keys containing "birth" or "dob"
+  const dateOfBirth = getValueByContains([
+    ['date', 'birth'],  // Matches: dateOfBirth, date_of_birth, what_is_your_date_of_birth, etc.
+    ['dob'],            // Matches: dob, clientDob, etc.
   ]) as string | Date | null;
   
   return {

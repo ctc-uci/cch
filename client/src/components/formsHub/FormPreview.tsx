@@ -713,13 +713,13 @@ const FormPreview = ({
                 overflowY="auto"
                 overflowX="auto"
               >
-                <Table variant="simple">
+                <Table variant="simple" sx={{ tableLayout: "fixed", width: "100%" }}>
                   <Thead>
                     <Tr>
                       <Th
                         fontSize="md"
                         color="gray.700"
-                        maxWidth="300px"
+                        width="40%"
                         whiteSpace="normal"
                         wordBreak="break-word"
                       >
@@ -728,7 +728,7 @@ const FormPreview = ({
                       <Th
                         fontSize="md"
                         color="gray.700"
-                        maxWidth="400px"
+                        width="60%"
                         whiteSpace="normal"
                         wordBreak="break-word"
                       >
@@ -742,18 +742,20 @@ const FormPreview = ({
                           ([key, value]) => (
                             <Tr key={key}>
                               <Td
-                                maxWidth="300px"
+                                width="40%"
                                 whiteSpace="normal"
                                 wordBreak="break-word"
                                 overflowWrap="break-word"
+                                verticalAlign="top"
                               >
                                 {key}
                               </Td>
                               <Td
-                                maxWidth="400px"
+                                width="60%"
                                 whiteSpace="normal"
                                 wordBreak="break-word"
                                 overflowWrap="break-word"
+                                verticalAlign="top"
                               >
                                 {formatValueForDisplay(value)}
                               </Td>

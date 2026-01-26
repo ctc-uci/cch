@@ -207,12 +207,40 @@ exitSurveyRouter.post("/", async (req, res) => {
     // Match client from clients table (excluding random client survey - form_id = 4)
     // form_id = 2 is Exit Survey, so we should match
     const clientFields = extractClientFields(formData);
+    
+    // Debug logging for Exit Survey form
+    if (!clientFields.firstName || !clientFields.lastName || !clientFields.phoneNumber || !clientFields.dateOfBirth) {
+      console.log("Exit Survey - Missing client fields:", {
+        extracted: clientFields,
+        availableKeys: Object.keys(formData).filter(k => 
+          k.toLowerCase().includes('name') || 
+          k.toLowerCase().includes('phone') || 
+          k.toLowerCase().includes('birth') ||
+          k.toLowerCase().includes('dob')
+        ),
+        formDataSample: Object.fromEntries(
+          Object.entries(formData).filter(([k]) => 
+            k.toLowerCase().includes('name') || 
+            k.toLowerCase().includes('phone') || 
+            k.toLowerCase().includes('birth') ||
+            k.toLowerCase().includes('dob')
+          )
+        )
+      });
+    }
+    
     const matchedClientId = await matchClient(
       clientFields.firstName,
       clientFields.lastName,
       clientFields.phoneNumber,
       clientFields.dateOfBirth
     );
+    
+    if (matchedClientId) {
+      console.log("Exit Survey - Matched client ID:", matchedClientId);
+    } else {
+      console.log("Exit Survey - No client match found for:", clientFields);
+    }
 
     // Use matched client ID if found, otherwise use NULL (client_id now references clients table)
     const finalClientId = matchedClientId || null;

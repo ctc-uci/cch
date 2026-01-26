@@ -1136,9 +1136,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                     value={editingQuestion.questionText}
                     onChange={(e) => {
                       const newQuestionText = e.target.value;
-                      const newFieldKey = editingQuestion.id === 0 
-                        ? generateFieldKey(newQuestionText, editingQuestion.id)
-                        : editingQuestion.fieldKey;
+                      const newFieldKey = generateFieldKey(newQuestionText, editingQuestion.id === 0 ? undefined : editingQuestion.id);
                       setEditingQuestion({ 
                         ...editingQuestion, 
                         questionText: newQuestionText,
