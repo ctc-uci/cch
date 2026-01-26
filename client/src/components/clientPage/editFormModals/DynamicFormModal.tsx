@@ -21,7 +21,12 @@ import {
   useToast,
   Textarea,
   Radio,
+  Alert,
+  AlertIcon,
+  HStack,
+  Tooltip,
 } from "@chakra-ui/react";
+import { WarningIcon } from "@chakra-ui/icons";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import PrintForm from "../../printForm/PrintForm";
 
@@ -441,6 +446,34 @@ export default function DynamicFormModal({
     (q) => q.questionType !== 'text_block' && q.questionType !== 'header'
   );
 
+  // Check if form contains sensitive fields that affect client matching
+  const hasSensitiveFields = () => {
+    const sensitiveFieldKeys = [
+      'first_name', 'firstName', 'firstname',
+      'last_name', 'lastName', 'lastname',
+      'date_of_birth', 'dateOfBirth', 'dob',
+      'phone_number', 'phoneNumber', 'phonenumber'
+    ];
+    
+    return visibleQuestions.some(q => {
+      const fieldKey = q.fieldKey.toLowerCase();
+      return sensitiveFieldKeys.some(sensitive => fieldKey.includes(sensitive.toLowerCase()));
+    });
+  };
+
+  // Check if a specific field is sensitive
+  const isSensitiveField = (fieldKey: string): boolean => {
+    const sensitiveFieldKeys = [
+      'first_name', 'firstName', 'firstname',
+      'last_name', 'lastName', 'lastname',
+      'date_of_birth', 'dateOfBirth', 'dob',
+      'phone_number', 'phoneNumber', 'phonenumber'
+    ];
+    
+    const lowerFieldKey = fieldKey.toLowerCase();
+    return sensitiveFieldKeys.some(sensitive => lowerFieldKey.includes(sensitive.toLowerCase()));
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="full">
       <ModalContent
@@ -507,6 +540,22 @@ export default function DynamicFormModal({
               </Box>
             )}
           </Box>
+          {isEditing && hasSensitiveFields() && (
+            <Alert status="warning" mx="2.5%" w="95%" mb={4} borderRadius="md">
+              <AlertIcon />
+              <Box>
+                <Box fontWeight="bold" mb={1}>
+                  Warning: Changing sensitive fields
+                </Box>
+                <Box fontSize="sm">
+                  If you change the First Name, Last Name, Date of Birth, or Phone Number, 
+                  this form will be removed from the client's forms table. These fields are 
+                  used to match forms to clients, so changing them may cause the form to be 
+                  treated as belonging to a different client.
+                </Box>
+              </Box>
+            </Alert>
+          )}
           <TableContainer
             border="2px solid"
             borderColor="#E2E8F0"
@@ -540,7 +589,20 @@ export default function DynamicFormModal({
                         whiteSpace="normal"
                         verticalAlign="top"
                       >
-                        {question.questionText}
+                        <HStack spacing={2} align="flex-start">
+                          <Box flex={1}>{question.questionText}</Box>
+                          {isSensitiveField(question.fieldKey) && (
+                            <Tooltip 
+                              label="Changing this field may remove the form from the client's forms table"
+                              placement="top"
+                              hasArrow
+                            >
+                              <Box color="orange.500" flexShrink={0} mt={0.5}>
+                                <WarningIcon />
+                              </Box>
+                            </Tooltip>
+                          )}
+                        </HStack>
                       </Td>
                       <Td 
                         p={4} 
