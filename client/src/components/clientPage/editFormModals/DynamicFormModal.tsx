@@ -63,6 +63,37 @@ export default function DynamicFormModal({
   // Check if form.id is a UUID (session-based form)
   const isUUID = typeof form.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(form.id);
 
+  // Helper function to format date without timezone issues
+  const formatDateForDisplay = (dateString: string): string => {
+    if (!dateString) return '';
+    // If already in YYYY-MM-DD format, parse it directly
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-');
+      return `${month}/${day}/${year}`;
+    }
+    // Otherwise, try to parse as date and format
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString("en-US");
+  };
+
+  // Helper function to get date value for input (YYYY-MM-DD format)
+  const getDateInputValue = (dateString: string): string => {
+    if (!dateString) return '';
+    // If already in YYYY-MM-DD format, use it directly
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      return dateString;
+    }
+    // Otherwise, parse the date and format it
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    // Use local date components to avoid timezone issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   useEffect(() => {
     if (!isOpen || !form.id) return;
     
@@ -139,6 +170,10 @@ export default function DynamicFormModal({
         });
         
         await backend.put(`/intakeResponses/session/${form.id}`, payload);
+        
+        // Refetch the updated data to ensure we have the latest from backend
+        const response = await backend.get(`/intakeResponses/session/${form.id}`);
+        setFormData(response.data || {});
       } else {
         // Update old table forms - convert edits to match old table format
         const toSnakeCase = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -168,10 +203,14 @@ export default function DynamicFormModal({
         
         if (endpoint) {
           await backend.put(endpoint, payload);
+          
+          // Refetch the updated data to ensure we have the latest from backend
+          const response = await backend.get(endpoint);
+          const data = formId === 2 ? response.data?.data?.[0] : response.data?.[0] || response.data;
+          setFormData(data || {});
         }
       }
 
-      setFormData({ ...formData, ...edits });
       setEdits({});
       setIsEditing(false);
       toast({
@@ -215,7 +254,7 @@ export default function DynamicFormModal({
     if (!isEditing) {
       // Display mode
       if (question.questionType === 'date' && displayValue) {
-        return new Date(displayValue).toLocaleDateString("en-US");
+        return formatDateForDisplay(displayValue);
       }
       if (question.questionType === 'boolean') {
         return displayValue === 'true' || displayValue === 'yes' ? 'Yes' : displayValue === 'false' || displayValue === 'no' ? 'No' : displayValue;
@@ -292,7 +331,7 @@ export default function DynamicFormModal({
           border="1px solid"
           borderColor="#3182CE"
           type="date"
-          value={displayValue ? new Date(displayValue).toISOString().split('T')[0] : ''}
+          value={getDateInputValue(displayValue)}
           onChange={(e) => handleFieldChange(question.fieldKey, e.target.value)}
         />
       );
@@ -480,10 +519,10 @@ export default function DynamicFormModal({
             <Table variant="simple" sx={{ tableLayout: "fixed", width: "100%" }}>
               <Thead bg="gray.50">
                 <Tr>
-                  <Th fontSize="md" color="black">
+                  <Th fontSize="md" color="black" width="40%">
                     Question
                   </Th>
-                  <Th fontSize="md" color="black">
+                  <Th fontSize="md" color="black" width="60%">
                     Answer
                   </Th>
                 </Tr>
@@ -494,8 +533,23 @@ export default function DynamicFormModal({
                   const isTextarea = question.questionType === 'textarea';
                   return (
                     <Tr key={question.id}>
-                      <Td p={4}>{question.questionText}</Td>
-                      <Td p={4} bgColor={isEditing ? "#EDF2F7" : "white"}>
+                      <Td 
+                        p={4} 
+                        wordBreak="break-word"
+                        overflowWrap="break-word"
+                        whiteSpace="normal"
+                        verticalAlign="top"
+                      >
+                        {question.questionText}
+                      </Td>
+                      <Td 
+                        p={4} 
+                        bgColor={isEditing ? "#EDF2F7" : "white"}
+                        wordBreak="break-word"
+                        overflowWrap="break-word"
+                        whiteSpace="normal"
+                        verticalAlign="top"
+                      >
                         <Box 
                           w="100%" 
                           minH={isRatingGrid || isTextarea ? "auto" : cellHeight} 
