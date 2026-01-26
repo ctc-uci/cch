@@ -91,11 +91,80 @@ successRouter.get("/table-data", async (req, res) => {
 successRouter.get("/:formId", async (req, res) => {
   try {
     const { formId } = req.params;
-    const children = await db.query(
-      `SELECT * FROM success_story WHERE id = $1`,
-      [formId]
-    );
-    res.status(200).json(keysToCamel(children));
+    
+    // Check if formId is a UUID (session-based form) or integer (old table)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(formId);
+    
+    if (isUUID) {
+      // Fetch from intake_responses using session_id
+      const sessionResult = await db.query(
+        `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, ic.first_name, ic.last_name
+        FROM intake_responses ir
+        JOIN intake_clients ic ON ir.client_id = ic.id
+        WHERE ir.session_id = $1 AND ir.form_id = 3
+        LIMIT 1`,
+        [formId]
+      );
+
+      if (sessionResult.length === 0) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+
+      const session = sessionResult[0];
+      
+      // Get all responses for this session
+      const responses = await db.query(
+        `SELECT 
+          ir.response_value,
+          fq.field_key,
+          fq.question_type
+        FROM intake_responses ir
+        JOIN form_questions fq ON ir.question_id = fq.id
+        WHERE ir.session_id = $1 AND ir.form_id = 3
+        ORDER BY fq.display_order ASC`,
+        [formId]
+      );
+
+      // Build response object matching success_story structure
+      const formData: Record<string, unknown> = {
+        id: session.session_id,
+        client_id: session.client_id,
+        date: session.submitted_at,
+        name: `${session.first_name || ''} ${session.last_name || ''}`.trim() || 'Unknown',
+      };
+
+      // Convert responses to form data
+      for (const resp of responses) {
+        let value: unknown = resp.response_value;
+        
+        // Convert based on question type
+        switch (resp.question_type) {
+          case "number":
+            value = resp.response_value ? parseFloat(resp.response_value) : null;
+            break;
+          case "boolean":
+            value = resp.response_value === "true" || resp.response_value === "yes";
+            break;
+          case "date":
+            value = resp.response_value || null;
+            break;
+          default:
+            value = resp.response_value || "";
+        }
+        
+        // Convert field_key from snake_case to match success_story column names
+        formData[resp.field_key] = value;
+      }
+
+      res.status(200).json(keysToCamel([formData]));
+    } else {
+      // Fetch from old success_story table
+      const children = await db.query(
+        `SELECT * FROM success_story WHERE id = $1`,
+        [formId]
+      );
+      res.status(200).json(keysToCamel(children));
+    }
   } catch (err) {
     res.status(400).send(err.message);
   }

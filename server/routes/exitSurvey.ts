@@ -102,10 +102,79 @@ exitSurveyRouter.get("/search-filter", async (req, res) => {
 exitSurveyRouter.get("/:clientId", async (req, res) => {
   try {
     const { clientId } = req.params;
-    const data = await db.any("SELECT * FROM exit_survey WHERE id = $1", [
-      clientId,
-    ]);
-    res.status(200).json({ data });
+    
+    // Check if clientId is a UUID (session-based form) or integer (old table)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientId);
+    
+    if (isUUID) {
+      // Fetch from intake_responses using session_id
+      const sessionResult = await db.query(
+        `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, ic.first_name, ic.last_name
+        FROM intake_responses ir
+        JOIN intake_clients ic ON ir.client_id = ic.id
+        WHERE ir.session_id = $1 AND ir.form_id = 2
+        LIMIT 1`,
+        [clientId]
+      );
+
+      if (sessionResult.length === 0) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+
+      const session = sessionResult[0];
+      
+      // Get all responses for this session
+      const responses = await db.query(
+        `SELECT 
+          ir.response_value,
+          fq.field_key,
+          fq.question_type
+        FROM intake_responses ir
+        JOIN form_questions fq ON ir.question_id = fq.id
+        WHERE ir.session_id = $1 AND ir.form_id = 2
+        ORDER BY fq.display_order ASC`,
+        [clientId]
+      );
+
+      // Build response object matching exit_survey structure
+      const formData: Record<string, unknown> = {
+        id: session.session_id,
+        client_id: session.client_id,
+        date: session.submitted_at,
+        name: `${session.first_name || ''} ${session.last_name || ''}`.trim() || 'Unknown',
+      };
+
+      // Convert responses to form data
+      for (const resp of responses) {
+        let value: unknown = resp.response_value;
+        
+        // Convert based on question type
+        switch (resp.question_type) {
+          case "number":
+            value = resp.response_value ? parseFloat(resp.response_value) : null;
+            break;
+          case "boolean":
+            value = resp.response_value === "true" || resp.response_value === "yes";
+            break;
+          case "date":
+            value = resp.response_value || null;
+            break;
+          default:
+            value = resp.response_value || "";
+        }
+        
+        // Convert field_key from snake_case to match exit_survey column names
+        formData[resp.field_key] = value;
+      }
+
+      res.status(200).json({ data: [formData] });
+    } else {
+      // Fetch from old exit_survey table
+      const data = await db.any("SELECT * FROM exit_survey WHERE id = $1", [
+        clientId,
+      ]);
+      res.status(200).json({ data });
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }
