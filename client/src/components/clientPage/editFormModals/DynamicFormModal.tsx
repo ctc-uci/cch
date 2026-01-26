@@ -168,9 +168,19 @@ export default function DynamicFormModal({
         const payload: Record<string, unknown> = {};
         formQuestions.forEach((q) => {
           const camelKey = q.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-          const value = edits[q.fieldKey] ?? edits[camelKey] ?? formData[camelKey] ?? formData[q.fieldKey];
-          if (value !== undefined && value !== null) {
-            payload[q.fieldKey] = value;
+          
+          // Check if user edited this field (in edits)
+          const editedValue = edits[q.fieldKey] ?? edits[camelKey];
+          
+          // If user edited the field, include it (even if null/empty - user's choice)
+          if (editedValue !== undefined) {
+            payload[q.fieldKey] = editedValue;
+          } else {
+            // Otherwise, include existing value from formData if it exists
+            const existingValue = formData[camelKey] ?? formData[q.fieldKey];
+            if (existingValue !== undefined && existingValue !== null) {
+              payload[q.fieldKey] = existingValue;
+            }
           }
         });
         

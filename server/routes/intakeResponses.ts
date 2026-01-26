@@ -391,12 +391,30 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
 
         // Update or insert response
         const questionId = (question as { id: number; type: string }).id;
-        await db.query(
-          `UPDATE intake_responses 
-           SET response_value = $1, updated_at = CURRENT_TIMESTAMP, client_id = $4
-           WHERE session_id = $2 AND question_id = $3`,
-          [stringValue, sessionId, questionId, finalClientId]
+        
+        // Check if response already exists
+        const existingResponse = await db.query(
+          `SELECT id FROM intake_responses 
+           WHERE session_id = $1 AND question_id = $2 LIMIT 1`,
+          [sessionId, questionId]
         );
+        
+        if (existingResponse.length > 0) {
+          // Update existing response
+          await db.query(
+            `UPDATE intake_responses 
+             SET response_value = $1, updated_at = CURRENT_TIMESTAMP, client_id = $4
+             WHERE session_id = $2 AND question_id = $3`,
+            [stringValue, sessionId, questionId, finalClientId]
+          );
+        } else {
+          // Insert new response
+          await db.query(
+            `INSERT INTO intake_responses (session_id, question_id, form_id, response_value, client_id)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [sessionId, questionId, formId, stringValue, finalClientId]
+          );
+        }
       }
     }
 
