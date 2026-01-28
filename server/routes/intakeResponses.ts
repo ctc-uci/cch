@@ -172,10 +172,31 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
       };
     }
 
+    // Helper: does field_key or question_text indicate "first name" or "last name"?
+    const isFirstNameField = (fieldKey: string, questionText: string) => {
+      const k = (fieldKey || "").toLowerCase().replace(/[\s_-]/g, "");
+      const q = (questionText || "").toLowerCase();
+      return (
+        k.includes("firstname") ||
+        /first\s*name/.test(q) ||
+        q.includes("first name")
+      );
+    };
+    const isLastNameField = (fieldKey: string, questionText: string) => {
+      const k = (fieldKey || "").toLowerCase().replace(/[\s_-]/g, "");
+      const q = (questionText || "").toLowerCase();
+      return (
+        k.includes("lastname") ||
+        /last\s*name/.test(q) ||
+        q.includes("last name")
+      );
+    };
+
     // Add response values to each session
     for (const resp of responses) {
       const sessionId = resp.session_id;
       if (responsesBySession[sessionId]) {
+        const session = responsesBySession[sessionId];
         let value: unknown = resp.response_value;
 
         // Convert based on question type
@@ -203,7 +224,21 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
 
         // Convert field_key from snake_case to camelCase for frontend compatibility
         const camelFieldKey = toCamel(resp.field_key);
-        responsesBySession[sessionId][camelFieldKey] = value;
+        session[camelFieldKey] = value;
+
+        // When there's no matched client (clientId null), fill firstName/lastName from any
+        // form field whose key or label suggests "first name" or "last name"
+        const strVal = value != null && value !== "" ? String(value).trim() : "";
+        if (strVal && session.clientId == null) {
+          if (isFirstNameField(resp.field_key, resp.question_text)) {
+            session.firstName = strVal;
+            session.first_name = strVal;
+          }
+          if (isLastNameField(resp.field_key, resp.question_text)) {
+            session.lastName = strVal;
+            session.last_name = strVal;
+          }
+        }
       }
     }
 

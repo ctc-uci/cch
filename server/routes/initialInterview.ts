@@ -7,54 +7,132 @@ import { matchClient, extractClientFields } from "../common/clientMatching";
 export const initialInterviewRouter = Router();
 
 //getting the data needed for the list of initial screeners
+// Now fetches from dynamic form system (intake_responses with form_id = 1)
 initialInterviewRouter.get(
   "/initial-interview-table-data",
   async (req, res) => {
     try {
       const { search, page, filter } = req.query;
-      const stringSearch = "'%" + String(search) + "%'";
+      const formId = 1; // Initial Interview form_id
 
-      let queryStr = `
-      SELECT
-        i.name AS client_name,
-        i.social_worker_office_location,
-        cm.first_name AS cm_first_name,
-        cm.last_name AS cm_last_name,
-        i.phone_number,
-        i.email,
-        i.date,
-        i.client_id
-      FROM initial_interview i
-      INNER JOIN screener_comment AS s ON i.id = s.initial_interview_id
-      INNER JOIN case_managers AS cm ON s.cm_id = cm.id
-    `;
-
+      // Build base query to get distinct sessions and pivot field values
+      // Use a subquery to first get distinct sessions, then aggregate field values per session
+      // Note: screener_comment links to old initial_interview table, so we can't directly join it here
+      // Case manager info will need to be fetched separately if needed
+      
+      // Build search conditions - need to check if session matches search criteria
+      let sessionFilter = '';
       if (search) {
-        queryStr += `
+        const stringSearch = "'%" + String(search) + "%'";
+        sessionFilter = `
         AND (
-          i.name::TEXT ILIKE ${stringSearch}
-          OR i.social_worker_office_location::TEXT ILIKE ${stringSearch}
-          OR cm.first_name::TEXT ILIKE ${stringSearch}
-          OR cm.last_name::TEXT ILIKE ${stringSearch}
-          OR i.phone_number::TEXT ILIKE ${stringSearch}
-          OR i.email::TEXT ILIKE ${stringSearch}
-          OR i.date::TEXT ILIKE ${stringSearch}
+          EXISTS (
+            SELECT 1 FROM intake_responses ir2 
+            JOIN form_questions fq2 ON ir2.question_id = fq2.id 
+            WHERE ir2.session_id = ir.session_id 
+            AND ir2.form_id = ${formId}
+            AND ir2.response_value::TEXT ILIKE ${stringSearch}
+          )
+          OR c.first_name::TEXT ILIKE ${stringSearch}
+          OR c.last_name::TEXT ILIKE ${stringSearch}
+          OR ir.session_id::TEXT ILIKE ${stringSearch}
+          OR ir.submitted_at::TEXT ILIKE ${stringSearch}
         )`;
       }
 
       if (filter) {
-        queryStr += ` AND ${filter}`;
+        sessionFilter += ` AND ${filter}`;
       }
 
-      queryStr += " ORDER BY i.id ASC";
+      let queryStr = `
+      SELECT 
+        session_data.session_id,
+        session_data.client_id,
+        session_data.date,
+        session_data.client_first_name,
+        session_data.client_last_name,
+        MAX(CASE WHEN fq.field_key = 'name' THEN ir.response_value END) AS client_name,
+        MAX(CASE WHEN fq.field_key = 'first_name' THEN ir.response_value END) AS first_name,
+        MAX(CASE WHEN fq.field_key = 'last_name' THEN ir.response_value END) AS last_name,
+        MAX(CASE WHEN fq.field_key = 'phone_number' THEN ir.response_value END) AS phone_number,
+        MAX(CASE WHEN fq.field_key = 'email' THEN ir.response_value END) AS email,
+        MAX(CASE WHEN fq.field_key = 'social_worker_office_location' THEN ir.response_value END) AS social_worker_office_location
+      FROM (
+        SELECT DISTINCT
+          ir.session_id,
+          ir.client_id,
+          ir.submitted_at AS date,
+          c.first_name AS client_first_name,
+          c.last_name AS client_last_name
+        FROM intake_responses ir
+        LEFT JOIN clients c ON ir.client_id = c.id
+        WHERE ir.form_id = ${formId}
+        ${sessionFilter}
+      ) session_data
+      JOIN intake_responses ir ON ir.session_id = session_data.session_id AND ir.form_id = ${formId}
+      JOIN form_questions fq ON ir.question_id = fq.id
+      GROUP BY session_data.session_id, session_data.client_id, session_data.date, session_data.client_first_name, session_data.client_last_name
+      ORDER BY session_data.date DESC
+      `;
 
       if (page) {
         queryStr += ` LIMIT ${page}`;
       }
 
       const data = await db.query(queryStr);
-      res.status(200).json(keysToCamel(data));
+      
+      // Transform the data to match expected format
+      const transformedData = data.map((row: {
+        session_id: string;
+        client_id: number | null;
+        date: Date;
+        client_name: string | null;
+        first_name?: string | null;
+        last_name?: string | null;
+        phone_number: string | null;
+        email: string | null;
+        social_worker_office_location: string | null;
+        client_first_name: string | null;
+        client_last_name: string | null;
+      }) => {
+        // Use client_name from form response, or combine first_name/last_name from form, or fall back to clients table
+        let name = row.client_name;
+        if (!name) {
+          const formFirstName = (row as { first_name?: string }).first_name;
+          const formLastName = (row as { last_name?: string }).last_name;
+          if (formFirstName && formLastName) {
+            name = `${formFirstName} ${formLastName}`.trim();
+          } else if (formFirstName) {
+            name = formFirstName;
+          } else if (formLastName) {
+            name = formLastName;
+          } else if (row.client_first_name && row.client_last_name) {
+            name = `${row.client_first_name} ${row.client_last_name}`.trim();
+          } else if (row.client_first_name) {
+            name = row.client_first_name;
+          } else if (row.client_last_name) {
+            name = row.client_last_name;
+          } else {
+            name = 'Unknown';
+          }
+        }
+
+        return {
+          client_name: name,
+          social_worker_office_location: row.social_worker_office_location || '',
+          cm_first_name: '', // Case manager info not available from dynamic forms
+          cm_last_name: '', // Case manager info not available from dynamic forms
+          phone_number: row.phone_number || '',
+          email: row.email || '',
+          date: row.date,
+          client_id: row.client_id,
+          session_id: row.session_id, // Include for reference
+        };
+      });
+
+      res.status(200).json(keysToCamel(transformedData));
     } catch (err) {
+      console.error("Error fetching initial interview table data:", err);
       res.status(500).send(err.message);
     }
   }

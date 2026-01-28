@@ -4,15 +4,32 @@ export const formatDateForInput = (dateString: string): string => {
   return answer
 };
 
+/**
+ * Parse a date string as a local calendar date when it's date-only (YYYY-MM-DD).
+ * new Date("2005-02-13") is UTC midnight, which in US timezones shows as the previous day.
+ */
+function parseAsLocalDate(dateString: string): Date {
+  const s = String(dateString).trim();
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (dateOnly) {
+    const [, y, m, d] = dateOnly;
+    return new Date(parseInt(y!, 10), parseInt(m!, 10) - 1, parseInt(d!, 10));
+  }
+  return new Date(dateString);
+}
+
 export const formatDateString = (dateString: string): string => {
-  const date = new Date(dateString);
+  if (dateString === null || dateString === undefined || dateString === "") {
+    return "";
+  }
+  const date = parseAsLocalDate(dateString);
   return date.toLocaleDateString("en-US", {
     month: "2-digit",
     day: "2-digit",
     year: "numeric",
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Uses browser's timezone and returns MM/DD/YYYY format
-  })
-}
+  });
+};
 
 export const formatDateStringForAPI = (date: Date): string => {
   return date.toLocaleDateString("en-US", { timeZone: "UTC" });
