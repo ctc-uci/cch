@@ -460,6 +460,38 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
   }
 });
 
+// Attach an existing client to a whole session (sets client_id for all responses in the session)
+intakeResponsesRouter.patch("/session/:sessionId/client", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { clientId } = req.body as { clientId?: number };
+
+    if (typeof clientId !== "number" || Number.isNaN(clientId)) {
+      return res.status(400).json({ error: "clientId is required" });
+    }
+
+    const sessionCheck = await db.query(
+      `SELECT 1 FROM intake_responses WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
+    if (sessionCheck.length === 0) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    await db.query(
+      `UPDATE intake_responses
+       SET client_id = $2, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = $1`,
+      [sessionId, clientId]
+    );
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Error attaching client to session:", err);
+    res.status(500).send((err as Error).message);
+  }
+});
+
 // Get form questions for a specific form_id (for building dynamic columns)
 intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
   try {

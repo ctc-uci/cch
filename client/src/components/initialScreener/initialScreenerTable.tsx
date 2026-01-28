@@ -5,6 +5,8 @@ import {
   Heading,
   Text,
   VStack,
+  useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import {
   ColumnDef,
@@ -18,6 +20,7 @@ import { formatDateString } from "../../utils/dateUtils";
 import { LoadingWheel } from "../loading/loading";
 import { TableControls } from "../adminClientForms/FormTables/TableControls";
 import { TableContent } from "../adminClientForms/FormTables/TableContent";
+import { AddClientForm } from "../clientlist/AddClientForm";
 
 // Helper function to convert snake_case to camelCase
 const toCamelCase = (str: string): string => {
@@ -55,6 +58,7 @@ export const InitialScreenerTable = () => {
   const navigate = useNavigate();
   const { backend } = useBackendContext();
   const formId = 1; // Initial Interview form_id
+  const toast = useToast();
 
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
   const [formData, setFormData] = useState<(FormResponse & { isChecked: boolean; isHovered: boolean })[]>([]);
@@ -63,8 +67,21 @@ export const InitialScreenerTable = () => {
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [lastUpdated, setLastUpdated] = useState("");
+
+  const {
+    isOpen: isAddClientOpen,
+    onOpen: openAddClient,
+    onClose: closeAddClient,
+  } = useDisclosure();
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [addClientInitialValues, setAddClientInitialValues] = useState<{
+    first_name?: string;
+    last_name?: string;
+    phone_number?: string;
+    email?: string;
+    date_of_birth?: string;
+  }>({});
 
   // Fetch form questions
   useEffect(() => {
@@ -215,7 +232,6 @@ export const InitialScreenerTable = () => {
     };
 
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backend, formId, searchQuery, filterQuery, refreshTable]);
 
   // Fetch last updated time
@@ -239,8 +255,28 @@ export const InitialScreenerTable = () => {
     if (row.clientId) {
       navigate(`/comment-form/${row.clientId}`);
     } else {
-      // Fallback: could navigate to a session-based view if needed
-      console.warn("No client_id available for session:", row.sessionId);
+      // No matched client yet: open Add Client drawer so user can create + attach a client
+      toast({
+        title: "Client not created yet",
+        description:
+          "This screener isn’t in the client table yet. Please add the client first so we can attach the screener and open the comment form.",
+        status: "info",
+        duration: 7000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      setPendingSessionId(row.sessionId);
+      const dob = (row as Record<string, unknown>).dateOfBirth ?? (row as Record<string, unknown>).date_of_birth;
+      const phone = (row as Record<string, unknown>).phoneNumber ?? (row as Record<string, unknown>).phone_number;
+      const email = (row as Record<string, unknown>).email;
+      setAddClientInitialValues({
+        first_name: row.firstName ?? "",
+        last_name: row.lastName ?? "",
+        phone_number: phone ? String(phone) : "",
+        email: email ? String(email) : "",
+        date_of_birth: dob ? String(dob) : "",
+      });
+      openAddClient();
     }
   };
 
@@ -250,6 +286,31 @@ export const InitialScreenerTable = () => {
       align="start"
       sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
     >
+      <AddClientForm
+        hideButton
+        isOpen={isAddClientOpen}
+        onOpen={openAddClient}
+        onClose={closeAddClient}
+        initialValues={addClientInitialValues}
+        setShowUnfinishedAlert={() => {}}
+        onClientAdded={async (newClientId) => {
+          try {
+            if (!pendingSessionId || !newClientId) return;
+            await backend.patch(`/intakeResponses/session/${pendingSessionId}/client`, {
+              clientId: newClientId,
+            });
+            setRefreshTable((prev) => !prev);
+            setPendingSessionId(null);
+            // Now that the screener is linked to a client, open the comment form
+            navigate(`/comment-form/${newClientId}`);
+          } catch (error) {
+            console.error("Error attaching client to session:", error);
+          } finally {
+            closeAddClient();
+          }
+        }}
+      />
+
       <Heading fontSize="3xl" lineHeight="9" fontWeight="extrabold" paddingBottom={"0.5%"}>
         List of Initial Screeners
       </Heading>

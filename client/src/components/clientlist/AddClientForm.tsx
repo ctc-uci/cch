@@ -28,13 +28,30 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
 interface AddClientFormProps {
-  onClientAdded: () => void;
+  onClientAdded: (clientId?: number) => void;
   setShowUnfinishedAlert: (e: boolean) => void;
+  // Optional controlled drawer behavior (lets other pages open this drawer programmatically)
+  isOpen?: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
+  hideButton?: boolean;
+  initialValues?: Partial<{
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    email: string;
+    date_of_birth: string;
+  }>;
 }
 
 export const AddClientForm = ({
   onClientAdded,
   setShowUnfinishedAlert,
+  isOpen: controlledIsOpen,
+  onOpen: controlledOnOpen,
+  onClose: controlledOnClose,
+  hideButton,
+  initialValues,
 }: AddClientFormProps) => {
   const {
     isOpen: isAlertOpen,
@@ -44,6 +61,20 @@ export const AddClientForm = ({
 
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [createdClientId, setCreatedClientId] = useState<number | undefined>(
+    undefined
+  );
+
+  // Drawer open/close can be controlled externally
+  const {
+    isOpen: localIsOpen,
+    onOpen: localOnOpen,
+    onClose: localOnClose,
+  } = useDisclosure();
+
+  const isOpen = controlledIsOpen ?? localIsOpen;
+  const onOpen = controlledOnOpen ?? localOnOpen;
+  const onClose = controlledOnClose ?? localOnClose;
 
   const resetForm = () => {
     setFormData({
@@ -92,11 +123,23 @@ export const AddClientForm = ({
 
   useEffect(() => {
     if (hasSubmitted) {
-      onClientAdded();
+      onClientAdded(createdClientId);
       setHasSubmitted(false);
+      setCreatedClientId(undefined);
       resetForm();
     }
-  }, [hasSubmitted, onClientAdded]);
+  }, [hasSubmitted, onClientAdded, createdClientId]);
+
+  // Prefill when opened from another flow (e.g. initial screener table)
+  useEffect(() => {
+    if (!isOpen || !initialValues) return;
+    setFormData((prev) => ({
+      ...prev,
+      ...Object.fromEntries(
+        Object.entries(initialValues).filter(([, v]) => v !== undefined)
+      ),
+    }));
+  }, [isOpen, initialValues]);
 
   const handleCloseAndSave = () => {
     onClose();
@@ -167,7 +210,6 @@ export const AddClientForm = ({
   });
   const [formInProgress, setFormInProgress] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, boolean>>({});
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const { backend } = useBackendContext();
   const toast = useToast();
@@ -320,7 +362,10 @@ export const AddClientForm = ({
         destination_city: formData.destination_city,
         comments: formData.comments,
       };
-      await backend.post("/clients", clientData);
+      const created = await backend.post("/clients", clientData);
+      const newClientId =
+        typeof created?.data?.id === "number" ? (created.data.id as number) : undefined;
+      setCreatedClientId(newClientId);
 
       toast({
         title: "Client Added",
@@ -346,10 +391,16 @@ export const AddClientForm = ({
   
     return (
       <>
-        <Button ref={btnRef} colorScheme='blue' onClick={onOpen}>
-          {!formInProgress && <Text>Add Client</Text>}
-          {formInProgress && <Text>Edit New Client</Text>}
-        </Button>
+        {!hideButton && (
+          <Button
+            ref={btnRef}
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            {!formInProgress && <Text>Add Client</Text>}
+            {formInProgress && <Text>Edit New Client</Text>}
+          </Button>
+        )}
         <Drawer
           isOpen={isOpen}
           placement='right'
