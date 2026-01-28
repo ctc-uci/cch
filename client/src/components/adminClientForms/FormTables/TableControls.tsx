@@ -73,6 +73,31 @@ export const TableControls = ({
       </HStack>
 
       <HStack spacing={2}>
+        {isSearchOpen && (
+          <Box>
+            <Input
+              ref={searchInputRef}
+              value={searchKey}
+              onChange={(e) => setSearchKey(e.target.value)}
+              placeholder="Search..."
+              width="260px"
+              size="sm"
+            />
+          </Box>
+        )}
+        <Box
+          display="flex"
+          alignItems="center"
+          paddingX="16px"
+          paddingY="8px"
+        >
+          <MdOutlineManageSearch
+            size="24px"
+            onClick={() => setIsSearchOpen((prev) => !prev)}
+            style={{ cursor: "pointer" }}
+          />
+        </Box>
+
         {onDelete && (
           <IconButton
             aria-label="Delete"
@@ -84,30 +109,6 @@ export const TableControls = ({
         )}
         {onExport && (
           <>
-            {isSearchOpen && (
-              <Box>
-                <Input
-                  ref={searchInputRef}
-                  value={searchKey}
-                  onChange={(e) => setSearchKey(e.target.value)}
-                  placeholder="Search..."
-                  width="260px"
-                  size="sm"
-                />
-              </Box>
-            )}
-            <Box
-              display="flex"
-              alignItems="center"
-              paddingX="16px"
-              paddingY="8px"
-            >
-              <MdOutlineManageSearch
-                size="24px"
-                onClick={() => setIsSearchOpen((prev) => !prev)}
-                style={{ cursor: "pointer" }}
-              />
-            </Box>
             {showExportCount ? (
               <Box
                 display="flex"
