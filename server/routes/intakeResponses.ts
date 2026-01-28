@@ -91,17 +91,33 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
             const value = match[3];
             const escapedValue = value.replace(/'/g, "''");
             const paramIndex = queryParams.length + 1;
+            const normalizedFieldKey = fieldKey
+              .toLowerCase()
+              .replace(/[\s_-]/g, "");
+            const isFirstName = normalizedFieldKey.includes("firstname");
+            const isLastName = normalizedFieldKey.includes("lastname");
             
             // Convert to subquery that checks intake_responses
             // Find sessions where there's a response with matching field_key and value
-            convertedFilters.push(`ir.session_id IN (
+            const sessionMatchSubquery = `ir.session_id IN (
               SELECT DISTINCT ir2.session_id 
               FROM intake_responses ir2
               JOIN form_questions fq2 ON ir2.question_id = fq2.id
               WHERE ir2.form_id = $${paramIndex}
               AND fq2.field_key = $${paramIndex + 1}
               AND ir2.response_value::TEXT ${operator} $${paramIndex + 2}
-            )`);
+            )`;
+
+            // Special-case: when filtering by a "first name"/"last name" dynamic field, also
+            // match against the linked client record (so after creating+attaching a client,
+            // filtering still works even if the intake response field was blank).
+            if (isFirstName) {
+              convertedFilters.push(`(c.first_name::TEXT ${operator} $${paramIndex + 2} OR ${sessionMatchSubquery})`);
+            } else if (isLastName) {
+              convertedFilters.push(`(c.last_name::TEXT ${operator} $${paramIndex + 2} OR ${sessionMatchSubquery})`);
+            } else {
+              convertedFilters.push(sessionMatchSubquery);
+            }
             queryParams.push(formId, fieldKey, operator === 'ILIKE' || operator === 'LIKE' ? `%${escapedValue}%` : escapedValue);
           } else {
             // If parsing fails, keep original filter
@@ -228,8 +244,11 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
 
         // When there's no matched client (clientId null), fill firstName/lastName from any
         // form field whose key or label suggests "first name" or "last name"
-        const strVal = value != null && value !== "" ? String(value).trim() : "";
-        if (strVal && session.clientId == null) {
+        const strVal =
+          value !== null && value !== undefined && value !== ""
+            ? String(value).trim()
+            : "";
+        if (strVal && session.clientId === null) {
           if (isFirstNameField(resp.field_key, resp.question_text)) {
             session.firstName = strVal;
             session.first_name = strVal;
