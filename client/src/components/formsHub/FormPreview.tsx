@@ -114,6 +114,7 @@ const FormPreview = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitial, setIsInitial] = useState(false);
+  const [hasApprovedRequest, setHasApprovedRequest] = useState(false);
   const navigate = useNavigate();
 
   const handleCommentForm = async () => {
@@ -423,6 +424,88 @@ const FormPreview = ({
     getData();
   }, [backend, formItemId, formItemTitle, refreshTable, isDynamicForm, sessionId]);
 
+  // For client tracking statistics forms viewed by a regular user, check
+  // whether any edit request for this client has already been approved.
+  useEffect(() => {
+    const checkApprovedRequest = async () => {
+      // Only relevant for regular users viewing Intake Statistics
+      if (
+        role !== "user" ||
+        formItemTitle !== "Client Tracking Statistics (Intake Statistics)" ||
+        isLoading
+      ) {
+        return;
+      }
+
+      const email =
+        typeof formData["email"] === "string"
+          ? (formData["email"] as string)
+          : undefined;
+
+      if (!email) {
+        setHasApprovedRequest(false);
+        return;
+      }
+
+      try {
+        // Resolve clientId from email (mirror RequestFormPreview logic)
+        let clientId: number | undefined;
+
+        try {
+          const intakeResponse = await backend.get(
+            `/intakeClients/email/${encodeURIComponent(email)}`
+          );
+          const intakeClients = Array.isArray(intakeResponse.data)
+            ? intakeResponse.data
+            : [];
+          if (intakeClients.length > 0 && intakeClients[0]?.id) {
+            clientId = intakeClients[0].id;
+          }
+        } catch {
+          // ignore and fall back to clients table
+        }
+
+        if (!clientId) {
+          try {
+            const response = await backend.get(
+              `/clients/email/${encodeURIComponent(email)}`
+            );
+            const clients = Array.isArray(response.data)
+              ? response.data
+              : [];
+            if (clients.length > 0 && clients[0]?.id) {
+              clientId = clients[0].id;
+            }
+          } catch {
+            // ignore; handled below
+          }
+        }
+
+        if (!clientId) {
+          setHasApprovedRequest(false);
+          return;
+        }
+
+        const requestsResponse = await backend.get("/request");
+        const allRequests = Array.isArray(requestsResponse.data)
+          ? requestsResponse.data
+          : [];
+
+        const approved = allRequests.some(
+          (req: { client_id?: number; status?: string }) =>
+            req.client_id === clientId && req.status === "approved"
+        );
+
+        setHasApprovedRequest(approved);
+      } catch (error) {
+        console.error("Error checking approved request status:", error);
+        setHasApprovedRequest(false);
+      }
+    };
+
+    checkApprovedRequest();
+  }, [backend, role, formItemTitle, isLoading, formData]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -699,7 +782,8 @@ const FormPreview = ({
             </VStack>
           ) : role === "user" &&
             formItemTitle ===
-              "Client Tracking Statistics (Intake Statistics)" ? (
+              "Client Tracking Statistics (Intake Statistics)" &&
+            !hasApprovedRequest ? (
             <RequestFormPreview
               cmId={
                 typeof formData["cmId"] === "number"
