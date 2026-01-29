@@ -78,9 +78,10 @@ screenerCommentRouter.post("/", async (req, res) => {
       additional_comments,
       // New dynamic-forms association
       session_id,
-      // Applicant type status enum
-      applicant_type_status,
     } = req.body;
+
+    // Applicant type status enum (mutable for normalization)
+    let applicant_type_status = req.body.applicant_type_status;
 
     // Validate applicant_type_status if present
     if (applicant_type_status !== undefined && applicant_type_status !== null) {
@@ -230,7 +231,7 @@ screenerCommentRouter.get("/session/:sessionId", async (req, res) => {
           MAX(CASE WHEN fq.field_key = 'name' THEN ir.response_value END) AS name_field,
           MAX(CASE WHEN fq.field_key = 'first_name' THEN ir.response_value END) AS first_name_field,
           MAX(CASE WHEN fq.field_key = 'last_name' THEN ir.response_value END) AS last_name_field,
-          MAX(CASE WHEN fq.field_key = 'applicant_type' THEN ir.response_value END) AS applicant_type
+          MAX(CASE WHEN fq.field_key IN ('applicant_type', 'applicantType') THEN ir.response_value END) AS applicant_type
         FROM intake_responses ir
         JOIN form_questions fq ON ir.question_id = fq.id
         WHERE ir.session_id = $1
@@ -270,7 +271,8 @@ screenerCommentRouter.get("/session/:sessionId", async (req, res) => {
         cm.first_name AS cm_first_name,
         cm.last_name AS cm_last_name,
         s.initial_interview_id AS initialid,
-        client_responses.applicant_type AS applicant_type,
+        -- applicantType for UI: prefer intake_responses, fallback to screener_comment enum
+        COALESCE(client_responses.applicant_type, s.applicant_type_status::TEXT) AS applicant_type,
         s.willingness,
         s.employability,
         s.attitude,

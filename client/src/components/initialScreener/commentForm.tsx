@@ -51,11 +51,17 @@ const CommentForm: React.FC = () => {
   const [formID, setFormID] = useState<number>(0);
   const [initialID, setInitialID] = useState<number>(0);
   const location = useLocation();
-  const sessionId =
-    (location.state as { sessionId?: string } | null)?.sessionId ?? null;
+  const locationState = (location.state as { sessionId?: string; returnPath?: string } | null) ?? {};
+  const sessionId = locationState.sessionId ?? null;
+  const returnPath = locationState.returnPath ?? "/initial-screener-table";
 
   const toast = useToast();
   const navigate = useNavigate();
+
+  // Helper function to navigate back to the source page
+  const navigateBack = () => {
+    navigate(returnPath);
+  };
 
   // (fields array removed; controls rendered explicitly below)
 
@@ -149,7 +155,12 @@ const CommentForm: React.FC = () => {
         if (cmName) {
           setClientCM(cmName);
         }
-        setAppType(record.applicantType ?? "");
+        const fetchedAppType = (record.applicantType ?? "").toLowerCase();
+        if (fetchedAppType === "single" || fetchedAppType === "family") {
+          setAppType(fetchedAppType);
+        } else {
+          setAppType("");
+        }
         setWillingness(Number(record.willingness ?? 0));
         setAttitude(Number(record.attitude ?? 0));
         setEmployability(Number(record.employability ?? 0));
@@ -301,7 +312,7 @@ const CommentForm: React.FC = () => {
         paddingBottom={"40px"}
       >
         <ArrowBackIcon
-          onClick={() => navigate(`/initial-screener-table`)}
+          onClick={navigateBack}
           color="blue.500"
           cursor="pointer"
           _hover={{
@@ -655,7 +666,7 @@ const CommentForm: React.FC = () => {
         <Button
           type="submit"
           variant="outline"
-          onClick={() => navigate(`/initial-screener-table`)}
+          onClick={navigateBack}
         >
           Cancel
         </Button>

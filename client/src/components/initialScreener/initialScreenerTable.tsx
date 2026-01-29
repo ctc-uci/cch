@@ -307,7 +307,10 @@ export const InitialScreenerTable = () => {
             setPendingSessionId(null);
             // Now that the screener is linked to a client, open the comment form
             navigate(`/comment-form/${newClientId}`, {
-              state: { sessionId: pendingSessionId },
+              state: { 
+                sessionId: pendingSessionId,
+                returnPath: "/initial-screener-table",
+              },
             });
           } catch (error) {
             console.error("Error attaching client to session:", error);

@@ -131,9 +131,8 @@ const FormPreview = ({
     // For dynamic forms, use sessionId
     if (sessionId) {
       try {
-        // Check if a screener comment exists for this session
-        const commentResponse = await backend.get(`/screenerComment/session/${sessionId}`);
-        const commentData = Array.isArray(commentResponse.data) ? commentResponse.data : [];
+        // Check if a screener comment exists for this session (we don't need the data, just checking it exists)
+        await backend.get(`/screenerComment/session/${sessionId}`);
         
         // Get clientId from form data (already loaded)
         const clientId = formData.clientId || formData.client_id;
@@ -149,9 +148,12 @@ const FormPreview = ({
           return;
         }
 
-        // Navigate to comment form with clientId and pass sessionId in state
+        // Navigate to comment form with clientId and pass sessionId and returnPath in state
         navigate(`/comment-form/${clientId}`, {
-          state: { sessionId: sessionId },
+          state: { 
+            sessionId: sessionId,
+            returnPath: "/admin-client-forms",
+          },
         });
       } catch (error: unknown) {
         // If no comment exists (404), still navigate to create a new one
@@ -160,7 +162,10 @@ const FormPreview = ({
           const clientId = formData.clientId || formData.client_id;
           if (clientId) {
             navigate(`/comment-form/${clientId}`, {
-              state: { sessionId: sessionId },
+              state: { 
+                sessionId: sessionId,
+                returnPath: "/admin-client-forms",
+              },
             });
           } else {
             toast({
@@ -197,7 +202,7 @@ const FormPreview = ({
           return;
         }
         navigate(`/comment-form/${formItemId}`);
-      } catch (error) {
+      } catch (_error) {
         toast({
           title: "Error",
           description: "Failed to load comment form.",
