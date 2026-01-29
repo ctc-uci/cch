@@ -7,6 +7,7 @@ export type Form = {
   name: string;
   title: FormType;
   cmId?: number;
+  sessionId?: string; // For dynamic forms using intake_responses
 };
 
 export type FormType =
@@ -17,7 +18,11 @@ export type FormType =
   | "Random Client Surveys"
   | "Front Desk Monthly Statistics"
   | "Case Manager Monthly Statistics"
-  | "Client Tracking Statistics (Intake Statistics)";
+  | "Client Tracking Statistics (Intake Statistics)"
+  | "Initial Screener Form"
+  | "Success Story Form"
+  | "Client Exit Survey Form"
+  | "Random Client Survey Form";
 
   export type TabData = {
     tabName: string;

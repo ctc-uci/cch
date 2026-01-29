@@ -1,322 +1,516 @@
 import { useEffect, useState } from "react";
-
 import {
   Box,
   Button,
-  Checkbox,
-  Divider,
-  Flex,
   FormControl,
   FormLabel,
   HStack,
+  Heading,
   Input,
+  Radio,
   Select,
-  Stack,
+  Spinner,
+  Table,
+  Tbody,
+  Td,
   Text,
   Textarea,
+  Th,
+  Thead,
+  Tr,
   useToast,
   VStack,
 } from "@chakra-ui/react";
-
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { CaseManager, Location } from "./SuccessStory";
+import { IoIosArrowBack } from "react-icons/io";
+import { useNavigate } from "react-router-dom";
+
+type SuccessStoryFormProps = {
+  formData: Record<string, unknown>;
+  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  setFormData: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+  onReview: boolean;
+  setOnReview: React.Dispatch<React.SetStateAction<boolean>>;
+  spanish: boolean;
+};
+
+interface FormOption {
+  value: string;
+  label: string;
+}
+
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionTextSpanish?: string;
+  questionType:
+    | "text"
+    | "number"
+    | "boolean"
+    | "date"
+    | "select"
+    | "textarea"
+    | "rating_grid"
+    | "case_manager_select"
+    | "site_location"
+    | "text_block"
+    | "header";
+  options?: FormOption[] | RatingGridConfig;
+  isRequired: boolean;
+  isVisible: boolean;
+  isCore: boolean;
+  displayOrder: number;
+}
+
+type CaseManager = {
+  id: number;
+  firstName?: string;
+  lastName?: string;
+  first_name?: string;
+  last_name?: string;
+};
+
+type Location = { id: number; name: string };
 
 export const SuccessStoryForm = ({
-  onSubmit,
+  formData,
+  handleSubmit,
+  setFormData,
   onReview,
-  spanish
-}: {
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => Promise<void>;
-  onReview: boolean;
-  spanish: boolean;
-}) => {
-  const [locations, setLocations] = useState([]);
-  const [caseManagers, setCaseManagers] = useState([]);
-
+  setOnReview,
+  spanish,
+}: SuccessStoryFormProps) => {
   const { backend } = useBackendContext();
   const toast = useToast();
-  const language = spanish ? "spanish" : "english"
-  const fields = {
-    english: {
-              title:"Success Story",
-              subtitle: "We are committed to providing you the best help possible, so we welcome your comments. Please fill out the questionnaire. Thank you!",
-              first_name: "What is your first name?",
-              site: "What was your site?",
-              cm: "Who is your case manager?",
-              entrance_date: "Entrance Date to CCH",
-              exit_date:"Exit Date from CCH",
-              date:"Today's Date",
-              program_title: "Overall Program",
-              previous_situation: "Please tell us your situation before entering Colette's Children's Home. Please give as many details as you are comfortable with about your story, how long you were homeless, what led to homelessness, etc. We want to help people understand what being homeless is like.",
-              cch_impact : "Tell us about your time in CCH and how CCH was part of the solution to your situation and the impact it had on you and and/or your children. What was most helpful, what you learned, etc.",
-              where_now : "Tell us where you are now. If you are graduating where are you moving, are you working, how are your children doing, etc. Tell us a finish to your story.",
-              tell_donors: "If you had the opportunity to tell one of our donors what it meant to you to be at CCH or how important it is to provide our services to other women, what would you say?",
-              quote: "Please give a 1 to 2 sentence quote of what the CCH experience meant to you?",
-              consent: "By checking the box, I consent to letting Colette's Children's Home use all or part of my story in their marketing materials, such as website, newsletter, brochures, videos, etc.",
-              type_here: "Enter your response...",
-              date_placeholder: "Date",
-              site_placeholder: "Select your site",
-              cm_placeholder: "Select your case manager",
-    },
-    spanish: {
-              title:"Encuesta de Éxito",
-              subtitle: "Estamos comprometidos a brindarle la mejor ayuda posible, por lo que agradecemos sus comentarios. Por favor, rellene el cuestionario. ¡Gracias!",
-              first_name: "¿Cuál es tu primer nombre?",
-              site: "¿Cuál fue su sitio?",
-              cm: "¿Quién es su administrador de casos?",
-              entrance_date: "fecha de entrada a CCH",
-              exit_date:"Fecha de salida de CCH",
-              date:"Fecha de hoy",
-              program_title: "Programa General",
-              previous_situation: "Por favor, díganos su situación antes de entrar en el Hogar Infantil de Colette. Por favor, dé tantos detalles como se sienta cómodo con acerca de su historia, cuánto tiempo estuvo sin hogar, qué llevó a la falta de vivienda, etc. Queremos ayudar a la gente a entender cómo es estar sin hogar",
-              cch_impact : "Cuéntanos sobre tu tiempo en CCH y cómo CCH fue parte de la solución a tu situación y el impacto que tuvo en ti y/o tus hijos. Lo que fue más útil, lo que aprendiste, etc.",
-              where_now : "Dinos dónde estás ahora. Si te estás graduando, ¿dónde te mudas, estás trabajando, cómo te van tus hijos, etc. Cuéntanos un final para tu historia.",
-              tell_donors: "Si tuviera la oportunidad de decirle a uno de nuestros donantes lo que significa para usted estar en CCH o lo importante que es proporcionar nuestros servicios a otras mujeres, ¿qué diría?",
-              quote: "Por favor, dé una cita de 1 a 2 frases de lo que significó para usted la experiencia de CCH?",
-              consent: "Al marcar la casilla, doy mi consentimiento para permitir que Colette's Children's Home use todo o parte de mi historia en sus materiales de marketing, tales como sitio web, boletín informativo, folletos, videos, etc.",
-              type_here: "Escribe su respuesta aquí...",
-              date_placeholder: "Fecha",
-              site_placeholder: "Seleccione su sitio",
-              cm_placeholder: "Seleccione su administrador de casos",
-    }
-  }
+  const language = spanish ? "spanish" : "english";
+
+  const [questions, setQuestions] = useState<FormQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const getLocations = async () => {
+    let mounted = true;
+    const loadQuestions = async () => {
       try {
-        const response = await backend.get("/locations");
-        setLocations(response.data);
-      } catch (e) {
-        toast({
-          title: "An error occurred",
-          description: `Locations were not fetched: ${e.message}`,
-          status: "error",
+        setIsLoading(true);
+        const resp = await backend.get("/formQuestions/form/3");
+        if (!mounted) return;
+        const qs = Array.isArray(resp.data) ? resp.data : [];
+        const sorted = qs.sort(
+          (a: FormQuestion, b: FormQuestion) => a.displayOrder - b.displayOrder
+        );
+        setQuestions(sorted);
+        // initialize defaults only once
+        const init: Record<string, unknown> = {};
+        sorted.forEach((q) => {
+          if (q.questionType === "rating_grid") {
+            init[q.fieldKey] = "{}";
+          } else if (q.questionType === "boolean") {
+            init[q.fieldKey] = formData[q.fieldKey] ?? false;
+          } else {
+            init[q.fieldKey] = formData[q.fieldKey] ?? "";
+          }
         });
+        setFormData((prev) => ({ ...init, ...prev }));
+      } catch (e) {
+        console.error(e);
+        if (mounted) {
+          toast({
+            title: language === "spanish" ? "Error al cargar preguntas" : "Error loading questions",
+            description: language === "spanish" ? "No se pudieron cargar las preguntas de la historia de éxito." : "Could not load success story questions.",
+            status: "error",
+          });
+        }
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
+    loadQuestions();
+    return () => {
+      mounted = false;
+    };
+    // We intentionally exclude formData to avoid re-initializing on every state change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [backend, setFormData, toast]);
 
-    const getCaseManagers = async () => {
+  useEffect(() => {
+    const loadRefs = async () => {
       try {
-        const response = await backend.get("/caseManagers");
-        setCaseManagers(response.data);
+        const [cms, locs] = await Promise.all([
+          backend.get("/caseManagers"),
+          backend.get("/locations"),
+        ]);
+        const cmList: CaseManager[] = Array.isArray(cms.data)
+          ? (cms.data as Array<{
+              id: number | string;
+              firstName?: string;
+              lastName?: string;
+              first_name?: string;
+              last_name?: string;
+            }>).map((cm) => ({
+              id: Number(cm.id),
+              firstName: cm.firstName ?? cm.first_name,
+              lastName: cm.lastName ?? cm.last_name,
+            }))
+          : [];
+        const locList: Location[] = Array.isArray(locs.data)
+          ? (locs.data as Array<{ id: number | string; name: string }>)
+              .map((l) => ({ id: Number(l.id), name: l.name }))
+              .filter((l: Location) => !Number.isNaN(l.id))
+          : [];
+        setCaseManagers(cmList);
+        setLocations(locList);
       } catch (e) {
+        console.error(e);
         toast({
-          title: "An error occurred",
-          description: `Case Managers were not fetched: ${e.message}`,
+          title: language === "spanish" ? "Error al cargar datos" : "Error loading data",
+          description: language === "spanish" ? "No se pudieron cargar los administradores de casos o las ubicaciones." : "Could not load case managers or locations.",
           status: "error",
         });
       }
     };
-    getLocations();
-    getCaseManagers();
+    loadRefs();
   }, [backend, toast]);
+
+  const renderField = (question: FormQuestion) => {
+    const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
+    const value = formData[fieldKey];
+    const disabled = onReview;
+    // Use Spanish text if language is Spanish and Spanish text is available
+    const displayQuestionText = language === "spanish" && questionTextSpanish ? questionTextSpanish : questionText;
+
+    switch (questionType) {
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig?.rows || !gridConfig?.columns) {
+          return <Text color="red.500">Invalid rating grid</Text>;
+        }
+        const gridData = typeof value === "string" && value ? JSON.parse(value) : {};
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th></Th>
+                  {gridConfig.columns.map((col) => (
+                    <Th key={col.value} textAlign="center" fontSize="12px" color="gray.600">
+                      {col.label}
+                    </Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td width="200px" fontSize="12px" color="#000">
+                      {row.label}
+                    </Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          isDisabled={disabled}
+                          onChange={() => {
+                            const newData = { ...gridData, [row.key]: col.value };
+                            setFormData((prev) => ({
+                              ...prev,
+                              [fieldKey]: JSON.stringify(newData),
+                            }));
+                          }}
+                        />
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        );
+      }
+
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona el administrador de casos" : "Select case manager"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {caseManagers.map((cm) => {
+              const name = `${cm.firstName ?? ""} ${cm.lastName ?? ""}`.trim() || `Case Manager ${cm.id}`;
+              return (
+                <option key={cm.id} value={cm.id}>
+                  {name}
+                </option>
+              );
+            })}
+          </Select>
+        );
+
+      case "site_location":
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona el sitio" : "Select location"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.name}>
+                {loc.name}
+              </option>
+            ))}
+          </Select>
+        );
+
+      case "select": {
+        const opts = options as FormOption[] | undefined;
+        return (
+          <Select
+            placeholder={language === "spanish" ? "Selecciona una opción" : "Select option"}
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          >
+            {opts?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        );
+      }
+
+      case "boolean": {
+        const boolValue =
+          value === true || value === "true" || value === "yes" || value === "Yes";
+        const hasValue = value !== undefined && value !== null && value !== "";
+        return (
+          <HStack spacing={4}>
+            {["yes", "no"].map((option) => {
+              const isSelected = hasValue && boolValue === (option === "yes");
+              const optionLabel = language === "spanish" 
+                ? (option === "yes" ? "Sí" : "No")
+                : (option.charAt(0).toUpperCase() + option.slice(1));
+              return (
+                <Button
+                  key={option}
+                  variant="outline"
+                  width="89px"
+                  height="32px"
+                  borderColor={isSelected ? "blue.500" : "gray.400"}
+                  borderRadius="8px"
+                  color={isSelected ? "white" : "black"}
+                  bg={isSelected ? "blue.500" : "transparent"}
+                  _hover={{ bg: isSelected ? "blue.600" : "gray.100" }}
+                  onClick={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      [fieldKey]: option === "yes",
+                    }))
+                  }
+                  isDisabled={disabled}
+                >
+                  {optionLabel}
+                </Button>
+              );
+            })}
+          </HStack>
+        );
+      }
+
+      case "date":
+        return (
+          <Input
+            type="date"
+            value={
+              typeof value === "string"
+                ? value
+                : value instanceof Date
+                ? value.toISOString().slice(0, 10)
+                : ""
+            }
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "number":
+        return (
+          <Input
+            type="number"
+            value={
+              typeof value === "number"
+                ? value
+                : typeof value === "string"
+                ? value
+                : ""
+            }
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={
+              language === "spanish" ? "Escribe tu respuesta" : "Enter response"
+            }
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+
+      case "text_block":
+        return (
+          <Text fontSize="sm" color="gray.700" fontStyle="italic" fontWeight="normal" py={2}>
+            {displayQuestionText}
+          </Text>
+        );
+
+      case "header":
+        return (
+          <Heading size="lg" color="#0099D2" mb={2} mt={4} fontWeight="normal">
+            {displayQuestionText}
+          </Heading>
+        );
+
+      case "text":
+      default:
+        return (
+          <Input
+            placeholder={
+              language === "spanish"
+                ? "Escribe tu respuesta"
+                : "Enter response"
+            }
+            value={value ? String(value) : ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                [fieldKey]: e.target.value,
+              }))
+            }
+            isDisabled={disabled}
+          />
+        );
+    }
+  };
+
+  const visibleQuestions = questions
+    .filter((q) => q.isVisible)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  if (isLoading) {
+    return (
+      <VStack align="center" justify="center" minH="300px">
+        <Spinner size="lg" color="blue.500" />
+        <Text>{language === "spanish" ? "Cargando formulario de historia de éxito..." : "Loading success story form..."}</Text>
+      </VStack>
+    );
+  }
+
   return (
-    <Box
-      maxW="800px"
-      mx="auto"
-      p={6}
-    >
-      <form onSubmit={onSubmit}>
-        <VStack
-          align="start"
-          spacing={6}
-        >
-            <Text
-              fontSize="3xl"
-              color="#3182CE"
-            >
-              {fields[language]["title"]}
-            </Text>
-          <Text>
-              {fields[language]["subtitle"]}
-          </Text>
+    <Box maxW="800px" mx="auto" p={6}>
+      <Button
+        position={"absolute"}
+        left={"400px"}
+        top={"50px"}
+        height={"40px"}
+        width={"40px"}
+        color={"blue.500"}
+        backgroundColor={"transparent"}
+        onClick={
+          !onReview
+            ? () => navigate("/client-landing-page")
+            : () => setOnReview(false)
+        }
+      >
+        <Box fontSize={"35px"}>
+          <IoIosArrowBack />
+        </Box>
+      </Button>
+      <form onSubmit={handleSubmit}>
+        <VStack spacing={6} align="stretch">
+          {visibleQuestions.map((question) => {
+            const isDisplayOnly =
+              question.questionType === "text_block" ||
+              question.questionType === "header";
+            
+            if (isDisplayOnly) {
+              return <Box key={question.id}>{renderField(question)}</Box>;
+            }
 
-          <Divider />
+            // Special handling for boolean/checkbox questions
+            if (question.questionType === "boolean") {
+              return (
+                <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
+                  <HStack spacing={2} alignItems="center">
+                    {renderField(question)}
+                    <FormLabel mb={0}>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
+                  </HStack>
+                </FormControl>
+              );
+            }
 
-          <Stack
-            direction={["column", "row"]}
-            spacing={4}
-            w="100%"
-          >
-            <FormControl isRequired>
-              <FormLabel>1.{fields[language]["first_name"]}</FormLabel>
-              <Input name="name" isDisabled={onReview} />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>2. {fields[language]["site"]} </FormLabel>
-              <Select
-                name="site"
-                placeholder={fields[language]["site_placeholder"]}
-                isDisabled={onReview}
-              >
-                {locations.map((location: Location) => (
-                  <option
-                    key={location.id}
-                    value={location.id}
-                  >
-                    {location.name}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
-
-          <Stack
-            direction={["column", "row"]}
-            spacing={4}
-            w="100%"
-          >
-            <FormControl isRequired>
-              <FormLabel>3. {fields[language]["cm"]}</FormLabel>
-              <Select
-                name="cm_id"
-                placeholder={fields[language]["cm_placeholder"]}
-                maxW="530px"
-                isDisabled={onReview}
-              >
-                {caseManagers.map((manager: CaseManager) => (
-                  <option
-                    key={manager.id}
-                    value={manager.id}
-                  >
-                    {manager.firstName} {manager.lastName}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>4. {fields[language]["entrance_date"]} </FormLabel>
-              <Input
-                name="entrance_date"
-                type="date"
-                placeholder={fields[language]["date_placeholder"]}
-                isDisabled={onReview}
-              />
-            </FormControl>
-          </Stack>
-
-          <Stack
-            direction={["column", "row"]}
-            spacing={4}
-            w="100%"
-          >
-            <FormControl isRequired>
-              <FormLabel>5. {fields[language]["exit_date"]} </FormLabel>
-              <Input
-                name="exit_date"
-                type="date"
-                placeholder={fields[language]["date_placeholder"]}
-                isDisabled={onReview}
-              />
-            </FormControl>
-
-            <FormControl isRequired>
-              <FormLabel>6. {fields[language]["date"]} </FormLabel>
-              <Input
-                name="date"
-                type="date"
-                placeholder={fields[language]["date_placeholder"]}
-                isDisabled={onReview}
-              />
-            </FormControl>
-          </Stack>
-
-          <Divider />
-
-          <Text
-            fontSize="3xl"
-            color="#3182CE"
-            pt={4}
-          >
-            {fields[language]["program_title"]}
-          </Text>
-
-          <FormControl isRequired>
-            <FormLabel>
-              1. {fields[language]["previous_situation"]}
-            </FormLabel>
-            <Textarea
-              name="previous_situation"
-              placeholder={fields[language]["type_here"]}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              2. {fields[language]["cch_impact"]}
-            </FormLabel>
-            <Textarea
-              name="cch_impact"
-              placeholder={fields[language]["type_here"]}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              3. {fields[language]["where_now"]}
-            </FormLabel>
-            <Textarea
-              name="where_now"
-              placeholder={fields[language]["type_here"]}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              4. {fields[language]["tell_donors"]}
-            </FormLabel>
-            <Textarea
-              name="tell_donors"
-              placeholder={fields[language]["type_here"]}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <FormControl isRequired>
-            <FormLabel>
-              5. {fields[language]["quote"]}
-            </FormLabel>
-            <Textarea
-              name="quote"
-              placeholder={fields[language]["type_here"]}
-              isDisabled={onReview}
-            />
-          </FormControl>
-
-          <FormControl>
-            <HStack
-              spacing={2}
-              alignItems="center"
-            >
-              <Checkbox
-                name="consent"
-                mt={1}
-                isDisabled={onReview}
-              />
-              <FormLabel>
-                {fields[language]["consent"]}
-              </FormLabel>
-            </HStack>
-          </FormControl>
+            return (
+              <FormControl key={question.id} isRequired={question.isRequired && question.questionType !== "text_block" && question.questionType !== "header"}>
+                <FormLabel>{language === "spanish" && question.questionTextSpanish ? question.questionTextSpanish : question.questionText}</FormLabel>
+                {renderField(question)}
+              </FormControl>
+            );
+          })}
 
           {!onReview && (
-            <Flex
-              justifyContent="flex-end"
-              width="100%"
-            >
-              <Button
-                type="submit"
-                size="lg"
-                colorScheme="blue"
-              >
-                Next
+            <HStack justify="flex-end">
+              <Button size="lg" colorScheme="blue" type="submit">
+                {language === "spanish" ? "Siguiente" : "Next"}
               </Button>
-            </Flex>
+            </HStack>
           )}
         </VStack>
       </form>

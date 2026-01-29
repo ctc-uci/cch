@@ -2,58 +2,137 @@ import { Router } from "express";
 
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
+import { matchClient, extractClientFields } from "../common/clientMatching";
 
 export const initialInterviewRouter = Router();
 
 //getting the data needed for the list of initial screeners
+// Now fetches from dynamic form system (intake_responses with form_id = 1)
 initialInterviewRouter.get(
   "/initial-interview-table-data",
   async (req, res) => {
     try {
       const { search, page, filter } = req.query;
-      const stringSearch = "'%" + String(search) + "%'";
+      const formId = 1; // Initial Interview form_id
 
-      let queryStr = `
-      SELECT
-        i.name AS client_name,
-        i.social_worker_office_location,
-        cm.first_name AS cm_first_name,
-        cm.last_name AS cm_last_name,
-        i.phone_number,
-        i.email,
-        i.date,
-        i.client_id
-      FROM initial_interview i
-      INNER JOIN screener_comment AS s ON i.id = s.initial_interview_id
-      INNER JOIN case_managers AS cm ON s.cm_id = cm.id
-    `;
-
+      // Build base query to get distinct sessions and pivot field values
+      // Use a subquery to first get distinct sessions, then aggregate field values per session
+      // Note: screener_comment links to old initial_interview table, so we can't directly join it here
+      // Case manager info will need to be fetched separately if needed
+      
+      // Build search conditions - need to check if session matches search criteria
+      let sessionFilter = '';
       if (search) {
-        queryStr += `
+        const stringSearch = "'%" + String(search) + "%'";
+        sessionFilter = `
         AND (
-          i.name::TEXT ILIKE ${stringSearch}
-          OR i.social_worker_office_location::TEXT ILIKE ${stringSearch}
-          OR cm.first_name::TEXT ILIKE ${stringSearch}
-          OR cm.last_name::TEXT ILIKE ${stringSearch}
-          OR i.phone_number::TEXT ILIKE ${stringSearch}
-          OR i.email::TEXT ILIKE ${stringSearch}
-          OR i.date::TEXT ILIKE ${stringSearch}
+          EXISTS (
+            SELECT 1 FROM intake_responses ir2 
+            JOIN form_questions fq2 ON ir2.question_id = fq2.id 
+            WHERE ir2.session_id = ir.session_id 
+            AND ir2.form_id = ${formId}
+            AND ir2.response_value::TEXT ILIKE ${stringSearch}
+          )
+          OR c.first_name::TEXT ILIKE ${stringSearch}
+          OR c.last_name::TEXT ILIKE ${stringSearch}
+          OR ir.session_id::TEXT ILIKE ${stringSearch}
+          OR ir.submitted_at::TEXT ILIKE ${stringSearch}
         )`;
       }
 
       if (filter) {
-        queryStr += ` AND ${filter}`;
+        sessionFilter += ` AND ${filter}`;
       }
 
-      queryStr += " ORDER BY i.id ASC";
+      let queryStr = `
+      SELECT 
+        session_data.session_id,
+        session_data.client_id,
+        session_data.date,
+        session_data.client_first_name,
+        session_data.client_last_name,
+        MAX(CASE WHEN fq.field_key = 'name' THEN ir.response_value END) AS client_name,
+        MAX(CASE WHEN fq.field_key = 'first_name' THEN ir.response_value END) AS first_name,
+        MAX(CASE WHEN fq.field_key = 'last_name' THEN ir.response_value END) AS last_name,
+        MAX(CASE WHEN fq.field_key = 'phone_number' THEN ir.response_value END) AS phone_number,
+        MAX(CASE WHEN fq.field_key = 'email' THEN ir.response_value END) AS email,
+        MAX(CASE WHEN fq.field_key = 'social_worker_office_location' THEN ir.response_value END) AS social_worker_office_location
+      FROM (
+        SELECT DISTINCT
+          ir.session_id,
+          ir.client_id,
+          ir.submitted_at AS date,
+          c.first_name AS client_first_name,
+          c.last_name AS client_last_name
+        FROM intake_responses ir
+        LEFT JOIN clients c ON ir.client_id = c.id
+        WHERE ir.form_id = ${formId}
+        ${sessionFilter}
+      ) session_data
+      JOIN intake_responses ir ON ir.session_id = session_data.session_id AND ir.form_id = ${formId}
+      JOIN form_questions fq ON ir.question_id = fq.id
+      GROUP BY session_data.session_id, session_data.client_id, session_data.date, session_data.client_first_name, session_data.client_last_name
+      ORDER BY session_data.date DESC
+      `;
 
       if (page) {
         queryStr += ` LIMIT ${page}`;
       }
 
       const data = await db.query(queryStr);
-      res.status(200).json(keysToCamel(data));
+      
+      // Transform the data to match expected format
+      const transformedData = data.map((row: {
+        session_id: string;
+        client_id: number | null;
+        date: Date;
+        client_name: string | null;
+        first_name?: string | null;
+        last_name?: string | null;
+        phone_number: string | null;
+        email: string | null;
+        social_worker_office_location: string | null;
+        client_first_name: string | null;
+        client_last_name: string | null;
+      }) => {
+        // Use client_name from form response, or combine first_name/last_name from form, or fall back to clients table
+        let name = row.client_name;
+        if (!name) {
+          const formFirstName = (row as { first_name?: string }).first_name;
+          const formLastName = (row as { last_name?: string }).last_name;
+          if (formFirstName && formLastName) {
+            name = `${formFirstName} ${formLastName}`.trim();
+          } else if (formFirstName) {
+            name = formFirstName;
+          } else if (formLastName) {
+            name = formLastName;
+          } else if (row.client_first_name && row.client_last_name) {
+            name = `${row.client_first_name} ${row.client_last_name}`.trim();
+          } else if (row.client_first_name) {
+            name = row.client_first_name;
+          } else if (row.client_last_name) {
+            name = row.client_last_name;
+          } else {
+            name = 'Unknown';
+          }
+        }
+
+        return {
+          client_name: name,
+          social_worker_office_location: row.social_worker_office_location || '',
+          cm_first_name: '', // Case manager info not available from dynamic forms
+          cm_last_name: '', // Case manager info not available from dynamic forms
+          phone_number: row.phone_number || '',
+          email: row.email || '',
+          date: row.date,
+          client_id: row.client_id,
+          session_id: row.session_id, // Include for reference
+        };
+      });
+
+      res.status(200).json(keysToCamel(transformedData));
     } catch (err) {
+      console.error("Error fetching initial interview table data:", err);
       res.status(500).send(err.message);
     }
   }
@@ -235,11 +314,81 @@ initialInterviewRouter.get("/:id", async (req, res) => {
 initialInterviewRouter.get("/id/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const data = await db.query(
-      `SELECT * FROM initial_interview WHERE id = $1;`,
-      [id]
-    );
-    res.status(200).json(keysToCamel(data));
+    // Check if id is a UUID (session-based form) or integer (old table)
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+    
+    if (isUUID) {
+      // Fetch from intake_responses using session_id
+      const sessionResult = await db.query(
+        `SELECT DISTINCT ir.session_id, ir.client_id, ir.submitted_at, ir.form_id, c.first_name, c.last_name
+        FROM intake_responses ir
+        LEFT JOIN clients c ON ir.client_id = c.id
+        WHERE ir.session_id = $1 AND ir.form_id = 1
+        LIMIT 1`,
+        [id]
+      );
+
+      if (sessionResult.length === 0) {
+        return res.status(404).json({ error: "Form not found" });
+      }
+
+      const session = sessionResult[0];
+      
+      // Get all responses for this session
+      const responses = await db.query(
+        `SELECT 
+          ir.response_value,
+          fq.field_key,
+          fq.question_type
+        FROM intake_responses ir
+        JOIN form_questions fq ON ir.question_id = fq.id
+        WHERE ir.session_id = $1 AND ir.form_id = 1
+        ORDER BY fq.display_order ASC`,
+        [id]
+      );
+
+      // Build response object matching initial_interview structure
+      const formData: Record<string, unknown> = {
+        id: session.session_id,
+        client_id: session.client_id,
+        date: session.submitted_at,
+        name: session.first_name && session.last_name 
+          ? `${session.first_name} ${session.last_name}`.trim() 
+          : 'Unknown',
+      };
+
+      // Convert responses to form data
+      for (const resp of responses) {
+        let value: unknown = resp.response_value;
+        
+        // Convert based on question type
+        switch (resp.question_type) {
+          case "number":
+            value = resp.response_value ? parseFloat(resp.response_value) : null;
+            break;
+          case "boolean":
+            value = resp.response_value === "true" || resp.response_value === "yes";
+            break;
+          case "date":
+            value = resp.response_value || null;
+            break;
+          default:
+            value = resp.response_value || "";
+        }
+        
+        // Convert field_key from snake_case to match initial_interview column names
+        formData[resp.field_key] = value;
+      }
+
+      res.status(200).json(keysToCamel([formData]));
+    } else {
+      // Fetch from old initial_interview table
+      const data = await db.query(
+        `SELECT * FROM initial_interview WHERE id = $1;`,
+        [id]
+      );
+      res.status(200).json(keysToCamel(data));
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -263,306 +412,81 @@ initialInterviewRouter.patch("/app-status/:id", async (req, res) => {
   }
 });
 
+// Create new initial interview - now posts to intake_responses with form_id = 1
 initialInterviewRouter.post("/", async (req, res) => {
   try {
-    // Helper functions to match SQL types
-    const toInt = (value: unknown): number => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') {
-        const parsed = parseInt(value, 10);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      return 0;
-    };
+    const formData = req.body;
+    const formId = 1; // Initial Interview Screening form_id
 
-    const toBoolean = (value: unknown): boolean => {
-      if (typeof value === 'boolean') return value;
-      if (typeof value === 'string') {
-        const lower = value.toLowerCase();
-        return lower === 'yes' || lower === 'true' || lower === '1';
-      }
-      return false;
-    };
+    // Get all form questions for form_id = 1 to map field_key to question_id
+    const questions = await db.query(
+      `SELECT id, field_key, question_type FROM form_questions WHERE form_id = $1`,
+      [formId]
+    );
 
-    const toNumeric = (value: unknown): number => {
-      if (typeof value === 'number') return value;
-      if (typeof value === 'string') {
-        const parsed = parseFloat(value);
-        return isNaN(parsed) ? 0 : parsed;
-      }
-      return 0;
-    };
+    const questionMap = new Map<string, { id: number; type: string }>(
+      questions.map(
+        (q: { id: number; field_key: string; question_type: string }) => [
+          q.field_key,
+          { id: q.id, type: q.question_type },
+        ]
+      )
+    );
 
-    const toDate = (value: unknown): string => {
-      if (!value) {
-        const defaultDate = new Date().toISOString();
-        return defaultDate.split('T')[0] ?? '1970-01-01';
+    // Match client from clients table (excluding random client survey - form_id = 4)
+    // form_id = 1 is Initial Interview, so we should match
+    const clientFields = extractClientFields(formData);
+    const matchedClientId = await matchClient(
+      clientFields.firstName,
+      clientFields.lastName,
+      clientFields.phoneNumber,
+      clientFields.dateOfBirth
+    );
+
+    // Use matched client ID if found, otherwise use NULL (client_id now references clients table)
+    const finalClientId = matchedClientId || null;
+
+    // Generate a unique session_id for this interview submission
+    // All responses from this submission will share the same session_id
+    const sessionIdResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId = sessionIdResult[0].session_id;
+
+    // Insert responses for each field that has a corresponding question
+    // All responses use the same session_id to group them together
+    for (const [fieldKey, value] of Object.entries(formData)) {
+      // Skip non-response fields
+      if (fieldKey === 'client_id' || fieldKey === 'name') {
+        continue;
       }
-      if (typeof value === 'string') {
-        // If it's already in YYYY-MM-DD format, return it
-        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-        // Try to parse and format
-        const date = new Date(value);
-        if (!isNaN(date.getTime())) {
-          const isoString = date.toISOString();
-          const datePart = isoString.split('T')[0];
-          return datePart ?? '1970-01-01';
+
+      const question = questionMap.get(fieldKey);
+      if (question && value !== undefined && value !== null && value !== "") {
+        // Convert value to string for storage
+        let stringValue: string;
+        if (typeof value === "boolean") {
+          // Convert boolean to "yes" or "no" instead of "true" or "false"
+          stringValue = value ? "yes" : "no";
+        } else if (typeof value === "number") {
+          stringValue = value.toString();
+        } else if (typeof value === "object") {
+          // For rating grids and other objects, stringify
+          stringValue = JSON.stringify(value);
+        } else {
+          stringValue = String(value);
         }
+
+        await db.query(
+          `INSERT INTO intake_responses (client_id, question_id, response_value, form_id, session_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [finalClientId, question.id, stringValue, formId, sessionId]
+        );
       }
-      const defaultDate = new Date().toISOString();
-      return defaultDate.split('T')[0] ?? '1970-01-01';
-    };
+    }
 
-    const toPhoneNumber = (value: unknown): string => {
-      if (!value) return '';
-      const cleaned = String(value).replace(/\D/g, '');
-      return cleaned.slice(0, 10);
-    };
-
-    const toEmail = (value: unknown): string => {
-      if (!value) return '';
-      return String(value).slice(0, 32);
-    };
-
-    const toMaritalStatus = (value: unknown): 'single' | 'married' | 'divorced' | 'widowed' => {
-      const validStatuses: Array<'single' | 'married' | 'divorced' | 'widowed'> = ['single', 'married', 'divorced', 'widowed'];
-      if (typeof value === 'string') {
-        const lower = value.toLowerCase();
-        const found = validStatuses.find(s => s === lower);
-        if (found) return found;
-      }
-      return 'single';
-    };
-
-    const toEthnicity = (value: unknown): 'Non-Hispanic' | 'Hispanic' | 'Refused' => {
-      const validEthnicities: Array<'Non-Hispanic' | 'Hispanic' | 'Refused'> = ['Non-Hispanic', 'Hispanic', 'Refused'];
-      if (typeof value === 'string') {
-        const found = validEthnicities.find(e => e === value);
-        if (found) return found;
-        // Handle common variations
-        if (value.toLowerCase().includes('hispanic')) return 'Hispanic';
-        if (value.toLowerCase().includes('refused')) return 'Refused';
-      }
-      return 'Refused';
-    };
-
-    const {
-      client_id,
-      applicantType,
-      name,
-      age,
-      date,
-      phoneNumber,
-      maritalStatus,
-      dateOfBirth,
-      email,
-      ssnLastFour,
-      ethnicity,
-      veteran,
-      disabled,
-      currentAddress,
-      lastPermAddress,
-      reasonForLeavingPermAddress,
-      whereResideLastNight,
-      currentlyHomeless,
-      eventLeadingToHomelessness,
-      howLongExperiencingHomelessness,
-      prevAppliedToCch,
-      whenPrevAppliedToCch,
-      prevInCch,
-      whenPrevInCch,
-      childName,
-      childDob,
-      custodyOfChild,
-      fatherName,
-      nameSchoolChildrenAttend,
-      cityOfSchool,
-      howHearAboutCch,
-      programsBeenInBefore,
-      monthlyIncome,
-      sourcesOfIncome,
-      monthlyBills,
-      currentlyEmployed,
-      lastEmployer,
-      lastEmployedDate,
-      educationHistory,
-      transportation,
-      legalResident,
-      medical,
-      medicalCity,
-      medicalInsurance,
-      medications,
-      domesticViolenceHistory,
-      socialWorker,
-      socialWorkerTelephone,
-      socialWorkerOfficeLocation,
-      lengthOfSobriety,
-      lastDrugUse,
-      lastAlcoholUse,
-      timeUsingDrugsAlcohol,
-      beenConvicted,
-      convictedReasonAndTime,
-      presentWarrantExist,
-      warrantCounty,
-      probationParoleOfficer,
-      probationParoleOfficerTelephone,
-      personalReferences,
-      personalReferenceTelephone,
-      futurePlansGoals,
-      lastPermanentResidenceHouseholdComposition,
-      whyNoLongerAtLastResidence,
-      whatCouldPreventHomeless,
-    } = req.body;
-
-    const query = `
-      INSERT INTO initial_interview (
-        client_id,
-        applicant_type,
-        name,
-        age,
-        date,
-        phone_number,
-        marital_status,
-        date_of_birth,
-        email,
-        ssn_last_four,
-        ethnicity,
-        veteran,
-        disabled,
-        current_address,
-        last_perm_address,
-        reason_for_leaving_perm_address,
-        where_reside_last_night,
-        currently_homeless,
-        event_leading_to_homelessness,
-        how_long_experiencing_homelessness,
-        prev_applied_to_cch,
-        when_prev_applied_to_cch,
-        prev_in_cch,
-        when_prev_in_cch,
-        child_name,
-        child_dob,
-        custody_of_child,
-        father_name,
-        name_school_children_attend,
-        city_of_school,
-        how_hear_about_cch,
-        programs_been_in_before,
-        monthly_income,
-        sources_of_income,
-        monthly_bills,
-        currently_employed,
-        last_employer,
-        last_employed_date,
-        education_history,
-        transportation,
-        legal_resident,
-        medical,
-        medical_city,
-        medical_insurance,
-        medications,
-        domestic_violence_history,
-        social_worker,
-        social_worker_telephone,
-        social_worker_office_location,
-        length_of_sobriety,
-        last_drug_use,
-        last_alcohol_use,
-        time_using_drugs_alcohol,
-        been_convicted,
-        convicted_reason_and_time,
-        present_warrant_exist,
-        warrant_county,
-        probation_parole_officer,
-        probation_parole_officer_telephone,
-        personal_references,
-        personal_reference_telephone,
-        future_plans_goals,
-        last_permanent_residence_household_composition,
-        why_no_longer_at_last_residence,
-        what_could_prevent_homeless
-      ) VALUES (
-                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                 $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-                 $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-                 $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
-                 $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-                 $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
-                 $61, $62, $63, $64, $65
-               );
-    `;
-
-    const result = await db.query(query, [
-      toInt(client_id), // INT - client_id
-      String(applicantType || ''), // VARCHAR(256)
-      String(name || ''), // VARCHAR(256)
-      toInt(age), // INT
-      toDate(date), // DATE
-      toPhoneNumber(phoneNumber), // VARCHAR(10)
-      toMaritalStatus(maritalStatus), // ENUM
-      toDate(dateOfBirth), // DATE
-      toEmail(email), // VARCHAR(32)
-      toInt(ssnLastFour), // INT
-      toEthnicity(ethnicity), // ENUM
-      toBoolean(veteran), // BOOLEAN
-      toBoolean(disabled), // BOOLEAN
-      String(currentAddress || ''), // VARCHAR(256)
-      String(lastPermAddress || ''), // VARCHAR(256)
-      String(reasonForLeavingPermAddress || ''), // VARCHAR(256)
-      String(whereResideLastNight || ''), // VARCHAR(1024)
-      toBoolean(currentlyHomeless), // BOOLEAN
-      eventLeadingToHomelessness ? String(eventLeadingToHomelessness) : null, // VARCHAR(256) nullable
-      String(howLongExperiencingHomelessness || ''), // VARCHAR(256)
-      toBoolean(prevAppliedToCch), // BOOLEAN
-      whenPrevAppliedToCch ? String(whenPrevAppliedToCch) : null, // VARCHAR(256) nullable
-      toBoolean(prevInCch), // BOOLEAN
-      whenPrevInCch ? String(whenPrevInCch) : null, // VARCHAR(256) nullable
-      String(childName || ''), // VARCHAR(256)
-      toDate(childDob), // DATE
-      toBoolean(custodyOfChild), // BOOLEAN
-      String(fatherName || ''), // VARCHAR(256)
-      String(nameSchoolChildrenAttend || ''), // VARCHAR(256)
-      String(cityOfSchool || ''), // VARCHAR(256)
-      String(howHearAboutCch || ''), // VARCHAR(1024)
-      String(programsBeenInBefore || ''), // VARCHAR(1024)
-      toNumeric(monthlyIncome), // NUMERIC
-      String(sourcesOfIncome || ''), // VARCHAR(1024)
-      String(monthlyBills || ''), // VARCHAR(1024)
-      toBoolean(currentlyEmployed), // BOOLEAN
-      String(lastEmployer || ''), // VARCHAR(1024)
-      toDate(lastEmployedDate), // DATE
-      String(educationHistory || ''), // VARCHAR(1024)
-      String(transportation || ''), // VARCHAR(256)
-      toBoolean(legalResident), // BOOLEAN
-      toBoolean(medical), // BOOLEAN
-      medicalCity ? String(medicalCity) : null, // VARCHAR(256) nullable
-      medicalInsurance ? String(medicalInsurance) : null, // VARCHAR(256) nullable
-      String(medications || ''), // VARCHAR(256)
-      String(domesticViolenceHistory || ''), // VARCHAR(256)
-      String(socialWorker || ''), // VARCHAR(256)
-      toPhoneNumber(socialWorkerTelephone), // VARCHAR(10)
-      String(socialWorkerOfficeLocation || ''), // VARCHAR(256)
-      String(lengthOfSobriety || ''), // VARCHAR(32)
-      String(lastDrugUse || ''), // VARCHAR(256)
-      String(lastAlcoholUse || ''), // VARCHAR(256)
-      String(timeUsingDrugsAlcohol || ''), // VARCHAR(256)
-      toBoolean(beenConvicted), // BOOLEAN
-      convictedReasonAndTime ? String(convictedReasonAndTime) : null, // VARCHAR(256) nullable
-      toBoolean(presentWarrantExist), // BOOLEAN
-      String(warrantCounty || ''), // VARCHAR(256)
-      String(probationParoleOfficer || ''), // VARCHAR(256)
-      toPhoneNumber(probationParoleOfficerTelephone), // VARCHAR(10)
-      String(personalReferences || ''), // VARCHAR(256)
-      toPhoneNumber(personalReferenceTelephone), // VARCHAR(10)
-      String(futurePlansGoals || ''), // VARCHAR(1024)
-      String(lastPermanentResidenceHouseholdComposition || ''), // VARCHAR(1024)
-      String(whyNoLongerAtLastResidence || ''), // VARCHAR(1024)
-      String(whatCouldPreventHomeless || ''), // VARCHAR(1024)
-    ]);
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, client_id: finalClientId, session_id: sessionId });
   } catch (err: unknown) {
     const error = err as Error & { message?: string };
-    console.error("Error inserting initial interview:", err);
+    console.error("Error creating initial interview:", err);
     res.status(500).json({ error: error?.message || 'Unknown error occurred' });
   }
 });
@@ -778,8 +702,9 @@ initialInterviewRouter.put("/:id", async (req, res) => {
     );
 
     return res.status(200).json(keysToCamel(result));
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error & { message?: string };
     console.error("Error", err);
-    return res.status(500).send(err.message);
+    return res.status(500).send(error?.message || 'Unknown error occurred');
   }
 });

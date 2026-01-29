@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Input, Select, Text, VStack, Heading, Divider, SimpleGrid, Stack, Flex, useToast } from "@chakra-ui/react";
+import { Box, Button, Input, Select, Text, VStack, Heading, Divider, SimpleGrid, Stack, Flex, useToast, HStack } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { useNavigate } from "react-router-dom";
 import { caseManagerForm, caseManagers } from "../../types/caseManagerForm";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 interface FormCMProps {
   onFormSubmitSuccess: () => void;
   spanish: boolean
@@ -238,7 +239,19 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
   };
   
   return (
+    <Box>
+      <HStack position="absolute" p="4">
+        <Button
+          variant="ghost"
+          colorScheme="blue"
+          leftIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/forms-hub")}
+        >
+          Back
+        </Button>
+        </HStack>
     <VStack spacing={4} align="stretch" maxW="800px" mx="auto" py={6}>
+      
       <Heading textAlign="center" mb={10}>Case Manager Monthly Statistics Form</Heading>
 
       {/* Month, Year, Case Manager */}
@@ -662,6 +675,7 @@ function FormCM({ onFormSubmitSuccess, spanish }: FormCMProps) {
         </Box>
       </Box>
     </VStack>
+    </Box>
   );
 }
 

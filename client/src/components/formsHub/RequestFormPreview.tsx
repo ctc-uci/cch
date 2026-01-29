@@ -19,6 +19,7 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
+import { useAuthContext } from "../../contexts/hooks/useAuthContext.ts";
 import { formatDateString } from "../../utils/dateUtils.ts";
 
 export const RequestFormPreview = ({
@@ -31,6 +32,7 @@ export const RequestFormPreview = ({
   onClose: () => void;
 }) => {
   const { backend } = useBackendContext();
+  const { currentUser } = useAuthContext();
 
   const toast = useToast();
 
@@ -40,44 +42,143 @@ export const RequestFormPreview = ({
   useEffect(() => {
     const getData = async () => {
       try {
-        const response = await backend.get("/request/activeRequests");
-        const dates: string[] = [];
-
-        for (const data of response.data) {
-          dates.push(formatDateString(data.created_at));
+        // If we don't have a client email, we can't look up history
+        if (!clientEmail) {
+          setRequestHistoryDates([]);
+          return;
         }
 
-        setRequestHistoryDates(dates);
+        // Resolve the legacy client ID from the provided email
+        let clientId: number | undefined;
+
+        try {
+          const intakeResponse = await backend.get(
+            `/intakeClients/email/${encodeURIComponent(clientEmail)}`
+          );
+
+          const intakeClients = Array.isArray(intakeResponse.data)
+            ? intakeResponse.data
+            : [];
+
+          if (intakeClients.length > 0 && intakeClients[0]?.id) {
+            clientId = intakeClients[0].id;
+          }
+        } catch {
+          // Ignore and fall back to clients table
+        }
+
+        if (!clientId) {
+          try {
+            const response = await backend.get(
+              `/clients/email/${encodeURIComponent(clientEmail)}`
+            );
+            const clients = Array.isArray(response.data) ? response.data : [];
+
+            if (clients.length > 0 && clients[0]?.id) {
+              clientId = clients[0].id;
+            }
+          } catch {
+            // If we still can't resolve the client, just show empty history
+          }
+        }
+
+        if (!clientId) {
+          setRequestHistoryDates([]);
+          return;
+        }
+
+        // Fetch all requests and filter to this specific client
+        const response = await backend.get("/request");
+        const allRequests = Array.isArray(response.data) ? response.data : [];
+
+        const clientRequests = allRequests
+          .filter(
+            (request: { client_id?: number }) => request.client_id === clientId
+          )
+          .sort(
+            (a: { created_at?: string }, b: { created_at?: string }) =>
+              new Date(b.created_at ?? "").getTime() -
+              new Date(a.created_at ?? "").getTime()
+          );
+
+        const dates = clientRequests.map((req: { created_at?: string }) =>
+          req.created_at ? formatDateString(req.created_at) : ""
+        );
+
+        setRequestHistoryDates(dates.filter((d) => d !== ""));
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     getData();
-  }, [backend, setRequestHistoryDates]);
+  }, [backend, clientEmail, setRequestHistoryDates]);
 
   const handleSubmitRequest = async () => {
     try {
       if (!cmId || !clientEmail) {
         toast({
           title: "Missing required data",
-          description: "Unable to submit the request without case manager or client information.",
+          description:
+            "Unable to submit the request without case manager or client information.",
           status: "error",
           duration: 5000,
           isClosable: true,
         });
         return;
       }
-      const response = await backend.get("/clients", {
-        params: {
-          search: clientEmail
+
+      // Try to find the client by email in the new intakeClients table first,
+      // then fall back to the legacy clients table (matches other client flows).
+      let clientId: number | undefined;
+
+      try {
+        const intakeResponse = await backend.get(
+          `/intakeClients/email/${encodeURIComponent(clientEmail)}`
+        );
+
+        const intakeClients = Array.isArray(intakeResponse.data)
+          ? intakeResponse.data
+          : [];
+
+        if (intakeClients.length > 0 && intakeClients[0]?.id) {
+          clientId = intakeClients[0].id;
         }
-      });
+      } catch (_error) {
+        // Ignore and fall back to clients table
+      }
+
+      if (!clientId) {
+        try {
+          const response = await backend.get(
+            `/clients/email/${encodeURIComponent(clientEmail)}`
+          );
+          const clients = Array.isArray(response.data) ? response.data : [];
+
+          if (clients.length > 0 && clients[0]?.id) {
+            clientId = clients[0].id;
+          }
+        } catch (_error) {
+          // Ignore and surface unified "Client not found" toast below
+        }
+      }
+
+      if (!clientId) {
+        toast({
+          title: "Client not found",
+          description:
+            "We couldn't find a client matching the provided email address.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
 
       await backend.post("/request", {
         comments: requestComment,
-        cm_id: cmId,
-        client_ids: [response.data[0].id],
+        client_ids: [clientId],
+        admin: currentUser,
       });
 
       toast({

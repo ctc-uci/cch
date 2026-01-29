@@ -18,7 +18,7 @@ clientsRouter.get("/:id", async (req, res) => {
 clientsRouter.get("/", async (req, res) => {
   try {
     const { search, page, filter } = req.query;
-    console.log(search);
+
     let queryStr = `
       SELECT 
         clients.*, 
@@ -101,9 +101,10 @@ clientsRouter.get("/", async (req, res) => {
 clientsRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    const clients = await db.query(`SELECT * FROM clients WHERE email COLLATE "C" = $1`, [
-      email,
-    ]);
+    const clients = await db.query(
+      `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
+      [email]
+    );
     res.status(200).json(keysToCamel(clients));
   } catch (err) {
     res.status(500).send(err.message);

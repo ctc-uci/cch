@@ -15,7 +15,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
@@ -50,79 +50,166 @@ const CommentForm: React.FC = () => {
   const [comments, setComments] = useState<string>("");
   const [formID, setFormID] = useState<number>(0);
   const [initialID, setInitialID] = useState<number>(0);
-  const { id } = useParams();
+  const location = useLocation();
+  const locationState = (location.state as { sessionId?: string; returnPath?: string } | null) ?? {};
+  const sessionId = locationState.sessionId ?? null;
+  const returnPath = locationState.returnPath ?? "/initial-screener-table";
 
   const toast = useToast();
   const navigate = useNavigate();
 
-  const fields = [
-    ["Disabling Condition?", dCondition, setDCondition],
-    ["Employment?", employed, setEmployed],
-    ["Driver's License?", dLicense, setDLicense],
-    ["Total # of children?", numChildren, setNumChildren],
-    ["Total # of children in custody?", numCustody, setNumCustody],
-    ["Last City of Permanent Residence?", lastCity, setLastCity],
-    ["Would you accept this client into CCH?", accept, setAccept],
-    ["Additional comments or concerns?", comments, setComments],
-  ];
+  // Helper function to navigate back to the source page
+  const navigateBack = () => {
+    navigate(returnPath);
+  };
+
+  // (fields array removed; controls rendered explicitly below)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await backend.get(`/caseManagers/names`);
-        setCaseManagers(response.data);
+        const managers = response.data || [];
+        setCaseManagers(managers);
       } catch (error) {
         console.error("Error fetching names:", error);
       }
     };
     fetchData();
-  }, []);
+  }, [backend]);
+
+  // Set default case manager when case managers are loaded and no CM is selected
+  // This will run if:
+  // 1. New form (no existing data) - sets default
+  // 2. Existing form with no CM - sets default (which is fine)
+  // 3. Existing form with CM - clientCM won't be empty, so won't override
+  useEffect(() => {
+    if (caseManagers.length > 0 && !clientCM && caseManagers[0]) {
+      const defaultCM = `${caseManagers[0].firstName} ${caseManagers[0].lastName}`;
+      setClientCM(defaultCM);
+    }
+  }, [caseManagers, clientCM]);
+
+  type SessionCommentRecord = {
+    clientName: string | null;
+    clientFirstName: string | null;
+    clientLastName: string | null;
+    cmFirstName: string | null;
+    cmLastName: string | null;
+    applicantType: string | null;
+    willingness: number | null;
+    attitude: number | null;
+    employability: number | null;
+    lengthOfSobriety: number | null;
+    completedTx: boolean | string | null;
+    homelessEpisodeOne: string | null;
+    homelessEpisodeTwo: string | null;
+    homelessEpisodeThree: string | null;
+    disablingCondition: string | null;
+    employed: boolean | string | null;
+    driversLicense: boolean | string | null;
+    numOfChildren: number | null;
+    childrenInCustody: number | null;
+    lastCityPermResidence: string | null;
+    decision: boolean | string | null;
+    additionalComments: string | null;
+    id: number;
+    initialid: number | null;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await backend.get(
-          `/initialInterview/commentForm/${id}`
-        );
-        setClientFN(response.data[0].clientName.split(" ")[0]);
-        setClientLN(response.data[0].clientName.split(" ")[1]);
-        setClientCM(
-          response.data[0].cmFirstName + " " + response.data[0].cmLastName
-        );
-        setAppType(response.data[0].applicantType);
-        setWillingness(response.data[0].willingness);
-        setAttitude(response.data[0].attitude);
-        setEmployability(response.data[0].employability);
-        setLength(response.data[0].lengthOfSobriety);
-        setTx(response.data[0].completedTx);
-        seth1(response.data[0].homelessEpisodeOne);
-        seth2(response.data[0].homelessEpisodeTwo);
-        seth3(response.data[0].homelessEpisodeThree);
-        setDCondition(response.data[0].disablingCondition);
-        setEmployed(response.data[0].employed);
-        setDLicense(response.data[0].driversLicense);
-        setNumChildren(response.data[0].numOfChildren);
-        setNumCustody(response.data[0].childrenInCustody);
-        setLastCity(response.data[0].lastCityPermResidence);
-        setAccept(response.data[0].decision);
-        setComments(response.data[0].additionalComments);
-        setFormID(response.data[0].id);
-        setInitialID(response.data[0].initialid);
+        if (!sessionId) return;
+
+        const response = await backend.get(`/screenerComment/session/${sessionId}`);
+        const data = Array.isArray(response.data) ? response.data : [];
+
+        if (data.length <= 0) {
+          return;
+        }
+
+        const record = data[0] as SessionCommentRecord;
+
+        const parseBool = (v: unknown): boolean => {
+          if (typeof v === "boolean") return v;
+          const s = String(v ?? "").toLowerCase().trim();
+          return s === "true" || s === "t" || s === "yes" || s === "y" || s === "1";
+        };
+
+        // Prefer separate first_name/last_name fields, fallback to parsing clientName
+        let firstName = record.clientFirstName ?? "";
+        let lastName = record.clientLastName ?? "";
+        
+        // If separate fields aren't available, try parsing the full name
+        if (!firstName && !lastName && record.clientName) {
+          const nameParts = record.clientName.trim().split(/\s+/);
+          firstName = nameParts[0] ?? "";
+          lastName = nameParts.slice(1).join(" ") ?? "";
+        }
+
+        setClientFN(firstName);
+        setClientLN(lastName);
+        const cmName = `${record.cmFirstName ?? ""} ${record.cmLastName ?? ""}`.trim();
+        // Only set CM if it exists in the record, otherwise leave empty for default to fill
+        if (cmName) {
+          setClientCM(cmName);
+        }
+        const fetchedAppType = (record.applicantType ?? "").toLowerCase();
+        if (fetchedAppType === "single" || fetchedAppType === "family") {
+          setAppType(fetchedAppType);
+        } else {
+          setAppType("");
+        }
+        setWillingness(Number(record.willingness ?? 0));
+        setAttitude(Number(record.attitude ?? 0));
+        setEmployability(Number(record.employability ?? 0));
+        setLength(Number(record.lengthOfSobriety ?? 0));
+        setTx(parseBool(record.completedTx));
+        seth1(record.homelessEpisodeOne ?? "");
+        seth2(record.homelessEpisodeTwo ?? "");
+        seth3(record.homelessEpisodeThree ?? "");
+        setDCondition(record.disablingCondition ?? "");
+        setEmployed(parseBool(record.employed));
+        setDLicense(parseBool(record.driversLicense));
+        setNumChildren(Number(record.numOfChildren ?? 0));
+        setNumCustody(Number(record.childrenInCustody ?? 0));
+        setLastCity(record.lastCityPermResidence ?? "");
+        setAccept(parseBool(record.decision));
+        setComments(record.additionalComments ?? "");
+        setFormID(Number(record.id ?? 0));
+        setInitialID(Number(record.initialid ?? 0));
       } catch (error) {
         console.error("Error fetching client data:", error);
       }
     };
     fetchData();
-  }, []);
+  }, [backend, sessionId]);
 
   const handleSubmit = async () => {
     const caseManagerMap = new Map<string, number>(
       caseManagers.map((cm) => [`${cm.firstName} ${cm.lastName}`, cm.id])
     );
 
-    const cm_id: number = caseManagerMap.get(clientCM);
+    const cm_id = caseManagerMap.get(clientCM);
 
     try {
+      if (!cm_id) {
+        toast({
+          title: "Missing case manager",
+          description: "Please select a case manager before submitting.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // Normalize applicant_type_status to ensure it's a valid enum value
+      const normalizedAppType = appType && (appType.toLowerCase() === 'single' || appType.toLowerCase() === 'family')
+        ? appType.toLowerCase()
+        : null;
+
       const screenerData = {
         cm_id: cm_id,
         willingness: willingness,
@@ -141,27 +228,53 @@ const CommentForm: React.FC = () => {
         last_city_perm_residence: lastCity,
         decision: accept,
         additional_comments: comments,
+        session_id: sessionId,
+        applicant_type_status: normalizedAppType,
       };
 
-      const initialInterviewData = {
-        applicant_type: appType,
-      };
 
-      const response = await backend.patch(
-        `/screenerComment/${formID}`,
-        screenerData
-      );
+      let response;
 
-      const response2 = await backend.patch(
-        `/initialInterview/app-status/${initialID}`,
-        initialInterviewData
-      );
+      // If we have a sessionId, check if a screener comment already exists for this session
+      if (sessionId) {
+        try {
+          const existingRes = await backend.get(`/screenerComment/session/${sessionId}`);
+          const existingData = Array.isArray(existingRes.data) ? existingRes.data : [];
+          
+          if (existingData.length > 0 && existingData[0].id) {
+            // Update existing screener_comment for this session
+            response = await backend.patch(
+              `/screenerComment/${existingData[0].id}`,
+              screenerData
+            );
+          } else {
+            // No existing record found, create a new one
+            response = await backend.post(`/screenerComment`, screenerData);
+          }
+        } catch (error: unknown) {
+          // If 404 or any error, assume no existing record and create new one
+          if ((error as { response?: { status?: number } })?.response?.status === 404) {
+            response = await backend.post(`/screenerComment`, screenerData);
+          } else {
+            throw error;
+          }
+        }
+      } else if (formID) {
+        // Legacy fallback: update by existing screener_comment id
+        response = await backend.patch(
+          `/screenerComment/${formID}`,
+          screenerData
+        );
+      } else {
+        // Legacy fallback: create a new screener_comment without sessionId
+        response = await backend.post(`/screenerComment`, screenerData);
+      }
 
-      if (response && response2) {
+      if (response) {
         toast({
-          title: "Comment Form Updated!",
+          title: "Comment Form Saved",
           description:
-            "The comment form has now been updated with the newly inputted information!",
+            "The comment form has been saved successfully.",
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -199,7 +312,7 @@ const CommentForm: React.FC = () => {
         paddingBottom={"40px"}
       >
         <ArrowBackIcon
-          onClick={() => navigate(`/initial-screener-table`)}
+          onClick={navigateBack}
           color="blue.500"
           cursor="pointer"
           _hover={{
@@ -264,12 +377,16 @@ const CommentForm: React.FC = () => {
             spacing={25}
           >
             <FormLabel w="40%">Entering as single or family?</FormLabel>
-            <Input
+            <Select
               value={appType}
               onChange={(e) => setAppType(String(e.target.value))}
               w="200px"
               borderRadius="xl"
-            />
+              placeholder="Select type"
+            >
+              <option value="single">Single</option>
+              <option value="family">Family</option>
+            </Select>
           </HStack>
         </FormControl>
       </VStack>
@@ -430,20 +547,115 @@ const CommentForm: React.FC = () => {
         mt={12}
         width="100%"
       >
-        {fields.map(([label, value, setter], i) => (
-          <FormControl key={i}>
-            <HStack spacing={25}>
-              <FormLabel w="40%">{label}</FormLabel>
-              <Input
-                w="200px"
-                borderRadius="xl"
-                placeholder="Type Here"
-                value={value} 
-                onChange={(e) => setter(e.target.value)}
-              />
-            </HStack>
-          </FormControl>
-        ))}
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Disabling Condition?</FormLabel>
+            <Input
+              w="200px"
+              borderRadius="xl"
+              placeholder="Type Here"
+              value={dCondition}
+              onChange={(e) => setDCondition(e.target.value)}
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Employment?</FormLabel>
+            <Select
+              w="200px"
+              borderRadius="xl"
+              value={String(employed)}
+              onChange={(e) => setEmployed(e.target.value === "true")}
+            >
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </Select>
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Driver&apos;s License?</FormLabel>
+            <Select
+              w="200px"
+              borderRadius="xl"
+              value={String(dLicense)}
+              onChange={(e) => setDLicense(e.target.value === "true")}
+            >
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </Select>
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Total # of children?</FormLabel>
+            <Input
+              w="200px"
+              borderRadius="xl"
+              type="number"
+              value={numChildren}
+              onChange={(e) => setNumChildren(Number(e.target.value))}
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Total # of children in custody?</FormLabel>
+            <Input
+              w="200px"
+              borderRadius="xl"
+              type="number"
+              value={numCustody}
+              onChange={(e) => setNumCustody(Number(e.target.value))}
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Last City of Permanent Residence?</FormLabel>
+            <Input
+              w="200px"
+              borderRadius="xl"
+              placeholder="Type Here"
+              value={lastCity}
+              onChange={(e) => setLastCity(e.target.value)}
+            />
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Would you accept this client into CCH?</FormLabel>
+            <Select
+              w="200px"
+              borderRadius="xl"
+              value={String(accept)}
+              onChange={(e) => setAccept(e.target.value === "true")}
+            >
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </Select>
+          </HStack>
+        </FormControl>
+
+        <FormControl>
+          <HStack spacing={25}>
+            <FormLabel w="40%">Additional comments or concerns?</FormLabel>
+            <Input
+              w="200px"
+              borderRadius="xl"
+              placeholder="Type Here"
+              value={comments}
+              onChange={(e) => setComments(e.target.value)}
+            />
+          </HStack>
+        </FormControl>
       </VStack>
 
       <HStack
@@ -454,7 +666,7 @@ const CommentForm: React.FC = () => {
         <Button
           type="submit"
           variant="outline"
-          onClick={() => navigate(`/initial-screener-table`)}
+          onClick={navigateBack}
         >
           Cancel
         </Button>

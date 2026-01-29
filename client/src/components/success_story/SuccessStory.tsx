@@ -44,22 +44,8 @@ export const SuccessStory = () => {
   const [onReview, setOnReview] = useState<boolean>(false);
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
-  const language = params.language || "english";
-  const [formData, setFormData] = useState<SuccessStoryFormType>({
-    name: "",
-    site: 0,
-    cm_id: 0,
-    entrance_date: new Date(),
-    exit_date: new Date(),
-    date: new Date(),
-    previous_situation: "",
-    cch_impact: "",
-    where_now: "",
-    tell_donors: "",
-    quote: "",
-    consent: false,
-    client_id: null,
-  });
+  const language = params.language?.toLowerCase() === "spanish" ? "spanish" : "english";
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const { currentUser } = useAuthContext();
   const navigate = useNavigate();
   
@@ -67,43 +53,51 @@ export const SuccessStory = () => {
     event.preventDefault();
 
     if (!onReview) {
-      const form = event.currentTarget;
-      const formDataObj = new FormData(form);
-      const data = Object.fromEntries(formDataObj);
-      const typedFormData: SuccessStoryFormType = {
-        name: String(data.name || ""),
-        site: Number(data.site || 0),
-        cm_id: Number(data.cm_id || 0),
-        entrance_date: new Date(data.entrance_date as string),
-        exit_date: new Date(data.exit_date as string),
-        date: new Date(data.date as string),
-        previous_situation: String(data.previous_situation || ""),
-        cch_impact: String(data.cch_impact || ""),
-        where_now: String(data.where_now || ""),
-        tell_donors: String(data.tell_donors || ""),
-        quote: String(data.quote || ""),
-        consent: formDataObj.has("consent"),
-        client_id: null,
-      };
-      setFormData(typedFormData);
       setOnReview(true);
     } else {
       try {
-        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
-        const client = response.data?.[0];
-        formData.client_id = client.id;
-        await backend.post("/successStory", formData);
+        // Try to get client from intakeClients first, then fall back to clients table
+        // If not found, backend will create one automatically
+        let clientData = null;
+        try {
+          const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(currentUser?.email || "")}`);
+          if (intakeResponse.data && intakeResponse.data.length > 0) {
+            clientData = intakeResponse.data[0];
+          }
+        } catch {
+          // If intakeClients doesn't have the client, try the old clients table
+          try {
+            const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+            if (response.data && response.data.length > 0) {
+              clientData = response.data[0];
+            }
+          } catch {
+            // Client not found in either table - backend will create one
+          }
+        }
+
+        // Include email so backend can create client if needed
+        // Include client_id if found, otherwise backend will create one
+        const payload = {
+          ...formData,
+          email: currentUser?.email,
+          ...(clientData && { client_id: clientData.id }),
+        };
+        await backend.post("/successStory", payload);
         toast({
-          title: "Form submitted",
-          description: `Thanks for your feedback!`,
+          title: language === "spanish" ? "Formulario enviado" : "Form submitted",
+          description: language === "spanish" ? "¡Gracias por sus comentarios!" : "Thanks for your feedback!",
           status: "success",
         });
         setSubmitted(true);
-      } catch (error) {
-        console.error("Error submitting success story:", error);
+      } catch (err: unknown) {
+        const error = err as Error & { message?: string };
+        console.error("Error submitting success story:", err);
         toast({
-          title: "An error occurred",
-          description: `Success story response was not created: ${error.message}`,
+          title: language === "spanish" ? "Ocurrió un error" : "An error occurred",
+          description: language === "spanish" 
+            ? `No se pudo crear la respuesta de la historia de éxito: ${error?.message || 'Error desconocido'}`
+            : `Success story response was not created: ${error?.message || 'Unknown error occurred'}`,
           status: "error",
         });
       }
@@ -151,7 +145,7 @@ export const SuccessStory = () => {
             mx="auto"
             fontWeight="normal"
           >
-            Review
+            {language === "spanish" ? "Revisar" : "Review"}
           </Text>
         )}
         <VStack
@@ -170,8 +164,11 @@ export const SuccessStory = () => {
             maxW={onReview ? "800px" : "auto"}
           >
             <SuccessStoryForm
-              onSubmit={handleSubmit}
+              formData={formData}
+              handleSubmit={handleSubmit}
+              setFormData={setFormData}
               onReview={onReview}
+              setOnReview={setOnReview}
               spanish={language === "spanish"}
             />
           </Box>
@@ -187,7 +184,7 @@ export const SuccessStory = () => {
                 bg="#C4C4C4"
                 size="lg"
               >
-                Cancel
+                {language === "spanish" ? "Cancelar" : "Cancel"}
               </Button>
 
               <Button
@@ -200,7 +197,7 @@ export const SuccessStory = () => {
                   );
                 }}
               >
-                Submit
+                {language === "spanish" ? "Enviar" : "Submit"}
               </Button>
             </Flex>
           )}

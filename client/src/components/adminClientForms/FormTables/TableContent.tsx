@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { flexRender, Table as TanStackTable } from "@tanstack/react-table";
 import { HoverCheckbox } from "../../hoverCheckbox/hoverCheckbox.tsx";
+import { useEffect } from "react";
 
 interface TableContentProps<T> {
   table: TanStackTable<T>;
@@ -31,6 +32,7 @@ export const TableContent = <T extends { id: number }>({
   checkboxMode,
   setCheckboxMode,
 }: TableContentProps<T>) => {
+
   return (
     <TableContainer
       maxHeight="calc(100vh - 20px)"

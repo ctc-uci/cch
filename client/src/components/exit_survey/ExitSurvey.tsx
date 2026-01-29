@@ -11,41 +11,21 @@ import {
 } from "@chakra-ui/react";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import type { ExitSurveyForm as ExitSurveyFormType } from "../../types/exitSurvey.ts";
 import { ExitSurveyForm } from "./ExitSurveyForm.tsx";
 import { ProgressSteps } from "../ProgressSteps.tsx";
 import { SuccessScreen } from "../SuccessScreen.tsx";
 import { useParams } from "react-router-dom";
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
 
-const initialFormData = {
-  name: "",
-  cmId: 0,
-  site: 0,
-  programDateCompletion: "",
-  client_id: 0,
-  cchRating: "",
-  cchLikeMost: "",
-  cchCouldBeImproved: "",
-  lifeSkillsRating: "",
-  lifeSkillsHelpfulTopics: "",
-  lifeSkillsOfferTopicsInTheFuture: "",
-  cmRating: "",
-  cmChangeAbout: "",
-  cmMostBeneficial: "",
-  experienceTakeaway: "",
-  experienceAccomplished: "",
-  experienceExtraNotes: "",
-};
-
 export const ExitSurvey = () => {
   const [onReview, setOnReview] = useState<boolean>(false);
-  const [formData, setFormData] = useState<ExitSurveyFormType>(initialFormData);
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const { backend } = useBackendContext();
   const toast = useToast();
   const [submitted, setSubmitted] = useState<boolean>(false);
   const params = useParams();
-  const language = params.language || "english";
+  const languageParam = params.language || "English";
+  const language = languageParam.toLowerCase();
   const { currentUser } = useAuthContext();
 
 
@@ -57,10 +37,34 @@ export const ExitSurvey = () => {
     event.preventDefault();
     if (onReview) {
       try {
-        const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
-        const client = response.data?.[0];
-        formData.client_id = client.id;
-        await backend.post("/exitSurvey", formData);
+        // Try to get client from intakeClients first, then fall back to clients table
+        // If not found, backend will create one automatically
+        let clientData = null;
+        try {
+          const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(currentUser?.email || "")}`);
+          if (intakeResponse.data && intakeResponse.data.length > 0) {
+            clientData = intakeResponse.data[0];
+          }
+        } catch {
+          // If intakeClients doesn't have the client, try the old clients table
+          try {
+            const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+            if (response.data && response.data.length > 0) {
+              clientData = response.data[0];
+            }
+          } catch {
+            // Client not found in either table - backend will create one
+          }
+        }
+
+        // Include email so backend can create client if needed
+        // Include client_id if found, otherwise backend will create one
+        const payload = {
+          ...formData,
+          email: currentUser?.email,
+          ...(clientData && { client_id: clientData.id }),
+        };
+        await backend.post("/exitSurvey", payload);
         toast({
           title: "Form submitted",
           description: `Thanks for your feedback!`,

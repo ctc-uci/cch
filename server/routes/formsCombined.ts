@@ -8,7 +8,18 @@ export const formsCombinedRouter = Router();
 formsCombinedRouter.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const data = await db.query(
+    // First, get the client's information
+    const clientResult = await db.query(
+      `SELECT first_name, last_name, phone_number, date_of_birth FROM clients WHERE id = $1`,
+      [id]
+    );
+
+    if (clientResult.length === 0) {
+      return res.status(404).json({ error: 'Client not found' });
+    }
+
+    // Query for forms with direct client_id matches (old tables)
+    const directMatches = await db.query(
       `SELECT id, client_id, date, 'Exit Survey' AS type
       FROM exit_survey
       WHERE client_id = $1
@@ -26,8 +37,35 @@ formsCombinedRouter.get('/:id', async (req, res) => {
       WHERE client_id = $1;`,
       [id]
     );
-    res.status(200).json(keysToCamel(data));
+
+    // Query for forms in intake_responses that match by client_id
+    // Exclude random client survey (form_id = 4)
+    // Group by session_id to ensure one row per form submission
+    const matchedForms = await db.query(
+      `SELECT 
+        ir.session_id AS id,
+        ir.client_id,
+        MAX(ir.submitted_at) AS date,
+        MAX(CASE ir.form_id
+          WHEN 1 THEN 'Initial Interview'
+          WHEN 2 THEN 'Exit Survey'
+          WHEN 3 THEN 'Success Story'
+          ELSE 'Unknown'
+        END) AS type
+      FROM intake_responses ir
+      WHERE ir.client_id = $1
+        AND ir.form_id != 4
+      GROUP BY ir.session_id, ir.client_id
+      ORDER BY MAX(ir.submitted_at) DESC`,
+      [id]
+    );
+
+    // Combine both results
+    const allForms = [...directMatches, ...matchedForms];
+    
+    res.status(200).json(keysToCamel(allForms));
   } catch (err) {
+    console.error('Error in /formsCombined:', err);
     res.status(500).send(err.message);
   }
 });

@@ -13,6 +13,15 @@ import { FilterTemplate } from "./FilterTemplate.tsx";
 
 import { Dispatch, SetStateAction } from "react";
 
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: string;
+  displayOrder: number;
+  isVisible: boolean;
+}
+
 interface TableControlsProps {
   searchKey: string;
   setSearchKey: (value: string) => void;
@@ -23,6 +32,7 @@ interface TableControlsProps {
   onExport?: () => void;
   filterType: string;
   showExportCount?: boolean;
+  formQuestions?: FormQuestion[]; // For dynamic forms
 }
 
 export const TableControls = ({
@@ -35,6 +45,7 @@ export const TableControls = ({
   onExport,
   filterType,
   showExportCount = false,
+  formQuestions,
 }: TableControlsProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -57,10 +68,36 @@ export const TableControls = ({
             }
           }}
           type={filterType}
+          formQuestions={formQuestions}
         />
       </HStack>
 
       <HStack spacing={2}>
+        {isSearchOpen && (
+          <Box>
+            <Input
+              ref={searchInputRef}
+              value={searchKey}
+              onChange={(e) => setSearchKey(e.target.value)}
+              placeholder="Search..."
+              width="260px"
+              size="sm"
+            />
+          </Box>
+        )}
+        <Box
+          display="flex"
+          alignItems="center"
+          paddingX="16px"
+          paddingY="8px"
+        >
+          <MdOutlineManageSearch
+            size="24px"
+            onClick={() => setIsSearchOpen((prev) => !prev)}
+            style={{ cursor: "pointer" }}
+          />
+        </Box>
+
         {onDelete && (
           <IconButton
             aria-label="Delete"
@@ -72,30 +109,6 @@ export const TableControls = ({
         )}
         {onExport && (
           <>
-            {isSearchOpen && (
-              <Box>
-                <Input
-                  ref={searchInputRef}
-                  value={searchKey}
-                  onChange={(e) => setSearchKey(e.target.value)}
-                  placeholder="Search..."
-                  width="260px"
-                  size="sm"
-                />
-              </Box>
-            )}
-            <Box
-              display="flex"
-              alignItems="center"
-              paddingX="16px"
-              paddingY="8px"
-            >
-              <MdOutlineManageSearch
-                size="24px"
-                onClick={() => setIsSearchOpen((prev) => !prev)}
-                style={{ cursor: "pointer" }}
-              />
-            </Box>
             {showExportCount ? (
               <Box
                 display="flex"

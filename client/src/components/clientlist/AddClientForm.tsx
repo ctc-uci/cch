@@ -18,6 +18,11 @@ import {
   Grid,
   HStack,
   Input,
+  NumberDecrementStepper,
+  NumberIncrementStepper,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
   Select,
   Text,
   useDisclosure,
@@ -28,13 +33,30 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
 interface AddClientFormProps {
-  onClientAdded: () => void;
+  onClientAdded: (clientId?: number) => void;
   setShowUnfinishedAlert: (e: boolean) => void;
+  // Optional controlled drawer behavior (lets other pages open this drawer programmatically)
+  isOpen?: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
+  hideButton?: boolean;
+  initialValues?: Partial<{
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    email: string;
+    date_of_birth: string;
+  }>;
 }
 
 export const AddClientForm = ({
   onClientAdded,
   setShowUnfinishedAlert,
+  isOpen: controlledIsOpen,
+  onOpen: controlledOnOpen,
+  onClose: controlledOnClose,
+  hideButton,
+  initialValues,
 }: AddClientFormProps) => {
   const {
     isOpen: isAlertOpen,
@@ -44,6 +66,20 @@ export const AddClientForm = ({
 
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [createdClientId, setCreatedClientId] = useState<number | undefined>(
+    undefined
+  );
+
+  // Drawer open/close can be controlled externally
+  const {
+    isOpen: localIsOpen,
+    onOpen: localOnOpen,
+    onClose: localOnClose,
+  } = useDisclosure();
+
+  const isOpen = controlledIsOpen ?? localIsOpen;
+  const onOpen = controlledOnOpen ?? localOnOpen;
+  const onClose = controlledOnClose ?? localOnClose;
 
   const resetForm = () => {
     setFormData({
@@ -92,11 +128,23 @@ export const AddClientForm = ({
 
   useEffect(() => {
     if (hasSubmitted) {
-      onClientAdded();
+      onClientAdded(createdClientId);
       setHasSubmitted(false);
+      setCreatedClientId(undefined);
       resetForm();
     }
-  }, [hasSubmitted, onClientAdded]);
+  }, [hasSubmitted, onClientAdded, createdClientId]);
+
+  // Prefill when opened from another flow (e.g. initial screener table)
+  useEffect(() => {
+    if (!isOpen || !initialValues) return;
+    setFormData((prev) => ({
+      ...prev,
+      ...Object.fromEntries(
+        Object.entries(initialValues).filter(([, v]) => v !== undefined)
+      ),
+    }));
+  }, [isOpen, initialValues]);
 
   const handleCloseAndSave = () => {
     onClose();
@@ -167,7 +215,6 @@ export const AddClientForm = ({
   });
   const [formInProgress, setFormInProgress] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, boolean>>({});
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const { backend } = useBackendContext();
   const toast = useToast();
@@ -320,7 +367,10 @@ export const AddClientForm = ({
         destination_city: formData.destination_city,
         comments: formData.comments,
       };
-      await backend.post("/clients", clientData);
+      const created = await backend.post("/clients", clientData);
+      const newClientId =
+        typeof created?.data?.id === "number" ? (created.data.id as number) : undefined;
+      setCreatedClientId(newClientId);
 
       toast({
         title: "Client Added",
@@ -335,7 +385,6 @@ export const AddClientForm = ({
       resetForm();
       onClose();
       } catch (e) {
-        console.log(e);
         toast({
           title: "Client Not Added",
           description: `An error occurred and the client was not added.`,
@@ -346,10 +395,16 @@ export const AddClientForm = ({
   
     return (
       <>
-        <Button ref={btnRef} colorScheme='blue' onClick={onOpen}>
-          {!formInProgress && <Text>Add Client</Text>}
-          {formInProgress && <Text>Edit New Client</Text>}
-        </Button>
+        {!hideButton && (
+          <Button
+            ref={btnRef}
+            colorScheme="blue"
+            onClick={onOpen}
+          >
+            {!formInProgress && <Text>Add Client</Text>}
+            {formInProgress && <Text>Edit New Client</Text>}
+          </Button>
+        )}
         <Drawer
           isOpen={isOpen}
           placement='right'
@@ -488,9 +543,28 @@ export const AddClientForm = ({
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
                       <Text fontWeight="medium">Age</Text>
-                      <Input placeholder="Enter age" value={formData.age}
-                      isInvalid={errors.age} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, age: e.target.value }); setFormInProgress(true); setErrors({...errors, age: false})}}/>
+                      <NumberInput
+                        min={0}
+                        max={125}
+                        step={1}
+                        clampValueOnBlur
+                        value={formData.age}
+                        onChange={(valueString) => {
+                          setFormData({ ...formData, age: valueString });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, age: false });
+                        }}
+                      >
+                        <NumberInputField
+                          placeholder="Enter age"
+                          aria-invalid={!!errors.age}
+                          _invalid={{ borderColor: "red.500" }}
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </Grid>
                   </Box>
 
@@ -579,20 +653,54 @@ export const AddClientForm = ({
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
                       <Text fontWeight="medium">Bed Nights</Text>
-                      <Input placeholder="Enter number of bed nights" value={formData.bed_nights}
-                      isInvalid={errors.bed_nights} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, bed_nights: e.target.value }); setFormInProgress(true); setErrors({...errors, bed_nights: false})}}
-                      />
+                      <NumberInput
+                        min={0}
+                        step={1}
+                        clampValueOnBlur
+                        value={formData.bed_nights}
+                        onChange={(valueString) => {
+                          setFormData({ ...formData, bed_nights: valueString });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, bed_nights: false });
+                        }}
+                      >
+                        <NumberInputField
+                          placeholder="Enter number of bed nights"
+                          aria-invalid={!!errors.bed_nights}
+                          _invalid={{ borderColor: "red.500" }}
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </Grid>
                   </Box>
 
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
                       <Text fontWeight="medium">Bed Nights with Children</Text>
-                      <Input placeholder="Enter number of bed nights with children" value={formData.bed_nights_children}
-                      isInvalid={errors.bed_nights_children} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, bed_nights_children: e.target.value }); setFormInProgress(true); setErrors({...errors, bed_nights_children: false})}}
-                      />
+                      <NumberInput
+                        min={0}
+                        step={1}
+                        clampValueOnBlur
+                        value={formData.bed_nights_children}
+                        onChange={(valueString) => {
+                          setFormData({ ...formData, bed_nights_children: valueString });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, bed_nights_children: false });
+                        }}
+                      >
+                        <NumberInputField
+                          placeholder="Enter number of bed nights with children"
+                          aria-invalid={!!errors.bed_nights_children}
+                          _invalid={{ borderColor: "red.500" }}
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </Grid>
                   </Box>
 
@@ -696,10 +804,27 @@ export const AddClientForm = ({
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
                       <Text fontWeight="medium">Length of Homelessness (months)</Text>
-                      <Input type="number" placeholder="Enter length" value={formData.homelessness_length}
-                      isInvalid={errors.homelessness_length} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, homelessness_length: e.target.value }); setFormInProgress(true); setErrors({...errors, homelessness_length: false})}}
-                      />
+                      <NumberInput
+                        min={0}
+                        step={1}
+                        clampValueOnBlur
+                        value={formData.homelessness_length}
+                        onChange={(valueString) => {
+                          setFormData({ ...formData, homelessness_length: valueString });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, homelessness_length: false });
+                        }}
+                      >
+                        <NumberInputField
+                          placeholder="Enter length"
+                          aria-invalid={!!errors.homelessness_length}
+                          _invalid={{ borderColor: "red.500" }}
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </Grid>
                   </Box>
 
@@ -771,10 +896,28 @@ export const AddClientForm = ({
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
                       <Text fontWeight="medium">Savings Amount ($)</Text>
-                      <Input type="number" step="0.01" placeholder="Enter amount" value={formData.savings_amount}
-                      isInvalid={errors.savings_amount} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, savings_amount: e.target.value }); setFormInProgress(true); setErrors({...errors, savings_amount: false})}}
-                      />
+                      <NumberInput
+                        min={0}
+                        step={0.01}
+                        precision={2}
+                        clampValueOnBlur
+                        value={formData.savings_amount}
+                        onChange={(valueString) => {
+                          setFormData({ ...formData, savings_amount: valueString });
+                          setFormInProgress(true);
+                          setErrors({ ...errors, savings_amount: false });
+                        }}
+                      >
+                        <NumberInputField
+                          placeholder="Enter amount"
+                          aria-invalid={!!errors.savings_amount}
+                          _invalid={{ borderColor: "red.500" }}
+                        />
+                        <NumberInputStepper>
+                          <NumberIncrementStepper />
+                          <NumberDecrementStepper />
+                        </NumberInputStepper>
+                      </NumberInput>
                     </Grid>
                   </Box>
 

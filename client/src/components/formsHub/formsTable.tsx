@@ -129,9 +129,9 @@ const applyFilters = (
     const normalizedSearch = searchKey.toLowerCase();
     const searchMatch =
       !searchKey ||
-      form.name.toLowerCase().includes(normalizedSearch) ||
-      form.title.toLowerCase().includes(normalizedSearch) ||
-      form.date.slice(0, 10).includes(normalizedSearch);
+      (form.name ?? "").toLowerCase().includes(normalizedSearch) ||
+      (form.title ?? "").toLowerCase().includes(normalizedSearch) ||
+      (form.date ?? "").slice(0, 10).includes(normalizedSearch);
 
     return filterMatch && searchMatch;
   });
@@ -186,23 +186,53 @@ export const FormTable = () => {
   const [successStory, setSuccessStory] = useState<Form[]>([]);
   const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>([]);
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "date", desc: true },
+  ]);
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
+  const [checkboxMode, setCheckboxMode] = useState<
+    "hidden" | "visible-unchecked" | "visible-checked"
+  >("hidden");
 
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
       {
         id: "selection",
-        header: ({ table }) => (
-          <Box textAlign="center">
-            <Checkbox
-              isChecked={selectedRowIds.length > 0}
-              isIndeterminate={table.getIsSomeRowsSelected()}
-              onChange={() => handleSelectAllCheckboxClick(table)}
-            />
-          </Box>
-        ),
+        header: ({ table }) => {
+          const visibleHashedIds = table
+            .getRowModel()
+            .rows.map((row) => row.original.hashedId);
+
+          return (
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={checkboxMode === "visible-checked"}
+                isIndeterminate={checkboxMode === "visible-unchecked"}
+                onChange={() => {
+                  if (checkboxMode === "hidden") {
+                    setCheckboxMode("visible-checked");
+                    setSelectedRowIds((prev) =>
+                      Array.from(
+                        new Set([...prev, ...visibleHashedIds])
+                      )
+                    );
+                  } else if (checkboxMode === "visible-checked") {
+                    setCheckboxMode("visible-unchecked");
+                    setSelectedRowIds((prev) =>
+                      prev.filter(
+                        (id) => !visibleHashedIds.includes(id)
+                      )
+                    );
+                  } else {
+                    setCheckboxMode("hidden");
+                    setSelectedRowIds([]);
+                  }
+                }}
+              />
+            </Box>
+          );
+        },
         cell: ({ row }) => {
           const hashedId = row.original.hashedId;
           const isChecked = selectedRowIds.includes(hashedId);
@@ -235,9 +265,8 @@ export const FormTable = () => {
         header: "Export",
       },
     ],
-    [selectedRowIds]
+    [selectedRowIds, checkboxMode]
   );
-
   const frontDeskColumns: ColumnDef<Form>[] = useMemo(
     () =>
       columns.map((column) => {
@@ -249,18 +278,6 @@ export const FormTable = () => {
       }),
     [columns]
   );
-  const handleSelectAllCheckboxClick = (
-    tableInstance: ReturnType<typeof useReactTable<Form>>
-  ) => {
-    const allHashedRowIds = tableInstance
-      .getRowModel()
-      .rows.map((row) => row.original.hashedId);
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(allHashedRowIds);
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
     if (isChecked) {
@@ -311,7 +328,7 @@ export const FormTable = () => {
           lastUpdatedSuccessStoryResponse,
           lastUpdatedRandomSurveyResponse,
         ] = await Promise.all([
-          backend.get(`/initialInterview`),
+          backend.get(`/intakeResponses/form/1`),
           backend.get(`/frontDesk`),
           backend.get(`/caseManagerMonthlyStats`),
           backend.get(`/caseManagers`),
@@ -328,13 +345,29 @@ export const FormTable = () => {
         ]);
 
         const initialScreeners: Form[] = await screenerResponse.data.map(
-          (form: Form) => ({
-            id: form.id,
-            hashedId: form.id,
-            date: form.date,
-            name: form.name,
-            title: "Initial Screeners",
-          })
+          (item: Record<string, unknown>) => {
+            // Create a numeric ID from sessionId hash (matching initialScreenerTable pattern)
+            const sessionId = String(item.sessionId || item.session_id || '');
+            const numericId = sessionId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+            
+            // Construct name from firstName/lastName or use name field
+            const firstName = item.firstName || item.first_name || '';
+            const lastName = item.lastName || item.last_name || '';
+            const name = item.name 
+              ? String(item.name)
+              : firstName || lastName
+              ? `${firstName} ${lastName}`.trim()
+              : 'Unknown';
+            
+            return {
+              id: numericId,
+              hashedId: numericId,
+              date: String(item.submittedAt || item.submitted_at || item.date || ''),
+              name: name,
+              title: "Initial Screeners" as const,
+              sessionId: sessionId,
+            };
+          }
         );
 
         const intakeStatistics: Form[] = await intakeStatsResponse.data.map(
@@ -679,7 +712,7 @@ export const FormTable = () => {
                   <MdOutlineManageSearch size="24px" />
                 </Button>
               </Box>
-              <Tooltip 
+              {/* <Tooltip 
                 label="Please select rows to export" 
                 isDisabled={selectedRowIds.length > 0}
               >
@@ -700,7 +733,7 @@ export const FormTable = () => {
                   </Box>
                   <Text ml="8px" color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>Export</Text>
                 </Button>
-              </Tooltip>
+              </Tooltip> */}
             </HStack>
           </HStack>
           <Box
@@ -759,10 +792,11 @@ export const FormTable = () => {
                         key={cell.id}
                         onClick={(e) => {
                           if (
-                            cell.column.id === "rowNumber" ||
+                            cell.column.id === "selection" ||
                             cell.column.id === "export"
-                          )
+                          ) {
                             e.stopPropagation();
+                          }
                         }}
                       >
                         {cell.column.id === "rowNumber" ? (
@@ -775,10 +809,30 @@ export const FormTable = () => {
                             index={index}
                           />
                         ) : cell.column.id === "export" ? (
-                          <PrintForm
-                            formId={row.original.id}
-                            formType={row.original.title}
-                          />
+                          role === "user" &&
+                          row.original.title ===
+                            "Client Tracking Statistics (Intake Statistics)" ? (
+                            // Users can't directly export sensitive client tracking forms.
+                            // Instead, open the same preview flow, which will render
+                            // RequestFormPreview for this combination.
+                            <Button
+                              size="sm"
+                              colorScheme="blue"
+                              onClick={() => {
+                                setClickedFormItem(row.original);
+                                onOpen();
+                              }}
+                            >
+                              Export Form
+                            </Button>
+                          ) : (
+                            <PrintForm
+                              // For dynamic forms (intake_responses), `sessionId` is the real identifier.
+                              // `id` is a numeric hash used only for table rendering/selection.
+                              formId={row.original.sessionId ?? row.original.id}
+                              formType={row.original.title}
+                            />
+                          )
                         ) : (
                           flexRender(
                             cell.column.columnDef.cell,

@@ -38,12 +38,14 @@ import { IntakeStatisticsTableBody } from "./IntakeStatisticsTableBody.tsx";
 import { RandomSurveyTableBody } from "./RandomSurveyTableBody.tsx";
 import { RequestFormPreview } from "./RequestFormPreview.tsx";
 import { SuccessStoryTableBody } from "./SuccessStoryTableBody.tsx";
+import { DynamicFormTableBody } from "./DynamicFormTableBody.tsx";
 
 type FormItem = {
   id: number;
   title: string;
   name?: string;
   date?: string;
+  sessionId?: string; // For dynamic forms using intake_responses
   [key: string]: unknown;
 };
 
@@ -70,12 +72,40 @@ const FormPreview = ({
     title: formItemTitle,
     name: formItemName,
     date: formItemDate,
+    sessionId,
   } = clickedFormItem;
 
   const toast = useToast();
 
   const [formData, setFormData] = useState<FormDataRecord>({});
   const [newFormData, setNewFormData] = useState<FormDataRecord>({});
+  const [formQuestions, setFormQuestions] = useState<Array<{
+    id: number;
+    fieldKey: string;
+    questionText: string;
+    questionType: string;
+    displayOrder: number;
+    isVisible: boolean;
+    options?: unknown;
+  }>>([]);
+  
+  // Check if this is a dynamic form (uses intake_responses)
+  const isDynamicForm = sessionId && (
+    formItemTitle === "Initial Screener Form" ||
+    formItemTitle === "Initial Screeners" ||
+    formItemTitle === "Success Story Form" ||
+    formItemTitle === "Client Exit Survey Form" ||
+    formItemTitle === "Random Client Survey Form"
+  );
+  
+  // Map form titles to form_ids
+  const getFormId = (title: string): number | null => {
+    if (title === "Initial Screener Form" || title === "Initial Screeners") return 1;
+    if (title === "Client Exit Survey Form") return 2;
+    if (title === "Success Story Form") return 3;
+    if (title === "Random Client Survey Form") return 4;
+    return null;
+  };
 
   const [newFormattedModifiedData, setFormattedModifiedData] =
     useState<FormDataRecord>({});
@@ -84,15 +114,15 @@ const FormPreview = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitial, setIsInitial] = useState(false);
+  const [hasApprovedRequest, setHasApprovedRequest] = useState(false);
   const navigate = useNavigate();
 
   const handleCommentForm = async () => {
-    const commentId = await backend.get(`/screenerComment/interview/${formItemId}`)
-    const result = commentId.data?.['result']?.[0];
-    if (!result || typeof result.id === "undefined") {
+    // Only handle Initial Screener Form (form_id = 1)
+    if (formItemTitle !== "Initial Screener Form" && formItemTitle !== "Initial Screeners") {
       toast({
-        title: "Comment Form Not Found",
-        description: "No comment form is associated with this interview.",
+        title: "Invalid Form Type",
+        description: "Comment forms are only available for Initial Screener forms.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -100,10 +130,105 @@ const FormPreview = ({
       return;
     }
 
-    navigate(`/comment-form/${result}`)
+    // For dynamic forms, use sessionId
+    if (sessionId) {
+      try {
+        // Check if a screener comment exists for this session (we don't need the data, just checking it exists)
+        await backend.get(`/screenerComment/session/${sessionId}`);
+        
+        // Get clientId from form data (already loaded)
+        const clientId = formData.clientId || formData.client_id;
+        
+        if (!clientId) {
+          toast({
+            title: "Client Not Found",
+            description: "Unable to open comment form. Client information is missing.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        // Navigate to comment form with clientId and pass sessionId and returnPath in state
+        navigate(`/comment-form/${clientId}`, {
+          state: { 
+            sessionId: sessionId,
+            returnPath: "/admin-client-forms",
+          },
+        });
+      } catch (error: unknown) {
+        // If no comment exists (404), still navigate to create a new one
+        const errorStatus = (error as { response?: { status?: number } })?.response?.status;
+        if (errorStatus === 404) {
+          const clientId = formData.clientId || formData.client_id;
+          if (clientId) {
+            navigate(`/comment-form/${clientId}`, {
+              state: { 
+                sessionId: sessionId,
+                returnPath: "/admin-client-forms",
+              },
+            });
+          } else {
+            toast({
+              title: "Client Not Found",
+              description: "Unable to open comment form. Client information is missing.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to check for existing comment form.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      }
+    } else {
+      // Legacy fallback for old forms without sessionId
+      try {
+        const commentId = await backend.get(`/screenerComment/interview/${formItemId}`);
+        const result = commentId.data?.['result']?.[0];
+        if (!result || typeof result.id === "undefined") {
+          toast({
+            title: "Comment Form Not Found",
+            description: "No comment form is associated with this interview.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+        navigate(`/comment-form/${formItemId}`);
+      } catch (_error) {
+        toast({
+          title: "Error",
+          description: "Failed to load comment form.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
   }
 
   const renderTableBody = () => {
+    // Use dynamic table body for dynamic forms
+    if (isDynamicForm && formQuestions.length > 0) {
+      return (
+        <DynamicFormTableBody
+          formData={newFormData}
+          formQuestions={formQuestions}
+          handleChange={handleChange}
+        />
+      );
+    }
+
+    // Legacy table bodies for non-dynamic forms
     switch (formItemTitle) {
       case "Initial Screeners":
         return (
@@ -165,8 +290,78 @@ const FormPreview = ({
     setIsEditing(false);
     setIsLoading(true);
 
-    setIsInitial(formItemTitle === "Initial Screeners");
+    setIsInitial(formItemTitle === "Initial Screeners" || formItemTitle === "Initial Screener Form");
     const getData = async () => {
+      // Handle dynamic forms (intake_responses)
+      if (isDynamicForm && sessionId) {
+        try {
+          // Fetch form response by session_id
+          const response = await backend.get(`/intakeResponses/session/${sessionId}`);
+          const normalData = response.data;
+
+          if (!normalData || typeof normalData !== "object") {
+            setFormData({});
+            setNewFormData({});
+            setFormattedFormData({});
+            setFormattedModifiedData({});
+            setIsLoading(false);
+            return;
+          }
+
+          // Fetch form questions to build dynamic display
+          const formId = getFormId(formItemTitle);
+          if (formId) {
+            const questionsResponse = await backend.get(`/intakeResponses/form/${formId}/questions`);
+            const questions = questionsResponse.data || [];
+            setFormQuestions(questions);
+
+            // Format data using question texts as labels
+            const formatted: FormDataRecord = {};
+
+            questions
+              .filter((q: { isVisible: boolean; questionType: string }) => 
+                q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+              .sort((a: { displayOrder: number }, b: { displayOrder: number }) => 
+                a.displayOrder - b.displayOrder)
+              .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
+                const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+                const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+                
+                // For rating grids, expand into separate rows for each grid row
+                if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+                  const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
+                  if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
+                    const gridData = value as Record<string, unknown>;
+                    gridConfig.rows.forEach((row) => {
+                      const rowValue = gridData[row.key];
+                      if (rowValue !== undefined && rowValue !== null) {
+                        const column = gridConfig.columns?.find(col => col.value === rowValue);
+                        const displayValue = column ? column.label : String(rowValue);
+                        formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                      }
+                    });
+                  } else {
+                    formatted[question.questionText] = value;
+                  }
+                } else {
+                  formatted[question.questionText] = value;
+                }
+              });
+
+            setFormData({ ...normalData });
+            setNewFormData({ ...normalData });
+            setFormattedFormData(formatted);
+            setFormattedModifiedData(formatted);
+          }
+        } catch (error) {
+          console.error("Error fetching dynamic form data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      // Handle legacy forms
       let endpoint = "";
       switch (formItemTitle) {
         case "Initial Screeners":
@@ -192,6 +387,7 @@ const FormPreview = ({
           break;
         default:
           console.error("Unknown form title:", formItemTitle);
+          setIsLoading(false);
           return;
       }
 
@@ -226,20 +422,197 @@ const FormPreview = ({
     };
 
     getData();
-  }, [backend, formItemId, formItemTitle, refreshTable]);
+  }, [backend, formItemId, formItemTitle, refreshTable, isDynamicForm, sessionId]);
+
+  // For client tracking statistics forms viewed by a regular user, check
+  // whether any edit request for this client has already been approved.
+  useEffect(() => {
+    const checkApprovedRequest = async () => {
+      // Only relevant for regular users viewing Intake Statistics
+      if (
+        role !== "user" ||
+        formItemTitle !== "Client Tracking Statistics (Intake Statistics)" ||
+        isLoading
+      ) {
+        return;
+      }
+
+      const email =
+        typeof formData["email"] === "string"
+          ? (formData["email"] as string)
+          : undefined;
+
+      if (!email) {
+        setHasApprovedRequest(false);
+        return;
+      }
+
+      try {
+        // Resolve clientId from email (mirror RequestFormPreview logic)
+        let clientId: number | undefined;
+
+        try {
+          const intakeResponse = await backend.get(
+            `/intakeClients/email/${encodeURIComponent(email)}`
+          );
+          const intakeClients = Array.isArray(intakeResponse.data)
+            ? intakeResponse.data
+            : [];
+          if (intakeClients.length > 0 && intakeClients[0]?.id) {
+            clientId = intakeClients[0].id;
+          }
+        } catch {
+          // ignore and fall back to clients table
+        }
+
+        if (!clientId) {
+          try {
+            const response = await backend.get(
+              `/clients/email/${encodeURIComponent(email)}`
+            );
+            const clients = Array.isArray(response.data)
+              ? response.data
+              : [];
+            if (clients.length > 0 && clients[0]?.id) {
+              clientId = clients[0].id;
+            }
+          } catch {
+            // ignore; handled below
+          }
+        }
+
+        if (!clientId) {
+          setHasApprovedRequest(false);
+          return;
+        }
+
+        const requestsResponse = await backend.get("/request");
+        const allRequests = Array.isArray(requestsResponse.data)
+          ? requestsResponse.data
+          : [];
+
+        const approved = allRequests.some(
+          (req: { client_id?: number; status?: string }) =>
+            req.client_id === clientId && req.status === "approved"
+        );
+
+        setHasApprovedRequest(approved);
+      } catch (error) {
+        console.error("Error checking approved request status:", error);
+        setHasApprovedRequest(false);
+      }
+    };
+
+    checkApprovedRequest();
+  }, [backend, role, formItemTitle, isLoading, formData]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    const { name, value } = e.target;
+    const { name, value, type } = e.target;
+
+    // Convert value based on input type
+    let processedValue: unknown = value;
+    if (type === "number") {
+      processedValue = value === "" ? null : parseFloat(value);
+    } else if (type === "checkbox") {
+      processedValue = (e.target as HTMLInputElement).checked;
+    }
 
     setNewFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }));
   };
 
   const handleSaveForm = async () => {
+    // Handle dynamic forms (intake_responses)
+    if (isDynamicForm && sessionId) {
+      try {
+        const payload: Record<string, unknown> = {};
+
+        // Map form questions to get correct field_key format
+        formQuestions.forEach((question) => {
+          const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+          const value = newFormData[camelKey] ?? newFormData[question.fieldKey];
+          
+          if (value !== undefined && value !== null) {
+            // Use the original field_key from the question
+            payload[question.fieldKey] = value;
+          }
+        });
+
+        await backend.put(`/intakeResponses/session/${sessionId}`, payload);
+
+        toast({
+          title: "Successfully submitted form",
+          description: `${formItemTitle} Form - ${new Date().toLocaleString()}`,
+          status: "success",
+          duration: 9000,
+          isClosable: true,
+        });
+
+        setRefreshTable((prev) => !prev);
+        setIsEditing(false);
+        
+        // Reload the data to reflect changes
+        const response = await backend.get(`/intakeResponses/session/${sessionId}`);
+        const normalData = response.data;
+        const formId = getFormId(formItemTitle);
+        if (formId && normalData) {
+          const questionsResponse = await backend.get(`/intakeResponses/form/${formId}/questions`);
+          const questions = questionsResponse.data || [];
+          setFormQuestions(questions);
+
+          const formatted: FormDataRecord = {};
+          questions
+            .filter((q: { isVisible: boolean; questionType: string }) => 
+              q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+            .sort((a: { displayOrder: number }, b: { displayOrder: number }) => 
+              a.displayOrder - b.displayOrder)
+            .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
+              const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+              const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+              
+              if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+                const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
+                if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
+                  const gridData = value as Record<string, unknown>;
+                  gridConfig.rows.forEach((row) => {
+                    const rowValue = gridData[row.key];
+                    if (rowValue !== undefined && rowValue !== null) {
+                      const column = gridConfig.columns?.find(col => col.value === rowValue);
+                      const displayValue = column ? column.label : String(rowValue);
+                      formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                    }
+                  });
+                } else {
+                  formatted[question.questionText] = value;
+                }
+              } else {
+                formatted[question.questionText] = value;
+              }
+            });
+
+          setFormData({ ...normalData });
+          setNewFormData({ ...normalData });
+          setFormattedFormData(formatted);
+          setFormattedModifiedData(formatted);
+        }
+      } catch (error) {
+        console.error("Error updating dynamic form:", error);
+        toast({
+          title: "Did Not Save Changes",
+          description: `There was an error while saving changes`,
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      }
+      return;
+    }
+
+    // Handle legacy forms
     let endpoint = "";
 
     switch (formItemTitle) {
@@ -285,7 +658,6 @@ const FormPreview = ({
         isClosable: true,
       });
 
-      onClose();
       setRefreshTable((prev) => !prev);
       setFormattedFormData(newFormattedModifiedData);
       setFormData(newFormData);
@@ -311,12 +683,23 @@ const FormPreview = ({
   };
 
   const formatValueForDisplay = (value: unknown) => {
+    // Rating grids are already expanded into separate rows in formattedFormData,
+    // so they'll come through as strings - no special handling needed
     if (typeof value === "string") {
       return isDate(value) ? formatDateString(value) : value;
     }
 
     if (value === null || value === undefined) {
       return "";
+    }
+
+    // Handle other object types
+    if (value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
     }
 
     return String(value);
@@ -365,9 +748,21 @@ const FormPreview = ({
               color="gray.600"
               fontSize="md"
             >
-              {formItemName && `${formItemName} - `}
-              {formItemTitle}{" "}
-              {formItemDate ? formatDateString(formItemDate) : ""}
+              {(() => {
+                // If formItemName contains "unknown client", remove it and show only what's after "-"
+                if (formItemName && formItemName.toLowerCase().includes("unknown")) {
+                  // Extract everything after the "-" separator
+                  const parts = formItemName.split(" - ");
+                  if (parts.length > 1) {
+                    return parts.slice(1).join(" - ");
+                  }
+                  // If no "-" separator, just show the form title
+                  return formItemTitle;
+                }
+                // If formItemName doesn't contain "unknown", show it normally
+                return formItemName ? `${formItemName} - ${formItemTitle}` : formItemTitle;
+              })()}
+              {formItemDate ? ` ${formatDateString(formItemDate)}` : ""}
             </Text>
           </HStack>
         </DrawerHeader>
@@ -387,7 +782,8 @@ const FormPreview = ({
             </VStack>
           ) : role === "user" &&
             formItemTitle ===
-              "Client Tracking Statistics (Intake Statistics)" ? (
+              "Client Tracking Statistics (Intake Statistics)" &&
+            !hasApprovedRequest ? (
             <RequestFormPreview
               cmId={
                 typeof formData["cmId"] === "number"
@@ -437,12 +833,95 @@ const FormPreview = ({
                     size="lg"
                     onClick={() => {
                       const headers = ["Questions", "Answer"];
-                      const data = Object.entries(formattedFormData).map(
-                        ([key, value]) => ({
-                          Questions: key,
-                          Answer: formatValueForExport(value),
-                        })
-                      );
+                      // Export what the user is seeing (and any edits), with a fallback
+                      // to building the export from dynamic questions + raw data.
+                      const getExportRows = () => {
+                        const primary =
+                          Object.keys(newFormattedModifiedData).length > 0
+                            ? newFormattedModifiedData
+                            : formattedFormData;
+
+
+                        if (Object.keys(primary).length > 0) {
+                          return Object.entries(primary).map(([key, value]) => ({
+                            Questions: key,
+                            Answer: formatValueForExport(value),
+                          }));
+                        }
+
+                        // Fallback: build from dynamic form questions + raw form data
+                        if (isDynamicForm && formQuestions.length > 0) {
+                          const rows: Array<{ Questions: string; Answer: string }> = [];
+
+                          formQuestions
+                            .filter(
+                              (q) =>
+                                q.isVisible &&
+                                q.questionType !== "text_block" &&
+                                q.questionType !== "header"
+                            )
+                            .sort((a, b) => a.displayOrder - b.displayOrder)
+                            .forEach((q) => {
+                              const camelKey = q.fieldKey.replace(
+                                /_([a-z])/g,
+                                (_, letter) => letter.toUpperCase()
+                              );
+                              const rawValue =
+                                (newFormData as Record<string, unknown>)[camelKey] ??
+                                (newFormData as Record<string, unknown>)[q.fieldKey] ??
+                                "";
+
+                              if (
+                                q.questionType === "rating_grid" &&
+                                rawValue &&
+                                typeof rawValue === "object" &&
+                                !Array.isArray(rawValue)
+                              ) {
+                                const gridConfig = q.options as
+                                  | {
+                                      rows?: Array<{ key: string; label: string }>;
+                                      columns?: Array<{ value: string; label: string }>;
+                                    }
+                                  | undefined;
+
+                                if (
+                                  gridConfig?.rows &&
+                                  gridConfig?.columns &&
+                                  gridConfig.columns.length > 0
+                                ) {
+                                  const gridData = rawValue as Record<string, unknown>;
+                                  gridConfig.rows.forEach((row) => {
+                                    const rowValue = gridData[row.key];
+                                    if (rowValue !== undefined && rowValue !== null) {
+                                      const column = gridConfig.columns?.find(
+                                        (col) => col.value === rowValue
+                                      );
+                                      const displayValue = column
+                                        ? column.label
+                                        : String(rowValue);
+                                      rows.push({
+                                        Questions: `${q.questionText} - ${row.label}`,
+                                        Answer: displayValue,
+                                      });
+                                    }
+                                  });
+                                  return;
+                                }
+                              }
+
+                              rows.push({
+                                Questions: q.questionText,
+                                Answer: formatValueForExport(rawValue),
+                              });
+                            });
+
+                          return rows;
+                        }
+
+                        return [];
+                      };
+
+                      const data = getExportRows();
                       downloadCSV(headers, data, "form.csv");
                     }}
                   >
@@ -482,6 +961,7 @@ const FormPreview = ({
                 borderColor="gray.200"
                 borderRadius="12px"
                 overflowY="auto"
+                overflowX="auto"
               >
                 <Table variant="simple">
                   <Thead>
@@ -489,12 +969,18 @@ const FormPreview = ({
                       <Th
                         fontSize="md"
                         color="gray.700"
+                        maxWidth="300px"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
                       >
                         Question
                       </Th>
                       <Th
                         fontSize="md"
                         color="gray.700"
+                        maxWidth="400px"
+                        whiteSpace="normal"
+                        wordBreak="break-word"
                       >
                         Answer
                       </Th>
@@ -505,8 +991,20 @@ const FormPreview = ({
                       ? Object.entries(newFormattedModifiedData).map(
                           ([key, value]) => (
                             <Tr key={key}>
-                              <Td>{key}</Td>
-                              <Td>
+                              <Td
+                                maxWidth="300px"
+                                whiteSpace="normal"
+                                wordBreak="break-word"
+                                overflowWrap="break-word"
+                              >
+                                {key}
+                              </Td>
+                              <Td
+                                maxWidth="400px"
+                                whiteSpace="normal"
+                                wordBreak="break-word"
+                                overflowWrap="break-word"
+                              >
                                 {formatValueForDisplay(value)}
                               </Td>
                             </Tr>

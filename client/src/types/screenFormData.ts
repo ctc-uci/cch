@@ -1,4 +1,4 @@
-interface FormData {
+export interface FormData {
     applicantType: string;
     name: string;
     firstName: string;

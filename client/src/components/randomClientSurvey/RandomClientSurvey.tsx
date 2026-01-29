@@ -16,73 +16,19 @@ type CaseManager = {
   email: string;
 };
 
-type SurveyData = {
-  date: string | Date;
-  cch_qos: number;
-  cm_qos: number;
-  courteous?: boolean;
-  informative?: boolean;
-  prompt_and_helpful?: boolean;
-  entry_quality: number;
-  unit_quality: number;
-  clean: number;
-  overall_experience: number;
-  case_meeting_frequency: string;
-  lifeskills?: boolean;
-  recommend?: boolean;
-  recommend_reasoning: string;
-  make_cch_more_helpful: string;
-  cm_id: number;
-  cm_feedback: string;
-  other_comments: string;
-};
-
 export const RandomClientSurvey = () => {
     const [page, setPage] = useState(1);
     const { backend } = useBackendContext();
     const toast = useToast();
+    const params = useParams();
 
     const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
     const navigate = useNavigate();
-
-
+    const [errors, setErrors] = useState<Record<string, boolean>>({});
+    const [surveyData, setSurveyData] = useState<Record<string, unknown>>({});
     
-
-      const [errors, setErrors] = useState({
-        qualityQuestions: false,
-        courteous: false,
-        informative: false,
-        prompt_and_helpful: false,
-        case_meeting_frequency: false,
-        lifeskills: false,
-        recommend: false,
-        recommend_reasoning: false,
-        date: false,
-        cm_id: false,
-    });
-
-    const initialEmptySurveyData: SurveyData = {
-      date: "",
-      cch_qos: 0,
-      cm_qos: 0,
-      courteous: undefined,
-      informative: undefined,
-      prompt_and_helpful: undefined,
-      entry_quality: 0,
-      unit_quality: 0,
-      clean: 0,
-      overall_experience: 0,
-      case_meeting_frequency: "",
-      lifeskills: undefined,
-      recommend: undefined,
-      recommend_reasoning: "",
-      make_cch_more_helpful: "",
-      cm_id: 0,
-      cm_feedback: "",
-      other_comments: "",
-    };
-
-    const [surveyData, setSurveyData] = useState<SurveyData>(initialEmptySurveyData);
+    // Get language from URL params, default to English if not specified
+    const language = params.language === "Spanish" ? "spanish" : "english";
 
     useEffect(() => {
         const fetchCaseManagers = async () => {
@@ -95,10 +41,10 @@ export const RandomClientSurvey = () => {
         };
 
         fetchCaseManagers();
-    }, []);
+    }, [backend]);
 
     const handleCancel = () => {
-      setSurveyData(initialEmptySurveyData);
+      // Just go back to page 1 without clearing data so user can edit their answers
       setPage(1);
     };
     
@@ -112,10 +58,11 @@ export const RandomClientSurvey = () => {
         });
 
         setPage(3);
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
         toast({
           title: "An error occurred",
-          description: `Random survey response was not created: ${error.message}`,
+          description: `Random survey response was not created: ${errorMessage}`,
           status: "error",
         });
         navigate("/landing-page");
@@ -149,6 +96,7 @@ export const RandomClientSurvey = () => {
                 setErrors={setErrors}
                 onNext={() => setPage(2)}
                 caseManagers={caseManagers}
+                language={language}
                 />
             )}
 
@@ -158,6 +106,7 @@ export const RandomClientSurvey = () => {
                 caseManagers={caseManagers}
                 onSubmit={handleSubmit}
                 onCancel={handleCancel}
+                language={language}
                 />
             )}
 

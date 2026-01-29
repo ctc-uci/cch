@@ -108,9 +108,10 @@ interface ExitSurvey {
   experience_extra_notes: string;
 }
 interface FormItems {
-  id: number;
+  id: number | string;
   date: string;
   type: string;
+  title?: string;
 }
 
 interface FormsProps {

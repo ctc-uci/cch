@@ -1,78 +1,242 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdOutlineManageSearch } from "react-icons/md";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
-  IconButton,
+  Box,
+  Button,
   Heading,
   HStack,
-  Box,
-  Input,
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
   VStack,
+  useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-
+import {
+  ColumnDef,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { formatDateString } from "../../utils/dateUtils";
+import { LoadingWheel } from "../loading/loading";
+import { TableControls } from "../adminClientForms/FormTables/TableControls";
+import { TableContent } from "../adminClientForms/FormTables/TableContent";
+import { AddClientForm } from "../clientlist/AddClientForm";
 
-import { InitialScreener } from "../../types/initialScreener";
-import { InitialScreeningFilter } from "./initialScreeningFilter";
+// Helper function to convert snake_case to camelCase
+const toCamelCase = (str: string): string => {
+  return str.replace(/([-_][a-z])/g, ($1) => {
+    return $1.toUpperCase().replace("-", "").replace("_", "");
+  });
+};
+
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
+interface FormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: string;
+  displayOrder: number;
+  isVisible: boolean;
+  options?: RatingGridConfig | Array<{ value: string; label: string }>;
+}
+
+interface FormResponse {
+  id: number; // Numeric ID for table compatibility
+  sessionId: string; // Actual session_id UUID
+  clientId: number | null;
+  submittedAt: string;
+  firstName: string | null;
+  lastName: string | null;
+  [key: string]: unknown; // Dynamic fields from responses
+}
 
 export const InitialScreenerTable = () => {
-
   const navigate = useNavigate();
-
   const { backend } = useBackendContext();
+  const toast = useToast();
 
-  const [screeners, setScreeners] = useState<InitialScreener[]>([]);
-  const [searchKey, setSearchKey] = useState("");
+  const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
+  const [formData, setFormData] = useState<(FormResponse & { isChecked: boolean; isHovered: boolean })[]>([]);
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
-  const [isInputVisible, setIsInputVisible] = useState(false);
-  const [lastUpdated, setLastUpdated ] = useState(""); 
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshTable, setRefreshTable] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [lastUpdated, setLastUpdated] = useState("");
 
-  const handleIconClick = () => {
-    setIsInputVisible(true); 
-  };
+  const {
+    isOpen: isAddClientOpen,
+    onOpen: openAddClient,
+    onClose: closeAddClient,
+  } = useDisclosure();
+  const [pendingSessionId, setPendingSessionId] = useState<string | null>(null);
+  const [addClientInitialValues, setAddClientInitialValues] = useState<{
+    first_name?: string;
+    last_name?: string;
+    phone_number?: string;
+    email?: string;
+    date_of_birth?: string;
+  }>({});
 
-  const handleInputBlur = () => {
-    if (!searchKey) {
-      setIsInputVisible(false); 
-    }
-  };
+  // Fetch form questions
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await backend.get(`/intakeResponses/form/1/questions`);
+        setFormQuestions(response.data);
+      } catch (error) {
+        console.error("Error fetching form questions:", error);
+      }
+    };
+    fetchQuestions();
+  }, [backend]);
 
+  // Build columns dynamically from form questions
+  const columns = useMemo<ColumnDef<FormResponse>[]>(() => {
+    const cols: ColumnDef<FormResponse>[] = [];
+
+    // Add columns for each form question (exclude text_block and header types)
+    formQuestions
+      .filter(q => q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .forEach((question) => {
+        // Convert fieldKey from snake_case to camelCase to match API response
+        const camelFieldKey = toCamelCase(question.fieldKey);
+
+        // Handle rating_grid questions separately - create a column for each row
+        if (question.questionType === 'rating_grid' && question.options && 'rows' in question.options) {
+          const gridConfig = question.options as RatingGridConfig;
+          if (gridConfig.rows && gridConfig.rows.length > 0) {
+            gridConfig.rows.forEach((row) => {
+              const col: ColumnDef<FormResponse> = {
+                accessorKey: `${camelFieldKey}_${row.key}`,
+                header: `${question.questionText} - ${row.label}`,
+                cell: ({ row: tableRow }) => {
+                  // Get the rating grid value (stored as JSON string)
+                  const gridValue = tableRow.original[camelFieldKey] ?? tableRow.original[question.fieldKey];
+                  if (!gridValue) return "";
+
+                  try {
+                    // Parse JSON if it's a string
+                    const gridData = typeof gridValue === 'string' ? JSON.parse(gridValue) : gridValue;
+                    const rowValue = gridData[row.key];
+                    
+                    if (!rowValue) return "";
+                    
+                    // Find the column label for this value
+                    const column = gridConfig.columns.find(col => col.value === rowValue);
+                    return column ? column.label : rowValue;
+                  } catch {
+                    // If parsing fails, try to access directly
+                    const gridData: Record<string, unknown> = typeof gridValue === 'object' && gridValue !== null ? (gridValue as Record<string, unknown>) : {};
+                    const rowValue = gridData[row.key];
+                    if (!rowValue) return "";
+                    
+                    const column = gridConfig.columns.find(col => col.value === rowValue);
+                    return column ? column.label : String(rowValue);
+                  }
+                },
+              };
+              cols.push(col);
+            });
+            return; // Skip the default column creation for rating grids
+          }
+        }
+
+        // Regular question types
+        const col: ColumnDef<FormResponse> = {
+          accessorKey: camelFieldKey,
+          header: question.questionText,
+          cell: ({ getValue, row }) => {
+            // Try camelCase first, fallback to original fieldKey
+            const value = row.original[camelFieldKey] ?? row.original[question.fieldKey] ?? getValue();
+            if (value === null || value === undefined || value === "") {
+              return "";
+            }
+            
+            // Format based on question type
+            switch (question.questionType) {
+              case "date":
+                return formatDateString(value as string);
+              case "boolean":
+                return value ? "Yes" : "No";
+              case "number":
+                return value;
+              default:
+                return String(value);
+            }
+          },
+        };
+        cols.push(col);
+      });
+
+    return cols;
+  }, [formQuestions]);
+
+  const table = useReactTable({
+    data: formData,
+    columns,
+    state: {
+      sorting,
+    },
+    sortDescFirst: true,
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  // Fetch form data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let response;
-
-        if (searchKey && filterQuery.length > 1) {
-          response = await backend.get(
-            `/initialInterview/initial-interview-table-data?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=${searchKey}`
-          );
-        } else if (searchKey) {
-          response = await backend.get(
-            `/initialInterview/initial-interview-table-data?page=&filter=&search=${searchKey}`
-          );
-        } else if (filterQuery.length > 1) {
-          response = await backend.get(
-            `/initialInterview/initial-interview-table-data?page=&filter=${encodeURIComponent(filterQuery.join(" "))}&search=`
-          );
-        } else {
-          response = await backend.get("/initialInterview/initial-interview-table-data");
+        setLoading(true);
+        let url = `/intakeResponses/form/1`;
+        const params = new URLSearchParams();
+        
+        if (searchQuery) {
+          params.append("search", searchQuery);
         }
-        setScreeners(response.data);
+        if (filterQuery.length > 0) {
+          params.append("filter", filterQuery.join(" "));
+        }
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+        
+        const response = await backend.get(url);
+        // Convert session_id (UUID string) to numeric ID for table compatibility
+        const data = response.data.map((item: Record<string, unknown>) => {
+          // Create a numeric ID from session_id hash
+          const sessionId = String(item.sessionId || item.session_id || '');
+          const numericId = sessionId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+          return {
+            ...item,
+            id: numericId,
+            sessionId: sessionId,
+            isChecked: false,
+            isHovered: false,
+          } as FormResponse & { isChecked: boolean; isHovered: boolean };
+        });
+        setFormData(data);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchData();
-  }, [backend, searchKey, filterQuery]);
 
+    fetchData();
+  }, [backend, searchQuery, filterQuery, refreshTable]);
+
+  // Fetch last updated time
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -81,102 +245,132 @@ export const InitialScreenerTable = () => {
         const formattedDate = date.toLocaleString();
         setLastUpdated(formattedDate);
       } catch (error) {
-        console.error("Error getting time:", error)
+        console.error("Error getting time:", error);
       }
-    }
+    };
     fetchData();
-  }, [backend])
+  }, [backend]);
+
+
+  const handleRowClick = (row: FormResponse) => {
+    // Navigate to comment form using client_id if available, otherwise use session_id
+    if (row.clientId) {
+      // Pass sessionId through route state so the comment form
+      // can associate screener comments with this intake session
+      navigate(`/comment-form/${row.clientId}`, {
+        state: { sessionId: row.sessionId },
+      });
+    } else {
+      // No matched client yet: open Add Client drawer so user can create + attach a client
+      toast({
+        title: "Client not created yet",
+        description:
+          "This screener isn’t in the client table yet. Please add the client first so we can attach the screener and open the comment form.",
+        status: "info",
+        duration: 7000,
+        isClosable: true,
+        position: "bottom-right",
+      });
+      setPendingSessionId(row.sessionId);
+      const dob = (row as Record<string, unknown>).dateOfBirth ?? (row as Record<string, unknown>).date_of_birth;
+      const phone = (row as Record<string, unknown>).phoneNumber ?? (row as Record<string, unknown>).phone_number;
+      const email = (row as Record<string, unknown>).email;
+      setAddClientInitialValues({
+        first_name: row.firstName ?? "",
+        last_name: row.lastName ?? "",
+        phone_number: phone ? String(phone) : "",
+        email: email ? String(email) : "",
+        date_of_birth: dob ? String(dob) : "",
+      });
+      openAddClient();
+    }
+  };
 
   return (
+    <Box paddingX="4%" paddingTop="2%">
+      <HStack justifyContent="flex-start" marginLeft="-2%">
+        <Button
+          variant="ghost"
+          colorScheme="blue"
+          leftIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/forms-hub")}
+        >
+          Back
+        </Button>
+      </HStack>
     <VStack
       spacing={2}
       align="start"
-      sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
+      sx={{ maxWidth: "100%", marginX: "auto"}}
     >
-    
+      <AddClientForm
+        hideButton
+        isOpen={isAddClientOpen}
+        onOpen={openAddClient}
+        onClose={closeAddClient}
+        initialValues={addClientInitialValues}
+        setShowUnfinishedAlert={() => {}}
+        onClientAdded={async (newClientId) => {
+          try {
+            if (!pendingSessionId || !newClientId) return;
+            await backend.patch(`/intakeResponses/session/${pendingSessionId}/client`, {
+              clientId: newClientId,
+            });
+            setRefreshTable((prev) => !prev);
+            setPendingSessionId(null);
+            // Now that the screener is linked to a client, open the comment form
+            navigate(`/comment-form/${newClientId}`, {
+              state: { 
+                sessionId: pendingSessionId,
+                returnPath: "/initial-screener-table",
+              },
+            });
+          } catch (error) {
+            console.error("Error attaching client to session:", error);
+          } finally {
+            closeAddClient();
+          }
+        }}
+      />
+
       <Heading fontSize="3xl" lineHeight="9" fontWeight="extrabold" paddingBottom={"0.5%"}>
-    List of Initial Screeners
-        </Heading>
-        <Text
-            size="sm"
-            marginBottom={"1%"}
-            >
-          Last Updated: {lastUpdated}
-        </Text>
-        <Heading fontSize="md" lineHeight="6" fontWeight="semibold" marginBottom={"0.5%"}> Choose a Screener</Heading>
+        List of Initial Screeners
+      </Heading>
+      <Text size="sm" marginBottom={"1%"}>
+        Last Updated: {lastUpdated}
+      </Text>
+      <Heading fontSize="md" lineHeight="6" fontWeight="semibold" marginBottom={"0.5%"}>
+        Choose a Screener
+      </Heading>
 
-
-     <Box border="1px" borderColor={"#E2E8F0"} borderRadius="md" p={4} overflow="hidden" w="100%">
-            
-        <HStack
-            width="100%"
-            justifyContent="space-between"
-        >
-            <InitialScreeningFilter setFilterQuery={setFilterQuery}/>
-            {isInputVisible ? (
-                <Input
-                fontSize="12px"
-                width="150px"
-                height="30px"
-                placeholder="Search"
-                value={searchKey}
-                onChange={(e) => setSearchKey(e.target.value)}
-                onBlur={handleInputBlur}
-                />
-            ) : (
-                <IconButton
-                aria-label="Search"
-                icon={<MdOutlineManageSearch fontSize={"24px"}/>}
-                onClick={handleIconClick}
-                variant="ghost"
-                />
-            )}
-
-        </HStack>
-        <TableContainer
-            sx={{
-            overflowX: "auto",
-            maxWidth: "100%",
-            }}
-        >
-            <Table variant="striped">
-            <Thead>
-                <Tr>
-                <Th>Client First Name</Th>
-                <Th>Client Last Name</Th>
-                <Th>Site</Th>
-                <Th>Case Manager</Th>
-                <Th>Phone Number</Th>
-                <Th>E-mail</Th>
-                <Th>Date</Th>
-                </Tr>
-            </Thead>
-            <Tbody>
-            {screeners?.map((screener) => {
-                const [firstName, ...lastNameParts] = screener.clientName.split(" ");
-                const lastName = lastNameParts.join(" ");
-
-
-                return (
-                    <Tr
-                    key={screener.clientId}
-                    onClick={() => navigate(`/comment-form/${screener.clientId}`)}
-                    style={{ cursor: "pointer" }}
-                    >
-                    <Td>{firstName}</Td>
-                    <Td>{lastName}</Td>
-                    <Td>{screener.socialWorkerOfficeLocation}</Td>
-                    <Td>{screener.cmFirstName} {screener.cmLastName}</Td>
-                    <Td>{screener.phoneNumber}</Td>
-                    <Td>{screener.email}</Td>
-                    <Td>{new Date(screener.date).toLocaleDateString()}</Td>
-                    </Tr>
-                );
-                })}
-            </Tbody>
-            </Table>
-        </TableContainer>
+      <Box width="100%">
+        <TableControls
+          searchKey={searchQuery}
+          setSearchKey={setSearchQuery}
+          filterQuery={filterQuery}
+          setFilterQuery={setFilterQuery}
+          selectedRowIds={[]}
+          filterType="initialScreener"
+          showExportCount={false}
+          formQuestions={formQuestions}
+        />
+        <Box width={"100%"} justifyContent={"center"} mt={4}>
+          {loading ? (
+            <LoadingWheel />
+          ) : (
+            <TableContent
+              table={table}
+              selectedRowIds={[]}
+              onRowSelect={() => {}}
+              checkboxMode="hidden"
+              setCheckboxMode={() => {}}
+              onRowClick={(row) => handleRowClick(row)}
+              showRowNumber={false}
+            />
+          )}
         </Box>
+      </Box>
     </VStack>
+    </Box>
   );
 };

@@ -10,7 +10,18 @@ import {
 } from "@chakra-ui/react";
 
 import { useAuthContext } from "../../contexts/hooks/useAuthContext";
-import { useEffect } from "react";
+
+type UserSettingsUser = {
+  firstName: string;
+  lastName: string;
+  role: string;
+  email: string;
+  phoneNumber: string;
+};
+
+type UserSettingsLocation = {
+  name: string;
+};
 
 const UserSettingsPreview = ({
   user,
@@ -19,16 +30,21 @@ const UserSettingsPreview = ({
   editing,
   location,
 }: {
-  user: object;
+  user: UserSettingsUser;
   role: string;
   setEditing: React.Dispatch<React.SetStateAction<boolean>>;
   editing: boolean;
-  location: string;
+  location: UserSettingsLocation;
 }) => {
   const { currentUser } = useAuthContext();
   const hideEditProfile = () => {
     setEditing(true);
   };
+
+  const rawRole = String((user?.role ?? role ?? "")).toLowerCase();
+  const isAdmin =
+    rawRole === "admin" || rawRole === "administrator" || rawRole === "admins";
+  const circleText = isAdmin ? "AD" : "CM";
 
   return (
     <Box
@@ -62,7 +78,7 @@ const UserSettingsPreview = ({
           fontSize="210%"
           margin={10}
         >
-          AD
+          {circleText}
         </Circle>
       </Flex>
 

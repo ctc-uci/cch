@@ -14,11 +14,17 @@ requestRouter.get('/', async (req, res) => {
 
 requestRouter.get('/activeRequests', async (req, res) => {
   try{
-    const query = `SELECT r.id, c.first_name, c.last_name, r.created_at, cm.first_name AS cm_first_name, cm.last_name AS cm_last_name, r.comments
-                  FROM clients AS c 
-                    INNER JOIN requests AS r ON r.client_id = c.id 
-                    INNER JOIN case_managers AS cm ON cm.id = r.created_by
-                  WHERE r.status = 'active' ORDER BY created_at DESC`;
+    const query = `SELECT r.id,
+                          c.first_name,
+                          c.last_name,
+                          r.created_at,
+                          u.first_name AS cm_first_name,
+                          u.last_name AS cm_last_name,
+                          r.comments
+                    FROM clients AS c 
+                      INNER JOIN requests AS r ON r.client_id = c.id 
+                      INNER JOIN users AS u ON u.id = r.created_by
+                    WHERE r.status = 'active' ORDER BY created_at DESC`;
     const idQuery = `SELECT id FROM requests WHERE status = 'active'`;
     const requests = await db.query(query);
     const ids = await db.query(idQuery);
@@ -30,10 +36,33 @@ requestRouter.get('/activeRequests', async (req, res) => {
 
 requestRouter.post('/', async (req, res) => {
   try{
-    const { comments, cm_id, client_ids } = req.body;
+    const { comments, client_ids, admin } = req.body;
+
+    if (!admin?.uid) {
+      return res.status(400).json({ error: "Missing admin user" });
+    }
+
+    const userQuery = await db.query(
+      `SELECT id FROM users WHERE firebase_uid = $1`,
+      [admin.uid]
+    );
+
+    if (userQuery.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const internalUserId = userQuery[0].id;
+
     const newComments = comments || '';
-    const values = client_ids.map((client_id: number) => `('${newComments}', ${cm_id}, ${client_id})`).join(',');
-    const request = await db.query(`INSERT INTO requests(comments, created_by, client_id) VALUES ${values} RETURNING *`);
+    const values = client_ids
+      .map(
+        (client_id: number) =>
+          `('${newComments}', ${internalUserId}, ${client_id})`
+      )
+      .join(',');
+    const request = await db.query(
+      `INSERT INTO requests(comments, created_by, client_id) VALUES ${values} RETURNING *`
+    );
     res.status(200).json(request);
   }catch(err){
     res.status(500).json(err.message);
@@ -51,8 +80,10 @@ requestRouter.put('/', async (req, res) => {
 
     const internalUserId = userQuery[0].id;
 
-    const values = ids.map((id: number) => `(${status}, ${internalUserId}, ${id})`).join(',');
-    const request = await db.query(`UPDATE requests SET status = $1, updated_by = $2, updated_at = NOW() WHERE id IN (${ids.join(',')}) RETURNING *`, [status, internalUserId]);
+    const request = await db.query(
+      `UPDATE requests SET status = $1, updated_by = $2, updated_at = NOW() WHERE id IN (${ids.join(',')}) RETURNING *`,
+      [status, internalUserId]
+    );
     res.status(200).json(request);
   }catch(err){
     res.status(500).json(err.message);
