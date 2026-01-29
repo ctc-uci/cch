@@ -758,7 +758,6 @@ const FormPreview = ({
                             : formattedFormData;
 
 
-                        console.log("primary", primary);
                         if (Object.keys(primary).length > 0) {
                           return Object.entries(primary).map(([key, value]) => ({
                             Questions: key,

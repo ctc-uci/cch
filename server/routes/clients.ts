@@ -18,7 +18,7 @@ clientsRouter.get("/:id", async (req, res) => {
 clientsRouter.get("/", async (req, res) => {
   try {
     const { search, page, filter } = req.query;
-    console.log(search);
+
     let queryStr = `
       SELECT 
         clients.*, 

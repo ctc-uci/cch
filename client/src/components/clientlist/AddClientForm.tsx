@@ -385,7 +385,6 @@ export const AddClientForm = ({
       resetForm();
       onClose();
       } catch (e) {
-        console.log(e);
         toast({
           title: "Client Not Added",
           description: `An error occurred and the client was not added.`,

@@ -190,7 +190,6 @@ export const ExitSurveyTable = ({ selectedRowIds, setSelectedRowIds, deletedRowI
     const selectedTableData = exitData.filter((row) =>
       selectedRowIds.includes(row.id)
     );
-    console.log(selectedTableData);
     const data = selectedTableData.map((row) => ({
       cchCouldBeImproved: row.cchCouldBeImproved,
       cchLikeMost: row.cchLikeMost,
