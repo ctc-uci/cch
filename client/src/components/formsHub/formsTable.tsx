@@ -186,7 +186,9 @@ export const FormTable = () => {
   const [successStory, setSuccessStory] = useState<Form[]>([]);
   const [randomClientSurvey, setRandomClientSurvey] = useState<Form[]>([]);
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "date", desc: true },
+  ]);
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
   const [checkboxMode, setCheckboxMode] = useState<
