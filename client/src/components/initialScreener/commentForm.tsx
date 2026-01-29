@@ -86,6 +86,8 @@ const CommentForm: React.FC = () => {
 
   type SessionCommentRecord = {
     clientName: string | null;
+    clientFirstName: string | null;
+    clientLastName: string | null;
     cmFirstName: string | null;
     cmLastName: string | null;
     applicantType: string | null;
@@ -123,17 +125,25 @@ const CommentForm: React.FC = () => {
 
         const record = data[0] as SessionCommentRecord;
 
-        const fullName = record.clientName ?? "";
-        const [first = "", last = ""] = fullName.split(" ");
-
         const parseBool = (v: unknown): boolean => {
           if (typeof v === "boolean") return v;
           const s = String(v ?? "").toLowerCase().trim();
           return s === "true" || s === "t" || s === "yes" || s === "y" || s === "1";
         };
 
-        setClientFN(first);
-        setClientLN(last);
+        // Prefer separate first_name/last_name fields, fallback to parsing clientName
+        let firstName = record.clientFirstName ?? "";
+        let lastName = record.clientLastName ?? "";
+        
+        // If separate fields aren't available, try parsing the full name
+        if (!firstName && !lastName && record.clientName) {
+          const nameParts = record.clientName.trim().split(/\s+/);
+          firstName = nameParts[0] ?? "";
+          lastName = nameParts.slice(1).join(" ") ?? "";
+        }
+
+        setClientFN(firstName);
+        setClientLN(lastName);
         const cmName = `${record.cmFirstName ?? ""} ${record.cmLastName ?? ""}`.trim();
         // Only set CM if it exists in the record, otherwise leave empty for default to fill
         if (cmName) {
@@ -184,6 +194,11 @@ const CommentForm: React.FC = () => {
         return;
       }
 
+      // Normalize applicant_type_status to ensure it's a valid enum value
+      const normalizedAppType = appType && (appType.toLowerCase() === 'single' || appType.toLowerCase() === 'family')
+        ? appType.toLowerCase()
+        : null;
+
       const screenerData = {
         cm_id: cm_id,
         willingness: willingness,
@@ -203,13 +218,10 @@ const CommentForm: React.FC = () => {
         decision: accept,
         additional_comments: comments,
         session_id: sessionId,
+        applicant_type_status: normalizedAppType,
       };
 
 
-      const initialInterviewData = {
-        applicant_type: appType,
-      };
-      
       let response;
 
       // If we have a sessionId, check if a screener comment already exists for this session
@@ -245,14 +257,6 @@ const CommentForm: React.FC = () => {
       } else {
         // Legacy fallback: create a new screener_comment without sessionId
         response = await backend.post(`/screenerComment`, screenerData);
-      }
-
-      // Optionally keep legacy initial_interview applicant_type update if we have an id
-      if (initialID) {
-        await backend.patch(
-          `/initialInterview/app-status/${initialID}`,
-          initialInterviewData
-        );
       }
 
       if (response) {
@@ -362,12 +366,16 @@ const CommentForm: React.FC = () => {
             spacing={25}
           >
             <FormLabel w="40%">Entering as single or family?</FormLabel>
-            <Input
+            <Select
               value={appType}
               onChange={(e) => setAppType(String(e.target.value))}
               w="200px"
               borderRadius="xl"
-            />
+              placeholder="Select type"
+            >
+              <option value="single">Single</option>
+              <option value="family">Family</option>
+            </Select>
           </HStack>
         </FormControl>
       </VStack>

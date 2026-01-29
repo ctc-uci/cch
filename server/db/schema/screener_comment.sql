@@ -1,5 +1,7 @@
 DROP TABLE IF EXISTS screener_comment_table CASCADE;
 
+CREATE TYPE applicant_type_status AS ENUM ('single', 'family');
+
 CREATE TABLE screener_comment (
     id SERIAL PRIMARY KEY NOT NULL,
     -- Legacy reference to initial_interview; kept for backwards compatibility
@@ -29,6 +31,7 @@ CREATE TABLE screener_comment (
     last_city_perm_residence varchar(32),
     decision boolean,
     additional_comments varchar(1024),
+    applicant_type_status applicant_type_status,
     FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );
 
