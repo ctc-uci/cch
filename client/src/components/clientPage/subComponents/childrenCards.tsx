@@ -147,8 +147,8 @@ function ChildrenCards({ items, parentId, onRefresh }: ChildrenProps) {
                           <Text fontSize="sm" color="gray.600">
                             DOB:{" "}
                             {new Date(item.dateOfBirth).toLocaleDateString("en-US", {
-                              month: "2-digit",
-                              day: "2-digit",
+                              month: "numeric",
+                              day: "numeric",
                               year: "2-digit",
                             })}
                           </Text>

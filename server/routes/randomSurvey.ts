@@ -9,7 +9,7 @@ export const randomSurveyRouter = Router();
 // Get all randomSurveys
 randomSurveyRouter.get("/", async (req, res) => {
   try {
-    const data = await db.query("SELECT * FROM random_survey_table");
+    const data = await db.query("SELECT * FROM random_survey_table ORDER BY date DESC");
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
@@ -90,7 +90,7 @@ randomSurveyRouter.get("/search-filter", async (req, res) => {
       queryStr += `AND ${filter}`;
     }
 
-    queryStr += " ORDER BY rs.id ASC";
+    queryStr += " ORDER BY rs.date DESC";
 
     if (page) {
       queryStr += ` LIMIT ${page}`;

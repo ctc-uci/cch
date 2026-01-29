@@ -28,6 +28,8 @@ caseManagerMonthlyStatsRouter.get("/", async (req, res) => {
       query += " WHERE " + conditions.join(" AND ");
     }
 
+    query += " ORDER BY date DESC";
+
     const data = await db.any(query, params);
 
     res.status(200).json(keysToCamel(data));

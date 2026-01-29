@@ -25,7 +25,8 @@ adminRouter.get("/admins", async (req, res) => {
       FROM case_managers AS cm
       LEFT JOIN locations AS locs ON cm.id = locs.cm_id
       LEFT JOIN users AS u ON cm.email COLLATE "C" = u.email COLLATE "C"
-      WHERE cm.role = 'superadmin' OR cm.role = 'admin';
+      WHERE cm.role = 'superadmin' OR cm.role = 'admin'
+      ORDER BY cm.id DESC;
     `);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
@@ -58,7 +59,8 @@ adminRouter.get("/clients", async (req, res) => {
             WHEN u.email IS NULL OR u.email = '' THEN true
             ELSE false
           END AS is_pending
-        FROM users AS u;
+        FROM users AS u
+        ORDER BY u.id DESC;
       `);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
@@ -84,7 +86,8 @@ adminRouter.get("/caseManagers", async (req, res) => {
         FROM case_managers AS cm
         LEFT JOIN locations AS locs ON cm.id = locs.cm_id
         LEFT JOIN users AS u ON cm.email COLLATE "C" = u.email COLLATE "C"
-        WHERE cm.role = 'case manager';`);
+        WHERE cm.role = 'case manager'
+        ORDER BY cm.id DESC;`);
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {
@@ -100,7 +103,8 @@ adminRouter.get("/:cm_id", async (req, res) => {
       `
       SELECT c.id, c.first_name, c.last_name FROM clients AS c
       INNER JOIN case_managers AS cm ON c.created_by = cm.id
-      WHERE c.created_by = $1`,
+      WHERE c.created_by = $1
+      ORDER BY c.id DESC`,
       [cm_id]
     );
 

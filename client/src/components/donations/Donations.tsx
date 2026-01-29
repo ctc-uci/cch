@@ -80,7 +80,7 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(
     null
   );
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");
@@ -519,8 +519,8 @@ export const Donations = () => {
       
         const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
         setLastUpdated(date.toLocaleString('en-US', { 
-          month: '2-digit', 
-          day: '2-digit', 
+          month: 'numeric', 
+          day: 'numeric', 
           year: 'numeric', 
           hour: '2-digit', 
           minute: '2-digit' 

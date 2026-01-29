@@ -9,7 +9,7 @@ successRouter.use(express.json());
 
 successRouter.get("/", async (req, res) => {
   try {
-    const success = await db.query(`SELECT * FROM success_story`);
+    const success = await db.query(`SELECT * FROM success_story ORDER BY date DESC`);
     res.status(200).json(keysToCamel(success));
   } catch (err) {
     res.status(400).send(err.message);
@@ -49,7 +49,7 @@ successRouter.get("/search-filter", async (req, res) => {
       queryStr += `AND ${filter}`;
     }
 
-    queryStr += " ORDER BY ss.id ASC";
+    queryStr += " ORDER BY ss.date DESC";
 
     if (page) {
       queryStr += ` LIMIT ${page}`;

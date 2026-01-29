@@ -165,7 +165,7 @@ intakeResponsesRouter.get("/form/:formId", async (req, res) => {
       LEFT JOIN clients c ON ir.client_id = c.id
       WHERE ir.session_id = ANY($1::uuid[])
       AND ir.form_id = $2
-      ORDER BY ir.submitted_at DESC, fq.display_order ASC`,
+      ORDER BY ir.submitted_at DESC, fq.created_at ASC`,
       [sessionIds, formId]
     );
 
@@ -306,7 +306,7 @@ intakeResponsesRouter.get("/session/:sessionId", async (req, res) => {
       FROM intake_responses ir
       JOIN form_questions fq ON ir.question_id = fq.id
       WHERE ir.session_id = $1
-      ORDER BY fq.display_order ASC`,
+      ORDER BY fq.created_at ASC`,
       [sessionId]
     );
 
@@ -521,7 +521,7 @@ intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
       SELECT * FROM form_questions
       WHERE form_id = $1
       ${includeHidden !== "true" ? "AND is_visible = true" : ""}
-      ORDER BY display_order ASC
+      ORDER BY created_at ASC
     `;
 
     const questions = await db.query(queryStr, [formId]);

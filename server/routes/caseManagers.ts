@@ -8,7 +8,7 @@ export const caseManagersRouter = Router();
 // Get all case managers
 caseManagersRouter.get("/", async (req, res) => {
   try {
-    const data = await db.query(`SELECT * FROM case_managers;`);
+    const data = await db.query(`SELECT * FROM case_managers ORDER BY id DESC;`);
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {

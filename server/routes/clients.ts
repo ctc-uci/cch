@@ -85,7 +85,7 @@ clientsRouter.get("/", async (req, res) => {
       queryStr += `AND ${filter}`;
     }
 
-    queryStr += " ORDER BY clients.id ASC";
+    queryStr += " ORDER BY clients.id DESC";
 
     if (page) {
       queryStr += ` LIMIT ${page}`;

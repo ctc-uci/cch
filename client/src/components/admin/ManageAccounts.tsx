@@ -88,7 +88,7 @@ export const ManageAccounts = () => {
     notes: "",
   });
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "email", desc: false }]);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const {
     isOpen: deleteIsOpen,
