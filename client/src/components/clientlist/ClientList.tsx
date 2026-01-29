@@ -122,14 +122,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
   const [showUnfinishedAlert, setShowUnfinishedAlert] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const handleSelectAllCheckboxClick = useCallback(() => {
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(filteredClients.map((client) => client.id));
-    } else {
-      setSelectedRowIds([]);
-    }
-  }, [selectedRowIds, filteredClients]);
+  const [checkboxMode, setCheckboxMode] = useState<
+    "hidden" | "visible-unchecked" | "visible-checked"
+  >("hidden");
 
   const columns = useMemo<ColumnDef<Client>[]>(
     () => [
@@ -139,9 +134,28 @@ export const ClientList = ({ admin }: ClientListProps) => {
           return (
             <Box textAlign="center">
               <Checkbox
-                isChecked={selectedRowIds.length > 0}
-                isIndeterminate={table.getIsSomeRowsSelected()}
-                onChange={handleSelectAllCheckboxClick}
+                isChecked={checkboxMode === "visible-checked"}
+                isIndeterminate={checkboxMode === "visible-unchecked"}
+                onChange={() => {
+                  const visibleClientIds = table
+                    .getRowModel()
+                    .rows.map((r) => r.original.id);
+
+                  if (checkboxMode === "hidden") {
+                    setCheckboxMode("visible-checked");
+                    setSelectedRowIds((prev) =>
+                      Array.from(new Set([...prev, ...visibleClientIds]))
+                    );
+                  } else if (checkboxMode === "visible-checked") {
+                    setCheckboxMode("visible-unchecked");
+                    setSelectedRowIds((prev) =>
+                      prev.filter((id) => !visibleClientIds.includes(id))
+                    );
+                  } else {
+                    setCheckboxMode("hidden");
+                    setSelectedRowIds([]);
+                  }
+                }}
               />
             </Box>
           );
@@ -321,7 +335,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
         header: "Destination City",
       },
     ],
-    [selectedRowIds, handleSelectAllCheckboxClick]
+    [checkboxMode, setSelectedRowIds]
   );
 
   const table = useReactTable({
@@ -739,34 +753,35 @@ export const ClientList = ({ admin }: ClientListProps) => {
                         cursor="pointer"
                         onClick={() => navigate(`/ViewClient/${row.original.id}`)}
                       >
-                        {row.getVisibleCells().map((cell) => (
-                          <Td
-                            key={cell.id}
-                            fontSize="14px"
-                            fontWeight="500px"
-                            onClick={(e) => {
-                              if (cell.column.id === "rowNumber") {
-                                e.stopPropagation();
-                              }
-                            }}
-                          >
-                            {cell.column.id === "rowNumber" ? (
-                              <HoverCheckbox
-                                id={row.original.id}
-                                isSelected={selectedRowIds.includes(
-                                  row.original.id
-                                )}
-                                onSelectionChange={handleRowSelect}
-                                index={index}
-                              />
-                            ) : (
-                              flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )
+                    {row.getVisibleCells().map((cell) => (
+                      <Td
+                        key={cell.id}
+                        fontSize="14px"
+                        fontWeight="500px"
+                        onClick={(e) => {
+                          if (cell.column.id === "rowNumber") {
+                            e.stopPropagation();
+                          }
+                        }}
+                      >
+                        {cell.column.id === "rowNumber" ? (
+                          <HoverCheckbox
+                            id={row.original.id}
+                            isSelected={selectedRowIds.includes(
+                              row.original.id
                             )}
-                          </Td>
-                        ))}
+                            onSelectionChange={handleRowSelect}
+                            index={index}
+                            alwaysVisible={checkboxMode !== "hidden"}
+                          />
+                        ) : (
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )
+                        )}
+                      </Td>
+                    ))}
                       </Tr>
                     ))}
                   </Tbody>
