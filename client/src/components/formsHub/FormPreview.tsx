@@ -116,12 +116,11 @@ const FormPreview = ({
   const navigate = useNavigate();
 
   const handleCommentForm = async () => {
-    const commentId = await backend.get(`/screenerComment/interview/${formItemId}`)
-    const result = commentId.data?.['result']?.[0];
-    if (!result || typeof result.id === "undefined") {
+    // Only handle Initial Screener Form (form_id = 1)
+    if (formItemTitle !== "Initial Screener Form" && formItemTitle !== "Initial Screeners") {
       toast({
-        title: "Comment Form Not Found",
-        description: "No comment form is associated with this interview.",
+        title: "Invalid Form Type",
+        description: "Comment forms are only available for Initial Screener forms.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -129,7 +128,85 @@ const FormPreview = ({
       return;
     }
 
-    navigate(`/comment-form/${result}`)
+    // For dynamic forms, use sessionId
+    if (sessionId) {
+      try {
+        // Check if a screener comment exists for this session
+        const commentResponse = await backend.get(`/screenerComment/session/${sessionId}`);
+        const commentData = Array.isArray(commentResponse.data) ? commentResponse.data : [];
+        
+        // Get clientId from form data (already loaded)
+        const clientId = formData.clientId || formData.client_id;
+        
+        if (!clientId) {
+          toast({
+            title: "Client Not Found",
+            description: "Unable to open comment form. Client information is missing.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        // Navigate to comment form with clientId and pass sessionId in state
+        navigate(`/comment-form/${clientId}`, {
+          state: { sessionId: sessionId },
+        });
+      } catch (error: unknown) {
+        // If no comment exists (404), still navigate to create a new one
+        const errorStatus = (error as { response?: { status?: number } })?.response?.status;
+        if (errorStatus === 404) {
+          const clientId = formData.clientId || formData.client_id;
+          if (clientId) {
+            navigate(`/comment-form/${clientId}`, {
+              state: { sessionId: sessionId },
+            });
+          } else {
+            toast({
+              title: "Client Not Found",
+              description: "Unable to open comment form. Client information is missing.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to check for existing comment form.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        }
+      }
+    } else {
+      // Legacy fallback for old forms without sessionId
+      try {
+        const commentId = await backend.get(`/screenerComment/interview/${formItemId}`);
+        const result = commentId.data?.['result']?.[0];
+        if (!result || typeof result.id === "undefined") {
+          toast({
+            title: "Comment Form Not Found",
+            description: "No comment form is associated with this interview.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          return;
+        }
+        navigate(`/comment-form/${formItemId}`);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to load comment form.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
   }
 
   const renderTableBody = () => {
