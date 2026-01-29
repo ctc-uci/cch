@@ -710,7 +710,7 @@ export const FormTable = () => {
                   <MdOutlineManageSearch size="24px" />
                 </Button>
               </Box>
-              <Tooltip 
+              {/* <Tooltip 
                 label="Please select rows to export" 
                 isDisabled={selectedRowIds.length > 0}
               >
@@ -731,7 +731,7 @@ export const FormTable = () => {
                   </Box>
                   <Text ml="8px" color={selectedRowIds.length === 0 ? "gray.400" : "inherit"}>Export</Text>
                 </Button>
-              </Tooltip>
+              </Tooltip> */}
             </HStack>
           </HStack>
           <Box
