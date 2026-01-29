@@ -791,12 +791,30 @@ export const FormTable = () => {
                             index={index}
                           />
                         ) : cell.column.id === "export" ? (
-                          <PrintForm
-                            // For dynamic forms (intake_responses), `sessionId` is the real identifier.
-                            // `id` is a numeric hash used only for table rendering/selection.
-                            formId={row.original.sessionId ?? row.original.id}
-                            formType={row.original.title}
-                          />
+                          role === "user" &&
+                          row.original.title ===
+                            "Client Tracking Statistics (Intake Statistics)" ? (
+                            // Users can't directly export sensitive client tracking forms.
+                            // Instead, open the same preview flow, which will render
+                            // RequestFormPreview for this combination.
+                            <Button
+                              size="sm"
+                              colorScheme="blue"
+                              onClick={() => {
+                                setClickedFormItem(row.original);
+                                onOpen();
+                              }}
+                            >
+                              Export Form
+                            </Button>
+                          ) : (
+                            <PrintForm
+                              // For dynamic forms (intake_responses), `sessionId` is the real identifier.
+                              // `id` is a numeric hash used only for table rendering/selection.
+                              formId={row.original.sessionId ?? row.original.id}
+                              formType={row.original.title}
+                            />
+                          )
                         ) : (
                           flexRender(
                             cell.column.columnDef.cell,
