@@ -33,11 +33,13 @@ export const UpdateClients = () => {
   const [updateRequests, setUpdateRequests] = useState<any[]>([]);
   const { currentUser } = useAuthContext();
   const { isOpen, onToggle } = useDisclosure();
-  const [ allIds, setAllIds ] = useState<number[]>([]);
-  const [ selectedIds, setSelectedIds ] = useState<IdMap>({});
-  const [ allSelected, setAllSelected] = useState<boolean>(false);
+  const [allIds, setAllIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<IdMap>({});
   const [refresh, setRefresh] = useState<boolean>(false);
   const [disabled, setDisabled] = useState<boolean>(true);
+  const [checkboxMode, setCheckboxMode] = useState<
+    "hidden" | "visible-unchecked" | "visible-checked"
+  >("hidden");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,33 +72,53 @@ export const UpdateClients = () => {
         status: "approved",
         admin: currentUser,
       });
-      setAllSelected(false);
       setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = false; return acc; }, {}))
+      setCheckboxMode("hidden");
       setRefresh((prev) => !prev);
     }catch(err){
+      console.error("Error completing requests:", err);
     }
   };
 
   const handleSelectAll = () => {
-    if(Object.values(selectedIds).every((value) => value === true)) {
-      setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = false; return acc; }, {}))
-      setAllSelected(false)
+    if (checkboxMode === "hidden") {
+      // First click: select all visible rows and show checkboxes
+      setCheckboxMode("visible-checked");
+      setSelectedIds((prev) => {
+        const newSelectedIds: IdMap = { ...prev };
+        allIds.forEach((id) => {
+          newSelectedIds[id] = true;
+        });
+        setDisabled(false);
+        return newSelectedIds;
+      });
+    } else if (checkboxMode === "visible-checked") {
+      // Second click: unselect all visible rows but keep checkboxes visible
+      setCheckboxMode("visible-unchecked");
+      setSelectedIds((prev) => {
+        const newSelectedIds: IdMap = { ...prev };
+        allIds.forEach((id) => {
+          newSelectedIds[id] = false;
+        });
+        const anySelected = Object.values(newSelectedIds).some((v) => v);
+        setDisabled(!anySelected);
+        return newSelectedIds;
+      });
     } else {
-      setSelectedIds(allIds.reduce((acc: IdMap, id: number) => { acc[id] = true; return acc; }, {}))
-      setAllSelected(true)
+      // Third click: hide checkboxes and clear all selections
+      setCheckboxMode("hidden");
+      const resetSelectedIds = allIds.reduce((acc: IdMap, id: number) => {
+        acc[id] = false;
+        return acc;
+      }, {} as IdMap);
+      setSelectedIds(resetSelectedIds);
+      setDisabled(true);
     }
-    
-  }
+  };
 
   const handleCheckbox = (id: number) => {
     const newSelectedIds = { ...selectedIds, [id]: !selectedIds[id] };
     setSelectedIds(newSelectedIds);
-    if (allSelected) {
-      setAllSelected(false);
-    } else {
-      const allTrue = Object.values(newSelectedIds).every((value) => value === true);
-      setAllSelected(allTrue);
-    }
     const allFalse = Object.values(newSelectedIds).every((value) => value === false);
     if (allFalse) {
       setDisabled(true);
@@ -162,7 +184,20 @@ export const UpdateClients = () => {
                 background={"white"}
               >
                 <Tr>
-                  <Th width={12}><Box flexDirection={'row'} alignItems={'center'} justifyContent={'center'} width={'100%'}><Checkbox onChange={handleSelectAll} isChecked={allSelected}></Checkbox></Box></Th>
+                  <Th width={12}>
+                    <Box
+                      flexDirection={"row"}
+                      alignItems={"center"}
+                      justifyContent={"center"}
+                      width={"100%"}
+                    >
+                      <Checkbox
+                        isChecked={checkboxMode === "visible-checked"}
+                        isIndeterminate={checkboxMode === "visible-unchecked"}
+                        onChange={handleSelectAll}
+                      />
+                    </Box>
+                  </Th>
                   <Th>Time and Date Submitted</Th>
                   <Th>Name</Th>
                   <Th width={'60%'}>Request to Edit</Th>
@@ -172,12 +207,15 @@ export const UpdateClients = () => {
                 {updateRequests
                   ? updateRequests.map((approvals, index) => (
                       <Tr key={approvals.id}>
-                        <Td><HoverCheckbox
-                          id={approvals.id}
-                          isSelected={selectedIds[approvals.id] || false}
-                          onSelectionChange={handleCheckbox}
-                          index={index}
-                        /></Td>
+                        <Td>
+                          <HoverCheckbox
+                            id={approvals.id}
+                            isSelected={selectedIds[approvals.id] || false}
+                            onSelectionChange={handleCheckbox}
+                            index={index}
+                            alwaysVisible={true}
+                          />
+                        </Td>
                         <Td>
                           {new Date(approvals.created_at).toLocaleString(
                             "en-US",
