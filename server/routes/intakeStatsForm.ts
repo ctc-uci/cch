@@ -8,7 +8,7 @@ export const intakeStatsFormRouter = Router();
 // Get all forms
 intakeStatsFormRouter.get("/", async (req, res) => {
   try {
-    const data = await db.query(`SELECT * FROM intake_statistics_form;`);
+    const data = await db.query(`SELECT * FROM intake_statistics_form ORDER BY date DESC;`);
     res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);

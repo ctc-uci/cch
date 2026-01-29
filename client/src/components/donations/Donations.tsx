@@ -80,7 +80,7 @@ export const Donations = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(
     null
   );
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "date", desc: true }]);
 
   const [toggleRefresh, setToggleRefresh] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>("");

@@ -40,7 +40,7 @@ donationRouter.get("/", async (req, res) => {
       }
     }
 
-    queryStr += " ORDER BY donations.id ASC";
+    queryStr += " ORDER BY donations.date DESC";
 
     const donations = await db.query(queryStr);
     res.status(200).json(keysToCamel(donations));

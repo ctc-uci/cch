@@ -8,7 +8,7 @@ export const exitSurveyRouter = Router();
 
 exitSurveyRouter.get("/", async (req, res) => {
   try {
-    const success = await db.query(`SELECT * FROM exit_survey`);
+    const success = await db.query(`SELECT * FROM exit_survey ORDER BY date DESC`);
     res.status(200).json(keysToCamel(success));
   } catch (err) {
     res.status(400).send(err.message);
@@ -86,7 +86,7 @@ exitSurveyRouter.get("/search-filter", async (req, res) => {
       queryStr += `AND ${filter}`;
     }
 
-    queryStr += " ORDER BY es.id ASC";
+    queryStr += " ORDER BY es.date DESC";
 
     if (page) {
       queryStr += ` LIMIT ${page}`;

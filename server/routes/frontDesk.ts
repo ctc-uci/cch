@@ -11,7 +11,7 @@ frontDeskRouter.use(express.json());
 frontDeskRouter.get("/", async (req, res) => {
   try {
     // Query database
-    const data = await db.query(`SELECT * FROM front_desk_monthly`);
+    const data = await db.query(`SELECT * FROM front_desk_monthly ORDER BY date DESC`);
 
     res.status(200).json(keysToCamel(data));
   } catch (err) {

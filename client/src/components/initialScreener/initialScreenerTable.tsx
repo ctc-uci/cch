@@ -65,7 +65,7 @@ export const InitialScreenerTable = () => {
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
   const [formData, setFormData] = useState<(FormResponse & { isChecked: boolean; isHovered: boolean })[]>([]);
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: "submittedAt", desc: true }]);
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

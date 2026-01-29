@@ -114,7 +114,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [searchKey, setSearchKey] = useState("");
   const [filterQuery, setFilterQuery] = useState<string[]>([]);
-  const [sorting, setSorting] = useState<SortingState>([{ id: "entranceDate", desc: true }]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ firstName?: string; lastName?: string }>(
     {}
