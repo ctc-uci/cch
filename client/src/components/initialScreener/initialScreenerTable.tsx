@@ -57,7 +57,6 @@ interface FormResponse {
 export const InitialScreenerTable = () => {
   const navigate = useNavigate();
   const { backend } = useBackendContext();
-  const formId = 1; // Initial Interview form_id
   const toast = useToast();
 
   const [formQuestions, setFormQuestions] = useState<FormQuestion[]>([]);
@@ -87,14 +86,14 @@ export const InitialScreenerTable = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await backend.get(`/intakeResponses/form/${formId}/questions`);
+        const response = await backend.get(`/intakeResponses/form/1/questions`);
         setFormQuestions(response.data);
       } catch (error) {
         console.error("Error fetching form questions:", error);
       }
     };
     fetchQuestions();
-  }, [backend, formId]);
+  }, [backend]);
 
   // Build columns dynamically from form questions
   const columns = useMemo<ColumnDef<FormResponse>[]>(() => {
@@ -195,7 +194,7 @@ export const InitialScreenerTable = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        let url = `/intakeResponses/form/${formId}`;
+        let url = `/intakeResponses/form/1`;
         const params = new URLSearchParams();
         
         if (searchQuery) {
@@ -208,7 +207,7 @@ export const InitialScreenerTable = () => {
         if (params.toString()) {
           url += `?${params.toString()}`;
         }
-
+        
         const response = await backend.get(url);
         // Convert session_id (UUID string) to numeric ID for table compatibility
         const data = response.data.map((item: Record<string, unknown>) => {
@@ -232,7 +231,7 @@ export const InitialScreenerTable = () => {
     };
 
     fetchData();
-  }, [backend, formId, searchQuery, filterQuery, refreshTable]);
+  }, [backend, searchQuery, filterQuery, refreshTable]);
 
   // Fetch last updated time
   useEffect(() => {

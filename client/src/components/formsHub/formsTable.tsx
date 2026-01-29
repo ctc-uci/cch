@@ -311,7 +311,7 @@ export const FormTable = () => {
           lastUpdatedSuccessStoryResponse,
           lastUpdatedRandomSurveyResponse,
         ] = await Promise.all([
-          backend.get(`/initialInterview`),
+          backend.get(`/intakeResponses/form/1`),
           backend.get(`/frontDesk`),
           backend.get(`/caseManagerMonthlyStats`),
           backend.get(`/caseManagers`),
@@ -328,13 +328,29 @@ export const FormTable = () => {
         ]);
 
         const initialScreeners: Form[] = await screenerResponse.data.map(
-          (form: Form) => ({
-            id: form.id,
-            hashedId: form.id,
-            date: form.date,
-            name: form.name,
-            title: "Initial Screeners",
-          })
+          (item: Record<string, unknown>) => {
+            // Create a numeric ID from sessionId hash (matching initialScreenerTable pattern)
+            const sessionId = String(item.sessionId || item.session_id || '');
+            const numericId = sessionId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+            
+            // Construct name from firstName/lastName or use name field
+            const firstName = item.firstName || item.first_name || '';
+            const lastName = item.lastName || item.last_name || '';
+            const name = item.name 
+              ? String(item.name)
+              : firstName || lastName
+              ? `${firstName} ${lastName}`.trim()
+              : 'Unknown';
+            
+            return {
+              id: numericId,
+              hashedId: numericId,
+              date: String(item.submittedAt || item.submitted_at || item.date || ''),
+              name: name,
+              title: "Initial Screeners" as const,
+              sessionId: sessionId,
+            };
+          }
         );
 
         const intakeStatistics: Form[] = await intakeStatsResponse.data.map(

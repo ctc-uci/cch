@@ -92,6 +92,7 @@ const FormPreview = ({
   // Check if this is a dynamic form (uses intake_responses)
   const isDynamicForm = sessionId && (
     formItemTitle === "Initial Screener Form" ||
+    formItemTitle === "Initial Screeners" ||
     formItemTitle === "Success Story Form" ||
     formItemTitle === "Client Exit Survey Form" ||
     formItemTitle === "Random Client Survey Form"
@@ -99,7 +100,7 @@ const FormPreview = ({
   
   // Map form titles to form_ids
   const getFormId = (title: string): number | null => {
-    if (title === "Initial Screener Form") return 1;
+    if (title === "Initial Screener Form" || title === "Initial Screeners") return 1;
     if (title === "Client Exit Survey Form") return 2;
     if (title === "Success Story Form") return 3;
     if (title === "Random Client Survey Form") return 4;
