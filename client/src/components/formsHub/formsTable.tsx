@@ -129,9 +129,9 @@ const applyFilters = (
     const normalizedSearch = searchKey.toLowerCase();
     const searchMatch =
       !searchKey ||
-      form.name.toLowerCase().includes(normalizedSearch) ||
-      form.title.toLowerCase().includes(normalizedSearch) ||
-      form.date.slice(0, 10).includes(normalizedSearch);
+      (form.name ?? "").toLowerCase().includes(normalizedSearch) ||
+      (form.title ?? "").toLowerCase().includes(normalizedSearch) ||
+      (form.date ?? "").slice(0, 10).includes(normalizedSearch);
 
     return filterMatch && searchMatch;
   });
