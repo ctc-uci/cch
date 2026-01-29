@@ -253,7 +253,11 @@ export const InitialScreenerTable = () => {
   const handleRowClick = (row: FormResponse) => {
     // Navigate to comment form using client_id if available, otherwise use session_id
     if (row.clientId) {
-      navigate(`/comment-form/${row.clientId}`);
+      // Pass sessionId through route state so the comment form
+      // can associate screener comments with this intake session
+      navigate(`/comment-form/${row.clientId}`, {
+        state: { sessionId: row.sessionId },
+      });
     } else {
       // No matched client yet: open Add Client drawer so user can create + attach a client
       toast({
@@ -302,7 +306,9 @@ export const InitialScreenerTable = () => {
             setRefreshTable((prev) => !prev);
             setPendingSessionId(null);
             // Now that the screener is linked to a client, open the comment form
-            navigate(`/comment-form/${newClientId}`);
+            navigate(`/comment-form/${newClientId}`, {
+              state: { sessionId: pendingSessionId },
+            });
           } catch (error) {
             console.error("Error attaching client to session:", error);
           } finally {

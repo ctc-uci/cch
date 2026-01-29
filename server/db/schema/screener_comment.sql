@@ -1,8 +1,15 @@
 DROP TABLE IF EXISTS screener_comment_table CASCADE;
 
 CREATE TABLE screener_comment (
-    id SERIAL PRIMARY KEY NOT NULL,    
-    initial_interview_id int NOT NULL,
+    id SERIAL PRIMARY KEY NOT NULL,
+    -- Legacy reference to initial_interview; kept for backwards compatibility
+    -- but no longer enforced as a foreign key. New records should instead use
+    -- session_id to associate with dynamic initial interview forms stored in
+    -- intake_responses.
+    initial_interview_id int,
+    -- New association to dynamic intake_responses submissions. This links a
+    -- screener comment to a specific intake_responses.session_id.
+    session_id uuid,
     cm_id int NOT NULL,
     willingness int NOT NULL,
     employability int NOT NULL,
@@ -22,7 +29,10 @@ CREATE TABLE screener_comment (
     last_city_perm_residence varchar(32),
     decision boolean,
     additional_comments varchar(1024),
-    FOREIGN KEY(cm_id) REFERENCES case_managers(id),
-    FOREIGN KEY(initial_interview_id) REFERENCES initial_interview(id)
+    FOREIGN KEY(cm_id) REFERENCES case_managers(id)
 );
+
+-- Index to efficiently look up screener comments by associated session_id
+CREATE INDEX IF NOT EXISTS idx_screener_comment_session
+ON screener_comment(session_id);
 

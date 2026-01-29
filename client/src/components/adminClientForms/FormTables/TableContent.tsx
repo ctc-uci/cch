@@ -33,10 +33,6 @@ export const TableContent = <T extends { id: number }>({
   setCheckboxMode,
 }: TableContentProps<T>) => {
 
-  useEffect(() => {
-    console.log(table.getRowModel().rows.map(row => row.original));
-  }, [table]);
-  
   return (
     <TableContainer
       maxHeight="calc(100vh - 20px)"
