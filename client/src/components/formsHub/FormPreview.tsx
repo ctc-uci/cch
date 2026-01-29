@@ -749,12 +749,96 @@ const FormPreview = ({
                     size="lg"
                     onClick={() => {
                       const headers = ["Questions", "Answer"];
-                      const data = Object.entries(formattedFormData).map(
-                        ([key, value]) => ({
-                          Questions: key,
-                          Answer: formatValueForExport(value),
-                        })
-                      );
+                      // Export what the user is seeing (and any edits), with a fallback
+                      // to building the export from dynamic questions + raw data.
+                      const getExportRows = () => {
+                        const primary =
+                          Object.keys(newFormattedModifiedData).length > 0
+                            ? newFormattedModifiedData
+                            : formattedFormData;
+
+
+                        console.log("primary", primary);
+                        if (Object.keys(primary).length > 0) {
+                          return Object.entries(primary).map(([key, value]) => ({
+                            Questions: key,
+                            Answer: formatValueForExport(value),
+                          }));
+                        }
+
+                        // Fallback: build from dynamic form questions + raw form data
+                        if (isDynamicForm && formQuestions.length > 0) {
+                          const rows: Array<{ Questions: string; Answer: string }> = [];
+
+                          formQuestions
+                            .filter(
+                              (q) =>
+                                q.isVisible &&
+                                q.questionType !== "text_block" &&
+                                q.questionType !== "header"
+                            )
+                            .sort((a, b) => a.displayOrder - b.displayOrder)
+                            .forEach((q) => {
+                              const camelKey = q.fieldKey.replace(
+                                /_([a-z])/g,
+                                (_, letter) => letter.toUpperCase()
+                              );
+                              const rawValue =
+                                (newFormData as Record<string, unknown>)[camelKey] ??
+                                (newFormData as Record<string, unknown>)[q.fieldKey] ??
+                                "";
+
+                              if (
+                                q.questionType === "rating_grid" &&
+                                rawValue &&
+                                typeof rawValue === "object" &&
+                                !Array.isArray(rawValue)
+                              ) {
+                                const gridConfig = q.options as
+                                  | {
+                                      rows?: Array<{ key: string; label: string }>;
+                                      columns?: Array<{ value: string; label: string }>;
+                                    }
+                                  | undefined;
+
+                                if (
+                                  gridConfig?.rows &&
+                                  gridConfig?.columns &&
+                                  gridConfig.columns.length > 0
+                                ) {
+                                  const gridData = rawValue as Record<string, unknown>;
+                                  gridConfig.rows.forEach((row) => {
+                                    const rowValue = gridData[row.key];
+                                    if (rowValue !== undefined && rowValue !== null) {
+                                      const column = gridConfig.columns?.find(
+                                        (col) => col.value === rowValue
+                                      );
+                                      const displayValue = column
+                                        ? column.label
+                                        : String(rowValue);
+                                      rows.push({
+                                        Questions: `${q.questionText} - ${row.label}`,
+                                        Answer: displayValue,
+                                      });
+                                    }
+                                  });
+                                  return;
+                                }
+                              }
+
+                              rows.push({
+                                Questions: q.questionText,
+                                Answer: formatValueForExport(rawValue),
+                              });
+                            });
+
+                          return rows;
+                        }
+
+                        return [];
+                      };
+
+                      const data = getExportRows();
                       downloadCSV(headers, data, "form.csv");
                     }}
                   >

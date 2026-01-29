@@ -792,7 +792,9 @@ export const FormTable = () => {
                           />
                         ) : cell.column.id === "export" ? (
                           <PrintForm
-                            formId={row.original.id}
+                            // For dynamic forms (intake_responses), `sessionId` is the real identifier.
+                            // `id` is a numeric hash used only for table rendering/selection.
+                            formId={row.original.sessionId ?? row.original.id}
                             formType={row.original.title}
                           />
                         ) : (
