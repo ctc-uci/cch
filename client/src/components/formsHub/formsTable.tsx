@@ -189,20 +189,48 @@ export const FormTable = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTable, setRefreshTable] = useState(false);
+  const [checkboxMode, setCheckboxMode] = useState<
+    "hidden" | "visible-unchecked" | "visible-checked"
+  >("hidden");
 
   const columns = useMemo<ColumnDef<Form>[]>(
     () => [
       {
         id: "selection",
-        header: ({ table }) => (
-          <Box textAlign="center">
-            <Checkbox
-              isChecked={selectedRowIds.length > 0}
-              isIndeterminate={table.getIsSomeRowsSelected()}
-              onChange={() => handleSelectAllCheckboxClick(table)}
-            />
-          </Box>
-        ),
+        header: ({ table }) => {
+          const visibleHashedIds = table
+            .getRowModel()
+            .rows.map((row) => row.original.hashedId);
+
+          return (
+            <Box textAlign="center">
+              <Checkbox
+                isChecked={checkboxMode === "visible-checked"}
+                isIndeterminate={checkboxMode === "visible-unchecked"}
+                onChange={() => {
+                  if (checkboxMode === "hidden") {
+                    setCheckboxMode("visible-checked");
+                    setSelectedRowIds((prev) =>
+                      Array.from(
+                        new Set([...prev, ...visibleHashedIds])
+                      )
+                    );
+                  } else if (checkboxMode === "visible-checked") {
+                    setCheckboxMode("visible-unchecked");
+                    setSelectedRowIds((prev) =>
+                      prev.filter(
+                        (id) => !visibleHashedIds.includes(id)
+                      )
+                    );
+                  } else {
+                    setCheckboxMode("hidden");
+                    setSelectedRowIds([]);
+                  }
+                }}
+              />
+            </Box>
+          );
+        },
         cell: ({ row }) => {
           const hashedId = row.original.hashedId;
           const isChecked = selectedRowIds.includes(hashedId);
@@ -235,9 +263,8 @@ export const FormTable = () => {
         header: "Export",
       },
     ],
-    [selectedRowIds]
+    [selectedRowIds, checkboxMode]
   );
-
   const frontDeskColumns: ColumnDef<Form>[] = useMemo(
     () =>
       columns.map((column) => {
@@ -249,18 +276,6 @@ export const FormTable = () => {
       }),
     [columns]
   );
-  const handleSelectAllCheckboxClick = (
-    tableInstance: ReturnType<typeof useReactTable<Form>>
-  ) => {
-    const allHashedRowIds = tableInstance
-      .getRowModel()
-      .rows.map((row) => row.original.hashedId);
-    if (selectedRowIds.length === 0) {
-      setSelectedRowIds(allHashedRowIds);
-    } else {
-      setSelectedRowIds([]);
-    }
-  };
 
   const handleRowSelect = (hashedId: number, isChecked: boolean) => {
     if (isChecked) {
@@ -775,10 +790,11 @@ export const FormTable = () => {
                         key={cell.id}
                         onClick={(e) => {
                           if (
-                            cell.column.id === "rowNumber" ||
+                            cell.column.id === "selection" ||
                             cell.column.id === "export"
-                          )
+                          ) {
                             e.stopPropagation();
+                          }
                         }}
                       >
                         {cell.column.id === "rowNumber" ? (
