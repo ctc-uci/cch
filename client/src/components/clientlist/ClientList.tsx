@@ -443,8 +443,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
       const date = new Date(lastUpdatedResponse.data[0]?.lastUpdatedAt);
       setLastUpdated(
         date.toLocaleString("en-US", {
-          month: "2-digit",
-          day: "2-digit",
+          month: "numeric",
+          day: "numeric",
           year: "numeric",
           hour: "2-digit",
           minute: "2-digit",

@@ -222,7 +222,7 @@ export const UpdateClients = () => {
                             { timeZone: "America/Los_Angeles", hour: '2-digit',
                               minute: '2-digit',
                               year: '2-digit',
-                              month: '2-digit', 
+                              month: 'numeric', 
                               day: 'numeric',}
                           )}
                         </Td>

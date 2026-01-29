@@ -68,8 +68,8 @@ function Forms({ forms }: FormsProps) {
               >
                 <Td fontSize="sm">
                   {new Date(form.date).toLocaleDateString("en-US", {
-                    month: "2-digit",
-                    day: "2-digit",
+                    month: "numeric",
+                    day: "numeric",
                     year: "2-digit",
                   })}
                 </Td>

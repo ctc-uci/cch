@@ -24,10 +24,10 @@ export const formatDateString = (dateString: string): string => {
   }
   const date = parseAsLocalDate(dateString);
   return date.toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
+    month: "numeric",
+    day: "numeric",
     year: "numeric",
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Uses browser's timezone and returns MM/DD/YYYY format
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, // Uses browser's timezone and returns M/D/YYYY format
   });
 };
 

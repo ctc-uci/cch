@@ -472,8 +472,8 @@ export const FormTable = () => {
         );
         setMostRecentDate(mostRecent.getTime() === 0 ? null : mostRecent);
         setLastUpdated(mostRecent.toLocaleString('en-US', { 
-          month: '2-digit', 
-          day: '2-digit', 
+          month: 'numeric', 
+          day: 'numeric', 
           year: 'numeric', 
           hour: '2-digit', 
           minute: '2-digit' 

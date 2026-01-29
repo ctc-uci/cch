@@ -488,8 +488,8 @@ export const ViewPage = () => {
                     "dateOfBirth",
                     client.dateOfBirth
                       ? new Date(client.dateOfBirth).toLocaleDateString("en-US", {
-                          month: "2-digit",
-                          day: "2-digit",
+                          month: "numeric",
+                          day: "numeric",
                           year: "numeric",
                         })
                       : ""
