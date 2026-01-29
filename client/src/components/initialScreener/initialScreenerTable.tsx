@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 import {
   Box,
+  Button,
   Heading,
+  HStack,
   Text,
   VStack,
   useDisclosure,
@@ -284,10 +287,21 @@ export const InitialScreenerTable = () => {
   };
 
   return (
+    <Box paddingX="4%" paddingTop="2%">
+      <HStack justifyContent="flex-start" marginLeft="-2%">
+        <Button
+          variant="ghost"
+          colorScheme="blue"
+          leftIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/forms-hub")}
+        >
+          Back
+        </Button>
+      </HStack>
     <VStack
       spacing={2}
       align="start"
-      sx={{ maxWidth: "100%", marginX: "auto", padding: "4%" }}
+      sx={{ maxWidth: "100%", marginX: "auto"}}
     >
       <AddClientForm
         hideButton
@@ -357,5 +371,6 @@ export const InitialScreenerTable = () => {
         </Box>
       </Box>
     </VStack>
+    </Box>
   );
 };

@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { SelectInputComponent } from "./formComponents.tsx";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 
 interface FormFrontDeskProps {
   onFormSubmitSuccess: () => void;
@@ -370,6 +371,16 @@ function FormFrontDesk({ onFormSubmitSuccess: _onFormSubmitSuccess, spanish }: F
         pt={10}
         pb={10}
       >
+        <HStack position="absolute" p="4">
+          <Button
+            variant="ghost"
+            colorScheme="blue"
+            leftIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/forms-hub")}
+          >
+            Back
+          </Button>
+        </HStack>
         <Card
           maxW="100%"
           marginX={"20%"}

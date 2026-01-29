@@ -26,6 +26,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import type { IntakeStatisticsForm } from "../../types/intakeStatisticsForm";
 import { Navbar } from "../Navbar";
 import { IntakeStatsPg1, IntakeStatsPg2 } from "./intakeStatsPgs";
+import { ArrowBackIcon } from "@chakra-ui/icons";
 
 const initialFormData: IntakeStatisticsForm = {
   date: new Date().toISOString(),
@@ -235,30 +236,28 @@ export const IntakeStats = () => {
       backgroundColor="#EDF2F7"
       minHeight="100vh"
       width="100%"
+      paddingTop="2%"
+      overflowY="hidden"
     >
-      {/*<Navbar />*/}
-      <Box
-        justifyContent="flex-start"
-        px={5}
-      >
-        <Button onClick={() => navigate("/forms-table")}>
-          <FaArrowLeft color="#4398cd" />
-          <Text
-            color="#4398cd"
-            mb={0}
-          >
-            Back
-          </Text>
-        </Button>
-      </Box>
+      
       {onReview === false ? (
         <Box
           backgroundColor="#FFFFFF"
           margin="0 8% 3% 8%"
           borderRadius="md"
-          maxHeight="85vh"
           overflow="auto"
         >
+        {/* <Navbar /> */}
+        <HStack position="absolute" p="4">
+          <Button
+            variant="ghost"
+            colorScheme="blue"
+            leftIcon={<ArrowBackIcon />}
+            onClick={() => navigate("/forms-hub")}
+          >
+            Back
+          </Button>
+        </HStack>
           <Box
             display="flex"
             justifyContent="center"
