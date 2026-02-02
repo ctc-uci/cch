@@ -274,16 +274,60 @@ export const DynamicFormTable = ({
       selectedRowIds.includes(row.sessionId)
     );
 
-    // Build CSV data with all fields (exclude text_block and header types)
+    // Build CSV headers and data with rating grids expanded
     const visibleQuestions = formQuestions.filter(q => q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header');
-    const headers = [...visibleQuestions.map(q => q.fieldKey)];
+    const headers: string[] = [];
+    const fieldKeyToHeader: Record<string, string> = {};
+    
+    // Build headers, expanding rating grids into separate columns
+    visibleQuestions.forEach((question) => {
+      if (question.questionType === 'rating_grid') {
+        const gridConfig = question.options as { rows?: Array<{ key: string; label: string }> } | undefined;
+        if (gridConfig?.rows) {
+          gridConfig.rows.forEach((gridRow) => {
+            const headerKey = `${question.fieldKey}_${gridRow.key}`;
+            const headerText = `${question.questionText} - ${gridRow.label}`;
+            headers.push(headerText);
+            fieldKeyToHeader[headerKey] = headerText;
+          });
+        }
+      } else {
+        headers.push(question.questionText);
+        fieldKeyToHeader[question.fieldKey] = question.questionText;
+      }
+    });
+
+    // Build data rows
     const data = selectedData.map((row) => {
       const rowData: Record<string, unknown> = {};
       
       visibleQuestions.forEach((question) => {
-        // Try camelCase first, fallback to original fieldKey
         const camelFieldKey = toCamelCase(question.fieldKey);
-        rowData[question.fieldKey] = row[camelFieldKey] ?? row[question.fieldKey] ?? "";
+        let value = row[camelFieldKey] ?? row[question.fieldKey] ?? "";
+
+        // Handle rating_grid values: expand into separate columns
+        if (question.questionType === 'rating_grid' && value && typeof value === 'object' && !Array.isArray(value)) {
+          const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
+          const gridData = value as Record<string, unknown>;
+          
+          if (gridConfig?.rows && gridConfig?.columns) {
+            gridConfig.rows.forEach((gridRow) => {
+              const rowValue = gridData[gridRow.key];
+              let displayValue = "";
+              if (rowValue) {
+                const column = gridConfig.columns?.find(col => col.value === rowValue);
+                displayValue = column ? column.label : String(rowValue);
+              }
+              const headerText = `${question.questionText} - ${gridRow.label}`;
+              rowData[headerText] = displayValue;
+            });
+          } else {
+            // Fallback: just use the question text
+            rowData[question.questionText] = JSON.stringify(value);
+          }
+        } else {
+          rowData[question.questionText] = value;
+        }
       });
       
       return rowData;
