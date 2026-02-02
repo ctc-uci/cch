@@ -3,7 +3,7 @@ import { ClientReviewPage } from "./ClientReviewPage";
 import { ReviewPage } from "./ReviewPage";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { IconButton, useToast } from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { RandomSurveyConfirmation } from "./RandomSurveyConfirmation";
 import { ChevronLeftIcon } from "@chakra-ui/icons/ChevronLeft";
 
