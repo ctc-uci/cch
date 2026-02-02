@@ -32,7 +32,6 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
           
           setRole(userRole);
         } else {
-          console.error(`[RoleContext] No authenticated user, clearing role`);
           setRole(undefined);
         }
       } catch (e) {
