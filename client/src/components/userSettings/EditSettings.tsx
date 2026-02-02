@@ -198,9 +198,6 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
       await handlePasswordChange();
     }
       try {
-        // console.log("Sending request: ", {
-        //   ...formData,
-        // firebaseUid: user.firebaseUid});
         const response = await backend.put("/users/update", {
           ...formData,
           firebaseUid: user.firebaseUid,

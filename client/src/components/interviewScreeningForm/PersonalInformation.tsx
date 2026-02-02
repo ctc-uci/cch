@@ -153,7 +153,7 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
         }
       } catch (err: unknown) {
         const error = err as Error & { message?: string };
-        console.log("error", error?.message);
+        console.error("error", error?.message);
         toast({
           title: language === "spanish" ? "Error" : "Error",
           description: language === "spanish" 

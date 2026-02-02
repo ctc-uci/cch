@@ -230,7 +230,7 @@ initialInterviewRouter.get("/search-filter", async (req, res) => {
     const initial_interview = await db.query(queryStr);
     res.status(200).json(keysToCamel(initial_interview));
   } catch (err) {
-    console.log(err.message);
+    console.error(err.message);
     res.status(500).send(err.message);
   }
 });

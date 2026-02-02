@@ -122,7 +122,7 @@ export async function matchClient(
     }
 
     // Log for debugging if no match found
-    console.log("No client match found for:", {
+    console.error("No client match found for:", {
       firstName: normalizedFirstName,
       lastName: normalizedLastName,
       phoneNumber: normalizedPhone,

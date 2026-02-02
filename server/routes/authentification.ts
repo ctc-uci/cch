@@ -22,7 +22,7 @@ authentificationRouter.post("/verify", async (req, res) => {
     return res.status(200).json(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
-    console.log(err);
+    console.error(err);
   }
 });
 
@@ -37,7 +37,7 @@ authentificationRouter.delete("/email", async (req, res) => {
     );
     res.status(200).json(keysToCamel(data));
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send(err.message);
   }
 });
@@ -104,7 +104,7 @@ authentificationRouter.post("/email", (req, res) => {
 
   transporter.sendMail(mail, (err) => {
     if (err) {
-      console.log(err.message);
+      console.error(err.message);
       res.status(500).send(err.message);
     } else {
       res.status(200).json(keysToCamel(emailSender));

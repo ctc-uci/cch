@@ -66,7 +66,6 @@ export const UpdateClients = () => {
       if (selectedIdsArray.length === 0) {
         return;
       }
-      // console.log("Selected IDs:", selectedIdsArray);
       await backend.put("/request", {
         ids: selectedIdsArray,
         status: "approved",

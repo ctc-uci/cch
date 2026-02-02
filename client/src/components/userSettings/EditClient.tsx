@@ -61,7 +61,7 @@ export default function EditClient({ email, setClientModal, onClientDeleted }: E
         await backend.delete(`/clients/${user.id}`);
       } catch (_error) {
         // If client doesn't exist in clients table, that's okay - just delete from users
-        console.log("Client not found in clients table, deleting from users only");
+        console.error("Client not found in clients table, deleting from users only");
       }
       
       // delete corresponding user by email (also deletes Firebase if linked on server)
@@ -184,10 +184,6 @@ export default function EditClient({ email, setClientModal, onClientDeleted }: E
     }
     try {
       if (!user) return;
-      // console.log("Sending request: ", {
-      //   ...formData,
-      //   firebaseUid: user.firebaseUid,
-      // });
       const response = await backend.put("/users/update", {
         ...formData,
         firebaseUid: user.firebaseUid,

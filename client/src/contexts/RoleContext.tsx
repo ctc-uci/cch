@@ -26,21 +26,13 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       try {
         if (user) {
-          console.log(`[RoleContext] Fetching role for user: ${user.uid}`);
           const response = await backend.get(`/users/${user.uid}`);
-          console.log(`[RoleContext] User data response:`, response.data);
 
           const userRole = (response.data as User[]).at(0)?.role;
           
-          if (!userRole) {
-            console.error(`[RoleContext] No role found for user ${user.uid}. Response:`, response.data);
-          } else {
-            console.log(`[RoleContext] Setting role to: ${userRole}`);
-          }
-          
           setRole(userRole);
         } else {
-          console.log(`[RoleContext] No authenticated user, clearing role`);
+          console.error(`[RoleContext] No authenticated user, clearing role`);
           setRole(undefined);
         }
       } catch (e) {

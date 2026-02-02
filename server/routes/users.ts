@@ -126,7 +126,7 @@ usersRouter.post("/create", async (req, res) => {
       });
     }
     res.status(500).send(err.message);
-    console.log(err);
+    console.error(err);
   }
 });
 
@@ -163,7 +163,7 @@ usersRouter.post("/invite", async (req, res) => {
       });
     }
     res.status(500).send(err.message);
-    console.log(err);
+    console.error(err);
   }
 });
 

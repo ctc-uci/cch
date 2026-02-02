@@ -58,7 +58,7 @@ intakeSuccessStoryRouter.get("/search-filter", async (req, res) => {
     const stories = await db.query(queryStr);
     res.status(200).json(keysToCamel(stories));
   } catch (err) {
-    console.log(err.message);
+    console.error(err.message);
     res.status(500).send(err.message);
   }
 });

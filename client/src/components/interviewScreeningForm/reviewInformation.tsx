@@ -75,7 +75,7 @@ const ReviewInformation: React.FC = () => {
       }
     } catch (err: unknown) {
       const error = err as Error & { message?: string };
-      console.log("error", error?.message);
+      console.error("error", error?.message);
       toast({
         title: "Error",
         description: error?.message || "An error occurred while submitting the form.",

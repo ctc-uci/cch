@@ -87,7 +87,7 @@ requestRouter.put('/', async (req, res) => {
     res.status(200).json(request);
   }catch(err){
     res.status(500).json(err.message);
-    console.log(err);
+    console.error(err);
   }
 
   }); 
