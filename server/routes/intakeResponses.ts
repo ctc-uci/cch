@@ -12,6 +12,43 @@ const toCamel = (string: string) => {
 
 export const intakeResponsesRouter = Router();
 
+// Get form questions for a specific form_id (for building dynamic columns)
+intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
+  try {
+    const { formId } = req.params;
+    const { includeHidden } = req.query;
+
+    const queryStr = `
+      SELECT * FROM form_questions
+      WHERE form_id = $1
+      ${includeHidden !== "true" ? "AND is_visible = true" : ""}
+      ORDER BY created_at ASC
+    `;
+
+    const questions = await db.query(queryStr, [formId]);
+    res.status(200).json(keysToCamel(questions));
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// Delete responses by session_id (deletes all responses in a session)
+intakeResponsesRouter.delete("/session/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    await db.query(
+      `DELETE FROM intake_responses WHERE session_id = $1`,
+      [sessionId]
+    );
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Error deleting intake responses:", err);
+    res.status(500).send(err.message);
+  }
+});
+
 // Get all form responses grouped by session_id for a specific form_id
 intakeResponsesRouter.get("/form/:formId", async (req, res) => {
   try {
@@ -508,42 +545,5 @@ intakeResponsesRouter.patch("/session/:sessionId/client", async (req, res) => {
   } catch (err) {
     console.error("Error attaching client to session:", err);
     res.status(500).send((err as Error).message);
-  }
-});
-
-// Get form questions for a specific form_id (for building dynamic columns)
-intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
-  try {
-    const { formId } = req.params;
-    const { includeHidden } = req.query;
-
-    const queryStr = `
-      SELECT * FROM form_questions
-      WHERE form_id = $1
-      ${includeHidden !== "true" ? "AND is_visible = true" : ""}
-      ORDER BY created_at ASC
-    `;
-
-    const questions = await db.query(queryStr, [formId]);
-    res.status(200).json(keysToCamel(questions));
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
-
-// Delete responses by session_id (deletes all responses in a session)
-intakeResponsesRouter.delete("/session/:sessionId", async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    
-    await db.query(
-      `DELETE FROM intake_responses WHERE session_id = $1`,
-      [sessionId]
-    );
-
-    res.status(200).json({ success: true });
-  } catch (err) {
-    console.error("Error deleting intake responses:", err);
-    res.status(500).send(err.message);
   }
 });
