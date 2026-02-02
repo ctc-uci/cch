@@ -168,17 +168,19 @@ randomSurveyRouter.post("/", async (req, res) => {
         }
       }
     }
-    const createdBy = cmId || 1;
+    // const createdBy = cmId || 1;
 
-    // Create a minimal client entry for the anonymous survey
-    const clientResult = await db.query(
-      `INSERT INTO intake_clients (created_by, unit_id, status, first_name, last_name)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id`,
-      [createdBy, unitId, "Active", "Random Survey", new Date().toISOString().slice(0, 10)]
-    );
+    // // Create a minimal client entry for the anonymous survey
+    // const clientResult = await db.query(
+    //   `INSERT INTO clients (created_by, unit_id, status, first_name, last_name)
+    //    VALUES ($1, $2, $3, $4, $5)
+    //    RETURNING id`,
+    //   [createdBy, unitId, "Active", "Random Survey", new Date().toISOString().slice(0, 10)]
+    // );
 
-    const clientId = clientResult[0].id;
+    // const clientId = clientResult[0].id;
+
+    const clientId = null;
 
     // Generate a unique session_id for this survey submission
     // All responses from this submission will share the same session_id
