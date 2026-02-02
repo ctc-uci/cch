@@ -376,6 +376,7 @@ export const ManageAccounts = () => {
           );
         } else {
           const response = await backend.get("/users/clients");
+          console.log(response.data);
           setPersons(
             (response.data || []).filter(
               (person: Person) => !person.email || person.email !== currentUserEmail

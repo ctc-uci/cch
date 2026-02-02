@@ -20,7 +20,7 @@ usersRouter.get("/", async (req, res) => {
 
 usersRouter.get("/clients", async (req, res) => {
   try {
-    const users = await db.query(`SELECT * FROM users WHERE role IN ('user', 'client') ORDER BY id DESC`);
+    const users = await db.query(`SELECT * FROM users WHERE role IN ('client') ORDER BY id DESC`);
     res.status(200).json(keysToCamel(users));
   } catch (err) {
     res.status(400).send(err.message);
