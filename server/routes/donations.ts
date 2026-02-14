@@ -105,24 +105,21 @@ donationRouter.post("/donors", async (req, res) => {
 donationRouter.get("/valueSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(value*weight) FROM donations`;
-    if (donor || startDate || endDate) {
-      query += " WHERE";
-    }
-    const queryParams = [];
+    const queryParams: string[] = [];
     if (donor) {
-      queryParams.push(` donor = '${donor}'`);
+      queryParams.push(` donors.name = '${donor}'`);
     }
     if (startDate) {
-      queryParams.push(` date >= '${startDate}'`);
+      queryParams.push(` donations.date >= '${startDate}'`);
     }
     if (endDate) {
-      queryParams.push(` date <= '${endDate}'`);
+      queryParams.push(` donations.date <= '${endDate}'`);
     }
-    query += queryParams.join(" AND");
-    const data = await db.query(
-        query
-    );
+    const query =
+      queryParams.length > 0
+        ? `SELECT SUM(donations.value * donations.weight) FROM donations JOIN donors ON donations.donor_id = donors.id WHERE ${queryParams.join(" AND ")}`
+        : `SELECT SUM(value * weight) FROM donations`;
+    const data = await db.query(query);
     res.status(200).send(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);
@@ -132,24 +129,21 @@ donationRouter.get("/valueSum", async (req, res) => {
 donationRouter.get("/weightSum", async (req, res) => {
   try {
     const { donor, startDate, endDate } = req.query;
-    let query = `SELECT SUM(ROUND(CAST(weight AS DECIMAL), 2)) FROM donations`;
-    if (donor || startDate || endDate) {
-      query += " WHERE";
-    }
-    const queryParams = [];
+    const queryParams: string[] = [];
     if (donor) {
-      queryParams.push(` donor = '${donor}'`);
+      queryParams.push(` donors.name = '${donor}'`);
     }
     if (startDate) {
-      queryParams.push(` date >= '${startDate}'`);
+      queryParams.push(` donations.date >= '${startDate}'`);
     }
     if (endDate) {
-      queryParams.push(` date <= '${endDate}'`);
+      queryParams.push(` donations.date <= '${endDate}'`);
     }
-    query += queryParams.join(" AND");
-    const data = await db.query(
-        query
-    );
+    const query =
+      queryParams.length > 0
+        ? `SELECT SUM(ROUND(CAST(donations.weight AS DECIMAL), 2)) FROM donations JOIN donors ON donations.donor_id = donors.id WHERE ${queryParams.join(" AND ")}`
+        : `SELECT SUM(ROUND(CAST(weight AS DECIMAL), 2)) FROM donations`;
+    const data = await db.query(query);
     res.status(200).send(keysToCamel(data));
   } catch (err) {
     res.status(500).send(err.message);

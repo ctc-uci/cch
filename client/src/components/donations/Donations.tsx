@@ -799,7 +799,10 @@ export const Donations = () => {
                           ) : (
                             cell.column.id === "donor" ? (
                               <Text>
-                                {donorMap[cell.getValue() as string] || 'Costco'}
+                                {(() => {
+                                  const name = cell.getValue() as string;
+                                  return donorMap[name?.toLowerCase()] ?? (name ? name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() : "");
+                                })()}
                               </Text>
                             ) : (
                               flexRender(

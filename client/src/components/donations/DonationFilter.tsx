@@ -91,6 +91,16 @@ export function DonationFilter({
         </InputGroup>
 
         <VStack align="stretch" spacing={0} maxH="100vh" overflowY="auto">
+          <MenuItem
+            onClick={() => {
+              setDonor("");
+              onClose();
+            }}
+            color={donor ? "gray.600" : undefined}
+            fontWeight={donor ? "normal" : "semibold"}
+          >
+            All donors
+          </MenuItem>
           {filtered.map((d) => (
             <MenuItem key={d} onClick={() => selectDonor(d)}>
               {d.charAt(0).toUpperCase() + d.slice(1).toLowerCase()}
