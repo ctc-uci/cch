@@ -196,16 +196,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const userCredential = await signInWithCredential(auth, authCredential);
-      // we have to update the currnet user role BEFORE we sign in or else the app won't know what role we are currently
-      const userData = await backend.get(`/users/${userCredential.user.uid}`);
-      setCurrentUserRole(userData.data[0]?.role);
-
-      // Set access token in cookie for persistent login
+      // Set access token in cookie before any further API calls so /users requests are authenticated
       const idToken = await userCredential.user.getIdToken();
       setCookie({
         key: cookieKeys.ACCESS_TOKEN,
         value: idToken,
       });
+      // Update current user role so the app knows what role we are
+      const userData = await backend.get(`/users/${userCredential.user.uid}`);
+      setCurrentUserRole(userData.data[0]?.role);
 
       setAuthCredential(null);
       setEmail(null);
@@ -249,6 +248,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const result = await getRedirectResult(auth);
 
       if (result) {
+        // Set access token in cookie before any API calls so /users requests are authenticated
+        const idToken = await result.user.getIdToken();
+        setCookie({
+          key: cookieKeys.ACCESS_TOKEN,
+          value: idToken,
+        });
+
         const response = await backend.get(`/users/${result.user.uid}`);
         if (response.data.length === 0) {
           try {
@@ -265,14 +271,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
           }
         }
-        
-        // Set access token in cookie for persistent login
-        const idToken = await result.user.getIdToken();
-        setCookie({
-          key: cookieKeys.ACCESS_TOKEN,
-          value: idToken,
-        });
-        
+
         navigate("/dashboard");
       }
     } catch (error) {
@@ -303,8 +302,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       setCurrentUser(user);
       if (user) {
-        await fetchRole(user);
         await setAuthCookie(user);
+        await fetchRole(user);
       }
 
       setLoading(false);
