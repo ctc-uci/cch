@@ -60,8 +60,17 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
+
 if (process.env.NODE_ENV === "production") {
-  app.use(verifyToken);
+  app.use((req, res, next) => {
+    const path = req.path;
+    const isAuthRoute = path === "/authentification" || path.startsWith("/authentification/");
+    const isLoginEmailCheck = req.method === "GET" && path.startsWith("/users/email/");
+    if (isAuthRoute || isLoginEmailCheck) {
+      return next();
+    }
+    return verifyToken(req, res, next);
+  });
 }
 
 app.use("/exitSurvey", exitSurveyRouter);
