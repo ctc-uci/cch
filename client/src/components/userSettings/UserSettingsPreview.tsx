@@ -1,7 +1,7 @@
 import { EditIcon } from "@chakra-ui/icons";
 import {
+  Avatar,
   Box,
-  Circle,
   Divider,
   Flex,
   Heading,
@@ -41,11 +41,6 @@ const UserSettingsPreview = ({
     setEditing(true);
   };
 
-  const rawRole = String((user?.role ?? role ?? "")).toLowerCase();
-  const isAdmin =
-    rawRole === "admin" || rawRole === "administrator" || rawRole === "admins";
-  const circleText = isAdmin ? "AD" : "CM";
-
   return (
     <Box
       position="absolute"
@@ -71,15 +66,14 @@ const UserSettingsPreview = ({
         padding="80px 32px 100px 32px"
         gap="40px"
       >
-        <Circle
-          size="200px"
-          bg="#63B3ED"
-          color="black"
-          fontSize="210%"
+        <Avatar
+          name={`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || undefined}
+          size="2xl"
+          boxSize="200px"
+          fontSize="5rem"
           margin={10}
-        >
-          {circleText}
-        </Circle>
+          sx={{ "& span": { fontSize: "5rem !important" } }}
+        />
       </Flex>
 
       {/* About Section */}
