@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Card,
@@ -9,7 +10,6 @@ import {
   Flex,
   Heading,
   HStack,
-  Image,
   Stack,
   Text,
   Textarea,
@@ -20,7 +20,6 @@ import {
 } from "@chakra-ui/react";
 import { AddIcon, EditIcon } from "@chakra-ui/icons";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
-import image from "../pfp.jpeg";
 import { Children } from "../ViewPage";
 import ChildModal from "../editFormModals/ChildModal";
 
@@ -133,12 +132,10 @@ function ChildrenCards({ items, parentId, onRefresh }: ChildrenProps) {
                   <CardHeader pb={2}>
                     <Flex justify="space-between" align="flex-start">
                       <HStack spacing={4}>
-                        <Image
+                        <Avatar
+                          name={`${item.firstName} ${item.lastName}`}
                           boxSize="60px"
-                          objectFit="cover"
-                          borderRadius="full"
-                          src={image}
-                          alt={`${item.firstName} ${item.lastName}`}
+                          fontSize="xl"
                         />
                         <VStack align="flex-start" spacing={0}>
                           <Text fontSize="md" fontWeight="bold">

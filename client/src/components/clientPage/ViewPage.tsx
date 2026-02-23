@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Card,
   HStack,
-  Image,
   Input,
   Spacer,
   Stack,
@@ -35,7 +35,6 @@ import toSnakeCase from "../../utils/snakeCase";
 import ChildrenCards from "./subComponents/childrenCards";
 import Comments from "./subComponents/comments";
 import Forms from "./subComponents/forms";
-import image from "./pfp.jpeg";
 import { Client, FormItems } from "./types";
 
 const emptyClient: Client = {
@@ -289,12 +288,11 @@ export const ViewPage = () => {
       <Box w="100%" p={4}>
         <HStack w="100%" align="flex-start">
           <HStack w="60%" spacing={8} align="center">
-            <Image
+            <Avatar
+              name={`${client.firstName} ${client.lastName}`}
               boxSize="120px"
-              objectFit="cover"
-              borderRadius="full"
-              src={image}
-              alt={`${client.firstName} ${client.lastName}`}
+              fontSize="3rem"
+              sx={{ "& .chakra-avatar__initials": { fontSize: "3rem" } }}
             />
             <VStack align="start" spacing={1}>
               <Text fontSize="4xl" fontWeight="bold">
