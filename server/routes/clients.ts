@@ -203,7 +203,7 @@ clientsRouter.post("/", async (req, res) => {
       [
         created_by,
         unit_name,
-        grant,
+        grant != null && String(grant).trim() !== "" ? String(grant).trim() : null,
         status,
         first_name,
         last_name,

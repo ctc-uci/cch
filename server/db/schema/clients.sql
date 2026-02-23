@@ -8,7 +8,7 @@ CREATE TABLE clients (
     id SERIAL NOT NULL PRIMARY KEY,
     created_by INT NOT NULL,
     unit_name VARCHAR(256) NOT NULL,
-    "grant" VARCHAR(256) NOT NULL,
+    "grant" VARCHAR(256),
     "status" client_status NOT NULL,
     first_name VARCHAR(16) NOT NULL,
     last_name VARCHAR(16) NOT NULL,

@@ -273,7 +273,9 @@ export const AddClientForm = ({
     // Validate all fields and track which ones have errors
     const newErrors: Record<string, boolean> = {};
     
+    const optionalFields = new Set(["grant"]);
     Object.entries(formData).forEach(([key, value]) => {
+      if (optionalFields.has(key)) return;
       if (isFieldEmpty(value)) {
         newErrors[key] = true;
       }
@@ -524,7 +526,7 @@ export const AddClientForm = ({
 
                   <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
                     <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Grant</Text>
+                      <Text fontWeight="medium">Grant <Text as="span" color="gray.500" fontWeight="normal">(optional)</Text></Text>
                       <Input placeholder="Enter grant name/number" value={formData.grant}
                       isInvalid={errors.grant} errorBorderColor="red.500"
                       onChange={(e) => {setFormData({ ...formData, grant: e.target.value }); setFormInProgress(true); setErrors({...errors, grant: false})}} />
