@@ -22,8 +22,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
-import { IoIosArrowBack } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
 
 type SuccessStoryFormProps = {
   formData: Record<string, unknown>;
@@ -94,7 +92,6 @@ export const SuccessStoryForm = ({
   const [isLoading, setIsLoading] = useState(true);
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -456,24 +453,6 @@ export const SuccessStoryForm = ({
 
   return (
     <Box maxW="800px" mx="auto" p={6}>
-      <Button
-        position={"absolute"}
-        left={"400px"}
-        top={"50px"}
-        height={"40px"}
-        width={"40px"}
-        color={"blue.500"}
-        backgroundColor={"transparent"}
-        onClick={
-          !onReview
-            ? () => navigate("/client-landing-page")
-            : () => setOnReview(false)
-        }
-      >
-        <Box fontSize={"35px"}>
-          <IoIosArrowBack />
-        </Box>
-      </Button>
       <form onSubmit={handleSubmit}>
         <VStack spacing={6} align="stretch">
           {visibleQuestions.map((question) => {
