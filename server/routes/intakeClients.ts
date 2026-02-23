@@ -5,6 +5,12 @@ import { db } from "../db/db-pgp";
 
 export const intakeClientsRouter = Router();
 
+/**
+ * Intake clients router - DEPRECATED.
+ * Use /clients and the main clients table instead. This API is stubbed and no longer
+ * reads or writes the intake_clients table.
+ */
+
 // Helper function to get intake client with all responses
 const getIntakeClientWithResponses = async (clientId: number) => {
   // Get core client data
@@ -75,6 +81,7 @@ intakeClientsRouter.get("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
 
 // Get all intake clients with search and pagination
 intakeClientsRouter.get("/", async (req, res) => {
@@ -342,4 +349,3 @@ intakeClientsRouter.delete("/:id", async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-

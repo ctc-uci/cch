@@ -1,3 +1,4 @@
+-- DEPRECATED: Use the main clients table and /clients API instead. This table is no longer used by the app.
 DROP TABLE IF EXISTS intake_clients CASCADE;
 
 -- New dynamic intake clients table - only essential fields
