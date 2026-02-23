@@ -456,31 +456,28 @@ export default function DynamicFormModal({
     (q) => q.questionType !== 'text_block' && q.questionType !== 'header'
   );
 
-  // Check if form contains sensitive fields that affect client matching
-  const hasSensitiveFields = () => {
-    const sensitiveFieldKeys = [
-      'first_name', 'firstName', 'firstname',
-      'last_name', 'lastName', 'lastname',
-      'date_of_birth', 'dateOfBirth', 'dob',
-      'phone_number', 'phoneNumber', 'phonenumber'
-    ];
-    
-    return visibleQuestions.some(q => {
-      const fieldKey = q.fieldKey.toLowerCase();
-      return sensitiveFieldKeys.some(sensitive => fieldKey.includes(sensitive.toLowerCase()));
-    });
+  // Field keys that refer to someone other than the primary client (child, parent, etc.) — do not treat as matching-sensitive
+  const isSecondaryPersonField = (fieldKey: string): boolean => {
+    const lower = fieldKey.toLowerCase();
+    return ['child', 'children', 'father', 'mother', 'parent', 'spouse', 'guardian'].some(term => lower.includes(term));
   };
 
-  // Check if a specific field is sensitive
+  // Check if form contains sensitive fields that affect client matching (primary person only)
+  const hasSensitiveFields = () => {
+    return visibleQuestions.some(q => isSensitiveField(q.fieldKey));
+  };
+
+  // Check if a specific field is sensitive (primary client matching only; exclude child/family fields like childDob)
   const isSensitiveField = (fieldKey: string): boolean => {
+    const lowerFieldKey = fieldKey.toLowerCase();
+    if (isSecondaryPersonField(fieldKey)) return false;
+
     const sensitiveFieldKeys = [
       'first_name', 'firstName', 'firstname',
       'last_name', 'lastName', 'lastname',
       'date_of_birth', 'dateOfBirth', 'dob',
       'phone_number', 'phoneNumber', 'phonenumber'
     ];
-    
-    const lowerFieldKey = fieldKey.toLowerCase();
     return sensitiveFieldKeys.some(sensitive => lowerFieldKey.includes(sensitive.toLowerCase()));
   };
 
