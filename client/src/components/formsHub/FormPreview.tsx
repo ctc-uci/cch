@@ -658,10 +658,15 @@ const FormPreview = ({
   };
 
   const isDate = (value: string) => {
-    return (
-      Object.prototype.toString.call(value) === "[object String]" &&
-      !isNaN(Date.parse(value))
-    );
+    if (Object.prototype.toString.call(value) !== "[object String]" || value === "") {
+      return false;
+    }
+    const trimmed = value.trim();
+    // Don't treat select/option values as dates: pure numbers (e.g. "1", "0") or yes/no
+    if (/^\d+$/.test(trimmed) || /^(yes|no)$/i.test(trimmed)) {
+      return false;
+    }
+    return !isNaN(Date.parse(value));
   };
 
   const formatValueForDisplay = (value: unknown) => {
