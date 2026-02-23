@@ -16,14 +16,13 @@ adminRouter.get("/admins", async (req, res) => {
         cm.email, 
         cm.id, 
         cm.notes, 
-        locs.name AS location,
+        cm.location,
         CASE 
           WHEN u.email IS NULL THEN true
           WHEN u.firebase_uid IS NULL OR u.firebase_uid = '' THEN true
           ELSE false
         END AS is_pending
       FROM case_managers AS cm
-      LEFT JOIN locations AS locs ON cm.id = locs.cm_id
       LEFT JOIN users AS u ON cm.email COLLATE "C" = u.email COLLATE "C"
       WHERE cm.role = 'superadmin' OR cm.role = 'admin'
       ORDER BY cm.id DESC;
@@ -78,13 +77,12 @@ adminRouter.get("/caseManagers", async (req, res) => {
           cm.phone_number, 
           cm.email, 
           cm.notes, 
-          locs.name AS location,
+          cm.location,
           CASE 
             WHEN u.email IS NOT NULL AND (u.firebase_uid IS NULL OR u.firebase_uid = '') THEN true
             ELSE false
           END AS is_pending
         FROM case_managers AS cm
-        LEFT JOIN locations AS locs ON cm.id = locs.cm_id
         LEFT JOIN users AS u ON cm.email COLLATE "C" = u.email COLLATE "C"
         WHERE cm.role = 'case manager'
         ORDER BY cm.id DESC;`);

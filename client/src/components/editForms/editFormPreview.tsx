@@ -36,6 +36,7 @@ import {
 import { FormType } from "../../types/form";
 import { useEffect, useState, useCallback } from "react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 import { DeleteIcon, EditIcon, AddIcon } from "@chakra-ui/icons";
 import { MdDragIndicator } from "react-icons/md";
 import { FaInfoCircle } from "react-icons/fa";
@@ -224,12 +225,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       last_name?: string;
     }>
   >([]);
-  const [locations, setLocations] = useState<
-    Array<{
-      id: number;
-      name: string;
-    }>
-  >([]);
   const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : 4;
 
   const sensors = useSensors(
@@ -301,37 +296,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       }
     };
     loadCaseManagers();
-  }, [backend]);
-
-  // Load locations for site_location questions
-  useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        const response = await backend.get("/locations");
-        const locList: Array<{
-          id: number;
-          name: string;
-        }> = Array.isArray(response.data)
-          ? response.data.map(
-              (loc: {
-                id: number | string;
-                name: string;
-              }) => ({
-                id: Number(loc.id),
-                name: loc.name,
-              })
-            ).filter((loc) => !Number.isNaN(loc.id))
-          : [];
-        // Get unique location names
-        const uniqueLocations = Array.from(
-          new Map(locList.map((loc) => [loc.name, loc])).values()
-        );
-        setLocations(uniqueLocations);
-      } catch (err) {
-        console.error("Failed to load locations:", err);
-      }
-    };
-    loadLocations();
   }, [backend]);
 
   const handleEdit = (question: FormQuestion) => {
@@ -910,9 +874,9 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
             value={value}
             onChange={(e) => setPreviewFormData({ ...previewFormData, [fieldKey]: e.target.value })}
           >
-            {locations.map((loc: { id: number; name: string }) => (
-              <option key={loc.id} value={loc.name}>
-                {loc.name}
+            {LOCATION_OPTIONS.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </Select>

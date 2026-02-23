@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import { useEffect, useState } from "react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 
 // Types for dynamic form questions
 interface FormOption {
@@ -88,12 +89,6 @@ export const ClientReviewPage = ({
   const { backend } = useBackendContext();
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [locations, setLocations] = useState<
-    Array<{
-      id: number;
-      name: string;
-    }>
-  >([]);
 
   // Load form questions for Random Client Surveys (form_id = 4)
   useEffect(() => {
@@ -117,37 +112,6 @@ export const ClientReviewPage = ({
     };
     loadQuestions();
   }, [backend, toast]);
-
-  // Load locations for site_location questions
-  useEffect(() => {
-    const loadLocations = async () => {
-      try {
-        const response = await backend.get("/locations");
-        const locList: Array<{
-          id: number;
-          name: string;
-        }> = Array.isArray(response.data)
-          ? response.data.map(
-              (loc: {
-                id: number | string;
-                name: string;
-              }) => ({
-                id: Number(loc.id),
-                name: loc.name,
-              })
-            ).filter((loc) => !Number.isNaN(loc.id))
-          : [];
-        // Get unique location names
-        const uniqueLocations = Array.from(
-          new Map(locList.map((loc) => [loc.name, loc])).values()
-        );
-        setLocations(uniqueLocations);
-      } catch (err) {
-        console.error("Failed to load locations:", err);
-      }
-    };
-    loadLocations();
-  }, [backend]);
 
   // Helper function to check if a field is empty
   const isFieldEmpty = (value: unknown, questionType?: string): boolean => {
@@ -347,9 +311,9 @@ export const ClientReviewPage = ({
             isInvalid={isInvalid}
             errorBorderColor="red.500"
           >
-            {locations.map((loc: { id: number; name: string }) => (
-              <option key={loc.id} value={loc.name}>
-                {loc.name}
+            {LOCATION_OPTIONS.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </Select>

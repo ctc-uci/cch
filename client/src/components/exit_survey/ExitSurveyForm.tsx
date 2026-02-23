@@ -22,6 +22,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 
@@ -77,8 +78,6 @@ type CaseManager = {
   last_name?: string;
 };
 
-type Location = { id: number; name: string };
-
 export const ExitSurveyForm = ({
   formData,
   handleSubmit,
@@ -94,7 +93,6 @@ export const ExitSurveyForm = ({
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -145,10 +143,7 @@ export const ExitSurveyForm = ({
   useEffect(() => {
     const loadRefs = async () => {
       try {
-        const [cms, locs] = await Promise.all([
-          backend.get("/caseManagers"),
-          backend.get("/locations"),
-        ]);
+        const cms = await backend.get("/caseManagers");
         const cmList: CaseManager[] = Array.isArray(cms.data)
           ? (cms.data as Array<{
               id: number | string;
@@ -162,18 +157,12 @@ export const ExitSurveyForm = ({
               lastName: cm.lastName ?? cm.last_name,
             }))
           : [];
-        const locList: Location[] = Array.isArray(locs.data)
-          ? (locs.data as Array<{ id: number | string; name: string }>)
-              .map((l) => ({ id: Number(l.id), name: l.name }))
-              .filter((l: Location) => !Number.isNaN(l.id))
-          : [];
         setCaseManagers(cmList);
-        setLocations(locList);
       } catch (e) {
         console.error(e);
         toast({
           title: "Error loading data",
-          description: "Could not load case managers or locations.",
+          description: "Could not load case managers.",
           status: "error",
         });
       }
@@ -282,9 +271,9 @@ export const ExitSurveyForm = ({
             }
             isDisabled={disabled}
           >
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.name}>
-                {loc.name}
+            {LOCATION_OPTIONS.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </Select>

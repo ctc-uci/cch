@@ -23,12 +23,9 @@ clientsRouter.get("/", async (req, res) => {
       SELECT 
         clients.*, 
         case_managers.first_name AS case_manager_first_name, 
-        case_managers.last_name AS case_manager_last_name,
-        locations.name AS location_name  -- Get location name
+        case_managers.last_name AS case_manager_last_name
       FROM clients
       LEFT JOIN case_managers ON clients.created_by = case_managers.id
-      LEFT JOIN units ON clients.unit_name = units.name
-      LEFT JOIN locations ON units.location_id = locations.id
       WHERE 1=1
     `;
 
@@ -77,7 +74,6 @@ clientsRouter.get("/", async (req, res) => {
         OR clients.destination_city::TEXT ILIKE ${stringSearch}
         OR case_managers.first_name::TEXT ILIKE ${stringSearch}
         OR case_managers.last_name::TEXT ILIKE ${stringSearch}
-        OR locations.name::TEXT ILIKE ${stringSearch}
       )`;
     }
 

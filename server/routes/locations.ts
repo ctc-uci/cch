@@ -3,130 +3,92 @@ import { Router } from "express";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
+/**
+ * Locations router - DEPRECATED.
+ * The locations table is deprecated. Case manager location is stored in case_managers.location.
+ * Only get-location and update-location are still used (they read/write case_managers.location).
+ * All other endpoints are stubbed and do not touch the locations table.
+ */
 export const locationsRouter = Router();
 
-// Get all locations
-locationsRouter.get("/", async (req, res) => {
+// Stub: return empty array (locations table deprecated)
+locationsRouter.get("/", async (_req, res) => {
   try {
-    const data = await db.query(`SELECT DISTINCT ON (name) *
-                                 FROM locations
-                                 ORDER BY name, id;`);
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
+// Still used: writes to case_managers.location
 locationsRouter.put("/update-location", async (req, res) => {
   try {
-    const { uid, locationName, date, calOptimaFunded } = req.body;
+    const { uid, locationName } = req.body;
 
-    const location = await db.query(
-      `UPDATE locations l
-       SET name = $1,
-           date = $2,
-           caloptima_funded = $3
-       FROM case_managers cm JOIN users u ON cm.email COLLATE "C" = u.email COLLATE "C"
-       WHERE l.cm_id = cm.id AND u.firebase_uid = $4`,
-      [locationName, date, calOptimaFunded, uid]
+    const result = await db.query(
+      `UPDATE case_managers cm
+       SET location = $1
+       FROM users u
+       WHERE cm.email COLLATE "C" = u.email COLLATE "C" AND u.firebase_uid = $2`,
+      [locationName ?? null, uid]
     );
 
-    res.status(200).json(keysToCamel(location));
+    res.status(200).json(keysToCamel(result));
   } catch (err) {
-    res.status(400).send(err.message);
+    res.status(400).send((err as Error).message);
   }
-})
+});
 
+// Still used: reads from case_managers.location
 locationsRouter.get("/get-location", async (req, res) => {
   try {
     const { uid } = req.query;
 
-    const location = await db.query(`SELECT l.*
-                                     FROM locations l
-                                            JOIN case_managers cm ON l.cm_id = cm.id
-                                            JOIN users u ON cm.email COLLATE "C" = u.email COLLATE "C"
-                                     WHERE u.firebase_uid = $1;`, [
-      uid,
-    ]);
-    res.status(200).json(keysToCamel(location));
+    const rows = await db.query(
+      `SELECT cm.location AS name
+       FROM case_managers cm
+       JOIN users u ON cm.email COLLATE "C" = u.email COLLATE "C"
+       WHERE u.firebase_uid = $1`,
+      [uid]
+    );
+    res.status(200).json(keysToCamel(rows.length > 0 ? [{ name: rows[0].name }] : []));
   } catch (err) {
-    res.status(400).send(err.message);
+    res.status(400).send((err as Error).message);
   }
-})
+});
 
-// Get location by id
+// Stub: return 404 (locations table deprecated)
 locationsRouter.get("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-    const data = await db.query(`SELECT * FROM locations WHERE id = $1`, [id]);
-
-    res.status(200).json(keysToCamel(data));
+    res.status(404).json({ error: "Not found", message: "Locations API is deprecated." });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Insert new location or create replica if exists
-locationsRouter.post("/", async (req, res) => {
+// Stub: no-op, return 201 (locations table deprecated)
+locationsRouter.post("/", async (_req, res) => {
   try {
-    const { cmId, name, date, caloptimaFunded } = req.body;
-    
-    // Check if location with same name already exists
-    const existingLocation = await db.query(
-      `SELECT * FROM locations WHERE name = $1 LIMIT 1`,
-      [name]
-    );
-    
-    let data;
-    if (existingLocation.length > 0) {
-      // Create replica with new cm_id but same other properties
-      data = await db.query(
-        `INSERT INTO locations (cm_id, name, date, caloptima_funded) VALUES ($1, $2, $3, $4) RETURNING id;`,
-        [cmId, name, existingLocation[0].date, existingLocation[0].caloptima_funded]
-      );
-    } else {
-      // Create new location
-      data = await db.query(
-        `INSERT INTO locations (cm_id, name, date, caloptima_funded) VALUES ($1, $2, $3, $4) RETURNING id;`,
-        [cmId, name, date, caloptimaFunded]
-      );
-    }
-    
-    res.status(200).json(keysToCamel(data));
+    res.status(201).json([{ id: null }]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Update location by id
-locationsRouter.put("/:id", async (req, res) => {
+// Stub: no-op, return 200 (locations table deprecated)
+locationsRouter.put("/:id", async (_req, res) => {
   try {
-    const { id } = req.params;
-    const { cmId, name, date, caloptimaFunded } = req.body;
-    const data = await db.query(
-      `UPDATE locations
-      SET cm_id = COALESCE($1, cm_id),
-      name = COALESCE($2, name),
-      date = COALESCE($3, date),
-      caloptima_funded = COALESCE($4, caloptima_funded)
-      WHERE id = $5 RETURNING id`,
-      [cmId, name, date, caloptimaFunded, id]
-    );
-
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([{ id: null }]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Delete location by id
-locationsRouter.delete("/:id", async (req, res) => {
+// Stub: no-op, return 200 (locations table deprecated)
+locationsRouter.delete("/:id", async (_req, res) => {
   try {
-    const { id } = req.params;
-    const data = await db.query(`DELETE FROM locations WHERE id = $1`, [id]);
-
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });

@@ -1,3 +1,5 @@
+-- DEPRECATED: Do not use. Case manager location is now case_managers.location.
+-- This table is dropped by migration 005_drop_locations_table.sql.
 DROP TABLE IF EXISTS locations;
 
 CREATE TABLE locations(

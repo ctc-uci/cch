@@ -58,7 +58,7 @@ caseManagersRouter.get("/id-by-email/:email", async (req, res) => {
 // Insert new case manager
 caseManagersRouter.post("/", async (req, res) => {
   try {
-    const { role, firstName, lastName, phoneNumber, email, notes } = req.body;
+    const { role, firstName, lastName, phoneNumber, email, notes, location } = req.body;
     
     // Check if email already exists
     const existing = await db.query(
@@ -74,8 +74,8 @@ caseManagersRouter.post("/", async (req, res) => {
     }
     
     const data = await db.query(
-      `INSERT INTO case_managers (role, first_name, last_name, phone_number, email, notes) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`,
-      [role, firstName, lastName, phoneNumber, email, notes]
+      `INSERT INTO case_managers (role, first_name, last_name, phone_number, email, notes, location) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id;`,
+      [role, firstName, lastName, phoneNumber, email, notes ?? null, location ?? null]
     );
 
     res.status(200).json(keysToCamel(data));
@@ -95,17 +95,18 @@ caseManagersRouter.post("/", async (req, res) => {
 caseManagersRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { role, firstName, lastName, phoneNumber, email } = req.body;
+    const { role, firstName, lastName, phoneNumber, email, location } = req.body;
     const data = await db.query(
       `UPDATE case_managers 
       SET role = COALESCE($1, role), 
       first_name = COALESCE($2, first_name), 
       last_name = COALESCE($3, last_name),
       phone_number = COALESCE($4, phone_number), 
-      email = COALESCE ($5, email) 
-      WHERE id = $6 
+      email = COALESCE($5, email),
+      location = COALESCE($6, location)
+      WHERE id = $7 
       RETURNING id`,
-      [role, firstName, lastName, phoneNumber, email, id]
+      [role, firstName, lastName, phoneNumber, email, location ?? null, id]
     );
 
     res.status(200).json(keysToCamel(data));
@@ -142,8 +143,12 @@ caseManagersRouter.delete("/:id", async (req, res) => {
       // Delete case manager monthly stats
       await db.query(`DELETE FROM cm_monthly_stats WHERE cm_id = $1`, [id]);
       
-      // Delete locations
-      await db.query(`DELETE FROM locations WHERE cm_id = $1`, [id]);
+      // Clear legacy locations rows for this CM if table still exists (deprecated; dropped by migration 005)
+      try {
+        await db.query(`DELETE FROM locations WHERE cm_id = $1`, [id]);
+      } catch {
+        // locations table may already be dropped
+      }
       
       // Update clients to set created_by to NULL (or handle as needed)
       // Note: This might need different handling based on business logic

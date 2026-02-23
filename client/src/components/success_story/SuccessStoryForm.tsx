@@ -22,6 +22,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 
 type SuccessStoryFormProps = {
   formData: Record<string, unknown>;
@@ -74,8 +75,6 @@ type CaseManager = {
   last_name?: string;
 };
 
-type Location = { id: number; name: string };
-
 export const SuccessStoryForm = ({
   formData,
   handleSubmit,
@@ -91,7 +90,6 @@ export const SuccessStoryForm = ({
   const [questions, setQuestions] = useState<FormQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -143,10 +141,7 @@ export const SuccessStoryForm = ({
   useEffect(() => {
     const loadRefs = async () => {
       try {
-        const [cms, locs] = await Promise.all([
-          backend.get("/caseManagers"),
-          backend.get("/locations"),
-        ]);
+        const cms = await backend.get("/caseManagers");
         const cmList: CaseManager[] = Array.isArray(cms.data)
           ? (cms.data as Array<{
               id: number | string;
@@ -160,18 +155,12 @@ export const SuccessStoryForm = ({
               lastName: cm.lastName ?? cm.last_name,
             }))
           : [];
-        const locList: Location[] = Array.isArray(locs.data)
-          ? (locs.data as Array<{ id: number | string; name: string }>)
-              .map((l) => ({ id: Number(l.id), name: l.name }))
-              .filter((l: Location) => !Number.isNaN(l.id))
-          : [];
         setCaseManagers(cmList);
-        setLocations(locList);
       } catch (e) {
         console.error(e);
         toast({
           title: language === "spanish" ? "Error al cargar datos" : "Error loading data",
-          description: language === "spanish" ? "No se pudieron cargar los administradores de casos o las ubicaciones." : "Could not load case managers or locations.",
+          description: language === "spanish" ? "No se pudieron cargar los administradores de casos." : "Could not load case managers.",
           status: "error",
         });
       }
@@ -274,9 +263,9 @@ export const SuccessStoryForm = ({
             }
             isDisabled={disabled}
           >
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.name}>
-                {loc.name}
+            {LOCATION_OPTIONS.map((name) => (
+              <option key={name} value={name}>
+                {name}
               </option>
             ))}
           </Select>

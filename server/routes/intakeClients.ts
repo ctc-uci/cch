@@ -12,12 +12,9 @@ const getIntakeClientWithResponses = async (clientId: number) => {
     `SELECT 
       intake_clients.*, 
       case_managers.first_name AS case_manager_first_name, 
-      case_managers.last_name AS case_manager_last_name,
-      locations.name AS location_name
+      case_managers.last_name AS case_manager_last_name
     FROM intake_clients
     LEFT JOIN case_managers ON intake_clients.created_by = case_managers.id
-    LEFT JOIN units ON intake_clients.unit_id = units.id
-    LEFT JOIN locations ON units.location_id = locations.id
     WHERE intake_clients.id = $1`,
     [clientId]
   );
@@ -90,11 +87,9 @@ intakeClientsRouter.get("/", async (req, res) => {
         intake_clients.*, 
         case_managers.first_name AS case_manager_first_name, 
         case_managers.last_name AS case_manager_last_name,
-        locations.name AS location_name
+        ${INTAKE_LOCATION_SQL} AS location_name
       FROM intake_clients
       LEFT JOIN case_managers ON intake_clients.created_by = case_managers.id
-      LEFT JOIN units ON intake_clients.unit_id = units.id
-      LEFT JOIN locations ON units.location_id = locations.id
       WHERE 1=1
     `;
 
@@ -110,7 +105,7 @@ intakeClientsRouter.get("/", async (req, res) => {
         OR intake_clients.status::TEXT ILIKE ${stringSearch}
         OR case_managers.first_name::TEXT ILIKE ${stringSearch}
         OR case_managers.last_name::TEXT ILIKE ${stringSearch}
-        OR locations.name::TEXT ILIKE ${stringSearch}
+        OR intake_clients.unit_name::TEXT ILIKE ${stringSearch}
         OR intake_clients.id IN (
           SELECT DISTINCT ir.client_id 
           FROM intake_responses ir 

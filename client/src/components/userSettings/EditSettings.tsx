@@ -33,6 +33,7 @@ import { MdEdit } from "react-icons/md";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { LocationData } from "../../types/location.ts";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 
 const EditSettings = ({ user, setUser, location, setLocation, setEditing, editing, setRefreshStatus }) => {
   const auth = getAuth();
@@ -91,8 +92,6 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
     confirmPassword: "",
   });
 
-  const [locations, setLocations] = useState<LocationData[]>([]);
-
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -101,9 +100,7 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
     if (e.target.value === " ") {
       return;
     }
-
-    const loc = locations.find((location) => location.name === e.target.value);
-    setUserLocation(loc);
+    setUserLocation((prev) => ({ ...prev, name: e.target.value }));
   };
 
   const { backend } = useBackendContext();
@@ -111,26 +108,14 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await backend.get(`/locations`);
-        setLocations(response.data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [backend]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
         const response = await backend.get(
           `/locations/get-location?uid=${user.firebaseUid}`
         );
-        if (response.data.length !== 0) {
-          setUserLocation(response.data[0]);
-          setLocation(response.data[0]);
-          setOldUserLocation(response.data[0]);
+        if (response.data?.length > 0 && response.data[0]?.name) {
+          const loc = { name: response.data[0].name } as LocationData;
+          setUserLocation(loc);
+          setLocation(loc);
+          setOldUserLocation(loc);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -205,12 +190,9 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
         setOldFormData(formData);
         const updatedUser = await response.data;
         setUser(updatedUser);
-        const locationResponse = await backend.put(`/locations/update-location`, {
+        await backend.put(`/locations/update-location`, {
           uid: user.firebaseUid,
           locationName: userLocation.name,
-          date: userLocation.date,
-          calOptimaFunded: false,
-          cmId: userLocation.cm_id,
         });
         setOldUserLocation(userLocation);
         setLocation(userLocation)
@@ -326,16 +308,13 @@ const EditSettings = ({ user, setUser, location, setLocation, setEditing, editin
                     Location
                   </Text>
                   <Select
-                    value={userLocation.name}
+                    value={userLocation.name || ""}
                     name="location"
                     onChange={handleLocationChange}
                   >
-                    {locations.map((location) => (
-                      <option
-                        key={location.name}
-                        value={location.name}
-                      >
-                        {location.name}
+                    {LOCATION_OPTIONS.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
                       </option>
                     ))}
                   </Select>

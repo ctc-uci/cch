@@ -30,6 +30,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 import { useToast } from "@chakra-ui/react";
 
 // Types for dynamic form questions
@@ -81,12 +82,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel, langu
     const toast = useToast();
     const [questions, setQuestions] = useState<FormQuestion[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [locations, setLocations] = useState<
-        Array<{
-            id: number;
-            name: string;
-        }>
-    >([]);
 
     // Load form questions for Random Client Surveys (form_id = 4)
     useEffect(() => {
@@ -110,37 +105,6 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel, langu
         };
         loadQuestions();
     }, [backend, toast]);
-
-    // Load locations for site_location questions
-    useEffect(() => {
-        const loadLocations = async () => {
-            try {
-                const response = await backend.get("/locations");
-                const locList: Array<{
-                    id: number;
-                    name: string;
-                }> = Array.isArray(response.data)
-                    ? response.data.map(
-                          (loc: {
-                              id: number | string;
-                              name: string;
-                          }) => ({
-                              id: Number(loc.id),
-                              name: loc.name,
-                          })
-                      ).filter((loc) => !Number.isNaN(loc.id))
-                    : [];
-                // Get unique location names
-                const uniqueLocations = Array.from(
-                    new Map(locList.map((loc) => [loc.name, loc])).values()
-                );
-                setLocations(uniqueLocations);
-            } catch (err) {
-                console.error("Failed to load locations:", err);
-            }
-        };
-        loadLocations();
-    }, [backend]);
 
     const renderField = (question: FormQuestion) => {
         const { fieldKey, questionType, options, questionText, questionTextSpanish } = question;
@@ -261,9 +225,9 @@ export const ReviewPage = ({ surveyData, caseManagers, onSubmit, onCancel, langu
                         borderRadius="14px"
                         borderColor="blue.solid var(--gray-600, #4A5568)"
                     >
-                        {locations.map((loc: { id: number; name: string }) => (
-                            <option key={loc.id} value={loc.name}>
-                                {loc.name}
+                        {LOCATION_OPTIONS.map((name) => (
+                            <option key={name} value={name}>
+                                {name}
                             </option>
                         ))}
                     </Select>

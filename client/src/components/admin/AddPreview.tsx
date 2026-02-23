@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 
 import { ChevronRightIcon } from "@chakra-ui/icons";
@@ -24,6 +24,7 @@ import { useBackendContext } from "../../contexts/hooks/useBackendContext.ts";
 import { SelectInputComponent, TextInputComponent } from "../intakeStatsForm/formComponents.tsx";
 import { RoleKey } from "./ManageAccounts.tsx";
 import { CancelAddModal } from "./CancelAddModal.tsx";
+import { LOCATION_OPTIONS } from "../../constants/locations";
 
 type UserInfo = {
   firstName: string;
@@ -33,19 +34,6 @@ type UserInfo = {
   location: string;
   notes: string;
 }
-
-type LocationOption = {
-  label: string;
-  value: string;
-};
-
-type Location = {
-  id: number;
-  cm_id: number;
-  name: string;
-  date: Date;
-  caloptima_funded: boolean;
-};
 
 const AddPreview = ({
                       userType,
@@ -62,7 +50,6 @@ const AddPreview = ({
 }) => {
   const { backend } = useBackendContext();
 
-  const [locationOptions, setLocationOption] = useState<LocationOption[]>([]);
   const [newUser, setNewUser] = useState<UserInfo>({
     firstName: "",
     lastName: "",
@@ -217,17 +204,11 @@ const AddPreview = ({
             lastName: newUser.lastName,
             phoneNumber: newUser.phoneNumber,
             email: newUser.email,
-            notes: newUser.notes
+            notes: newUser.notes,
+            location: newUser.location || null,
           });
 
           const cm_id = cmResponse.data[0].id;
-
-          await backend.post(`/locations`, {
-            cmId: cm_id,
-            name: newUser.location,
-            date: new Date(),
-            caloptimaFunded: false,
-          });
 
           // Create user account
           try {
@@ -325,28 +306,6 @@ const AddPreview = ({
         });
       }
     }
-
-    useEffect(() => {
-      const getLocations = async () => {
-        try {
-          const response = await backend.get("/locations");
-          const locationOptions: LocationOption[] = [];
-
-          response.data.forEach((location: Location) => {
-            locationOptions.push({
-              label: location.name,
-              value: location.name,
-            });
-          });
-
-          setLocationOption(locationOptions);
-        } catch (e) {
-          console.error(`something went wrong ${e}`);
-        }
-      };
-
-      getLocations();
-    }, [backend, setLocationOption]);
 
     const handleChange = (
       e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
@@ -462,7 +421,7 @@ const AddPreview = ({
                             name="location"
                             value={newUser.location}
                             onChange={handleChange}
-                            options={locationOptions}
+                            options={LOCATION_OPTIONS.map((name) => ({ label: name, value: name }))}
                             width="100%"
                           />
                         </Td>
