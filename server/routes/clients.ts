@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { findUnassignedSessionIdsMatchingClient } from "../common/clientMatching";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
@@ -203,7 +204,7 @@ clientsRouter.post("/", async (req, res) => {
       [
         created_by,
         unit_name,
-        grant != null && String(grant).trim() !== "" ? String(grant).trim() : null,
+        grant !== null && grant !== undefined && String(grant).trim() !== "" ? String(grant).trim() : null,
         status,
         first_name,
         last_name,
@@ -243,7 +244,30 @@ clientsRouter.post("/", async (req, res) => {
       ]
     );
 
-    res.status(200).json({ id: data[0].id });
+    const newClientId = data[0].id;
+    // Link any existing survey submissions (intake_responses) that have no client but match by name, phone, date of birth
+    if (newClientId) {
+      try {
+        const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
+          firstName: first_name,
+          lastName: last_name,
+          phoneNumber: phone_number,
+          dateOfBirth: date_of_birth,
+        });
+        if (matchingSessionIds.length > 0) {
+          await db.query(
+            `UPDATE intake_responses
+             SET client_id = $1, updated_at = CURRENT_TIMESTAMP
+             WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
+            [newClientId, matchingSessionIds]
+          );
+        }
+      } catch (linkErr) {
+        console.error("Link surveys to new client failed (non-fatal):", linkErr);
+      }
+    }
+
+    res.status(200).json({ id: newClientId });
   } catch (err) {
     res.status(500).send(err.message);
   }

@@ -216,3 +216,61 @@ export function extractClientFields(formData: Record<string, unknown>): {
   };
 }
 
+/** Same four fields used by matchClient and extractClientFields for client matching */
+export type ClientMatchingFields = {
+  firstName: string | null | undefined;
+  lastName: string | null | undefined;
+  phoneNumber: string | null | undefined;
+  dateOfBirth: string | Date | null | undefined;
+};
+
+/**
+ * Finds unassigned intake_responses session_ids whose stored responses match the given client.
+ * Uses the same parameters as matchClient: first name, last name, phone number, date of birth.
+ * Used when creating a new client to link previously submitted forms that had no matching client.
+ */
+export async function findUnassignedSessionIdsMatchingClient(
+  fields: ClientMatchingFields
+): Promise<string[]> {
+  const { firstName, lastName, phoneNumber, dateOfBirth } = fields;
+  const nFirst = normalizeName(firstName);
+  const nLast = normalizeName(lastName);
+  const nPhone = normalizePhoneNumber(phoneNumber);
+  const nDob = normalizeDateOfBirth(dateOfBirth);
+  if (!nFirst || !nLast || !nPhone || !nDob) return [];
+
+  try {
+    const rows = await db.query(
+      `SELECT ir.session_id, fq.field_key, ir.response_value
+       FROM intake_responses ir
+       JOIN form_questions fq ON fq.id = ir.question_id
+       WHERE ir.client_id IS NULL AND ir.session_id IS NOT NULL`
+    );
+
+    const bySession = new Map<string, Record<string, string>>();
+    for (const r of rows as { session_id: string; field_key: string; response_value: string | null }[]) {
+      const sid = r.session_id;
+      if (!bySession.has(sid)) bySession.set(sid, {});
+      const val = r.response_value !== null && r.response_value !== undefined ? String(r.response_value).trim() : "";
+      if (val !== "") bySession.get(sid)![r.field_key] = val;
+    }
+
+    const matchingSessions: string[] = [];
+    for (const [sessionId, formData] of bySession) {
+      const extracted = extractClientFields(formData);
+      if (
+        normalizeName(extracted.firstName) === nFirst &&
+        normalizeName(extracted.lastName) === nLast &&
+        normalizePhoneNumber(extracted.phoneNumber) === nPhone &&
+        normalizeDateOfBirth(extracted.dateOfBirth) === nDob
+      ) {
+        matchingSessions.push(sessionId);
+      }
+    }
+    return matchingSessions;
+  } catch (err) {
+    console.error("findUnassignedSessionIdsMatchingClient error:", err);
+    return [];
+  }
+}
+
