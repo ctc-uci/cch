@@ -32,6 +32,22 @@ import {
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
+const UNIT_OPTIONS = [
+  "Cy-A",
+  "Cy-B",
+  "Cy-C",
+  "Cy-D",
+  "Gl-1",
+  "Gl-2",
+  "Gl-3",
+  "Gl-4",
+  "1046",
+  "1048",
+  "1050",
+  "1052",
+  "FV",
+];
+
 interface AddClientFormProps {
   onClientAdded: (clientId?: number) => void;
   setShowUnfinishedAlert: (e: boolean) => void;
@@ -84,7 +100,7 @@ export const AddClientForm = ({
   const resetForm = () => {
     setFormData({
       created_by: "",
-      unit_id: "",
+      unit_name: "",
       first_name: "",
       last_name: "",
       grant: "",
@@ -174,7 +190,7 @@ export const AddClientForm = ({
 
   const [formData, setFormData] = React.useState({
     created_by: "",
-    unit_id: "",
+    unit_name: "",
     first_name: "",
     last_name: "",
     grant: "",
@@ -218,9 +234,7 @@ export const AddClientForm = ({
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const { backend } = useBackendContext();
   const toast = useToast();
-  const [validUnitIds, setValidUnitIds] = React.useState<number[]>([]);
   const [validCaseManagerIds, setValidCaseManagerIds] = React.useState<number[]>([]);
-  const [units, setUnits] = React.useState<Array<{ id: number; name: string }>>([]);
   const [caseManagers, setCaseManagers] = React.useState<Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>>([]);
 
   // Helper function to check if a field is empty
@@ -228,23 +242,11 @@ export const AddClientForm = ({
     return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
   };
 
-  // Load valid foreign key IDs for validation
+  // Load case managers for validation and dropdown
   useEffect(() => {
     const loadReferences = async () => {
       try {
-        const [unitsRes, cmsRes] = await Promise.all([
-          backend.get("/units"),
-          backend.get("/caseManagers"),
-        ]);
-        const unitList: Array<{ id: number; name: string }> = Array.isArray(unitsRes.data)
-          ? unitsRes.data.map((u: { id: number | string; name: string }) => ({
-              id: Number(u.id),
-              name: u.name,
-            }))
-            .filter((u) => !Number.isNaN(u.id))
-          : [];
-        const unitIds = unitList.map((u) => u.id);
-        setUnits(unitList);
+        const cmsRes = await backend.get("/caseManagers");
         const cmList: Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }> =
           Array.isArray(cmsRes.data)
             ? cmsRes.data
@@ -259,7 +261,6 @@ export const AddClientForm = ({
             : [];
         const cmIds = cmList.map((cm) => cm.id);
         setCaseManagers(cmList);
-        setValidUnitIds(unitIds);
         setValidCaseManagerIds(cmIds);
       } catch (_e) {
         // If we can't load references, skip pre-validation; backend will still enforce constraints
@@ -295,13 +296,12 @@ export const AddClientForm = ({
     setErrors({});
 
     try {
-      // Foreign key validation for created_by and unit_id
+      // Foreign key validation for created_by and unit_name
       const createdById = parseInt(formData.created_by || "0", 10);
-      const unitId = parseInt(formData.unit_id || "0", 10);
-      if (validUnitIds.length > 0 && !validUnitIds.includes(unitId)) {
+      if (!UNIT_OPTIONS.includes(formData.unit_name || "")) {
         toast({
-          title: "Invalid Unit ID",
-          description: "Please choose an existing unit ID.",
+          title: "Invalid Unit",
+          description: "Please choose an existing unit.",
           status: "error",
           position: "bottom-right",
           isClosable: true,
@@ -321,7 +321,7 @@ export const AddClientForm = ({
 
       const clientData = {
         created_by: parseInt(formData.created_by || "0", 10),
-        unit_id: parseInt(formData.unit_id || "0", 10),
+        unit_name: formData.unit_name || "",
         first_name: formData.first_name,
         last_name: formData.last_name,
         grant: formData.grant,
@@ -476,18 +476,18 @@ export const AddClientForm = ({
                       <Text fontWeight="medium">Unit</Text>
                       <Select
                         placeholder="Select unit"
-                        value={formData.unit_id}
-                        isInvalid={errors.unit_id}
+                        value={formData.unit_name}
+                        isInvalid={errors.unit_name}
                         errorBorderColor="red.500"
                         onChange={(e) => {
-                          setFormData({ ...formData, unit_id: e.target.value });
+                          setFormData({ ...formData, unit_name: e.target.value });
                           setFormInProgress(true);
-                          setErrors({ ...errors, unit_id: false });
+                          setErrors({ ...errors, unit_name: false });
                         }}
                       >
-                        {units.map((u) => (
-                          <option key={u.id} value={u.id.toString()}>
-                            {u.name}
+                        {UNIT_OPTIONS.map((name) => (
+                          <option key={name} value={name}>
+                            {name}
                           </option>
                         ))}
                       </Select>

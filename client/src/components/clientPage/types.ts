@@ -157,7 +157,7 @@ interface Client {
   specificReasonForLeaving: string;
   status: string;
   successfulCompletion: boolean;
-  unitId: number;
+  unitName: string;
   comments: string;
 }
 

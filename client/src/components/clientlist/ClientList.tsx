@@ -92,9 +92,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
     "Reunified",
     "Successful Completion",
     "Destination City",
-    "Location Name",
+    "Unit",
     "Status",
-    "Unit ID",
     "Comments",
   ];
 
@@ -186,8 +185,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
         },
       },
       {
-        accessorKey: "locationName",
-        header: "Site",
+        accessorKey: "unitName",
+        header: "Unit",
       },
       {
         accessorKey: "grant",
@@ -395,9 +394,8 @@ export const ClientList = ({ admin }: ClientListProps) => {
       "Reunified": client.reunified,
       "Successful Completion": client.successfulCompletion,
       "Destination City": client.destinationCity,
-      "Location Name": client.locationName,
+      "Unit": client.unitName,
       "Status": client.status,
-      "Unit ID": client.unitId,
       "Comments": client.comments,
     }));
 
@@ -485,7 +483,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
           client.email?.toLowerCase().includes(searchLower) ||
           client.caseManagerFirstName?.toLowerCase().includes(searchLower) ||
           client.caseManagerLastName?.toLowerCase().includes(searchLower) ||
-          client.locationName?.toLowerCase().includes(searchLower)
+          client.unitName?.toLowerCase().includes(searchLower)
         );
       });
     }
@@ -545,6 +543,7 @@ export const ClientList = ({ admin }: ClientListProps) => {
             "case_managers.first_name": "caseManagerFirstName",
             "case_managers.last_name": "caseManagerLastName",
             "locations.name": "locationName",
+            "clients.unit_name": "unitName",
           };
 
           const clientField = fieldMap[fieldPath];

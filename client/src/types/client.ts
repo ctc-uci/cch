@@ -40,6 +40,6 @@ export type Client = {
   destinationCity: string;
   locationName: string;
   status: string;
-  unitId: string;
+  unitName: string;
   comments: string;
 }

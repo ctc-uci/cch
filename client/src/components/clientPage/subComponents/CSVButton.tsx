@@ -40,7 +40,7 @@ const CSVButton = ({ data }: any) => {
     "specificReasonForLeaving",
     "status",
     "successfulCompletion",
-    "unitId",
+    "unitName",
   ];
 
   const convertToCSV = () => {

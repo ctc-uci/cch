@@ -77,7 +77,7 @@ const emptyClient: Client = {
   specificReasonForLeaving: "",
   status: "",
   successfulCompletion: false,
-  unitId: 0,
+  unitName: "",
   comments: "",
 };
 
@@ -646,9 +646,9 @@ export const ViewPage = () => {
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("exitDate", client.exitDate)}</Td>
                 </Tr>
                 <Tr>
-                  <Td>Unit ID</Td>
+                  <Td>Unit Name</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
-                    {renderField("unitId", client.unitId, { isNumeric: true })}
+                    {renderField("unitName", client.unitName, { isNumeric: false })}
                   </Td>
                 </Tr>
                 <Tr>

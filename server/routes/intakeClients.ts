@@ -21,7 +21,6 @@ const getIntakeClientWithResponses = async (clientId: number) => {
     WHERE intake_clients.id = $1`,
     [clientId]
   );
-
   if (clientResult.length === 0) return null;
 
   const client = clientResult[0];

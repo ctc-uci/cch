@@ -7,7 +7,7 @@ CREATE TYPE client_status AS ENUM('Active', 'Exited');
 CREATE TABLE clients (
     id SERIAL NOT NULL PRIMARY KEY,
     created_by INT NOT NULL,
-    unit_id INT NOT NULL,
+    unit_name VARCHAR(256) NOT NULL,
     "grant" VARCHAR(256) NOT NULL,
     "status" client_status NOT NULL,
     first_name VARCHAR(16) NOT NULL,
@@ -45,6 +45,5 @@ CREATE TABLE clients (
     successful_completion BOOLEAN,
     destination_city VARCHAR(32),
     comments VARCHAR(2048),
-    FOREIGN KEY (created_by) REFERENCES case_managers(id),
-    FOREIGN KEY (unit_id) REFERENCES units(id)
+    FOREIGN KEY (created_by) REFERENCES case_managers(id)
 );

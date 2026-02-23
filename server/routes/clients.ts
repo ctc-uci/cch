@@ -27,7 +27,7 @@ clientsRouter.get("/", async (req, res) => {
         locations.name AS location_name  -- Get location name
       FROM clients
       LEFT JOIN case_managers ON clients.created_by = case_managers.id
-      LEFT JOIN units ON clients.unit_id = units.id
+      LEFT JOIN units ON clients.unit_name = units.name
       LEFT JOIN locations ON units.location_id = locations.id
       WHERE 1=1
     `;
@@ -38,7 +38,7 @@ clientsRouter.get("/", async (req, res) => {
       queryStr += ` 
       AND (clients.id::TEXT ILIKE ${stringSearch}
         OR clients.created_by::TEXT ILIKE ${stringSearch}
-        OR clients.unit_id::TEXT ILIKE ${stringSearch}
+        OR clients.unit_name::TEXT ILIKE ${stringSearch}
         OR clients."grant"::TEXT ILIKE ${stringSearch}
         OR clients."status"::TEXT ILIKE ${stringSearch}
         OR clients.first_name::TEXT ILIKE ${stringSearch}
@@ -116,7 +116,7 @@ clientsRouter.post("/", async (req, res) => {
   try {
     const {
       created_by,
-      unit_id,
+      unit_name,
       grant,
       status,
       first_name,
@@ -159,7 +159,7 @@ clientsRouter.post("/", async (req, res) => {
     const data = await db.query(
       `INSERT INTO clients (
           created_by,
-          unit_id,
+          unit_name,
           "grant",
           "status",
           first_name,
@@ -206,7 +206,7 @@ clientsRouter.post("/", async (req, res) => {
 
       [
         created_by,
-        unit_id,
+        unit_name,
         grant,
         status,
         first_name,
@@ -257,7 +257,7 @@ clientsRouter.put("/:id", async (req, res) => {
   try {
     const {
       created_by,
-      unit_id,
+      unit_name,
       grant,
       status,
       first_name,
@@ -303,7 +303,7 @@ clientsRouter.put("/:id", async (req, res) => {
       UPDATE clients
       SET
         created_by = COALESCE($1, created_by),
-        unit_id = COALESCE($2, unit_id),
+        unit_name = COALESCE($2, unit_name),
         "grant" = COALESCE($3, "grant"),
         "status" = COALESCE($4, "status"),
         first_name = COALESCE($5, first_name),
@@ -347,7 +347,7 @@ clientsRouter.put("/:id", async (req, res) => {
 
     const data = await db.query(query, [
       created_by,
-      unit_id,
+      unit_name,
       grant,
       status,
       first_name,

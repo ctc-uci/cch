@@ -68,7 +68,7 @@ export const AllFormTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds 
     "specificReasonForLeaving",
     "status",
     "successfulCompletion",
-    "unitId",
+    "unitName",
   ];
 
   const { backend } = useBackendContext();
@@ -146,8 +146,8 @@ export const AllFormTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds 
         },
       },
       {
-        accessorKey: "locationName",
-        header: "Site",
+        accessorKey: "unitName",
+        header: "Unit",
       },
       {
         accessorKey: "grant",
@@ -343,7 +343,7 @@ export const AllFormTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds 
       homelessnessLength: client.homelessnessLength,
       id: client.id,
       lastName: client.lastName,
-      locationName: client.locationName,
+      unitName: client.unitName,
       medical: client.medical,
       phoneNumber: client.phoneNumber,
       pregnantUponEntry: client.pregnantUponEntry,
@@ -358,7 +358,7 @@ export const AllFormTable = ({ selectedRowIds, setSelectedRowIds, deletedRowIds 
       specificReasonForLeaving: client.specificReasonForLeaving,
       status: client.status,
       successfulCompletion: client.successfulCompletion,
-      unitId: client.unitId,
+      unitName: client.unitName,
     }));
 
     downloadCSV(headers, data, `clients.csv`);

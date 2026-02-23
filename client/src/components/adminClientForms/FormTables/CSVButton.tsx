@@ -42,7 +42,7 @@ const CSVButton = ( { data } ) => {
         "specificReasonForLeaving",
         "status",
         "successfulCompletion",
-        "unitId"
+        "unitName"
     ];
     
     

@@ -44,7 +44,7 @@ interface Client {
   specificReasonForLeaving: string;
   status: string;
   successfulCompletion: boolean;
-  unitId: number;
+  unitName: string;
   comments: string;
 }
 
@@ -87,7 +87,7 @@ const emptyClient: Client = {
   specificReasonForLeaving: "",
   status: "",
   successfulCompletion: false,
-  unitId: 0,
+  unitName: "",
   comments: "",
 };
 

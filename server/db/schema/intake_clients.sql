@@ -6,18 +6,17 @@ DROP TABLE IF EXISTS intake_clients CASCADE;
 CREATE TABLE intake_clients (
     id SERIAL NOT NULL PRIMARY KEY,
     created_by INT NOT NULL,
-    unit_id INT NOT NULL,
+    unit_name VARCHAR(256) NOT NULL,
     status VARCHAR(32) NOT NULL DEFAULT 'Active',
     first_name VARCHAR(64) NOT NULL,
     last_name VARCHAR(64) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES case_managers(id),
-    FOREIGN KEY (unit_id) REFERENCES units(id)
+    FOREIGN KEY (created_by) REFERENCES case_managers(id)
 );
 
 -- Create index for common queries
 CREATE INDEX idx_intake_clients_status ON intake_clients(status);
 CREATE INDEX idx_intake_clients_created_by ON intake_clients(created_by);
-CREATE INDEX idx_intake_clients_unit ON intake_clients(unit_id);
+CREATE INDEX idx_intake_clients_unit ON intake_clients(unit_name);
 
