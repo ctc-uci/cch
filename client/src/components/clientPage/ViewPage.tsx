@@ -300,9 +300,6 @@ export const ViewPage = () => {
               <Text fontSize="4xl" fontWeight="bold">
                 {client.firstName} {client.lastName}
               </Text>
-              <Text fontSize="xs" color="gray.600">
-                Last Updated: 5/7/2025, 10:36:46 PM
-              </Text>
             </VStack>
           </HStack>
           <HStack w="40%" justify="flex-end">
