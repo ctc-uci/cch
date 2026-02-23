@@ -135,11 +135,15 @@ const FormPreview = ({
       try {
         // Check if a screener comment exists for this session (we don't need the data, just checking it exists)
         await backend.get(`/screenerComment/session/${sessionId}`);
-        
-        // Get clientId from form data (already loaded)
-        const clientId = formData.clientId || formData.client_id;
-        
-        if (!clientId) {
+
+        // Get clientId, preferring loaded form data but falling back to the table item
+        const clientId =
+          (formData.clientId as number | string | undefined) ??
+          (formData.client_id as number | string | undefined) ??
+          (clickedFormItem.clientId as number | string | undefined) ??
+          (clickedFormItem.client_id as number | string | undefined);
+
+        if (clientId === undefined || clientId === null || clientId === "") {
           toast({
             title: "Client Not Found",
             description: "Unable to open comment form. Client information is missing.",
@@ -161,8 +165,12 @@ const FormPreview = ({
         // If no comment exists (404), still navigate to create a new one
         const errorStatus = (error as { response?: { status?: number } })?.response?.status;
         if (errorStatus === 404) {
-          const clientId = formData.clientId || formData.client_id;
-          if (clientId) {
+          const clientId =
+            (formData.clientId as number | string | undefined) ??
+            (formData.client_id as number | string | undefined) ??
+            (clickedFormItem.clientId as number | string | undefined) ??
+            (clickedFormItem.client_id as number | string | undefined);
+          if (clientId !== undefined && clientId !== null && clientId !== "") {
             navigate(`/comment-form/${clientId}`, {
               state: { 
                 sessionId: sessionId,
