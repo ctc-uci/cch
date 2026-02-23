@@ -135,7 +135,7 @@ interface Client {
   emergencyContactPhoneNumber: string;
   employmentGained: boolean;
   entranceDate: string;
-  estimatedExitdate: string;
+  estimatedExitDate: string;
   ethnicity: string;
   exitDate: string;
   firstName: string;

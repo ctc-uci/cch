@@ -55,7 +55,7 @@ const emptyClient: Client = {
   emergencyContactPhoneNumber: "",
   employmentGained: false,
   entranceDate: "",
-  estimatedExitdate: "",
+  estimatedExitDate: "",
   ethnicity: "",
   exitDate: "",
   firstName: "",
@@ -638,7 +638,7 @@ export const ViewPage = () => {
                 <Tr>
                   <Td>Estimated Exit Date</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
-                    {renderField("estimatedExitdate", client.estimatedExitdate)}
+                    {renderField("estimatedExitDate", client.estimatedExitDate)}
                   </Td>
                 </Tr>
                 <Tr>

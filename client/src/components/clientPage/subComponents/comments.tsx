@@ -22,7 +22,7 @@ interface Client {
   emergencyContactPhoneNumber: string;
   employmentGained: boolean;
   entranceDate: string;
-  estimatedExitdate: string;
+  estimatedExitDate: string;
   ethnicity: string;
   exitDate: string;
   firstName: string;
@@ -65,7 +65,7 @@ const emptyClient: Client = {
   emergencyContactPhoneNumber: "",
   employmentGained: false,
   entranceDate: "",
-  estimatedExitdate: "",
+  estimatedExitDate: "",
   ethnicity: "",
   exitDate: "",
   firstName: "",
