@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Td, Tr } from "@chakra-ui/react";
 import {
   NumberInputComponent,
@@ -5,6 +6,7 @@ import {
   TextInputComponent,
   TrueFalseComponent
 } from "../intakeStatsForm/formComponents";
+import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 
 interface FormQuestion {
   id: number;
@@ -31,6 +33,32 @@ export const DynamicFormTableBody = ({
   formQuestions,
   handleChange,
 }: DynamicFormTableBodyProps) => {
+  const { backend } = useBackendContext();
+  const [caseManagers, setCaseManagers] = useState<Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await backend.get("/caseManagers");
+        const list = Array.isArray(res.data)
+          ? res.data
+              .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+                id: Number(cm.id),
+                firstName: cm.firstName,
+                lastName: cm.lastName,
+                first_name: cm.first_name,
+                last_name: cm.last_name,
+              }))
+              .filter((cm: { id: number }) => !Number.isNaN(cm.id))
+          : [];
+        setCaseManagers(list);
+      } catch {
+        // ignore
+      }
+    };
+    load();
+  }, [backend]);
+
   const visibleQuestions = formQuestions
     .filter(q => q.isVisible && q.questionType !== 'text_block' && q.questionType !== 'header')
     .sort((a, b) => a.displayOrder - b.displayOrder);
@@ -154,6 +182,43 @@ export const DynamicFormTableBody = ({
                   <SelectInputComponent
                     name={camelFieldKey}
                     value={typeof value === 'string' ? value : ""}
+                    onChange={handleChange}
+                    options={options}
+                    placeholder={`Select ${question.questionText}`}
+                    width="100%"
+                  />
+                </Td>
+              </Tr>
+            );
+          }
+
+          case "case_manager_select": {
+            const options = caseManagers.map((cm) => {
+              const first = cm.firstName ?? cm.first_name ?? "";
+              const last = cm.lastName ?? cm.last_name ?? "";
+              const label = `${first} ${last}`.trim() || `ID ${cm.id}`;
+              return { label, value: String(cm.id) };
+            });
+            return (
+              <Tr key={question.id}>
+                <Td 
+                  fontSize="medium"
+                  maxWidth="300px"
+                  whiteSpace="normal"
+                  wordBreak="break-word"
+                  overflowWrap="break-word"
+                >
+                  {question.questionText}
+                </Td>
+                <Td
+                  maxWidth="400px"
+                  whiteSpace="normal"
+                  wordBreak="break-word"
+                  overflowWrap="break-word"
+                >
+                  <SelectInputComponent
+                    name={camelFieldKey}
+                    value={typeof value === 'string' || typeof value === 'number' ? String(value) : ""}
                     onChange={handleChange}
                     options={options}
                     placeholder={`Select ${question.questionText}`}

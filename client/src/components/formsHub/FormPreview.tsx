@@ -88,7 +88,7 @@ const FormPreview = ({
     isVisible: boolean;
     options?: unknown;
   }>>([]);
-  
+
   // Check if this is a dynamic form (uses intake_responses)
   const isDynamicForm = sessionId && (
     formItemTitle === "Initial Screener Form" ||
@@ -295,9 +295,25 @@ const FormPreview = ({
       // Handle dynamic forms (intake_responses)
       if (isDynamicForm && sessionId) {
         try {
-          // Fetch form response by session_id
-          const response = await backend.get(`/intakeResponses/session/${sessionId}`);
+          // Fetch form response and case managers in parallel
+          const [response, cmResponse] = await Promise.all([
+            backend.get(`/intakeResponses/session/${sessionId}`),
+            backend.get("/caseManagers"),
+          ]);
           const normalData = response.data;
+
+          const cmList: Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }> =
+            Array.isArray(cmResponse.data)
+              ? cmResponse.data
+                  .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+                    id: Number(cm.id),
+                    firstName: cm.firstName,
+                    lastName: cm.lastName,
+                    first_name: cm.first_name,
+                    last_name: cm.last_name,
+                  }))
+                  .filter((cm: { id: number }) => !Number.isNaN(cm.id))
+              : [];
 
           if (!normalData || typeof normalData !== "object") {
             setFormData({});
@@ -317,6 +333,17 @@ const FormPreview = ({
 
             // Format data using question texts as labels
             const formatted: FormDataRecord = {};
+
+            const resolveCmName = (id: number | string | null | undefined): string => {
+              if (id === null || id === undefined || id === "") return "";
+              const numId = typeof id === "string" ? parseInt(id, 10) : id;
+              if (Number.isNaN(numId)) return String(id);
+              const cm = cmList.find((c) => c.id === numId);
+              if (!cm) return String(id);
+              const first = cm.firstName ?? cm.first_name ?? "";
+              const last = cm.lastName ?? cm.last_name ?? "";
+              return `${first} ${last}`.trim() || String(id);
+            };
 
             questions
               .filter((q: { isVisible: boolean; questionType: string }) => 
@@ -343,6 +370,8 @@ const FormPreview = ({
                   } else {
                     formatted[question.questionText] = value;
                   }
+                } else if (question.questionType === "case_manager_select") {
+                  formatted[question.questionText] = resolveCmName(value);
                 } else {
                   formatted[question.questionText] = value;
                 }
@@ -538,13 +567,40 @@ const FormPreview = ({
         setIsEditing(false);
         
         // Reload the data to reflect changes
-        const response = await backend.get(`/intakeResponses/session/${sessionId}`);
-        const normalData = response.data;
+        const [reloadResponse, cmReloadResponse] = await Promise.all([
+          backend.get(`/intakeResponses/session/${sessionId}`),
+          backend.get("/caseManagers"),
+        ]);
+        const normalData = reloadResponse.data;
+        const cmList: Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }> =
+          Array.isArray(cmReloadResponse.data)
+            ? cmReloadResponse.data
+                .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+                  id: Number(cm.id),
+                  firstName: cm.firstName,
+                  lastName: cm.lastName,
+                  first_name: cm.first_name,
+                  last_name: cm.last_name,
+                }))
+                .filter((cm: { id: number }) => !Number.isNaN(cm.id))
+            : [];
+
         const formId = getFormId(formItemTitle);
         if (formId && normalData) {
           const questionsResponse = await backend.get(`/intakeResponses/form/${formId}/questions`);
           const questions = questionsResponse.data || [];
           setFormQuestions(questions);
+
+          const resolveCmName = (id: number | string | null | undefined): string => {
+            if (id === null || id === undefined || id === "") return "";
+            const numId = typeof id === "string" ? parseInt(id, 10) : id;
+            if (Number.isNaN(numId)) return String(id);
+            const cm = cmList.find((c) => c.id === numId);
+            if (!cm) return String(id);
+            const first = cm.firstName ?? cm.first_name ?? "";
+            const last = cm.lastName ?? cm.last_name ?? "";
+            return `${first} ${last}`.trim() || String(id);
+          };
 
           const formatted: FormDataRecord = {};
           questions
@@ -571,6 +627,8 @@ const FormPreview = ({
                 } else {
                   formatted[question.questionText] = value;
                 }
+              } else if (question.questionType === "case_manager_select") {
+                formatted[question.questionText] = resolveCmName(value);
               } else {
                 formatted[question.questionText] = value;
               }
