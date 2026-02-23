@@ -93,8 +93,7 @@ intakeClientsRouter.get("/", async (req, res) => {
       SELECT 
         intake_clients.*, 
         case_managers.first_name AS case_manager_first_name, 
-        case_managers.last_name AS case_manager_last_name,
-        ${INTAKE_LOCATION_SQL} AS location_name
+        case_managers.last_name AS case_manager_last_name
       FROM intake_clients
       LEFT JOIN case_managers ON intake_clients.created_by = case_managers.id
       WHERE 1=1

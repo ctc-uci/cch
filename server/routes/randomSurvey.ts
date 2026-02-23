@@ -130,16 +130,8 @@ randomSurveyRouter.post("/", async (req, res) => {
       cmId = typeof surveyData.case_manager === 'number' ? surveyData.case_manager : Number(surveyData.case_manager);
     }
 
-    // Get first unit_id as default (or use 1 if none exists)
-    let unitId = 1;
-    try {
-      const units = await db.query("SELECT id FROM units LIMIT 1");
-      if (units.length > 0) {
-        unitId = units[0].id;
-      }
-    } catch {
-      // Use default unitId = 1
-    }
+    // // units table is deprecated; default unitId kept for any legacy/commented code
+    // const unitId = 1;
 
     // Get all form questions for form_id = 4 to map field_key to question_id
     const questions = await db.query(

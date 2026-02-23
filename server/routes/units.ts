@@ -1,79 +1,53 @@
 import { Router } from "express";
 
-import { keysToCamel } from "../common/utils";
-import { db } from "../db/db-pgp";
-
+/**
+ * Units router - DEPRECATED.
+ * The units table is deprecated. Client unit is stored as clients.unit_name (VARCHAR).
+ * All endpoints are stubbed and do not touch the units table.
+ */
 export const unitsRouter = Router();
 
-// Get all units
-unitsRouter.get("/", async (req, res) => {
+// Stub: return empty array (units table deprecated)
+unitsRouter.get("/", async (_req, res) => {
   try {
-    const data = await db.query(`SELECT * FROM units;`);
-
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Get units by location id
-unitsRouter.get("/:locationId", async (req, res) => {
+// Stub: return 404 (units table deprecated)
+unitsRouter.get("/:locationId", async (_req, res) => {
   try {
-    const { locationId } = req.params;
-    const data = await db.query(`SELECT * FROM units WHERE location_id = $1`, [
-      locationId,
-    ]);
-
-    res.status(200).json(keysToCamel(data));
+    res.status(404).json({ error: "Not found", message: "Units API is deprecated." });
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Insert new unit
-unitsRouter.post("/", async (req, res) => {
+// Stub: no-op, return 201 (units table deprecated)
+unitsRouter.post("/", async (_req, res) => {
   try {
-    const { locationId, name, type } = req.body;
-    const data = await db.query(
-      `INSERT INTO units (location_id, name, type) VALUES ($1, $2, $3) RETURNING id;`,
-      [locationId, name, type]
-    );
-
-    res.status(200).json(keysToCamel(data));
+    res.status(201).json([{ id: null }]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Update unit by id
-unitsRouter.put("/:id", async (req, res) => {
+// Stub: no-op, return 200 (units table deprecated)
+unitsRouter.put("/:id", async (_req, res) => {
   try {
-    const { id } = req.params;
-    const { locationId, name, type } = req.body;
-    const data = await db.query(
-      `UPDATE units
-       SET location_id = COALESCE($1, location_id),
-       name = COALESCE($2, name),
-       type = COALESCE($3, type)
-       WHERE id = $4
-       RETURNING id`,
-      [locationId, name, type, id]
-    );
-
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([{ id: null }]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
 
-// Delete unit by id
-unitsRouter.delete("/:id", async (req, res) => {
+// Stub: no-op, return 200 (units table deprecated)
+unitsRouter.delete("/:id", async (_req, res) => {
   try {
-    const { id } = req.params;
-    const data = await db.query(`DELETE FROM units WHERE id = $1`, [id]);
-
-    res.status(200).json(keysToCamel(data));
+    res.status(200).json([]);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send((err as Error).message);
   }
 });
