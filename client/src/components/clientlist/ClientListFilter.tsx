@@ -46,7 +46,6 @@ export const ClientListFilter = ({ setFilterQuery }: ClientListFilterProps) => {
       type: "string",
     },
     { name: "Unit", value: "clients.unit_name", type: "string" },
-    { name: "Unit Name", value: "clients.unit_name", type: "string" },
     { name: "Grant", value: "clients.grant", type: "string" },
     { name: "Status", value: "clients.status", type: "string" },
     { name: "Age", value: "clients.age", type: "number" },

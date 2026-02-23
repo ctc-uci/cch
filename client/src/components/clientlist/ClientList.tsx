@@ -494,9 +494,9 @@ export const ClientList = ({ admin }: ClientListProps) => {
         return filterQuery.slice(1).every((query) => {
           if (!query) return true;
 
-          // Parse the filter query to extract field, operator, and value
+          // Parse the filter query to extract field, operator, and value (allow leading space from filter builder)
           const match = query.match(
-            /(\w+\.\w+)\s+(ILIKE|contains|=|!=|>|<)\s+['"]?([^'"]*)['"]?/
+            /\s*(\w+\.\w+(?:_\w+)*)\s+(ILIKE|contains|=|!=|>|<)\s+['"]?([^'"]*)['"]?/
           );
           if (!match) return true;
 
@@ -551,7 +551,11 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
           const clientValue = client[clientField as keyof Client];
           const stringValue = String(clientValue || "").toLowerCase();
-          const filterValue = value.toLowerCase();
+          let filterValue = value.trim().toLowerCase();
+          // For contains/ILIKE the filter builder emits '%value%' — strip SQL wildcards so we match substring
+          if (operator === "ILIKE" || operator === "contains") {
+            filterValue = filterValue.replace(/^%+|%+$/g, "");
+          }
 
           switch (operator) {
             case "ILIKE":
