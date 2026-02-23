@@ -56,24 +56,15 @@ export const SuccessStory = () => {
       setOnReview(true);
     } else {
       try {
-        // Try to get client from intakeClients first, then fall back to clients table
-        // If not found, backend will create one automatically
+        // Get client by email; if not found, backend will create one when submitting
         let clientData = null;
         try {
-          const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(currentUser?.email || "")}`);
-          if (intakeResponse.data && intakeResponse.data.length > 0) {
-            clientData = intakeResponse.data[0];
+          const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
+          if (response.data && response.data.length > 0) {
+            clientData = response.data[0];
           }
         } catch {
-          // If intakeClients doesn't have the client, try the old clients table
-          try {
-            const response = await backend.get(`/clients/email/${encodeURIComponent(currentUser?.email || "")}`);
-            if (response.data && response.data.length > 0) {
-              clientData = response.data[0];
-            }
-          } catch {
-            // Client not found in either table - backend will create one
-          }
+          // Client not found - backend will create one when submitting
         }
 
         // Include email so backend can create client if needed

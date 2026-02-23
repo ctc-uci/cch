@@ -48,38 +48,19 @@ export const RequestFormPreview = ({
           return;
         }
 
-        // Resolve the legacy client ID from the provided email
+        // Resolve client ID from email
         let clientId: number | undefined;
 
         try {
-          const intakeResponse = await backend.get(
-            `/intakeClients/email/${encodeURIComponent(clientEmail)}`
+          const response = await backend.get(
+            `/clients/email/${encodeURIComponent(clientEmail)}`
           );
-
-          const intakeClients = Array.isArray(intakeResponse.data)
-            ? intakeResponse.data
-            : [];
-
-          if (intakeClients.length > 0 && intakeClients[0]?.id) {
-            clientId = intakeClients[0].id;
+          const clients = Array.isArray(response.data) ? response.data : [];
+          if (clients.length > 0 && clients[0]?.id) {
+            clientId = clients[0].id;
           }
         } catch {
-          // Ignore and fall back to clients table
-        }
-
-        if (!clientId) {
-          try {
-            const response = await backend.get(
-              `/clients/email/${encodeURIComponent(clientEmail)}`
-            );
-            const clients = Array.isArray(response.data) ? response.data : [];
-
-            if (clients.length > 0 && clients[0]?.id) {
-              clientId = clients[0].id;
-            }
-          } catch {
-            // If we still can't resolve the client, just show empty history
-          }
+          // If we can't resolve the client, just show empty history
         }
 
         if (!clientId) {
@@ -128,39 +109,19 @@ export const RequestFormPreview = ({
         return;
       }
 
-      // Try to find the client by email in the new intakeClients table first,
-      // then fall back to the legacy clients table (matches other client flows).
+      // Find the client by email
       let clientId: number | undefined;
 
       try {
-        const intakeResponse = await backend.get(
-          `/intakeClients/email/${encodeURIComponent(clientEmail)}`
+        const response = await backend.get(
+          `/clients/email/${encodeURIComponent(clientEmail)}`
         );
-
-        const intakeClients = Array.isArray(intakeResponse.data)
-          ? intakeResponse.data
-          : [];
-
-        if (intakeClients.length > 0 && intakeClients[0]?.id) {
-          clientId = intakeClients[0].id;
+        const clients = Array.isArray(response.data) ? response.data : [];
+        if (clients.length > 0 && clients[0]?.id) {
+          clientId = clients[0].id;
         }
       } catch (_error) {
-        // Ignore and fall back to clients table
-      }
-
-      if (!clientId) {
-        try {
-          const response = await backend.get(
-            `/clients/email/${encodeURIComponent(clientEmail)}`
-          );
-          const clients = Array.isArray(response.data) ? response.data : [];
-
-          if (clients.length > 0 && clients[0]?.id) {
-            clientId = clients[0].id;
-          }
-        } catch (_error) {
-          // Ignore and surface unified "Client not found" toast below
-        }
+        // Ignore and surface unified "Client not found" toast below
       }
 
       if (!clientId) {

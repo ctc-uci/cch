@@ -108,25 +108,16 @@ const PersonalInformation: React.FC<InterviewScreeningFormProps> = ({ hidden: _h
         // Get email from form data
         const formEmail = formData.email || (formData as unknown as Record<string, unknown>).emailAddress as string | undefined;
 
-        // Try to get client from intakeClients first, then fall back to clients table
-        // If not found, backend will create one automatically
+        // Get client by email; if not found, backend will create one when submitting
         let clientData = null;
         if (formEmail) {
-        try {
-            const intakeResponse = await backend.get(`/intakeClients/email/${encodeURIComponent(formEmail)}`);
-          if (intakeResponse.data && intakeResponse.data.length > 0) {
-            clientData = intakeResponse.data[0];
-          }
-        } catch {
-          // If intakeClients doesn't have the client, try the old clients table
           try {
-              const response = await backend.get(`/clients/email/${encodeURIComponent(formEmail)}`);
+            const response = await backend.get(`/clients/email/${encodeURIComponent(formEmail)}`);
             if (response.data && response.data.length > 0) {
               clientData = response.data[0];
             }
           } catch {
-            // Client not found in either table - backend will create one
-            }
+            // Client not found - backend will create one when submitting
           }
         }
 

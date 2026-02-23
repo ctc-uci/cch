@@ -448,37 +448,19 @@ const FormPreview = ({
       }
 
       try {
-        // Resolve clientId from email (mirror RequestFormPreview logic)
+        // Resolve clientId from email
         let clientId: number | undefined;
 
         try {
-          const intakeResponse = await backend.get(
-            `/intakeClients/email/${encodeURIComponent(email)}`
+          const response = await backend.get(
+            `/clients/email/${encodeURIComponent(email)}`
           );
-          const intakeClients = Array.isArray(intakeResponse.data)
-            ? intakeResponse.data
-            : [];
-          if (intakeClients.length > 0 && intakeClients[0]?.id) {
-            clientId = intakeClients[0].id;
+          const clients = Array.isArray(response.data) ? response.data : [];
+          if (clients.length > 0 && clients[0]?.id) {
+            clientId = clients[0].id;
           }
         } catch {
-          // ignore and fall back to clients table
-        }
-
-        if (!clientId) {
-          try {
-            const response = await backend.get(
-              `/clients/email/${encodeURIComponent(email)}`
-            );
-            const clients = Array.isArray(response.data)
-              ? response.data
-              : [];
-            if (clients.length > 0 && clients[0]?.id) {
-              clientId = clients[0].id;
-            }
-          } catch {
-            // ignore; handled below
-          }
+          // ignore; handled below
         }
 
         if (!clientId) {
