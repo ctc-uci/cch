@@ -6,13 +6,14 @@ CREATE TABLE last_updated(
 );
 
 -- create the function that will update the specified last updated table
+-- Store Pacific local time (America/Los_Angeles) so DST is respected; client displays as-is in local context
 CREATE OR REPLACE FUNCTION update_last_updated_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO last_updated (table_name, last_updated_at)
-    VALUES (TG_TABLE_NAME, CURRENT_TIMESTAMP AT TIME ZONE 'PDT')
+    VALUES (TG_TABLE_NAME, CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')
     ON CONFLICT (table_name)
-    DO UPDATE SET last_updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'PDT';
+    DO UPDATE SET last_updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles';
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
