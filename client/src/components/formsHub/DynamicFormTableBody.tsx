@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Td, Tr } from "@chakra-ui/react";
 import {
   NumberInputComponent,
@@ -22,6 +22,7 @@ interface DynamicFormTableBodyProps {
   formData: Record<string, unknown>;
   formQuestions: FormQuestion[];
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onRatingGridChange?: (fieldKey: string, rowKey: string, value: string) => void;
 }
 
 const toCamelCase = (str: string): string => {
@@ -32,6 +33,7 @@ export const DynamicFormTableBody = ({
   formData,
   formQuestions,
   handleChange,
+  onRatingGridChange,
 }: DynamicFormTableBodyProps) => {
   const { backend } = useBackendContext();
   const [caseManagers, setCaseManagers] = useState<Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>>([]);
@@ -259,58 +261,86 @@ export const DynamicFormTableBody = ({
             );
 
           case "rating_grid": {
-            // Format rating grid as readable text
             const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
-            let displayValue = "";
-            
-            if (value && typeof value === "object" && !Array.isArray(value) && value !== null) {
-              if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
-                const gridData = value as Record<string, unknown>;
-                const formattedRows: string[] = [];
-                
-                gridConfig.rows.forEach((row) => {
-                  const rowValue = gridData[row.key];
-                  if (rowValue) {
-                    const column = gridConfig.columns?.find(col => col.value === rowValue);
-                    if (column) {
-                      formattedRows.push(column.label);
-                    }
-                  }
-                });
-                
-                displayValue = formattedRows.length > 0 ? formattedRows.join(", ") : "";
-              } else {
-                // Fallback to JSON if config is missing
-                try {
-                  displayValue = JSON.stringify(value);
-                } catch {
-                  displayValue = String(value);
-                }
+            let gridData: Record<string, unknown> = {};
+            if (typeof value === "string" && value) {
+              try {
+                gridData = JSON.parse(value) as Record<string, unknown>;
+              } catch {
+                gridData = {};
               }
-            } else if (typeof value === 'string') {
-              displayValue = value;
+            } else if (value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+              gridData = value as Record<string, unknown>;
             }
-            
+            if (gridConfig?.rows && gridConfig.rows.length > 0) {
+              const options = (gridConfig?.columns ?? []).map((col) => ({
+                label: col.label,
+                value: col.value,
+              }));
+              const canEdit = !!onRatingGridChange && options.length > 0;
+              return (
+                <Fragment key={question.id}>
+                  {gridConfig.rows.map((row) => {
+                    const rowValue = gridData[row.key];
+                    const valueStr = rowValue !== undefined && rowValue !== null ? String(rowValue) : "";
+                    return (
+                      <Tr key={`${question.id}-${row.key}`}>
+                        <Td
+                          fontSize="medium"
+                          maxWidth="300px"
+                          whiteSpace="normal"
+                          wordBreak="break-word"
+                          overflowWrap="break-word"
+                        >
+                          {question.questionText} - {row.label}
+                        </Td>
+                        <Td
+                          maxWidth="400px"
+                          whiteSpace="normal"
+                          wordBreak="break-word"
+                          overflowWrap="break-word"
+                        >
+                          {canEdit ? (
+                            <SelectInputComponent
+                              name={`${camelFieldKey}__${row.key}`}
+                              value={valueStr}
+                              onChange={(e) => {
+                                onRatingGridChange!(camelFieldKey, row.key, e.target.value);
+                              }}
+                              options={options}
+                              placeholder="Select..."
+                              width="100%"
+                            />
+                          ) : (
+                            <TextInputComponent
+                              name={camelFieldKey}
+                              value={
+                                gridConfig?.columns?.length
+                                  ? (gridConfig.columns.find((col: { value: string }) => String(col.value) === valueStr)?.label ?? valueStr)
+                                  : valueStr
+                              }
+                              onChange={handleChange}
+                              type="text"
+                              width="100%"
+                              disabled={true}
+                            />
+                          )}
+                        </Td>
+                      </Tr>
+                    );
+                  })}
+                </Fragment>
+              );
+            }
             return (
               <Tr key={question.id}>
-                <Td 
-                  fontSize="medium"
-                  maxWidth="300px"
-                  whiteSpace="normal"
-                  wordBreak="break-word"
-                  overflowWrap="break-word"
-                >
+                <Td fontSize="medium" maxWidth="300px" whiteSpace="normal" wordBreak="break-word" overflowWrap="break-word">
                   {question.questionText}
                 </Td>
-                <Td
-                  maxWidth="400px"
-                  whiteSpace="normal"
-                  wordBreak="break-word"
-                  overflowWrap="break-word"
-                >
+                <Td maxWidth="400px" whiteSpace="normal" wordBreak="break-word" overflowWrap="break-word">
                   <TextInputComponent
                     name={camelFieldKey}
-                    value={displayValue}
+                    value={typeof value === "string" ? value : JSON.stringify(gridData ?? value ?? {})}
                     onChange={handleChange}
                     type="text"
                     width="100%"

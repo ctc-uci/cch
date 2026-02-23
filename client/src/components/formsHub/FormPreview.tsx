@@ -224,6 +224,7 @@ const FormPreview = ({
           formData={newFormData}
           formQuestions={formQuestions}
           handleChange={handleChange}
+          onRatingGridChange={handleRatingGridChange}
         />
       );
     }
@@ -352,23 +353,38 @@ const FormPreview = ({
                 a.displayOrder - b.displayOrder)
               .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
                 const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-                const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+                let value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+                // Parse rating grid value if stored as JSON string
+                if (question.questionType === "rating_grid" && typeof value === "string" && value) {
+                  try {
+                    value = JSON.parse(value) as Record<string, unknown>;
+                  } catch {
+                    value = {};
+                  }
+                }
                 
-                // For rating grids, expand into separate rows for each grid row
-                if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+                // For rating grids, one row per grid row with its own value
+                if (question.questionType === "rating_grid") {
                   const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
-                  if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
-                    const gridData = value as Record<string, unknown>;
+                  const gridData = (value && typeof value === "object" && !Array.isArray(value) && value !== null) ? (value as Record<string, unknown>) : {};
+                  if (gridConfig?.rows && gridConfig.rows.length > 0) {
                     gridConfig.rows.forEach((row) => {
                       const rowValue = gridData[row.key];
+                      let displayValue = "";
                       if (rowValue !== undefined && rowValue !== null) {
-                        const column = gridConfig.columns?.find(col => col.value === rowValue);
-                        const displayValue = column ? column.label : String(rowValue);
-                        formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                        if (gridConfig?.columns && gridConfig.columns.length > 0) {
+                          const column = gridConfig.columns.find((col: { value: string }) => String(col.value) === String(rowValue));
+                          displayValue = column ? column.label : String(rowValue);
+                        } else {
+                          displayValue = String(rowValue);
+                        }
                       }
+                      formatted[`${question.questionText} - ${row.label}`] = displayValue;
                     });
                   } else {
-                    formatted[question.questionText] = value;
+                    Object.entries(gridData).forEach(([k, v]) => {
+                      formatted[`${question.questionText} - ${k}`] = v !== undefined && v !== null ? String(v) : "";
+                    });
                   }
                 } else if (question.questionType === "case_manager_select") {
                   formatted[question.questionText] = resolveCmName(value);
@@ -536,6 +552,20 @@ const FormPreview = ({
     }));
   };
 
+  const handleRatingGridChange = (fieldKey: string, rowKey: string, newValue: string) => {
+    setNewFormData((prev) => {
+      const current = prev[fieldKey];
+      const gridObj =
+        current && typeof current === "object" && !Array.isArray(current) && current !== null
+          ? { ...(current as Record<string, unknown>) }
+          : {};
+      return {
+        ...prev,
+        [fieldKey]: { ...gridObj, [rowKey]: newValue },
+      };
+    });
+  };
+
   const handleSaveForm = async () => {
     // Handle dynamic forms (intake_responses)
     if (isDynamicForm && sessionId) {
@@ -610,22 +640,35 @@ const FormPreview = ({
               a.displayOrder - b.displayOrder)
             .forEach((question: { fieldKey: string; questionText: string; questionType: string; options?: unknown }) => {
               const camelKey = question.fieldKey.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
-              const value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
-              
-              if (question.questionType === "rating_grid" && value && typeof value === "object" && !Array.isArray(value) && value !== null) {
+              let value = normalData[camelKey] ?? normalData[question.fieldKey] ?? "";
+              if (question.questionType === "rating_grid" && typeof value === "string" && value) {
+                try {
+                  value = JSON.parse(value) as Record<string, unknown>;
+                } catch {
+                  value = {};
+                }
+              }
+              if (question.questionType === "rating_grid") {
                 const gridConfig = question.options as { rows?: Array<{ key: string; label: string }>; columns?: Array<{ value: string; label: string }> } | undefined;
-                if (gridConfig?.rows && gridConfig?.columns && gridConfig.columns.length > 0) {
-                  const gridData = value as Record<string, unknown>;
+                const gridData = (value && typeof value === "object" && !Array.isArray(value) && value !== null) ? (value as Record<string, unknown>) : {};
+                if (gridConfig?.rows && gridConfig.rows.length > 0) {
                   gridConfig.rows.forEach((row) => {
                     const rowValue = gridData[row.key];
+                    let displayValue = "";
                     if (rowValue !== undefined && rowValue !== null) {
-                      const column = gridConfig.columns?.find(col => col.value === rowValue);
-                      const displayValue = column ? column.label : String(rowValue);
-                      formatted[`${question.questionText} - ${row.label}`] = displayValue;
+                      if (gridConfig?.columns && gridConfig.columns.length > 0) {
+                        const column = gridConfig.columns.find((col: { value: string }) => String(col.value) === String(rowValue));
+                        displayValue = column ? column.label : String(rowValue);
+                      } else {
+                        displayValue = String(rowValue);
+                      }
                     }
+                    formatted[`${question.questionText} - ${row.label}`] = displayValue;
                   });
                 } else {
-                  formatted[question.questionText] = value;
+                  Object.entries(gridData).forEach(([k, v]) => {
+                    formatted[`${question.questionText} - ${k}`] = v !== undefined && v !== null ? String(v) : "";
+                  });
                 }
               } else if (question.questionType === "case_manager_select") {
                 formatted[question.questionText] = resolveCmName(value);
@@ -911,44 +954,47 @@ const FormPreview = ({
                                 /_([a-z])/g,
                                 (_, letter) => letter.toUpperCase()
                               );
-                              const rawValue =
+                              let rawValue =
                                 (newFormData as Record<string, unknown>)[camelKey] ??
                                 (newFormData as Record<string, unknown>)[q.fieldKey] ??
                                 "";
+                              if (q.questionType === "rating_grid" && typeof rawValue === "string" && rawValue) {
+                                try {
+                                  rawValue = JSON.parse(rawValue) as Record<string, unknown>;
+                                } catch {
+                                  rawValue = {};
+                                }
+                              }
 
-                              if (
-                                q.questionType === "rating_grid" &&
-                                rawValue &&
-                                typeof rawValue === "object" &&
-                                !Array.isArray(rawValue)
-                              ) {
+                              if (q.questionType === "rating_grid") {
                                 const gridConfig = q.options as
                                   | {
                                       rows?: Array<{ key: string; label: string }>;
                                       columns?: Array<{ value: string; label: string }>;
                                     }
                                   | undefined;
-
-                                if (
-                                  gridConfig?.rows &&
-                                  gridConfig?.columns &&
-                                  gridConfig.columns.length > 0
-                                ) {
-                                  const gridData = rawValue as Record<string, unknown>;
+                                const gridData =
+                                  rawValue && typeof rawValue === "object" && !Array.isArray(rawValue)
+                                    ? (rawValue as Record<string, unknown>)
+                                    : {};
+                                if (gridConfig?.rows && gridConfig.rows.length > 0) {
                                   gridConfig.rows.forEach((row) => {
                                     const rowValue = gridData[row.key];
+                                    let displayValue = "";
                                     if (rowValue !== undefined && rowValue !== null) {
-                                      const column = gridConfig.columns?.find(
-                                        (col) => col.value === rowValue
-                                      );
-                                      const displayValue = column
-                                        ? column.label
-                                        : String(rowValue);
-                                      rows.push({
-                                        Questions: `${q.questionText} - ${row.label}`,
-                                        Answer: displayValue,
-                                      });
+                                      if (gridConfig?.columns && gridConfig.columns.length > 0) {
+                                        const column = gridConfig.columns.find(
+                                          (col: { value: string }) => String(col.value) === String(rowValue)
+                                        );
+                                        displayValue = column ? column.label : String(rowValue);
+                                      } else {
+                                        displayValue = String(rowValue);
+                                      }
                                     }
+                                    rows.push({
+                                      Questions: `${q.questionText} - ${row.label}`,
+                                      Answer: displayValue,
+                                    });
                                   });
                                   return;
                                 }
