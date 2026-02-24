@@ -23,11 +23,7 @@ import {
   Tr,
   useToast,
   VStack,
-  Alert,
-  AlertIcon,
-  Tooltip,
 } from "@chakra-ui/react";
-import { WarningIcon } from "@chakra-ui/icons";
 import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
@@ -241,17 +237,6 @@ export const ViewPage = () => {
   if (loading) return <Box>Loading...</Box>;
   if (error) return <Box>Error: {error}</Box>;
 
-  // Check if a field is sensitive (affects client matching)
-  const isSensitiveField = (fieldName: keyof Client): boolean => {
-    const sensitiveFields: (keyof Client)[] = ['firstName', 'lastName', 'phoneNumber', 'dateOfBirth'];
-    return sensitiveFields.includes(fieldName);
-  };
-
-  // Check if any sensitive fields are being edited
-  const hasSensitiveFieldEdits = (): boolean => {
-    return Object.keys(edits).some(key => isSensitiveField(key as keyof Client));
-  };
-
   const toggleEditForm = () => {
     if (isEditing) {
       setEdits({});
@@ -371,22 +356,6 @@ export const ViewPage = () => {
               )}
             </Stack>
           </HStack>
-          {isEditing && hasSensitiveFieldEdits() && (
-            <Alert status="warning" mx="2.5%" w="95%" mb={4} borderRadius="md">
-              <AlertIcon />
-              <Box>
-                <Box fontWeight="bold" mb={1}>
-                  Warning: Changing sensitive fields
-                </Box>
-                <Box fontSize="sm">
-                  If you change the First Name, Last Name, Date of Birth, or Phone Number, 
-                  all forms associated with this client may be removed from the client's forms table. 
-                  These fields are used to match forms to clients, so changing them may cause 
-                  forms to be treated as belonging to a different client.
-                </Box>
-              </Box>
-            </Alert>
-          )}
           <TableContainer
             sx={{
               overflowX: "auto",
@@ -418,41 +387,11 @@ export const ViewPage = () => {
                   </Td>
                 </Tr>
                 <Tr>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Text>First Name</Text>
-                      {isSensitiveField("firstName") && (
-                        <Tooltip 
-                          label="Changing this field may remove all forms from the client's forms table"
-                          placement="top"
-                          hasArrow
-                        >
-                          <Box color="orange.500" display="inline-flex" alignItems="center">
-                            <WarningIcon />
-                          </Box>
-                        </Tooltip>
-                      )}
-                    </HStack>
-                  </Td>
+                  <Td>First Name</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("firstName", client.firstName)}</Td>
                 </Tr>
                 <Tr>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Text>Last Name</Text>
-                      {isSensitiveField("lastName") && (
-                        <Tooltip 
-                          label="Changing this field may remove all forms from the client's forms table"
-                          placement="top"
-                          hasArrow
-                        >
-                          <Box color="orange.500" display="inline-flex" alignItems="center">
-                            <WarningIcon />
-                          </Box>
-                        </Tooltip>
-                      )}
-                    </HStack>
-                  </Td>
+                  <Td>Last Name</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("lastName", client.lastName)}</Td>
                 </Tr>
                 <Tr>
@@ -462,22 +401,7 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                 {/* probably need to check this updates backend correctly and maintains date form it */}
-                <Td>
-                  <HStack spacing={2}>
-                    <Text>Date of Birth</Text>
-                    {isSensitiveField("dateOfBirth") && (
-                      <Tooltip 
-                        label="Changing this field may remove all forms from the client's forms table"
-                        placement="top"
-                        hasArrow
-                      >
-                        <Box color="orange.500" display="inline-flex" alignItems="center">
-                          <WarningIcon />
-                        </Box>
-                      </Tooltip>
-                    )}
-                  </HStack>
-                </Td>
+                <Td>Date of Birth</Td>
                 <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
                   {renderField(
                     "dateOfBirth",
@@ -497,22 +421,7 @@ export const ViewPage = () => {
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("email", client.email)}</Td>
                 </Tr>
                 <Tr>
-                  <Td>
-                    <HStack spacing={2}>
-                      <Text>Phone Number</Text>
-                      {isSensitiveField("phoneNumber") && (
-                        <Tooltip 
-                          label="Changing this field may remove all forms from the client's forms table"
-                          placement="top"
-                          hasArrow
-                        >
-                          <Box color="orange.500" display="inline-flex" alignItems="center">
-                            <WarningIcon />
-                          </Box>
-                        </Tooltip>
-                      )}
-                    </HStack>
-                  </Td>
+                  <Td>Phone Number</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("phoneNumber", client.phoneNumber)}</Td>
                 </Tr>
                 <Tr>

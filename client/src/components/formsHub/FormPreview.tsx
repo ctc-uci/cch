@@ -117,6 +117,121 @@ const FormPreview = ({
   const [hasApprovedRequest, setHasApprovedRequest] = useState(false);
   const navigate = useNavigate();
 
+  const normalizeString = (value: unknown): string => {
+    if (value === undefined || value === null) return "";
+    return String(value).trim().toLowerCase();
+  };
+
+  const normalizePhone = (value: unknown): string => {
+    if (value === undefined || value === null) return "";
+    return String(value).replace(/\D/g, "");
+  };
+
+  const normalizeDate = (value: unknown): string => {
+    if (value === undefined || value === null) return "";
+    const str = String(value).trim();
+    // Normalize to YYYY-MM-DD when possible (strip time portion)
+    const [datePart] = str.split("T");
+    return datePart ?? "";
+  };
+
+  const tryMatchExistingClient = async (): Promise<number | null> => {
+    // Prefer edited values (newFormData), but fall back to original formData and clickedFormItem
+    const merged: Record<string, unknown> = {
+      ...clickedFormItem,
+      ...formData,
+      ...newFormData,
+    };
+
+    const rawFirstName =
+      merged.firstName ??
+      merged.first_name;
+    const rawLastName =
+      merged.lastName ??
+      merged.last_name;
+    const rawEmail = merged.email;
+    const rawPhone =
+      merged.phoneNumber ??
+      merged.phone_number;
+    const rawDob =
+      merged.dateOfBirth ??
+      merged.date_of_birth;
+
+    const firstName = normalizeString(rawFirstName);
+    const lastName = normalizeString(rawLastName);
+    const email = normalizeString(rawEmail);
+    const phone = normalizePhone(rawPhone);
+    const dob = normalizeDate(rawDob);
+
+    // If we have no identifying info at all, bail out early
+    if (!firstName && !lastName && !email && !phone && !dob) {
+      return null;
+    }
+
+    try {
+      const res = await backend.get("/clients");
+      const clients = Array.isArray(res.data) ? res.data : [];
+
+      type ClientLike = {
+        id: number;
+        firstName?: string;
+        lastName?: string;
+        first_name?: string;
+        last_name?: string;
+        email?: string;
+        phoneNumber?: string;
+        phone_number?: string;
+        dateOfBirth?: string;
+        date_of_birth?: string;
+      };
+
+      const strongMatches: ClientLike[] = [];
+      const weakMatches: ClientLike[] = [];
+
+      clients.forEach((c: ClientLike) => {
+        const cFirst = normalizeString(c.firstName ?? c.first_name);
+        const cLast = normalizeString(c.lastName ?? c.last_name);
+        const cEmail = normalizeString(c.email);
+        const cPhone = normalizePhone(c.phoneNumber ?? c.phone_number);
+        const cDob = normalizeDate(c.dateOfBirth ?? c.date_of_birth);
+
+        // Require at least a name match for any candidate
+        const nameMatches =
+          (!!firstName && !!lastName && cFirst === firstName && cLast === lastName);
+        if (!nameMatches && !email) {
+          // If we don't have email to match on, don't consider non-name matches
+          return;
+        }
+
+        // Strong match criteria
+        if (
+          nameMatches &&
+          ((dob && cDob === dob) || (phone && cPhone === phone))
+        ) {
+          strongMatches.push(c);
+          return;
+        }
+
+        // Strong match by unique email
+        if (email && cEmail && cEmail === email) {
+          strongMatches.push(c);
+          return;
+        }
+
+        // Weak match: just by name
+        if (nameMatches) {
+          weakMatches.push(c);
+        }
+      });
+
+      const chosen = strongMatches[0] ?? weakMatches[0];
+      return chosen ? chosen.id : null;
+    } catch (error) {
+      console.error("Error attempting to match existing client:", error);
+      return null;
+    }
+  };
+
   const handleCommentForm = async () => {
     // Only handle Initial Screener Form (form_id = 1)
     if (formItemTitle !== "Initial Screener Form" && formItemTitle !== "Initial Screeners") {
@@ -144,12 +259,41 @@ const FormPreview = ({
           (clickedFormItem.client_id as number | string | undefined);
 
         if (clientId === undefined || clientId === null || clientId === "") {
-          toast({
-            title: "Client Not Found",
-            description: "Unable to open comment form. Client information is missing.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
+          // Try to match this screener (including any edits) to an existing client
+          const matchedClientId = await tryMatchExistingClient();
+          if (!matchedClientId) {
+            toast({
+              title: "Client Not Found",
+              description: "Unable to open comment form. Client information is missing.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            return;
+          }
+
+          try {
+            // Attach this intake session to the matched client
+            await backend.patch(`/intakeResponses/session/${sessionId}/client`, {
+              clientId: matchedClientId,
+            });
+          } catch (error) {
+            console.error("Error attaching matched client to session:", error);
+            toast({
+              title: "Client Match Failed",
+              description: "We found a possible client match but could not attach it. Please try again or link the client from the Initial Screener table.",
+              status: "error",
+              duration: 7000,
+              isClosable: true,
+            });
+            return;
+          }
+
+          navigate(`/comment-form/${matchedClientId}`, {
+            state: {
+              sessionId: sessionId,
+              returnPath: "/admin-client-forms",
+            },
           });
           return;
         }
@@ -172,18 +316,46 @@ const FormPreview = ({
             (clickedFormItem.client_id as number | string | undefined);
           if (clientId !== undefined && clientId !== null && clientId !== "") {
             navigate(`/comment-form/${clientId}`, {
-              state: { 
+              state: {
                 sessionId: sessionId,
                 returnPath: "/admin-client-forms",
               },
             });
           } else {
-            toast({
-              title: "Client Not Found",
-              description: "Unable to open comment form. Client information is missing.",
-              status: "error",
-              duration: 5000,
-              isClosable: true,
+            // No existing client link; try to match to an existing client using edited data
+            const matchedClientId = await tryMatchExistingClient();
+            if (!matchedClientId) {
+              toast({
+                title: "Client Not Found",
+                description: "Unable to open comment form. Client information is missing.",
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+              });
+              return;
+            }
+
+            try {
+              await backend.patch(`/intakeResponses/session/${sessionId}/client`, {
+                clientId: matchedClientId,
+              });
+            } catch (patchError) {
+              console.error("Error attaching matched client to session (404 path):", patchError);
+              toast({
+                title: "Client Match Failed",
+                description: "We found a possible client match but could not attach it. Please try again or link the client from the Initial Screener table.",
+                status: "error",
+                duration: 7000,
+                isClosable: true,
+              });
+              return;
+            }
+
+            navigate(`/comment-form/${matchedClientId}`, {
+              state: {
+                sessionId: sessionId,
+                returnPath: "/admin-client-forms",
+              },
             });
           }
         } else {

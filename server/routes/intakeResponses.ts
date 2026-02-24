@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
-import { matchClient, extractClientFields } from "../common/clientMatching";
 
 // Helper function to convert snake_case to camelCase
 const toCamel = (string: string) => {
@@ -409,9 +408,9 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
     const { sessionId } = req.params;
     const formData = req.body;
 
-    // Verify session exists and get form_id
+    // Verify session exists and get form_id and current client_id
     const sessionCheck = await db.query(
-      `SELECT form_id FROM intake_responses WHERE session_id = $1 LIMIT 1`,
+      `SELECT form_id, client_id FROM intake_responses WHERE session_id = $1 LIMIT 1`,
       [sessionId]
     );
 
@@ -420,18 +419,8 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
     }
 
     const formId = sessionCheck[0].form_id;
-
-    // Match client from clients table (excluding random client survey - form_id = 4)
-    let finalClientId: number | null = null;
-    if (formId !== 4) {
-      const clientFields = extractClientFields(formData);
-      finalClientId = await matchClient(
-        clientFields.firstName,
-        clientFields.lastName,
-        clientFields.phoneNumber,
-        clientFields.dateOfBirth
-      );
-    }
+    // Preserve existing client link when editing in form preview; do not re-run client matching
+    const finalClientId: number | null = sessionCheck[0].client_id ?? null;
 
     // Get all form questions for this form to map field_key to question_id
     const questions = await db.query(
