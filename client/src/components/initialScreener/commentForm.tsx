@@ -10,6 +10,8 @@ import {
   Heading,
   HStack,
   Input,
+  Radio,
+  RadioGroup,
   Select,
   useToast,
   VStack,
@@ -35,7 +37,7 @@ const CommentForm: React.FC = () => {
   const [willingness, setWillingness] = useState<number>(0);
   const [attitude, setAttitude] = useState<number>(0);
   const [employability, setEmployability] = useState<number>(0);
-  const [length, setLength] = useState<number>(0);
+  const [length, setLength] = useState<number | "">("");
   const [tx, setTx] = useState<boolean>(true);
   const [h1, seth1] = useState<string>("");
   const [h2, seth2] = useState<string>("");
@@ -43,8 +45,8 @@ const CommentForm: React.FC = () => {
   const [dCondition, setDCondition] = useState<string>("");
   const [employed, setEmployed] = useState<boolean>(true);
   const [dLicense, setDLicense] = useState<boolean>(true);
-  const [numChildren, setNumChildren] = useState<number>(0);
-  const [numCustody, setNumCustody] = useState<number>(0);
+  const [numChildren, setNumChildren] = useState<number | "">("");
+  const [numCustody, setNumCustody] = useState<number | "">("");
   const [lastCity, setLastCity] = useState<string>("");
   const [accept, setAccept] = useState<boolean>(true);
   const [comments, setComments] = useState<string>("");
@@ -164,7 +166,7 @@ const CommentForm: React.FC = () => {
         setWillingness(Number(record.willingness ?? 0));
         setAttitude(Number(record.attitude ?? 0));
         setEmployability(Number(record.employability ?? 0));
-        setLength(Number(record.lengthOfSobriety ?? 0));
+        setLength(record.lengthOfSobriety !== null && record.lengthOfSobriety !== undefined ? record.lengthOfSobriety : "");
         setTx(parseBool(record.completedTx));
         seth1(record.homelessEpisodeOne ?? "");
         seth2(record.homelessEpisodeTwo ?? "");
@@ -172,8 +174,8 @@ const CommentForm: React.FC = () => {
         setDCondition(record.disablingCondition ?? "");
         setEmployed(parseBool(record.employed));
         setDLicense(parseBool(record.driversLicense));
-        setNumChildren(Number(record.numOfChildren ?? 0));
-        setNumCustody(Number(record.childrenInCustody ?? 0));
+        setNumChildren(record.numOfChildren !== null && record.numOfChildren !== undefined ? record.numOfChildren : "");
+        setNumCustody(record.childrenInCustody !== null && record.childrenInCustody !== undefined ? record.childrenInCustody : "");
         setLastCity(record.lastCityPermResidence ?? "");
         setAccept(parseBool(record.decision));
         setComments(record.additionalComments ?? "");
@@ -215,7 +217,7 @@ const CommentForm: React.FC = () => {
         willingness: willingness,
         employability: employability,
         attitude: attitude,
-        length_of_sobriety: length,
+        length_of_sobriety: length === "" ? 0 : length,
         completed_tx: tx,
         homeless_episode_one: h1,
         homeless_episode_two: h2,
@@ -223,8 +225,8 @@ const CommentForm: React.FC = () => {
         disabling_condition: dCondition,
         employed: employed,
         driver_license: dLicense,
-        num_of_children: numChildren,
-        children_in_custody: numCustody,
+        num_of_children: numChildren === "" ? 0 : numChildren,
+        children_in_custody: numCustody === "" ? 0 : numCustody,
         last_city_perm_residence: lastCity,
         decision: accept,
         additional_comments: comments,
@@ -279,6 +281,7 @@ const CommentForm: React.FC = () => {
           duration: 3000,
           isClosable: true,
         });
+        navigateBack();
       }
     } catch (error) {
       console.error("Error submitting data:", error);
@@ -470,8 +473,15 @@ const CommentForm: React.FC = () => {
           <HStack spacing={25}>
             <FormLabel w="40%">Length of Sobriety</FormLabel>
             <Input
-              value={length}
-              onChange={(e) => setLength(Number(e.target.value))}
+              value={length === "" ? "" : length}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") setLength("");
+                else {
+                  const n = Number(raw);
+                  setLength(Number.isNaN(n) ? "" : n);
+                }
+              }}
               w="200px"
               borderRadius="xl"
             />
@@ -481,13 +491,16 @@ const CommentForm: React.FC = () => {
         <FormControl>
           <HStack spacing={25}>
             <FormLabel w="40%">Completed Tx</FormLabel>
-            <Input
+            <RadioGroup
               value={String(tx)}
-              onChange={(e) => setTx(Boolean(e.target.value))}
-              placeholder="Type Here"
+              onChange={(value) => setTx(value === "true")}
               w="200px"
-              borderRadius="xl"
-            />
+            >
+              <HStack spacing={4} ml={4}>
+                <Radio value="true">Yes</Radio>
+                <Radio value="false">No</Radio>
+              </HStack>
+            </RadioGroup>
           </HStack>
         </FormControl>
       </VStack>
@@ -563,30 +576,32 @@ const CommentForm: React.FC = () => {
         <FormControl>
           <HStack spacing={25}>
             <FormLabel w="40%">Employment?</FormLabel>
-            <Select
-              w="200px"
-              borderRadius="xl"
+            <RadioGroup
               value={String(employed)}
-              onChange={(e) => setEmployed(e.target.value === "true")}
+              onChange={(value) => setEmployed(value === "true")}
+              w="200px"
             >
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </Select>
+              <HStack spacing={4} ml={4}>
+                <Radio value="true">Yes</Radio>
+                <Radio value="false">No</Radio>
+              </HStack>
+            </RadioGroup>
           </HStack>
         </FormControl>
 
         <FormControl>
           <HStack spacing={25}>
             <FormLabel w="40%">Driver&apos;s License?</FormLabel>
-            <Select
-              w="200px"
-              borderRadius="xl"
+            <RadioGroup
               value={String(dLicense)}
-              onChange={(e) => setDLicense(e.target.value === "true")}
+              onChange={(value) => setDLicense(value === "true")}
+              w="200px"
             >
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </Select>
+              <HStack spacing={4} ml={4} >
+                <Radio value="true">Yes</Radio>
+                <Radio value="false">No</Radio>
+              </HStack>
+            </RadioGroup>
           </HStack>
         </FormControl>
 
@@ -597,8 +612,15 @@ const CommentForm: React.FC = () => {
               w="200px"
               borderRadius="xl"
               type="number"
-              value={numChildren}
-              onChange={(e) => setNumChildren(Number(e.target.value))}
+              value={numChildren === "" ? "" : numChildren}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") setNumChildren("");
+                else {
+                  const n = Number(raw);
+                  setNumChildren(Number.isNaN(n) ? "" : n);
+                }
+              }}
             />
           </HStack>
         </FormControl>
@@ -610,8 +632,15 @@ const CommentForm: React.FC = () => {
               w="200px"
               borderRadius="xl"
               type="number"
-              value={numCustody}
-              onChange={(e) => setNumCustody(Number(e.target.value))}
+              value={numCustody === "" ? "" : numCustody}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === "") setNumCustody("");
+                else {
+                  const n = Number(raw);
+                  setNumCustody(Number.isNaN(n) ? "" : n);
+                }
+              }}
             />
           </HStack>
         </FormControl>
@@ -632,15 +661,16 @@ const CommentForm: React.FC = () => {
         <FormControl>
           <HStack spacing={25}>
             <FormLabel w="40%">Would you accept this client into CCH?</FormLabel>
-            <Select
-              w="200px"
-              borderRadius="xl"
+            <RadioGroup
               value={String(accept)}
-              onChange={(e) => setAccept(e.target.value === "true")}
+              onChange={(value) => setAccept(value === "true")}
+              w="200px"
             >
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </Select>
+              <HStack spacing={4} ml={4}>
+                <Radio value="true">Yes</Radio>
+                <Radio value="false">No</Radio>
+              </HStack>
+            </RadioGroup>
           </HStack>
         </FormControl>
 
