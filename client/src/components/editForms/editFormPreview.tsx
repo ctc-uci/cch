@@ -1078,7 +1078,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
             handleSave();
           }}
         >
-          <ModalContent>
+          <ModalContent overflow="hidden">
             <ModalHeader>
               {editingQuestion?.id === 0 ? "Add New Question" : "Edit Question"}
             </ModalHeader>
@@ -1214,7 +1214,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                   </Box>
                 )}
                 {editingQuestion.questionType === "select" && (
-                  <Box>
+                  <Box w="100%" minW={0} overflow="hidden">
                     <Flex justifyContent="space-between" alignItems="center" mb={2}>
                       <Text fontSize="sm" fontWeight="medium">
                         Options
@@ -1225,13 +1225,15 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                     </Flex>
                     <Stack spacing={2}>
                       {(editingQuestion.options as FormOption[])?.map((option, index) => (
-                        <Stack key={index} spacing={2}>
-                          <Flex gap={2}>
+                        <Stack key={index} spacing={2} minW={0}>
+                          <Flex gap={2} minW={0}>
                             <Input
                               placeholder="Value"
                               value={option.value}
                               onChange={(e) => updateOption(index, "value", e.target.value)}
                               size="sm"
+                              flex="0 0 90px"
+                              minW={0}
                             />
                             <Input
                               placeholder="Label (English)"
@@ -1239,27 +1241,33 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                               onChange={(e) => updateOption(index, "label", e.target.value)}
                               size="sm"
                               flex={1}
+                              minW={0}
                             />
                             <IconButton
                               icon={<DeleteIcon />}
                               aria-label="Remove option"
                               size="sm"
+                              flexShrink={0}
                               onClick={() => removeOption(index)}
                             />
                           </Flex>
-                          <Input
-                            placeholder="Label (Spanish) - Optional"
-                            value={option.labelSpanish || ""}
-                            onChange={(e) => {
-                              if (!editingQuestion || editingQuestion.questionType !== "select" || !editingQuestion.options) return;
-                              const currentOptions = editingQuestion.options as FormOption[];
-                              const newOptions = [...currentOptions];
-                              newOptions[index] = { ...option, labelSpanish: e.target.value };
-                              setEditingQuestion({ ...editingQuestion, options: newOptions });
-                            }}
-                            size="sm"
-                            ml="60px"
-                          />
+                          <Flex gap={2} minW={0} align="stretch">
+                            <Box flex="0 0 90px" minW={0} aria-hidden />
+                            <Input
+                              placeholder="Label (Spanish) - Optional"
+                              value={option.labelSpanish || ""}
+                              onChange={(e) => {
+                                if (!editingQuestion || editingQuestion.questionType !== "select" || !editingQuestion.options) return;
+                                const currentOptions = editingQuestion.options as FormOption[];
+                                const newOptions = [...currentOptions];
+                                newOptions[index] = { ...option, labelSpanish: e.target.value };
+                                setEditingQuestion({ ...editingQuestion, options: newOptions });
+                              }}
+                              size="sm"
+                              flex={1}
+                              minW={0}
+                            />
+                          </Flex>
                         </Stack>
                       ))}
                     </Stack>
@@ -1294,10 +1302,10 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                             Add Row
                           </Button>
                         </Flex>
-                        <Stack spacing={2}>
+                        <Stack spacing={5}>
                           {(editingQuestion.options as RatingGridConfig)?.rows.map((row, index) => (
-                            <Stack key={row.key} spacing={2}>
-                              <Flex gap={2}>
+                            <Stack key={row.key} spacing={2} minW={0}>
+                              <Flex gap={2} minW={0}>
                                 <Input
                                   placeholder="Row label (English) (e.g., The service you received from your case manager.)"
                                   value={row.label}
@@ -1313,11 +1321,13 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                                   }}
                                   size="sm"
                                   flex={1}
+                                  minW={0}
                                 />
                                 <IconButton
                                   icon={<DeleteIcon />}
                                   aria-label="Remove row"
                                   size="sm"
+                                  flexShrink={0}
                                   onClick={() => {
                                     if (!editingQuestion.options) return;
                                     const config = editingQuestion.options as RatingGridConfig;
@@ -1329,22 +1339,25 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                                   }}
                                 />
                               </Flex>
-                              <Input
-                                placeholder="Row label (Spanish) - Optional"
-                                value={row.labelSpanish || ""}
-                                onChange={(e) => {
-                                  if (!editingQuestion.options) return;
-                                  const config = editingQuestion.options as RatingGridConfig;
-                                  const newRows = [...config.rows];
-                                  newRows[index] = { ...row, labelSpanish: e.target.value };
-                                  setEditingQuestion({
-                                    ...editingQuestion,
-                                    options: { ...config, rows: newRows },
-                                  });
-                                }}
-                                size="sm"
-                                ml="60px"
-                              />
+                              <Flex gap={2} minW={0} align="stretch">
+                                <Input
+                                  placeholder="Row label (Spanish) - Optional"
+                                  value={row.labelSpanish || ""}
+                                  onChange={(e) => {
+                                    if (!editingQuestion.options) return;
+                                    const config = editingQuestion.options as RatingGridConfig;
+                                    const newRows = [...config.rows];
+                                    newRows[index] = { ...row, labelSpanish: e.target.value };
+                                    setEditingQuestion({
+                                      ...editingQuestion,
+                                      options: { ...config, rows: newRows },
+                                    });
+                                  }}
+                                  size="sm"
+                                  flex={1}
+                                  minW={0}
+                                />
+                              </Flex>
                             </Stack>
                           ))}
                         </Stack>
@@ -1372,10 +1385,10 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                             Add Column
                           </Button>
                         </Flex>
-                        <Stack spacing={2}>
+                        <Stack spacing={5}>
                           {(editingQuestion.options as RatingGridConfig)?.columns.map((col, index) => (
-                            <Stack key={col.value} spacing={2}>
-                              <Flex gap={2}>
+                            <Stack key={`column-${index}`} spacing={2} minW={0}>
+                              <Flex gap={2} minW={0}>
                                 <Input
                                   placeholder="Label (English) (e.g., Very Poor)"
                                   value={col.label}
@@ -1393,11 +1406,13 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                                   }}
                                   size="sm"
                                   flex={1}
+                                  minW={0}
                                 />
                                 <IconButton
                                   icon={<DeleteIcon />}
                                   aria-label="Remove column"
                                   size="sm"
+                                  flexShrink={0}
                                   onClick={() => {
                                     if (!editingQuestion.options) return;
                                     const config = editingQuestion.options as RatingGridConfig;
@@ -1409,22 +1424,25 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
                                   }}
                                 />
                               </Flex>
-                              <Input
-                                placeholder="Label (Spanish) - Optional"
-                                value={col.labelSpanish || ""}
-                                onChange={(e) => {
-                                  if (!editingQuestion.options) return;
-                                  const config = editingQuestion.options as RatingGridConfig;
-                                  const newColumns = [...config.columns];
-                                  newColumns[index] = { ...col, labelSpanish: e.target.value };
-                                  setEditingQuestion({
-                                    ...editingQuestion,
-                                    options: { ...config, columns: newColumns },
-                                  });
-                                }}
-                                size="sm"
-                                ml="60px"
-                              />
+                              <Flex gap={2} minW={0} align="stretch">
+                                <Input
+                                  placeholder="Label (Spanish) - Optional"
+                                  value={col.labelSpanish || ""}
+                                  onChange={(e) => {
+                                    if (!editingQuestion.options) return;
+                                    const config = editingQuestion.options as RatingGridConfig;
+                                    const newColumns = [...config.columns];
+                                    newColumns[index] = { ...col, labelSpanish: e.target.value };
+                                    setEditingQuestion({
+                                      ...editingQuestion,
+                                      options: { ...config, columns: newColumns },
+                                    });
+                                  }}
+                                  size="sm"
+                                  flex={1}
+                                  minW={0}
+                                />
+                              </Flex>
                             </Stack>
                           ))}
                         </Stack>
