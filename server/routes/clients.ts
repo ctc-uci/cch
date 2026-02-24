@@ -98,10 +98,79 @@ clientsRouter.get("/", async (req, res) => {
 clientsRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    const clients = await db.query(
+    let clients = await db.query(
       `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
       [email]
     );
+
+    // If no client found, check intake_statistics_form and create a client from it
+    // so that request flow (e.g. Client Tracking Statistics) can submit.
+    if (clients.length === 0) {
+      const intakeRows = await db.query(
+        `SELECT * FROM intake_statistics_form WHERE email COLLATE "C" = $1 ORDER BY id DESC LIMIT 1`,
+        [email]
+      );
+      if (intakeRows.length > 0) {
+        const i = intakeRows[0];
+        const sub = (s: string | null | undefined, maxLen: number) =>
+          (s !== null && s !== undefined ? String(s).trim() : "").slice(0, maxLen);
+        const priorLiving = i.prior_living_situation !== null && i.prior_living_situation !== undefined ? String(i.prior_living_situation) : "";
+        const homelessnessLength = parseInt(String(i.duration_homeless || "0"), 10) || 0;
+        await db.query(
+          `INSERT INTO clients (
+            created_by, unit_name, "grant", "status",
+            first_name, last_name, date_of_birth, age,
+            phone_number, email, emergency_contact_name, emergency_contact_phone_number,
+            medical, entrance_date, estimated_exit_date, exit_date,
+            bed_nights, bed_nights_children, pregnant_upon_entry, disabled_children,
+            ethnicity, race, city_of_last_permanent_residence, prior_living, prior_living_city,
+            shelter_in_last_five_years, homelessness_length, chronically_homeless,
+            attending_school_upon_entry, employement_gained
+          ) VALUES (
+            $1, $2, $3, 'Active',
+            $4, $5, $6, $7,
+            $8, $9, $10, $11,
+            $12, $13, $13, NULL,
+            0, 0, $14, $15,
+            $16, $17, $18, $19, $20,
+            $21, $22, $23,
+            $24, false
+          )
+          RETURNING *`,
+          [
+            i.cm_id,
+            "", // unit_name
+            i.client_grant !== null && i.client_grant !== undefined ? String(i.client_grant) : null,
+            sub(i.first_name, 16),
+            sub(i.last_name, 16),
+            i.birthday,
+            i.age ?? 0,
+            sub(i.phone_number, 10),
+            sub(i.email, 32),
+            sub(i.emergency_contact_name, 32),
+            sub(i.emergency_contact_phone_number, 10),
+            i.medical ?? false,
+            i.entry_date,
+            i.pregnant ?? false,
+            (i.number_of_children_with_disability ?? 0) > 0,
+            i.ethnicity,
+            i.race,
+            sub(i.city_last_permanent_address, 256),
+            sub(priorLiving, 256),
+            sub(i.last_city_resided, 256),
+            i.been_in_shelter_last_5_years ?? false,
+            homelessnessLength,
+            i.chronically_homeless ?? false,
+            i.attending_school_upon_entry ?? false,
+          ]
+        );
+        clients = await db.query(
+          `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
+          [email]
+        );
+      }
+    }
+
     res.status(200).json(keysToCamel(clients));
   } catch (err) {
     res.status(500).send(err.message);
