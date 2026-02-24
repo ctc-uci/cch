@@ -505,15 +505,11 @@ intakeResponsesRouter.put("/session/:sessionId", async (req, res) => {
   }
 });
 
-// Attach an existing client to a whole session (sets client_id for all responses in the session)
+// Attach an existing client to a whole session, or unlink by passing clientId: null
 intakeResponsesRouter.patch("/session/:sessionId/client", async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { clientId } = req.body as { clientId?: number };
-
-    if (typeof clientId !== "number" || Number.isNaN(clientId)) {
-      return res.status(400).json({ error: "clientId is required" });
-    }
+    const { clientId } = req.body as { clientId?: number | null };
 
     const sessionCheck = await db.query(
       `SELECT 1 FROM intake_responses WHERE session_id = $1 LIMIT 1`,
@@ -521,6 +517,20 @@ intakeResponsesRouter.patch("/session/:sessionId/client", async (req, res) => {
     );
     if (sessionCheck.length === 0) {
       return res.status(404).json({ error: "Session not found" });
+    }
+
+    if (clientId === null || clientId === undefined) {
+      await db.query(
+        `UPDATE intake_responses
+         SET client_id = NULL, updated_at = CURRENT_TIMESTAMP
+         WHERE session_id = $1`,
+        [sessionId]
+      );
+      return res.status(200).json({ success: true });
+    }
+
+    if (typeof clientId !== "number" || Number.isNaN(clientId)) {
+      return res.status(400).json({ error: "clientId must be a number or null" });
     }
 
     await db.query(
@@ -532,7 +542,7 @@ intakeResponsesRouter.patch("/session/:sessionId/client", async (req, res) => {
 
     res.status(200).json({ success: true });
   } catch (err) {
-    console.error("Error attaching client to session:", err);
+    console.error("Error updating client link for session:", err);
     res.status(500).send((err as Error).message);
   }
 });

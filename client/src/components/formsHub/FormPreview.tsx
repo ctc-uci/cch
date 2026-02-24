@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { ChevronRightIcon } from "@chakra-ui/icons";
 import {
+  Box,
   Button,
   Drawer,
   DrawerBody,
@@ -11,6 +12,7 @@ import {
   DrawerHeader,
   HStack,
   IconButton,
+  Input,
   Spinner,
   Table,
   TableContainer,
@@ -107,6 +109,12 @@ const FormPreview = ({
     return null;
   };
 
+  // Allow manual client link in form preview for dynamic forms except Random Client Survey
+  const canManualClientMatch =
+    isDynamicForm &&
+    !!sessionId &&
+    getFormId(formItemTitle) !== 4;
+
   const [newFormattedModifiedData, setFormattedModifiedData] =
     useState<FormDataRecord>({});
   const [formattedFormData, setFormattedFormData] =
@@ -116,6 +124,12 @@ const FormPreview = ({
   const [isInitial, setIsInitial] = useState(false);
   const [hasApprovedRequest, setHasApprovedRequest] = useState(false);
   const navigate = useNavigate();
+
+  // Manual client match (link form session to a client)
+  const [clientsList, setClientsList] = useState<Array<{ id: number; firstName?: string; lastName?: string }>>([]);
+  const [selectedClientIdForLink, setSelectedClientIdForLink] = useState<string>("");
+  const [linkClientSearch, setLinkClientSearch] = useState("");
+  const [linkClientDropdownOpen, setLinkClientDropdownOpen] = useState(false);
 
   const normalizeString = (value: unknown): string => {
     if (value === undefined || value === null) return "";
@@ -713,6 +727,35 @@ const FormPreview = ({
     checkApprovedRequest();
   }, [backend, role, formItemTitle, isLoading, formData]);
 
+  // Fetch clients list when manual client match is available
+  useEffect(() => {
+    if (!isOpen || !canManualClientMatch) return;
+    const fetchClients = async () => {
+      try {
+        const res = await backend.get("/clients");
+        const list = Array.isArray(res.data) ? res.data : [];
+        setClientsList(
+          list.map((c: { id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+            id: Number(c.id),
+            firstName: c.firstName ?? c.first_name,
+            lastName: c.lastName ?? c.last_name,
+          }))
+        );
+      } catch (err) {
+        console.error("Error fetching clients for manual link:", err);
+      }
+    };
+    fetchClients();
+  }, [backend, isOpen, canManualClientMatch]);
+
+  // When entering edit mode, sync dropdown with current linked client
+  useEffect(() => {
+    if (isEditing && canManualClientMatch) {
+      const current = formData.clientId ?? formData.client_id;
+      setSelectedClientIdForLink(current !== undefined && current !== null ? String(current) : "");
+    }
+  }, [isEditing, canManualClientMatch, formData.clientId, formData.client_id]);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -764,6 +807,29 @@ const FormPreview = ({
         });
 
         await backend.put(`/intakeResponses/session/${sessionId}`, payload);
+
+        // Apply client link/unlink if changed (manual client match forms only)
+        if (canManualClientMatch) {
+          const currentClientId = formData.clientId ?? formData.client_id;
+          const currentStr = currentClientId !== undefined && currentClientId !== null ? String(currentClientId) : "";
+          if (selectedClientIdForLink !== currentStr) {
+            try {
+              const newClientId = selectedClientIdForLink === "" ? null : parseInt(selectedClientIdForLink, 10);
+              await backend.patch(`/intakeResponses/session/${sessionId}/client`, {
+                clientId: newClientId,
+              });
+            } catch (patchErr) {
+              console.error("Error updating client link:", patchErr);
+              toast({
+                title: "Form saved but client link failed",
+                description: "Form data was saved. Could not update client link.",
+                status: "warning",
+                duration: 5000,
+                isClosable: true,
+              });
+            }
+          }
+        }
 
         toast({
           title: "Successfully submitted form",
@@ -1281,7 +1347,127 @@ const FormPreview = ({
                             </Tr>
                           )
                         )
-                      : renderTableBody()}
+                      : (
+                          <>
+                            {renderTableBody()}
+                            {canManualClientMatch && (
+                              <Tr>
+                                <Td
+                                  fontSize="medium"
+                                  maxWidth="300px"
+                                  whiteSpace="normal"
+                                  wordBreak="break-word"
+                                  overflowWrap="break-word"
+                                >
+                                  Link to client
+                                </Td>
+                                <Td
+                                  maxWidth="400px"
+                                  whiteSpace="normal"
+                                  wordBreak="break-word"
+                                  overflowWrap="break-word"
+                                >
+                                  <Box position="relative" maxW="300px">
+                                    <Input
+                                      value={
+                                        linkClientDropdownOpen
+                                          ? linkClientSearch
+                                          : (() => {
+                                              if (!selectedClientIdForLink) return "No client (unlink)";
+                                              const c = clientsList.find((x) => String(x.id) === selectedClientIdForLink);
+                                              return c ? [c.firstName, c.lastName].filter(Boolean).join(" ") || `Client #${c.id}` : selectedClientIdForLink;
+                                            })()
+                                      }
+                                      onChange={(e) => {
+                                        setLinkClientSearch(e.target.value);
+                                        setLinkClientDropdownOpen(true);
+                                      }}
+                                      onFocus={() => {
+                                        setLinkClientDropdownOpen(true);
+                                        const c = clientsList.find((x) => String(x.id) === selectedClientIdForLink);
+                                        setLinkClientSearch(selectedClientIdForLink && c ? [c.firstName, c.lastName].filter(Boolean).join(" ") || `Client #${c.id}` : "");
+                                      }}
+                                      onBlur={() => setTimeout(() => setLinkClientDropdownOpen(false), 150)}
+                                      placeholder="Type to search clients..."
+                                    />
+                                    {linkClientDropdownOpen && (
+                                      <Box
+                                        position="absolute"
+                                        zIndex={10}
+                                        top="100%"
+                                        left={0}
+                                        right={0}
+                                        mt={1}
+                                        bg="white"
+                                        borderWidth="1px"
+                                        borderRadius="md"
+                                        boxShadow="md"
+                                        maxH="200px"
+                                        overflowY="auto"
+                                      >
+                                        {(() => {
+                                          const q = linkClientSearch.trim().toLowerCase();
+                                          const noClientLabel = "No client (unlink)";
+                                          const showNoClient = !q || noClientLabel.toLowerCase().includes(q);
+                                          const filtered = clientsList.filter((c) => {
+                                            const name = [c.firstName, c.lastName].filter(Boolean).join(" ") || "";
+                                            const idStr = `client #${c.id}`;
+                                            return !q || name.toLowerCase().includes(q) || idStr.includes(q);
+                                          });
+                                          return (
+                                            <>
+                                              {showNoClient && (
+                                                <Box
+                                                  px={3}
+                                                  py={2}
+                                                  cursor="pointer"
+                                                  _hover={{ bg: "gray.100" }}
+                                                  onMouseDown={(e) => {
+                                                    e.preventDefault();
+                                                    setSelectedClientIdForLink("");
+                                                    setLinkClientSearch("");
+                                                    setLinkClientDropdownOpen(false);
+                                                  }}
+                                                >
+                                                  {noClientLabel}
+                                                </Box>
+                                              )}
+                                              {filtered.map((c) => {
+                                                const label = [c.firstName, c.lastName].filter(Boolean).join(" ") || `Client #${c.id}`;
+                                                return (
+                                                  <Box
+                                                    key={c.id}
+                                                    px={3}
+                                                    py={2}
+                                                    cursor="pointer"
+                                                    _hover={{ bg: "gray.100" }}
+                                                    onMouseDown={(e) => {
+                                                      e.preventDefault();
+                                                      setSelectedClientIdForLink(String(c.id));
+                                                      setLinkClientSearch(label);
+                                                      setLinkClientDropdownOpen(false);
+                                                    }}
+                                                  >
+                                                    {label}
+                                                  </Box>
+                                                );
+                                              })}
+                                              {filtered.length === 0 && !showNoClient && (
+                                                <Box px={3} py={2} color="gray.500" fontSize="sm">
+                                                  No matching clients
+                                                </Box>
+                                              )}
+                                            </>
+                                          );
+                                        })()}
+                                      </Box>
+                                    )}
+                                  </Box>
+                                </Td>
+                              </Tr>
+                            )}
+                          </>
+                        )}
                   </Tbody>
                 </Table>
               </TableContainer>
