@@ -120,6 +120,7 @@ const FormPreview = ({
   const [formattedFormData, setFormattedFormData] =
     useState<FormDataRecord>({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isInitial, setIsInitial] = useState(false);
   const [hasApprovedRequest, setHasApprovedRequest] = useState(false);
@@ -790,6 +791,7 @@ const FormPreview = ({
   };
 
   const handleSaveForm = async () => {
+    setIsSaving(true);
     // Handle dynamic forms (intake_responses)
     if (isDynamicForm && sessionId) {
       try {
@@ -929,6 +931,7 @@ const FormPreview = ({
           setFormattedModifiedData(formatted);
         }
       } catch (error) {
+        setIsSaving(false);
         console.error("Error updating dynamic form:", error);
         toast({
           title: "Did Not Save Changes",
@@ -938,6 +941,7 @@ const FormPreview = ({
           isClosable: true,
         });
       }
+      setIsSaving(false);
       return;
     }
 
@@ -965,6 +969,7 @@ const FormPreview = ({
         break;
       default:
         console.error("Unknown form title:", formItemTitle);
+        setIsSaving(false);
         return;
     }
 
@@ -1002,6 +1007,7 @@ const FormPreview = ({
         isClosable: true,
       });
     }
+    setIsSaving(false);
   };
 
   const isDate = (value: string) => {
@@ -1287,6 +1293,8 @@ const FormPreview = ({
                     colorScheme="blue"
                     size="lg"
                     onClick={handleSaveForm}
+                    isLoading={isSaving}
+                    isDisabled={isSaving}
                   >
                     Save
                   </Button>
