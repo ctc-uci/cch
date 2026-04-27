@@ -5,89 +5,101 @@ import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
 export const clientsRouter = Router();
+
+// clients is now a VIEW over intake_responses (see migration 011).
+// INSERT and DELETE must target the base table directly.
+
+async function getQuestionMap(): Promise<Map<string, number>> {
+  const questions = await db.query(`SELECT id, field_key FROM form_questions WHERE form_id = 5`);
+  return new Map<string, number>(
+    (questions as { id: number; field_key: string }[]).map((q) => [q.field_key, q.id])
+  );
+}
+
+async function getOrCreateSession(clientId: number | string): Promise<string> {
+  const rows = await db.query(
+    `SELECT session_id FROM intake_responses WHERE client_id = $1 AND form_id = 5 LIMIT 1`,
+    [clientId]
+  );
+  if (rows.length > 0) return (rows[0] as { session_id: string }).session_id;
+  return (await db.query("SELECT uuid_generate_v4() as sid"))[0].sid;
+}
+
+async function upsertResponse(
+  clientId: number | string,
+  questionId: number,
+  value: unknown,
+  sessionId: string
+): Promise<void> {
+  const val =
+    value !== null && value !== undefined && String(value).trim() !== ""
+      ? String(value).trim()
+      : null;
+  await db.query(
+    `INSERT INTO intake_responses (client_id, question_id, response_value, session_id, form_id)
+     VALUES ($1, $2, $3, $4, 5)
+     ON CONFLICT (client_id, question_id) WHERE form_id = 5 AND client_id IS NOT NULL
+     DO UPDATE SET response_value = EXCLUDED.response_value`,
+    [clientId, questionId, val, sessionId]
+  );
+}
+
 clientsRouter.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const clients = await db.query(`SELECT * FROM clients WHERE id = $1`, [id]);
-    res.status(200).json(keysToCamel(clients));
+    const rows = await db.query(
+      `SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
+       FROM clients c
+       LEFT JOIN case_managers cm ON c.created_by = cm.id
+       WHERE c.id = $1`,
+      [id]
+    );
+    res.status(200).json(keysToCamel(rows));
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-// Gets specific number of clients based on page count and returns either ALL or specific clients that have search keyword present.
 clientsRouter.get("/", async (req, res) => {
   try {
     const { search, page, filter } = req.query;
 
     let queryStr = `
-      SELECT 
-        clients.*, 
-        case_managers.first_name AS case_manager_first_name, 
-        case_managers.last_name AS case_manager_last_name
-      FROM clients
-      LEFT JOIN case_managers ON clients.created_by = case_managers.id
-      WHERE 1=1
-    `;
+      SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
+      FROM clients c
+      LEFT JOIN case_managers cm ON c.created_by = cm.id
+      WHERE 1=1`;
 
-    const stringSearch = "'%" + String(search) + "%'";
+    const params: unknown[] = [];
 
     if (search) {
-      queryStr += ` 
-      AND (clients.id::TEXT ILIKE ${stringSearch}
-        OR clients.created_by::TEXT ILIKE ${stringSearch}
-        OR clients.unit_name::TEXT ILIKE ${stringSearch}
-        OR clients."grant"::TEXT ILIKE ${stringSearch}
-        OR clients."status"::TEXT ILIKE ${stringSearch}
-        OR clients.first_name::TEXT ILIKE ${stringSearch}
-        OR clients.last_name::TEXT ILIKE ${stringSearch}
-        OR clients.date_of_birth::TEXT ILIKE ${stringSearch}
-        OR clients.age::TEXT ILIKE ${stringSearch}
-        OR clients.phone_number::TEXT ILIKE ${stringSearch}
-        OR clients.email::TEXT ILIKE ${stringSearch}
-        OR clients.emergency_contact_name::TEXT ILIKE ${stringSearch}
-        OR clients.emergency_contact_phone_number::TEXT ILIKE ${stringSearch}
-        OR clients.medical::TEXT ILIKE ${stringSearch}
-        OR clients.entrance_date::TEXT ILIKE ${stringSearch}
-        OR clients.estimated_exit_date::TEXT ILIKE ${stringSearch}
-        OR clients.exit_date::TEXT ILIKE ${stringSearch}
-        OR clients.bed_nights::TEXT ILIKE ${stringSearch}
-        OR clients.bed_nights_children::TEXT ILIKE ${stringSearch}
-        OR clients.pregnant_upon_entry::TEXT ILIKE ${stringSearch}
-        OR clients.disabled_children::TEXT ILIKE ${stringSearch}
-        OR clients.ethnicity::TEXT ILIKE ${stringSearch}
-        OR clients.race::TEXT ILIKE ${stringSearch}
-        OR clients.city_of_last_permanent_residence::TEXT ILIKE ${stringSearch}
-        OR clients.prior_living::TEXT ILIKE ${stringSearch}
-        OR clients.prior_living_city::TEXT ILIKE ${stringSearch}
-        OR clients.shelter_in_last_five_years::TEXT ILIKE ${stringSearch}
-        OR clients.homelessness_length::TEXT ILIKE ${stringSearch}
-        OR clients.chronically_homeless::TEXT ILIKE ${stringSearch}
-        OR clients.attending_school_upon_entry::TEXT ILIKE ${stringSearch}
-        OR clients.employement_gained::TEXT ILIKE ${stringSearch}
-        OR clients.reason_for_leaving::TEXT ILIKE ${stringSearch}
-        OR clients.specific_reason_for_leaving::TEXT ILIKE ${stringSearch}
-        OR clients.specific_destination::TEXT ILIKE ${stringSearch}
-        OR clients.savings_amount::TEXT ILIKE ${stringSearch}
-        OR clients.attending_school_upon_exit::TEXT ILIKE ${stringSearch}
-        OR clients.reunified::TEXT ILIKE ${stringSearch}
-        OR clients.successful_completion::TEXT ILIKE ${stringSearch}
-        OR clients.destination_city::TEXT ILIKE ${stringSearch}
-        OR case_managers.first_name::TEXT ILIKE ${stringSearch}
-        OR case_managers.last_name::TEXT ILIKE ${stringSearch}
+      params.push(`%${String(search)}%`);
+      const n = params.length;
+      // Search all response_value fields dynamically — no hardcoded column list needed.
+      // response_value is stored as TEXT so no casting required.
+      queryStr += ` AND (
+        c.id::TEXT ILIKE $${n}
+        OR EXISTS (
+          SELECT 1 FROM intake_responses ir
+          WHERE ir.client_id = c.id AND ir.form_id = 5
+            AND ir.response_value ILIKE $${n}
+        )
+        OR cm.first_name ILIKE $${n}
+        OR cm.last_name ILIKE $${n}
       )`;
     }
 
     if (filter) {
-      queryStr += `AND ${filter}`;
+      queryStr += ` AND ${filter}`;
     }
 
-    queryStr += " ORDER BY clients.id DESC";
+    queryStr += " ORDER BY c.id DESC";
 
     if (page) {
       queryStr += ` LIMIT ${page}`;
     }
-    const clients = await db.query(queryStr);
+
+    const clients = await db.query(queryStr, params);
     res.status(200).json(keysToCamel(clients));
   } catch (err) {
     console.error(err.message);
@@ -98,242 +110,193 @@ clientsRouter.get("/", async (req, res) => {
 clientsRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
-    let clients = await db.query(
-      `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
+
+    let rows = await db.query(
+      `SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
+       FROM clients c
+       LEFT JOIN case_managers cm ON c.created_by = cm.id
+       WHERE c.email COLLATE "C" = $1`,
       [email]
     );
 
-    // If no client found, check intake_statistics_form and create a client from it
-    // so that request flow (e.g. Client Tracking Statistics) can submit.
-    if (clients.length === 0) {
+    if (rows.length === 0) {
       const intakeRows = await db.query(
         `SELECT * FROM intake_statistics_form WHERE email COLLATE "C" = $1 ORDER BY id DESC LIMIT 1`,
         [email]
       );
+
       if (intakeRows.length > 0) {
         const i = intakeRows[0];
         const sub = (s: string | null | undefined, maxLen: number) =>
           (s !== null && s !== undefined ? String(s).trim() : "").slice(0, maxLen);
-        const priorLiving = i.prior_living_situation !== null && i.prior_living_situation !== undefined ? String(i.prior_living_situation) : "";
+
+        const clientResult = await db.query(`INSERT INTO clients_base DEFAULT VALUES RETURNING id`);
+        const newClientId: number = clientResult[0].id;
+
+        const sessionResult = await db.query("SELECT uuid_generate_v4() as session_id");
+        const sessionId: string = sessionResult[0].session_id;
+
+        const fieldToId = await getQuestionMap();
+        const priorLiving =
+          i.prior_living_situation !== null && i.prior_living_situation !== undefined
+            ? String(i.prior_living_situation)
+            : "";
         const homelessnessLength = parseInt(String(i.duration_homeless || "0"), 10) || 0;
-        await db.query(
-          `INSERT INTO clients (
-            created_by, unit_name, "grant", "status",
-            first_name, last_name, date_of_birth, age,
-            phone_number, email, emergency_contact_name, emergency_contact_phone_number,
-            medical, entrance_date, estimated_exit_date, exit_date,
-            bed_nights, bed_nights_children, pregnant_upon_entry, disabled_children,
-            ethnicity, race, city_of_last_permanent_residence, prior_living, prior_living_city,
-            shelter_in_last_five_years, homelessness_length, chronically_homeless,
-            attending_school_upon_entry, employement_gained
-          ) VALUES (
-            $1, $2, $3, 'Active',
-            $4, $5, $6, $7,
-            $8, $9, $10, $11,
-            $12, $13, $13, NULL,
-            0, 0, $14, $15,
-            $16, $17, $18, $19, $20,
-            $21, $22, $23,
-            $24, false
-          )
-          RETURNING *`,
-          [
-            i.cm_id,
-            "", // unit_name
-            i.client_grant !== null && i.client_grant !== undefined ? String(i.client_grant) : null,
-            sub(i.first_name, 16),
-            sub(i.last_name, 16),
-            i.birthday,
-            i.age ?? 0,
-            sub(i.phone_number, 10),
-            sub(i.email, 32),
-            sub(i.emergency_contact_name, 32),
-            sub(i.emergency_contact_phone_number, 10),
-            i.medical ?? false,
-            i.entry_date,
-            i.pregnant ?? false,
-            (i.number_of_children_with_disability ?? 0) > 0,
-            i.ethnicity,
-            i.race,
-            sub(i.city_last_permanent_address, 256),
-            sub(priorLiving, 256),
-            sub(i.last_city_resided, 256),
-            i.been_in_shelter_last_5_years ?? false,
-            homelessnessLength,
-            i.chronically_homeless ?? false,
-            i.attending_school_upon_entry ?? false,
-          ]
-        );
-        clients = await db.query(
-          `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
+
+        const fieldValues: Record<string, string> = {
+          created_by: String(i.cm_id ?? ""),
+          unit_name: "",
+          grant:
+            i.client_grant !== null && i.client_grant !== undefined
+              ? String(i.client_grant)
+              : "",
+          status: "Active",
+          first_name: sub(i.first_name, 16),
+          last_name: sub(i.last_name, 16),
+          date_of_birth: i.birthday ? String(i.birthday).split("T")[0] : "",
+          age: String(i.age ?? ""),
+          phone_number: sub(i.phone_number, 10),
+          email: sub(i.email, 32),
+          emergency_contact_name: sub(i.emergency_contact_name, 32),
+          emergency_contact_phone_number: sub(i.emergency_contact_phone_number, 10),
+          medical: String(i.medical ?? false),
+          entrance_date: i.entry_date ? String(i.entry_date).split("T")[0] : "",
+          estimated_exit_date: i.entry_date ? String(i.entry_date).split("T")[0] : "",
+          bed_nights: "0",
+          bed_nights_children: "0",
+          pregnant_upon_entry: String(i.pregnant ?? false),
+          disabled_children: String((i.number_of_children_with_disability ?? 0) > 0),
+          ethnicity: i.ethnicity ? String(i.ethnicity) : "",
+          race: i.race ? String(i.race) : "",
+          city_of_last_permanent_residence: sub(i.city_last_permanent_address, 256),
+          prior_living: sub(priorLiving, 256),
+          prior_living_city: sub(i.last_city_resided, 256),
+          shelter_in_last_five_years: String(i.been_in_shelter_last_5_years ?? false),
+          homelessness_length: String(homelessnessLength),
+          chronically_homeless: String(i.chronically_homeless ?? false),
+          attending_school_upon_entry: String(i.attending_school_upon_entry ?? false),
+          employement_gained: "false",
+        };
+
+        for (const [fieldKey, value] of Object.entries(fieldValues)) {
+          const questionId = fieldToId.get(fieldKey);
+          if (!questionId || !value || value.trim() === "") continue;
+          await upsertResponse(newClientId, questionId, value, sessionId);
+        }
+
+        rows = await db.query(
+          `SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
+           FROM clients c
+           LEFT JOIN case_managers cm ON c.created_by = cm.id
+           WHERE c.email COLLATE "C" = $1`,
           [email]
         );
       }
     }
 
-    res.status(200).json(keysToCamel(clients));
+    res.status(200).json(keysToCamel(rows));
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-// Creates new client based on key values provided into request body.
+// Creates a client from the dynamic Add Client drawer form.
+clientsRouter.post("/from-form", async (req, res) => {
+  try {
+    const { responses } = req.body as {
+      client?: Record<string, unknown>;
+      responses: { question_id: number; response_value: string }[];
+    };
+
+    const clientResult = await db.query(`INSERT INTO clients_base DEFAULT VALUES RETURNING id`);
+    const newClientId: number = clientResult[0].id;
+
+    const sessionResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId: string = sessionResult[0].session_id;
+
+    if (Array.isArray(responses) && responses.length > 0) {
+      for (const { question_id, response_value } of responses) {
+        await upsertResponse(newClientId, question_id, response_value, sessionId);
+      }
+    }
+
+    try {
+      const questionIds = responses.map((r) => r.question_id);
+      const questionRows =
+        questionIds.length > 0
+          ? await db.query(
+              `SELECT id, field_key FROM form_questions WHERE id = ANY($1::int[])`,
+              [questionIds]
+            )
+          : [];
+      const idToFieldKey = new Map<number, string>(
+        (questionRows as { id: number; field_key: string }[]).map((q) => [q.id, q.field_key])
+      );
+      const byFieldKey: Record<string, string> = {};
+      for (const { question_id, response_value } of responses) {
+        const fk = idToFieldKey.get(question_id);
+        if (fk && response_value) byFieldKey[fk] = response_value;
+      }
+      const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
+        firstName: byFieldKey["first_name"] ?? null,
+        lastName: byFieldKey["last_name"] ?? null,
+        phoneNumber: byFieldKey["phone_number"] ?? null,
+        dateOfBirth: byFieldKey["date_of_birth"] ?? null,
+      });
+      if (matchingSessionIds.length > 0) {
+        await db.query(
+          `UPDATE intake_responses
+           SET client_id = $1, updated_at = CURRENT_TIMESTAMP
+           WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
+          [newClientId, matchingSessionIds]
+        );
+      }
+    } catch (linkErr) {
+      console.error("Link surveys to new client failed (non-fatal):", linkErr);
+    }
+
+    res.status(200).json({ id: newClientId, session_id: sessionId });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+// Legacy create route — body field keys must match form_questions field_keys for form_id=5.
 clientsRouter.post("/", async (req, res) => {
   try {
-    const {
-      created_by,
-      unit_name,
-      grant,
-      status,
-      first_name,
-      last_name,
-      date_of_birth,
-      age,
-      phone_number,
-      email,
-      emergency_contact_name,
-      emergency_contact_phone_number,
-      medical,
-      entrance_date,
-      estimated_exit_date,
-      exit_date,
-      bed_nights,
-      bed_nights_children,
-      pregnant_upon_entry,
-      disabled_children,
-      ethnicity,
-      race,
-      city_of_last_permanent_residence,
-      prior_living,
-      prior_living_city,
-      shelter_in_last_five_years,
-      homelessness_length,
-      chronically_homeless,
-      attending_school_upon_entry,
-      employement_gained,
-      reason_for_leaving,
-      specific_reason_for_leaving,
-      specific_destination,
-      savings_amount,
-      attending_school_upon_exit,
-      reunified,
-      successful_completion,
-      destination_city,
-      comments,
-    } = req.body;
+    const body = req.body as Record<string, unknown>;
 
-    const data = await db.query(
-      `INSERT INTO clients (
-          created_by,
-          unit_name,
-          "grant",
-          "status",
-          first_name,
-          last_name,
-          date_of_birth,
-          age,
-          phone_number,
-          email,
-          emergency_contact_name,
-          emergency_contact_phone_number,
-          medical,
-          entrance_date,
-          estimated_exit_date,
-          exit_date,
-          bed_nights,
-          bed_nights_children,
-          pregnant_upon_entry,
-          disabled_children,
-          ethnicity,
-          race,
-          city_of_last_permanent_residence,
-          prior_living,
-          prior_living_city,
-          shelter_in_last_five_years,
-          homelessness_length,
-          chronically_homeless,
-          attending_school_upon_entry,
-          employement_gained,
-          reason_for_leaving,
-          specific_reason_for_leaving,
-          specific_destination,
-          savings_amount,
-          attending_school_upon_exit,
-          reunified,
-          successful_completion,
-          destination_city,
-          comments
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
-          $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39
-        )
-        RETURNING id;
-        `,
+    const clientResult = await db.query(`INSERT INTO clients_base DEFAULT VALUES RETURNING id`);
+    const newClientId: number = clientResult[0].id;
 
-      [
-        created_by,
-        unit_name,
-        grant !== null && grant !== undefined && String(grant).trim() !== "" ? String(grant).trim() : null,
-        status,
-        first_name,
-        last_name,
-        date_of_birth,
-        age,
-        phone_number,
-        email,
-        emergency_contact_name,
-        emergency_contact_phone_number,
-        medical,
-        entrance_date,
-        estimated_exit_date,
-        exit_date,
-        bed_nights,
-        bed_nights_children,
-        pregnant_upon_entry,
-        disabled_children,
-        ethnicity,
-        race,
-        city_of_last_permanent_residence,
-        prior_living,
-        prior_living_city,
-        shelter_in_last_five_years,
-        homelessness_length,
-        chronically_homeless,
-        attending_school_upon_entry,
-        employement_gained,
-        reason_for_leaving,
-        specific_reason_for_leaving,
-        specific_destination,
-        savings_amount,
-        attending_school_upon_exit,
-        reunified,
-        successful_completion,
-        destination_city,
-        comments,
-      ]
-    );
+    const sessionResult = await db.query("SELECT uuid_generate_v4() as session_id");
+    const sessionId: string = sessionResult[0].session_id;
 
-    const newClientId = data[0].id;
-    // Link any existing survey submissions (intake_responses) that have no client but match by name, phone, date of birth
-    if (newClientId) {
-      try {
-        const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
-          firstName: first_name,
-          lastName: last_name,
-          phoneNumber: phone_number,
-          dateOfBirth: date_of_birth,
-        });
-        if (matchingSessionIds.length > 0) {
-          await db.query(
-            `UPDATE intake_responses
-             SET client_id = $1, updated_at = CURRENT_TIMESTAMP
-             WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
-            [newClientId, matchingSessionIds]
-          );
-        }
-      } catch (linkErr) {
-        console.error("Link surveys to new client failed (non-fatal):", linkErr);
+    const fieldToId = await getQuestionMap();
+
+    for (const [fieldKey, value] of Object.entries(body)) {
+      const questionId = fieldToId.get(fieldKey);
+      if (!questionId) continue;
+      await upsertResponse(newClientId, questionId, value, sessionId);
+    }
+
+    try {
+      const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
+        firstName: (body["first_name"] as string) ?? null,
+        lastName: (body["last_name"] as string) ?? null,
+        phoneNumber: (body["phone_number"] as string) ?? null,
+        dateOfBirth: (body["date_of_birth"] as string) ?? null,
+      });
+      if (matchingSessionIds.length > 0) {
+        await db.query(
+          `UPDATE intake_responses
+           SET client_id = $1, updated_at = CURRENT_TIMESTAMP
+           WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
+          [newClientId, matchingSessionIds]
+        );
       }
+    } catch (linkErr) {
+      console.error("Link surveys to new client failed (non-fatal):", linkErr);
     }
 
     res.status(200).json({ id: newClientId });
@@ -344,150 +307,28 @@ clientsRouter.post("/", async (req, res) => {
 
 clientsRouter.put("/:id", async (req, res) => {
   try {
-    const {
-      created_by,
-      unit_name,
-      grant,
-      status,
-      first_name,
-      last_name,
-      date_of_birth,
-      age,
-      phone_number,
-      email,
-      emergency_contact_name,
-      emergency_contact_phone_number,
-      medical,
-      entrance_date,
-      estimated_exit_date,
-      exit_date,
-      bed_nights,
-      bed_nights_children,
-      pregnant_upon_entry,
-      disabled_children,
-      ethnicity,
-      race,
-      city_of_last_permanent_residence,
-      prior_living,
-      prior_living_city,
-      shelter_in_last_five_years,
-      homelessness_length,
-      chronically_homeless,
-      attending_school_upon_entry,
-      employement_gained,
-      reason_for_leaving,
-      specific_reason_for_leaving,
-      specific_destination,
-      savings_amount,
-      attending_school_upon_exit,
-      reunified,
-      successful_completion,
-      destination_city,
-      comments,
-    } = req.body;
-
     const { id } = req.params;
+    const body = req.body as Record<string, unknown>;
 
-    const query = `
-      UPDATE clients
-      SET
-        created_by = COALESCE($1, created_by),
-        unit_name = COALESCE($2, unit_name),
-        "grant" = COALESCE($3, "grant"),
-        "status" = COALESCE($4, "status"),
-        first_name = COALESCE($5, first_name),
-        last_name = COALESCE($6, last_name),
-        date_of_birth = COALESCE($7, date_of_birth),
-        age = COALESCE($8, age),
-        phone_number = COALESCE($9, phone_number),
-        email = COALESCE($10, email),
-        emergency_contact_name = COALESCE($11, emergency_contact_name),
-        emergency_contact_phone_number = COALESCE($12, emergency_contact_phone_number),
-        medical = COALESCE($13, medical),
-        entrance_date = COALESCE($14, entrance_date),
-        estimated_exit_date = COALESCE($15, estimated_exit_date),
-        exit_date = COALESCE($16, exit_date),
-        bed_nights = COALESCE($17, bed_nights),
-        bed_nights_children = COALESCE($18, bed_nights_children),
-        pregnant_upon_entry = COALESCE($19, pregnant_upon_entry),
-        disabled_children = COALESCE($20, disabled_children),
-        ethnicity = COALESCE($21, ethnicity),
-        race = COALESCE($22, race),
-        city_of_last_permanent_residence = COALESCE($23, city_of_last_permanent_residence),
-        prior_living = COALESCE($24, prior_living),
-        prior_living_city = COALESCE($25, prior_living_city),
-        shelter_in_last_five_years = COALESCE($26, shelter_in_last_five_years),
-        homelessness_length = COALESCE($27, homelessness_length),
-        chronically_homeless = COALESCE($28, chronically_homeless),
-        attending_school_upon_entry = COALESCE($29, attending_school_upon_entry),
-        employement_gained = COALESCE($30, employement_gained),
-        reason_for_leaving = COALESCE($31, reason_for_leaving),
-        specific_reason_for_leaving = COALESCE($32, specific_reason_for_leaving),
-        specific_destination = COALESCE($33, specific_destination),
-        savings_amount = COALESCE($34, savings_amount),
-        attending_school_upon_exit = COALESCE($35, attending_school_upon_exit),
-        reunified = COALESCE($36, reunified),
-        successful_completion = COALESCE($37, successful_completion),
-        destination_city = COALESCE($38, destination_city),
-        comments = COALESCE($39, comments)
-      WHERE id = $40
-      RETURNING id;
-    `;
+    const sessionId = await getOrCreateSession(id);
+    const fieldToId = await getQuestionMap();
 
-    const data = await db.query(query, [
-      created_by,
-      unit_name,
-      grant,
-      status,
-      first_name,
-      last_name,
-      date_of_birth,
-      age,
-      phone_number,
-      email,
-      emergency_contact_name,
-      emergency_contact_phone_number,
-      medical,
-      entrance_date,
-      estimated_exit_date,
-      exit_date,
-      bed_nights,
-      bed_nights_children,
-      pregnant_upon_entry,
-      disabled_children,
-      ethnicity,
-      race,
-      city_of_last_permanent_residence,
-      prior_living,
-      prior_living_city,
-      shelter_in_last_five_years,
-      homelessness_length,
-      chronically_homeless,
-      attending_school_upon_entry,
-      employement_gained,
-      reason_for_leaving,
-      specific_reason_for_leaving,
-      specific_destination,
-      savings_amount,
-      attending_school_upon_exit,
-      reunified,
-      successful_completion,
-      destination_city,
-      comments,
-      id,
-    ]);
+    for (const [fieldKey, value] of Object.entries(body)) {
+      const questionId = fieldToId.get(fieldKey);
+      if (!questionId) continue;
+      await upsertResponse(id, questionId, value, sessionId);
+    }
 
-    res.status(200).json({ id: data[0].id });
+    res.status(200).json({ id: parseInt(id) });
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-// Delete a client
 clientsRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query("DELETE FROM clients WHERE id = $1", [id]);
+    await db.query("DELETE FROM clients_base WHERE id = $1", [id]);
     res.status(200).json();
   } catch (err) {
     res.status(500).send(err.message);

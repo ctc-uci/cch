@@ -31,6 +31,62 @@ intakeResponsesRouter.get("/form/:formId/questions", async (req, res) => {
   }
 });
 
+// Get all responses for a specific client + form as a flat camelCase object.
+// Returns null if no responses exist (e.g. client was created via the old direct-insert flow).
+intakeResponsesRouter.get("/client/:clientId/form/:formId", async (req, res) => {
+  try {
+    const { clientId, formId } = req.params;
+
+    const sessionResult = await db.query(
+      `SELECT DISTINCT session_id, submitted_at
+       FROM intake_responses
+       WHERE client_id = $1 AND form_id = $2
+       ORDER BY submitted_at DESC
+       LIMIT 1`,
+      [clientId, formId]
+    );
+
+    if (sessionResult.length === 0) {
+      return res.status(200).json(null);
+    }
+
+    const sessionId: string = sessionResult[0].session_id;
+
+    const responses = await db.query(
+      `SELECT ir.response_value, fq.field_key, fq.question_type
+       FROM intake_responses ir
+       JOIN form_questions fq ON ir.question_id = fq.id
+       WHERE ir.session_id = $1
+       ORDER BY fq.display_order ASC`,
+      [sessionId]
+    );
+
+    const result: Record<string, unknown> = { sessionId };
+
+    for (const row of responses as { response_value: string | null; field_key: string; question_type: string }[]) {
+      let value: unknown;
+      switch (row.question_type) {
+        case "number":
+          value = row.response_value ? parseFloat(row.response_value) : null;
+          break;
+        case "boolean":
+          value = row.response_value === "true";
+          break;
+        case "date":
+          value = row.response_value || null;
+          break;
+        default:
+          value = row.response_value || "";
+      }
+      result[toCamel(row.field_key)] = value;
+    }
+
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
 // Delete responses by session_id (deletes all responses in a session)
 intakeResponsesRouter.delete("/session/:sessionId", async (req, res) => {
   try {

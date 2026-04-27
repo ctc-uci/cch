@@ -6,6 +6,8 @@ import {
   Card,
   HStack,
   Input,
+  Radio,
+  RadioGroup,
   Spacer,
   Stack,
   Tab,
@@ -42,6 +44,8 @@ const emptyClient: Client = {
   chronicallyHomeless: false,
   cityOfLastPermanentResidence: "",
   createdBy: 0,
+  caseManagerFirstName: "",
+  caseManagerLastName: "",
   dateOfBirth: "",
   destinationcity: "",
   disabledChildren: false,
@@ -106,6 +110,21 @@ export const ViewPage = () => {
     options?: { isBoolean?: boolean; isNumeric?: boolean }
   ) => {
     if (isEditing) {
+      if (options?.isBoolean) {
+        const currentVal = edits[fieldName] !== undefined ? edits[fieldName] : displayValue;
+        return (
+          <RadioGroup
+            value={currentVal ? "true" : "false"}
+            onChange={(val) => setEdits({ ...edits, [fieldName]: val === "true" })}
+          >
+            <HStack spacing={6}>
+              <Radio value="true">Yes</Radio>
+              <Radio value="false">No</Radio>
+            </HStack>
+          </RadioGroup>
+        );
+      }
+
       return (
         <Box
           w="100%"
@@ -127,35 +146,18 @@ export const ViewPage = () => {
             value={edits[fieldName] !== undefined ? edits[fieldName] : displayValue}
             onChange={(e) => {
               let newValue = e.target.value;
-
-              if (options?.isBoolean) {
-                newValue = newValue.toLowerCase() === "yes";
-                setEdits({ ...edits, [fieldName]: newValue });
-                return;
-              }
-
               if (options?.isNumeric) {
-                if (newValue !== "" && !/^\d+$/.test(newValue)) {
-                  return;
-                }
-                setEdits({ ...edits, [fieldName]: newValue });
-                return;
+                if (newValue !== "" && !/^\d+$/.test(newValue)) return;
               }
-
               setEdits({ ...edits, [fieldName]: newValue });
             }}
           />
         </Box>
       );
     }
+
     return (
-      <Box
-        w="100%"
-        h={cellHeight}
-        display="flex"
-        alignItems="center"
-        p={0}
-      >
+      <Box w="100%" h={cellHeight} display="flex" alignItems="center" p={0}>
         {options?.isBoolean ? (displayValue ? "Yes" : "No") : displayValue}
       </Box>
     );
@@ -200,33 +202,27 @@ export const ViewPage = () => {
   }, [params.id, fetchChildren]);
 
   useEffect(() => {
-    const fetchClient = async (id: number) => {
-      try {
-        const response = await backend.get(`/clients/${id}`);
-        setClient(response.data[0]);
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
-
-    const fetchForms = async (id: number) => {
-      try {
-        const response = await backend.get(`/formsCombined/${id}`);
-        setFormItems(response.data);
-      } catch (err: any) {
-        setError(err.message);
-      }
-    };
-
     const fetchData = async () => {
       setLoading(true);
       if (params.id) {
         const intId = parseInt(params.id);
-        await Promise.all([
-          fetchChildren(intId),
-          fetchClient(intId),
-          fetchForms(intId),
+
+        const [clientRes, formsRes] = await Promise.allSettled([
+          backend.get(`/clients/${intId}`),
+          backend.get(`/formsCombined/${intId}`),
         ]);
+
+        await fetchChildren(intId);
+
+        if (clientRes.status === "fulfilled" && clientRes.value.data?.[0]) {
+          setClient({ ...emptyClient, ...clientRes.value.data[0] });
+        } else if (clientRes.status === "rejected") {
+          setError((clientRes.reason as { message?: string })?.message ?? "Failed to fetch client");
+        }
+
+        if (formsRes.status === "fulfilled") {
+          setFormItems(formsRes.value.data);
+        }
       }
       setLoading(false);
     };
@@ -426,8 +422,10 @@ export const ViewPage = () => {
                 </Tr>
                 <Tr>
                   <Td>Created By</Td>
-                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
-                    {renderField("createdBy", client.createdBy, { isNumeric: true })}
+                  <Td bgColor="white" p={4}>
+                    <Box w="100%" h="40px" display="flex" alignItems="center">
+                      {[client.caseManagerFirstName, client.caseManagerLastName].filter(Boolean).join(" ") || "—"}
+                    </Box>
                   </Td>
                 </Tr>
                 <Tr>

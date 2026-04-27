@@ -127,6 +127,8 @@ interface Client {
   chronicallyHomeless: boolean;
   cityOfLastPermanentResidence: string;
   createdBy: number;
+  caseManagerFirstName: string;
+  caseManagerLastName: string;
   dateOfBirth: string;
   destinationcity: string;
   disabledChildren: boolean;

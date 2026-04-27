@@ -490,89 +490,68 @@ export const ClientList = ({ admin }: ClientListProps) => {
 
     // Apply filter queries
     if (filterQuery.length > 1) {
+      const STATIC_FIELD_MAP: Record<string, string> = {
+        "case_managers.first_name": "caseManagerFirstName",
+        "case_managers.last_name": "caseManagerLastName",
+      };
+      const snakeToCamel = (s: string) =>
+        s.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+
+      const evaluateQuery = (client: Client, query: string): boolean => {
+        if (!query) return true;
+
+        const match = query.match(
+          /\s*(?:AND|OR)?\s*(\w+\.\w+(?:_\w+)*)\s+(ILIKE|contains|=|!=|>|<)\s+['"]?([^'"]*)['"]?/
+        );
+        if (!match) return true;
+
+        const [, fieldPath, operator, value] = match;
+        if (!fieldPath || !operator || !value) return true;
+
+        const clientField =
+          STATIC_FIELD_MAP[fieldPath] ??
+          (fieldPath.startsWith("clients.")
+            ? snakeToCamel(fieldPath.split(".")[1])
+            : undefined);
+        if (!clientField) return true;
+
+        const clientValue = client[clientField as keyof Client];
+        const stringValue = String(clientValue ?? "").toLowerCase().trim();
+        let filterValue = value.trim().toLowerCase();
+        if (operator === "ILIKE" || operator === "contains") {
+          filterValue = filterValue.replace(/^%+|%+$/g, "");
+        }
+
+        switch (operator) {
+          case "ILIKE":
+          case "contains":
+            return stringValue.includes(filterValue);
+          case "=":
+            return stringValue === filterValue;
+          case "!=":
+            return stringValue !== filterValue;
+          case ">":
+            return Number(clientValue) > Number(value);
+          case "<":
+            return Number(clientValue) < Number(value);
+          default:
+            return true;
+        }
+      };
+
+      // Respect AND/OR selectors between filter rows
       filtered = filtered.filter((client) => {
-        return filterQuery.slice(1).every((query) => {
-          if (!query) return true;
-
-          // Parse the filter query to extract field, operator, and value (allow leading space from filter builder)
-          const match = query.match(
-            /\s*(\w+\.\w+(?:_\w+)*)\s+(ILIKE|contains|=|!=|>|<)\s+['"]?([^'"]*)['"]?/
-          );
-          if (!match) return true;
-
-          const [, fieldPath, operator, value] = match;
-          if (!fieldPath || !operator || !value) return true;
-
-          const [_table, _field] = fieldPath.split(".");
-
-          // Map database field names to client object properties
-          const fieldMap: { [key: string]: string } = {
-            "clients.first_name": "firstName",
-            "clients.last_name": "lastName",
-            "clients.date_of_birth": "dateOfBirth",
-            "clients.age": "age",
-            "clients.phone_number": "phoneNumber",
-            "clients.email": "email",
-            "clients.grant": "grant",
-            "clients.status": "status",
-            "clients.entrance_date": "entranceDate",
-            "clients.exit_date": "exitDate",
-            "clients.bed_nights": "bedNights",
-            "clients.bed_nights_children": "bedNightsChildren",
-            "clients.pregnant_upon_entry": "pregnantUponEntry",
-            "clients.disabled_children": "disabledChildren",
-            "clients.ethnicity": "ethnicity",
-            "clients.race": "race",
-            "clients.city_of_last_permanent_residence":
-              "cityOfLastPermanentResidence",
-            "clients.prior_living": "priorLiving",
-            "clients.prior_living_city": "priorLivingCity",
-            "clients.shelter_in_last_five_years": "shelterInLastFiveYears",
-            "clients.homelessness_length": "homelessnessLength",
-            "clients.chronically_homeless": "chronicallyHomeless",
-            "clients.attending_school_upon_entry": "attendingSchoolUponEntry",
-            "clients.employement_gained": "employementGained",
-            "clients.reason_for_leaving": "reasonForLeaving",
-            "clients.specific_reason_for_leaving": "specificReasonForLeaving",
-            "clients.specific_destination": "specificDestination",
-            "clients.savings_amount": "savingsAmount",
-            "clients.attending_school_upon_exit": "attendingSchoolUponExit",
-            "clients.reunified": "reunified",
-            "clients.successful_completion": "successfulCompletion",
-            "clients.destination_city": "destinationCity",
-            "case_managers.first_name": "caseManagerFirstName",
-            "case_managers.last_name": "caseManagerLastName",
-            "locations.name": "locationName",
-            "clients.unit_name": "unitName",
-          };
-
-          const clientField = fieldMap[fieldPath];
-          if (!clientField) return true;
-
-          const clientValue = client[clientField as keyof Client];
-          const stringValue = String(clientValue || "").toLowerCase();
-          let filterValue = value.trim().toLowerCase();
-          // For contains/ILIKE the filter builder emits '%value%' — strip SQL wildcards so we match substring
-          if (operator === "ILIKE" || operator === "contains") {
-            filterValue = filterValue.replace(/^%+|%+$/g, "");
+        const queries = filterQuery.slice(1);
+        let result = evaluateQuery(client, queries[0]);
+        for (let i = 1; i < queries.length; i++) {
+          const isOr = queries[i].trimStart().startsWith("OR");
+          if (isOr) {
+            result = result || evaluateQuery(client, queries[i]);
+          } else {
+            result = result && evaluateQuery(client, queries[i]);
           }
-
-          switch (operator) {
-            case "ILIKE":
-            case "contains":
-              return stringValue.includes(filterValue);
-            case "=":
-              return stringValue === filterValue;
-            case "!=":
-              return stringValue !== filterValue;
-            case ">":
-              return Number(clientValue) > Number(value);
-            case "<":
-              return Number(clientValue) < Number(value);
-            default:
-              return true;
-          }
-        });
+        }
+        return result;
       });
     }
 

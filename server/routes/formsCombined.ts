@@ -55,6 +55,7 @@ formsCombinedRouter.get('/:id', async (req, res) => {
       FROM intake_responses ir
       WHERE ir.client_id = $1
         AND ir.form_id != 4
+        AND ir.form_id != 5
       GROUP BY ir.session_id, ir.client_id
       ORDER BY MAX(ir.submitted_at) DESC`,
       [id]

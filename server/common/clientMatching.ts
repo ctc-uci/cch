@@ -101,18 +101,23 @@ export async function matchClient(
   }
 
   try {
-    // Query to find matching client
-    // We normalize both sides for comparison
-    // For date comparison, try both text and date casting to handle various formats
     const result = await db.query(
-      `SELECT id FROM clients
-       WHERE LOWER(TRIM(first_name)) = $1
-         AND LOWER(TRIM(last_name)) = $2
-         AND REGEXP_REPLACE(phone_number, '[^0-9]', '', 'g') = $3
-         AND (
-           date_of_birth::date = $4::date
-           OR date_of_birth::text = $4
-         )
+      `SELECT c.id FROM clients c
+       WHERE c.id IN (
+         SELECT ir.client_id
+         FROM intake_responses ir
+         JOIN form_questions fq ON fq.id = ir.question_id AND fq.form_id = 5
+         WHERE ir.client_id IS NOT NULL AND ir.form_id = 5
+         GROUP BY ir.client_id
+         HAVING
+           LOWER(TRIM(MAX(CASE WHEN fq.field_key = 'first_name'   THEN ir.response_value END))) = $1
+           AND LOWER(TRIM(MAX(CASE WHEN fq.field_key = 'last_name' THEN ir.response_value END))) = $2
+           AND REGEXP_REPLACE(MAX(CASE WHEN fq.field_key = 'phone_number' THEN ir.response_value END), '[^0-9]', '', 'g') = $3
+           AND (
+             MAX(CASE WHEN fq.field_key = 'date_of_birth' THEN ir.response_value END)::date = $4::date
+             OR MAX(CASE WHEN fq.field_key = 'date_of_birth' THEN ir.response_value END) = $4
+           )
+       )
        LIMIT 1`,
       [normalizedFirstName, normalizedLastName, normalizedPhone, normalizedDob]
     );
@@ -121,23 +126,9 @@ export async function matchClient(
       return result[0].id;
     }
 
-    // Log for debugging if no match found
-    console.error("No client match found for:", {
-      firstName: normalizedFirstName,
-      lastName: normalizedLastName,
-      phoneNumber: normalizedPhone,
-      dateOfBirth: normalizedDob
-    });
-
     return null;
   } catch (error) {
     console.error("Error matching client:", error);
-    console.error("Matching parameters:", {
-      firstName: normalizedFirstName,
-      lastName: normalizedLastName,
-      phoneNumber: normalizedPhone,
-      dateOfBirth: normalizedDob
-    });
     return null;
   }
 }

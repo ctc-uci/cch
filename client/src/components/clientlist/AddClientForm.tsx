@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   AlertDialog,
@@ -9,6 +9,7 @@ import {
   AlertDialogOverlay,
   Box,
   Button,
+  Divider,
   Drawer,
   DrawerBody,
   DrawerContent,
@@ -16,6 +17,7 @@ import {
   DrawerHeader,
   DrawerOverlay,
   Grid,
+  Heading,
   HStack,
   Input,
   NumberDecrementStepper,
@@ -23,35 +25,51 @@ import {
   NumberInput,
   NumberInputField,
   NumberInputStepper,
+  Radio,
   Select,
+  Spinner,
+  Table,
+  Tbody,
+  Td,
   Text,
+  Textarea,
+  Th,
+  Thead,
+  Tr,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 
+import { LOCATION_OPTIONS } from "../../constants/locations";
+
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
 import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
-const UNIT_OPTIONS = [
-  "Cy-A",
-  "Cy-B",
-  "Cy-C",
-  "Cy-D",
-  "Gl-1",
-  "Gl-2",
-  "Gl-3",
-  "Gl-4",
-  "1046",
-  "1048",
-  "1050",
-  "1052",
-  "FV",
-];
+interface FormOption {
+  value: string;
+  label: string;
+}
+
+interface RatingGridConfig {
+  rows: Array<{ key: string; label: string }>;
+  columns: Array<{ value: string; label: string }>;
+}
+
+interface ClientFormQuestion {
+  id: number;
+  fieldKey: string;
+  questionText: string;
+  questionType: string;
+  options?: FormOption[] | RatingGridConfig;
+  isRequired: boolean;
+  isVisible: boolean;
+  isCore: boolean;
+  displayOrder: number;
+}
 
 interface AddClientFormProps {
   onClientAdded: (clientId?: number) => void;
   setShowUnfinishedAlert: (e: boolean) => void;
-  // Optional controlled drawer behavior (lets other pages open this drawer programmatically)
   isOpen?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
@@ -64,6 +82,7 @@ interface AddClientFormProps {
     date_of_birth: string;
   }>;
 }
+
 
 export const AddClientForm = ({
   onClientAdded,
@@ -82,11 +101,8 @@ export const AddClientForm = ({
 
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [createdClientId, setCreatedClientId] = useState<number | undefined>(
-    undefined
-  );
+  const [createdClientId, setCreatedClientId] = useState<number | undefined>(undefined);
 
-  // Drawer open/close can be controlled externally
   const {
     isOpen: localIsOpen,
     onOpen: localOnOpen,
@@ -97,50 +113,68 @@ export const AddClientForm = ({
   const onOpen = controlledOnOpen ?? localOnOpen;
   const onClose = controlledOnClose ?? localOnClose;
 
+  const [formData, setFormData] = React.useState<Record<string, string>>({});
+  const [formInProgress, setFormInProgress] = React.useState(false);
+  const [errors, setErrors] = React.useState<Record<string, boolean>>({});
+  const [questions, setQuestions] = useState<ClientFormQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(true);
+  const [caseManagers, setCaseManagers] = useState<
+    Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>
+  >([]);
+  const [validCaseManagerIds, setValidCaseManagerIds] = useState<number[]>([]);
+
+  const btnRef = React.useRef<HTMLButtonElement | null>(null);
+  const { backend } = useBackendContext();
+  const toast = useToast();
+
+  const isFieldEmpty = (value: unknown): boolean =>
+    value === null || value === undefined || (typeof value === "string" && value.trim() === "");
+
   const resetForm = () => {
-    setFormData({
-      created_by: "",
-      unit_name: "",
-      first_name: "",
-      last_name: "",
-      grant: "",
-      status: "",
-      date_of_birth: "",
-      age: "",
-      phone_number: "",
-      email: "",
-      emergency_contact_name: "",
-      emergency_contact_phone_number: "",
-      medical: "",
-      entrance_date: "",
-      estimated_exit_date: "",
-      exit_date: "",
-      bed_nights: "",
-      bed_nights_children: "",
-      pregnant_upon_entry: "",
-      disabled_children: "",
-      ethnicity: "",
-      race: "",
-      city_of_last_permanent_residence: "",
-      prior_living: "",
-      prior_living_city: "",
-      shelter_in_last_five_years: "",
-      homelessness_length: "",
-      chronically_homeless: "",
-      attending_school_upon_entry: "",
-      employement_gained: "",
-      reason_for_leaving: "",
-      specific_reason_for_leaving: "",
-      specific_destination: "",
-      savings_amount: "",
-      attending_school_upon_exit: "",
-      reunified: "",
-      successful_completion: "",
-      destination_city: "",
-      comments: "",
-    });
-    setErrors({}); // Clear error states when resetting
+    setFormData({});
+    setErrors({});
   };
+
+  const loadQuestions = useCallback(async () => {
+    try {
+      setQuestionsLoading(true);
+      const res = await backend.get("/formQuestions/form/5");
+      const qs: ClientFormQuestion[] = Array.isArray(res.data) ? res.data : [];
+      setQuestions(qs.sort((a, b) => a.displayOrder - b.displayOrder));
+    } catch {
+      // Fall through — questionsLoading stays true, form falls back to loading state
+    } finally {
+      setQuestionsLoading(false);
+    }
+  }, [backend]);
+
+  useEffect(() => {
+    loadQuestions();
+  }, [loadQuestions]);
+
+  useEffect(() => {
+    const loadCaseManagers = async () => {
+      try {
+        const res = await backend.get("/caseManagers");
+        const list: typeof caseManagers = Array.isArray(res.data)
+          ? res.data
+              .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
+                id: Number(cm.id),
+                firstName: cm.firstName,
+                lastName: cm.lastName,
+                first_name: cm.first_name,
+                last_name: cm.last_name,
+              }))
+              .filter((cm) => !Number.isNaN(cm.id))
+          : [];
+        setCaseManagers(list);
+        setValidCaseManagerIds(list.map((cm) => cm.id));
+      } catch {
+        // skip
+      }
+    };
+    loadCaseManagers();
+  }, [backend]);
 
   useEffect(() => {
     if (hasSubmitted) {
@@ -151,7 +185,6 @@ export const AddClientForm = ({
     }
   }, [hasSubmitted, onClientAdded, createdClientId]);
 
-  // Prefill when opened from another flow (e.g. initial screener table)
   useEffect(() => {
     if (!isOpen || !initialValues) return;
     setFormData((prev) => ({
@@ -164,11 +197,7 @@ export const AddClientForm = ({
 
   const handleCloseAndSave = () => {
     onClose();
-    
-    // Check if any field has been filled
-    const hasAnyData = Object.values(formData).some(value => !isFieldEmpty(value));
-    
-    // Only show toast if there's actual data entered
+    const hasAnyData = Object.values(formData).some((v) => !isFieldEmpty(v));
     if (hasAnyData) {
       toast({
         title: "New Client Data Saved",
@@ -181,107 +210,28 @@ export const AddClientForm = ({
   };
 
   const handleConfirmCancel = () => {
-    onClose(); // Close the drawer
-    closeAlert(); // Close the alert
+    onClose();
+    closeAlert();
     resetForm();
     setFormInProgress(false);
     setShowUnfinishedAlert(false);
   };
 
-  const [formData, setFormData] = React.useState({
-    created_by: "",
-    unit_name: "",
-    first_name: "",
-    last_name: "",
-    grant: "",
-    status: "",
-    date_of_birth: "",
-    age: "",
-    phone_number: "",
-    email: "",
-    emergency_contact_name: "",
-    emergency_contact_phone_number: "",
-    medical: "",
-    entrance_date: "",
-    estimated_exit_date: "",
-    exit_date: "",
-    bed_nights: "",
-    bed_nights_children: "",
-    pregnant_upon_entry: "",
-    disabled_children: "",
-    ethnicity: "",
-    race: "",
-    city_of_last_permanent_residence: "",
-    prior_living: "",
-    prior_living_city: "",
-    shelter_in_last_five_years: "",
-    homelessness_length: "",
-    chronically_homeless: "",
-    attending_school_upon_entry: "",
-    employement_gained: "",
-    reason_for_leaving: "",
-    specific_reason_for_leaving: "",
-    specific_destination: "",
-    savings_amount: "",
-    attending_school_upon_exit: "",
-    reunified: "",
-    successful_completion: "",
-    destination_city: "",
-    comments: "",
-  });
-  const [formInProgress, setFormInProgress] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, boolean>>({});
-  const btnRef = React.useRef<HTMLButtonElement | null>(null);
-  const { backend } = useBackendContext();
-  const toast = useToast();
-  const [validCaseManagerIds, setValidCaseManagerIds] = React.useState<number[]>([]);
-  const [caseManagers, setCaseManagers] = React.useState<Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }>>([]);
-
-  // Helper function to check if a field is empty
-  const isFieldEmpty = (value: unknown): boolean => {
-    return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
+  const handleChange = (fieldKey: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [fieldKey]: value }));
+    setFormInProgress(true);
+    setShowUnfinishedAlert(true);
+    setErrors((prev) => ({ ...prev, [fieldKey]: false }));
   };
 
-  // Load case managers for validation and dropdown
-  useEffect(() => {
-    const loadReferences = async () => {
-      try {
-        const cmsRes = await backend.get("/caseManagers");
-        const cmList: Array<{ id: number; firstName?: string; lastName?: string; first_name?: string; last_name?: string }> =
-          Array.isArray(cmsRes.data)
-            ? cmsRes.data
-                .map((cm: { id: number | string; firstName?: string; lastName?: string; first_name?: string; last_name?: string }) => ({
-                  id: Number(cm.id),
-                  firstName: cm.firstName,
-                  lastName: cm.lastName,
-                  first_name: cm.first_name,
-                  last_name: cm.last_name,
-                }))
-                .filter((cm) => !Number.isNaN(cm.id))
-            : [];
-        const cmIds = cmList.map((cm) => cm.id);
-        setCaseManagers(cmList);
-        setValidCaseManagerIds(cmIds);
-      } catch (_e) {
-        // If we can't load references, skip pre-validation; backend will still enforce constraints
-      }
-    };
-    loadReferences();
-  }, [backend]);
-
   const handleSubmit = async () => {
-    // Validate all fields and track which ones have errors
     const newErrors: Record<string, boolean> = {};
-    
-    const optionalFields = new Set(["grant"]);
-    Object.entries(formData).forEach(([key, value]) => {
-      if (optionalFields.has(key)) return;
-      if (isFieldEmpty(value)) {
-        newErrors[key] = true;
-      }
-    });
+    questions
+      .filter((q) => q.isVisible && q.isRequired && q.questionType !== "header" && q.questionType !== "text_block")
+      .forEach((q) => {
+        if (isFieldEmpty(formData[q.fieldKey])) newErrors[q.fieldKey] = true;
+      });
 
-    // If there are errors, set the error state and show a toast
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       toast({
@@ -291,16 +241,18 @@ export const AddClientForm = ({
         position: "bottom",
         isClosable: true,
       });
-      return; // prevent submission
+      return;
     }
 
-    // Clear errors if validation passes
     setErrors({});
 
     try {
-      // Foreign key validation for created_by and unit_name
       const createdById = parseInt(formData.created_by || "0", 10);
-      if (!UNIT_OPTIONS.includes(formData.unit_name || "")) {
+      const unitOptions = questions
+        .find((q) => q.fieldKey === "unit_name")
+        ?.options?.map((o) => o.value) ?? [];
+
+      if (unitOptions.length > 0 && !unitOptions.includes(formData.unit_name)) {
         toast({
           title: "Invalid Unit",
           description: "Please choose an existing unit.",
@@ -310,6 +262,7 @@ export const AddClientForm = ({
         });
         return;
       }
+
       if (validCaseManagerIds.length > 0 && !validCaseManagerIds.includes(createdById)) {
         toast({
           title: "Invalid Case Manager ID",
@@ -321,678 +274,324 @@ export const AddClientForm = ({
         return;
       }
 
-      const clientData = {
-        created_by: parseInt(formData.created_by || "0", 10),
-        unit_name: formData.unit_name || "",
+      // Core identity fields stay in the clients row
+      const clientCore = {
+        created_by: createdById,
+        unit_name: formData.unit_name,
+        status: formData.status,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        grant: formData.grant,
-        status: formData.status,
-        date_of_birth: formData.date_of_birth,
-        age: parseInt(formData.age || "0", 10),
-        phone_number: formData.phone_number,
-        email: formData.email,
-        emergency_contact_name: formData.emergency_contact_name,
-        emergency_contact_phone_number: formData.emergency_contact_phone_number,
-        medical: formData.medical === "Yes" ? true : false,
-        entrance_date: formData.entrance_date,
-        estimated_exit_date: formData.estimated_exit_date,
-        exit_date: formData.exit_date,
-        bed_nights: parseInt(formData.bed_nights || "0", 10),
-        bed_nights_children: parseInt(formData.bed_nights_children || "0", 10),
-        pregnant_upon_entry:
-          formData.pregnant_upon_entry === "Yes" ? true : false,
-        disabled_children: formData.disabled_children === "Yes" ? true : false,
-        ethnicity: formData.ethnicity,
-        race: formData.race,
-        city_of_last_permanent_residence:
-          formData.city_of_last_permanent_residence,
-        prior_living: formData.prior_living,
-        prior_living_city: formData.prior_living_city,
-        shelter_in_last_five_years:
-          formData.shelter_in_last_five_years === "Yes" ? true : false,
-        homelessness_length: parseInt(formData.homelessness_length || "0", 10),
-        chronically_homeless:
-          formData.chronically_homeless === "Yes" ? true : false,
-        attending_school_upon_entry:
-          formData.attending_school_upon_entry === "Yes" ? true : false,
-        employement_gained: formData.employement_gained,
-        reason_for_leaving: formData.reason_for_leaving,
-        specific_reason_for_leaving: formData.specific_reason_for_leaving,
-        specific_destination: formData.specific_destination,
-        savings_amount: parseFloat(formData.savings_amount || "0"),
-        attending_school_upon_exit:
-          formData.attending_school_upon_exit === "Yes" ? true : false,
-        reunified: formData.reunified === "Yes" ? true : false,
-        successful_completion:
-          formData.successful_completion === "Yes" ? true : false,
-        destination_city: formData.destination_city,
-        comments: formData.comments,
+        grant: formData.grant || null,
       };
-      const created = await backend.post("/clients", clientData);
+
+      // Display-only types produce no response value
+      const responses = questions
+        .filter((q) => q.questionType !== "header" && q.questionType !== "text_block")
+        .map((q) => ({
+          question_id: q.id,
+          response_value: (formData as Record<string, string>)[q.fieldKey] ?? "",
+        }));
+
+      const created = await backend.post("/clients/from-form", {
+        client: clientCore,
+        responses,
+      });
       const newClientId =
         typeof created?.data?.id === "number" ? (created.data.id as number) : undefined;
       setCreatedClientId(newClientId);
 
       toast({
         title: "Client Added",
-        description: `Client Name has been added!`,
+        description: "Client has been added!",
         position: "bottom-right",
         status: "success",
       });
       setHasSubmitted(true);
       setFormInProgress(false);
       setShowUnfinishedAlert(false);
-      setErrors({}); // Clear errors on successful submission
       resetForm();
       onClose();
-      } catch (e) {
-        toast({
-          title: "Client Not Added",
-          description: `An error occurred and the client was not added.`,
-          status: "error",
-        });
-      }
-    };
-  
-    return (
-      <>
-        {!hideButton && (
-          <Button
-            ref={btnRef}
-            colorScheme="blue"
-            onClick={onOpen}
+    } catch {
+      toast({
+        title: "Client Not Added",
+        description: "An error occurred and the client was not added.",
+        status: "error",
+      });
+    }
+  };
+
+  const renderInput = (question: ClientFormQuestion) => {
+    const { fieldKey, questionType, questionText, options } = question;
+    const value = (formData as Record<string, string>)[fieldKey] ?? "";
+    const hasError = !!errors[fieldKey];
+
+    const onChange = (val: string) => handleChange(fieldKey, val);
+
+    switch (questionType) {
+      case "case_manager_select":
+        return (
+          <Select
+            placeholder="Select case manager"
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
           >
-            {!formInProgress && <Text>Add Client</Text>}
-            {formInProgress && <Text>Edit New Client</Text>}
-          </Button>
-        )}
-        <Drawer
-          isOpen={isOpen}
-          placement='right'
-          onClose={handleCloseAndSave}
-          finalFocusRef={btnRef}
-          size="xl"
-        >
-          <DrawerOverlay />
-          <DrawerContent>
-            {/* <DrawerCloseButton /> */}
-            
-            <DrawerHeader>
-              <HStack alignItems="center">
-                <BackArrowIcon onClick={onClose} />
-                <Text fontSize="md" mt="2px">Add Client</Text>
-              </HStack>
-            </DrawerHeader>
-  
-            <DrawerBody >
-                <Box padding="24px" borderWidth="1px" borderRadius="lg" bg="white">
-                  <Grid templateColumns="1fr 1fr" gap={5} pb={3} borderBottom="1px solid" borderColor="gray.200">
-                    <Text fontWeight="bold">QUESTIONS</Text>
-                    <Text fontWeight="bold">ANSWERS</Text>
-                  </Grid>
-                  
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">First Name</Text>
-                      <Input 
-                      placeholder="Enter first name" 
-                      value={formData.first_name}
-                      isInvalid={errors.first_name}
-                      errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, first_name: e.target.value }); setFormInProgress(true); setShowUnfinishedAlert(true); setErrors({...errors, first_name: false})}}
-                      />
-                    </Grid>
-                  </Box>
+            {caseManagers.map((cm) => {
+              const first = cm.firstName ?? cm.first_name ?? "";
+              const last = cm.lastName ?? cm.last_name ?? "";
+              const label = `${first} ${last}`.trim() || `ID ${cm.id}`;
+              return (
+                <option key={cm.id} value={cm.id.toString()}>
+                  {label}
+                </option>
+              );
+            })}
+          </Select>
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Last Name</Text>
-                      <Input 
-                      placeholder="Enter last name" 
-                      value={formData.last_name}
-                      isInvalid={errors.last_name}
-                      errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, last_name: e.target.value }); setFormInProgress(true); setErrors({...errors, last_name: false})}}
-                      />
-                    </Grid>
-                  </Box>
+      case "select":
+        return (
+          <Select
+            placeholder="Select option"
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Status</Text>
-                      <Select 
-                      placeholder="Select option" 
-                      value={formData.status}
-                      isInvalid={errors.status}
-                      errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, status: e.target.value }); setFormInProgress(true); setErrors({...errors, status: false})}}>
-                          <option value="Active">Active</option>
-                          <option value="Exited">Exited</option>
-                      </Select>
-                    </Grid>
-                  </Box>
+      case "boolean":
+        return (
+          <Select
+            placeholder="Select option"
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
+          >
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </Select>
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Unit</Text>
-                      <Select
-                        placeholder="Select unit"
-                        value={formData.unit_name}
-                        isInvalid={errors.unit_name}
-                        errorBorderColor="red.500"
-                        onChange={(e) => {
-                          setFormData({ ...formData, unit_name: e.target.value });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, unit_name: false });
-                        }}
-                      >
-                        {UNIT_OPTIONS.map((name) => (
-                          <option key={name} value={name}>
-                            {name}
-                          </option>
-                        ))}
-                      </Select>
-                    </Grid>
-                  </Box>
+      case "date":
+        return (
+          <Input
+            type="date"
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
+          />
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Case Manager</Text>
-                      <Select
-                        placeholder="Select case manager"
-                        value={formData.created_by}
-                        isInvalid={errors.created_by}
-                        errorBorderColor="red.500"
-                        onChange={(e) => {
-                          setFormData({ ...formData, created_by: e.target.value });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, created_by: false });
-                        }}
-                      >
-                        {caseManagers.map((cm) => {
-                          const first = cm.firstName ?? cm.first_name ?? "";
-                          const last = cm.lastName ?? cm.last_name ?? "";
-                          const label = `${first} ${last}`.trim() || `ID ${cm.id}`;
-                          return (
-                            <option key={cm.id} value={cm.id.toString()}>
-                              {label}
-                            </option>
-                          );
-                        })}
-                      </Select>
-                    </Grid>
-                  </Box>
+      case "number":
+        return (
+          <NumberInput
+            min={0}
+            step={fieldKey === "savings_amount" ? 0.01 : 1}
+            precision={fieldKey === "savings_amount" ? 2 : 0}
+            clampValueOnBlur
+            value={value}
+            onChange={(val) => onChange(val)}
+          >
+            <NumberInputField
+              placeholder={`Enter ${questionText.toLowerCase()}`}
+              aria-invalid={hasError}
+              _invalid={{ borderColor: "red.500" }}
+            />
+            <NumberInputStepper>
+              <NumberIncrementStepper />
+              <NumberDecrementStepper />
+            </NumberInputStepper>
+          </NumberInput>
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Grant <Text as="span" color="gray.500" fontWeight="normal">(optional)</Text></Text>
-                      <Input placeholder="Enter grant name/number" value={formData.grant}
-                      isInvalid={errors.grant} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, grant: e.target.value }); setFormInProgress(true); setErrors({...errors, grant: false})}} />
-                    </Grid>
-                  </Box>
+      case "textarea":
+        return (
+          <Textarea
+            placeholder={`Enter ${questionText.toLowerCase()}`}
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
+          />
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Birthday</Text>
-                      <Input type="date" value={formData.date_of_birth}
-                      isInvalid={errors.date_of_birth} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, date_of_birth: e.target.value }); setFormInProgress(true); setErrors({...errors, date_of_birth: false})}} />
-                    </Grid>
-                  </Box>
+      case "site_location":
+        return (
+          <Select
+            placeholder="Select site location"
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {LOCATION_OPTIONS.map((loc) => (
+              <option key={loc} value={loc}>{loc}</option>
+            ))}
+          </Select>
+        );
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Age</Text>
-                      <NumberInput
-                        min={0}
-                        max={125}
-                        step={1}
-                        clampValueOnBlur
-                        value={formData.age}
-                        onChange={(valueString) => {
-                          setFormData({ ...formData, age: valueString });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, age: false });
-                        }}
-                      >
-                        <NumberInputField
-                          placeholder="Enter age"
-                          aria-invalid={!!errors.age}
-                          _invalid={{ borderColor: "red.500" }}
+      case "rating_grid": {
+        const gridConfig = options as RatingGridConfig | undefined;
+        if (!gridConfig?.rows?.length || !gridConfig?.columns?.length) return null;
+        const gridData = value ? (() => { try { return JSON.parse(value); } catch { return {}; } })() : {};
+        return (
+          <Box overflowX="auto">
+            <Table variant="simple" size="sm">
+              <Thead>
+                <Tr>
+                  <Th />
+                  {gridConfig.columns.map((col) => (
+                    <Th key={col.value} textAlign="center" fontSize="11px">{col.label}</Th>
+                  ))}
+                </Tr>
+              </Thead>
+              <Tbody>
+                {gridConfig.rows.map((row) => (
+                  <Tr key={row.key}>
+                    <Td fontSize="12px">{row.label}</Td>
+                    {gridConfig.columns.map((col) => (
+                      <Td key={col.value} textAlign="center">
+                        <Radio
+                          name={`${fieldKey}_${row.key}`}
+                          value={col.value}
+                          isChecked={gridData[row.key] === col.value}
+                          onChange={() => {
+                            const updated = { ...gridData, [row.key]: col.value };
+                            onChange(JSON.stringify(updated));
+                          }}
                         />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Grid>
-                  </Box>
+                      </Td>
+                    ))}
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
+        );
+      }
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Phone Number</Text>
-                      <Input placeholder="Enter phone number" maxLength={10}  value={formData.phone_number}
-                      isInvalid={errors.phone_number} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, phone_number: e.target.value }); setFormInProgress(true); setErrors({...errors, phone_number: false})}}
-                      />
-                    </Grid>
-                  </Box>
-                    
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Email</Text>
-                      <Input type="email" placeholder="Enter email" maxLength={32} value={formData.email}
-                      isInvalid={errors.email} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, email: e.target.value }); setFormInProgress(true); setErrors({...errors, email: false})}}
-                      />
-                    </Grid>
-                  </Box>
+      case "header":
+      case "text_block":
+        return null;
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Emergency Contact Name</Text>
-                      <Input placeholder="Enter name" maxLength={32} value={formData.emergency_contact_name}
-                      isInvalid={errors.emergency_contact_name} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, emergency_contact_name: e.target.value }); setFormInProgress(true); setErrors({...errors, emergency_contact_name: false})}}
-                      />
-                    </Grid>
-                  </Box>
+      case "text":
+      default:
+        return (
+          <Input
+            type={fieldKey === "email" ? "email" : "text"}
+            placeholder={`Enter ${questionText.toLowerCase()}`}
+            value={value}
+            isInvalid={hasError}
+            errorBorderColor="red.500"
+            maxLength={
+              fieldKey === "phone_number" || fieldKey === "emergency_contact_phone_number"
+                ? 10
+                : fieldKey === "email"
+                ? 32
+                : undefined
+            }
+            onChange={(e) => onChange(e.target.value)}
+          />
+        );
+    }
+  };
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Emergency Contact Phone</Text>
-                      <Input placeholder="Enter phone number" maxLength={10} value={formData.emergency_contact_phone_number}
-                      isInvalid={errors.emergency_contact_phone_number} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, emergency_contact_phone_number: e.target.value }); setFormInProgress(true); setErrors({...errors, emergency_contact_phone_number: false})}}
-                      />
-                    </Grid>
-                  </Box>
+  const visibleQuestions = questions.filter((q) => q.isVisible).sort((a, b) => a.displayOrder - b.displayOrder);
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Medical</Text>
-                      <Select placeholder="Select option" value={formData.medical}
-                      isInvalid={errors.medical} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, medical: e.target.value}); setFormInProgress(true); setErrors({...errors, medical: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
+  return (
+    <>
+      {!hideButton && (
+        <Button ref={btnRef} colorScheme="blue" onClick={onOpen}>
+          {formInProgress ? <Text>Edit New Client</Text> : <Text>Add Client</Text>}
+        </Button>
+      )}
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Entry Date</Text>
-                      <Input type="date" value={formData.entrance_date}
-                      isInvalid={errors.entrance_date} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, entrance_date: e.target.value }); setFormInProgress(true); setErrors({...errors, entrance_date: false})}}
-                      />
-                    </Grid>
-                  </Box>
+      <Drawer
+        isOpen={isOpen}
+        placement="right"
+        onClose={handleCloseAndSave}
+        finalFocusRef={btnRef}
+        size="xl"
+      >
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerHeader>
+            <HStack alignItems="center">
+              <BackArrowIcon onClick={onClose} />
+              <Text fontSize="md" mt="2px">Add Client</Text>
+            </HStack>
+          </DrawerHeader>
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Estimated Exit Date</Text>
-                      <Input type="date" value={formData.estimated_exit_date}
-                      isInvalid={errors.estimated_exit_date} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, estimated_exit_date: e.target.value }); setFormInProgress(true); setErrors({...errors, estimated_exit_date: false})}}
-                      />
-                    </Grid>
-                  </Box>
+          <DrawerBody>
+            <Box padding="24px" borderWidth="1px" borderRadius="lg" bg="white">
+              <Grid templateColumns="1fr 1fr" gap={5} pb={3} borderBottom="1px solid" borderColor="gray.200">
+                <Text fontWeight="bold">QUESTIONS</Text>
+                <Text fontWeight="bold">ANSWERS</Text>
+              </Grid>
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Exit Date</Text>
-                      <Input type="date" value={formData.exit_date}
-                      isInvalid={errors.exit_date} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, exit_date: e.target.value }); setFormInProgress(true); setErrors({...errors, exit_date: false})}}
-                      />
-                    </Grid>
-                  </Box>
+              {questionsLoading ? (
+                <HStack justify="center" py={8}>
+                  <Spinner />
+                  <Text color="gray.500">Loading form fields...</Text>
+                </HStack>
+              ) : (
+                visibleQuestions.map((question, idx) => {
+                  const isLast = idx === visibleQuestions.length - 1;
+                  const isDisplayOnly = question.questionType === "header" || question.questionType === "text_block";
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Bed Nights</Text>
-                      <NumberInput
-                        min={0}
-                        step={1}
-                        clampValueOnBlur
-                        value={formData.bed_nights}
-                        onChange={(valueString) => {
-                          setFormData({ ...formData, bed_nights: valueString });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, bed_nights: false });
-                        }}
-                      >
-                        <NumberInputField
-                          placeholder="Enter number of bed nights"
-                          aria-invalid={!!errors.bed_nights}
-                          _invalid={{ borderColor: "red.500" }}
-                        />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Grid>
-                  </Box>
+                  if (isDisplayOnly) {
+                    return (
+                      <Box key={question.id} py={3} borderBottom={isLast ? undefined : "1px solid"} borderColor="gray.200">
+                        {question.questionType === "header" ? (
+                          <>
+                            <Divider mb={2} />
+                            <Heading size="sm" color="blue.600">{question.questionText}</Heading>
+                          </>
+                        ) : (
+                          <Text fontSize="sm" color="gray.600">{question.questionText}</Text>
+                        )}
+                      </Box>
+                    );
+                  }
 
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Bed Nights with Children</Text>
-                      <NumberInput
-                        min={0}
-                        step={1}
-                        clampValueOnBlur
-                        value={formData.bed_nights_children}
-                        onChange={(valueString) => {
-                          setFormData({ ...formData, bed_nights_children: valueString });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, bed_nights_children: false });
-                        }}
-                      >
-                        <NumberInputField
-                          placeholder="Enter number of bed nights with children"
-                          aria-invalid={!!errors.bed_nights_children}
-                          _invalid={{ borderColor: "red.500" }}
-                        />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Pregnant Upon Entry?</Text>
-                      <Select placeholder="Select option" value={formData.pregnant_upon_entry}
-                      isInvalid={errors.pregnant_upon_entry} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, pregnant_upon_entry: e.target.value }); setFormInProgress(true); setErrors({...errors, pregnant_upon_entry: false})}}
-                      >
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Disabled Children</Text>
-                      <Select placeholder="Select option" value={formData.disabled_children}
-                      isInvalid={errors.disabled_children} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, disabled_children: e.target.value }); setFormInProgress(true); setErrors({...errors, disabled_children: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Ethnicity</Text>
-                      <Select placeholder="Select option" value={formData.ethnicity}
-                      isInvalid={errors.ethnicity} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, ethnicity: e.target.value }); setFormInProgress(true); setErrors({...errors, ethnicity: false})}}>
-                          <option value="Hispanic">Hispanic</option>
-                          <option value="Non-Hispanic">Non-Hispanic</option>
-                          <option value="Refused">Refused</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Race</Text>
-                      <Select placeholder="Select option" value={formData.race}
-                      isInvalid={errors.race} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, race: e.target.value }); setFormInProgress(true); setErrors({...errors, race: false})}}>
-                          <option value="Hispanic">Hispanic</option>
-                          <option value="Caucasian">Caucasian</option>
-                          <option value="African American">African American</option>
-                          <option value="Asian">Asian</option>
-                          <option value="Native American">Native American</option>
-                          <option value="Pacific Islander/Hawaiian">Pacific Islander/Hawaiian</option>
-                          <option value="Multi/Other">Multi/Other</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">City of Last Permanent Residence</Text>
-                      <Input placeholder="Enter city" value={formData.city_of_last_permanent_residence}
-                      isInvalid={errors.city_of_last_permanent_residence} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, city_of_last_permanent_residence: e.target.value }); setFormInProgress(true); setErrors({...errors, city_of_last_permanent_residence: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Prior Living</Text>
-                      <Input placeholder="Enter prior living situation" value={formData.prior_living}
-                      isInvalid={errors.prior_living} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, prior_living: e.target.value }); setFormInProgress(true); setErrors({...errors, prior_living: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Prior Living City</Text>
-                      <Input placeholder="Enter city" value={formData.prior_living_city}
-                      isInvalid={errors.prior_living_city} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, prior_living_city: e.target.value }); setFormInProgress(true); setErrors({...errors, prior_living_city: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Shelter in Last 5 Years</Text>
-                      <Select placeholder="Select option" value={formData.shelter_in_last_five_years}
-                      isInvalid={errors.shelter_in_last_five_years} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, shelter_in_last_five_years: e.target.value }); setFormInProgress(true); setErrors({...errors, shelter_in_last_five_years: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Length of Homelessness (months)</Text>
-                      <NumberInput
-                        min={0}
-                        step={1}
-                        clampValueOnBlur
-                        value={formData.homelessness_length}
-                        onChange={(valueString) => {
-                          setFormData({ ...formData, homelessness_length: valueString });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, homelessness_length: false });
-                        }}
-                      >
-                        <NumberInputField
-                          placeholder="Enter length"
-                          aria-invalid={!!errors.homelessness_length}
-                          _invalid={{ borderColor: "red.500" }}
-                        />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Chronically Homeless</Text>
-                      <Select placeholder="Select option" value={formData.chronically_homeless}
-                      isInvalid={errors.chronically_homeless} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, chronically_homeless: e.target.value }); setFormInProgress(true); setErrors({...errors, chronically_homeless: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Attending School Upon Entry</Text>
-                      <Select placeholder="Select option" value={formData.attending_school_upon_entry}
-                      isInvalid={errors.attending_school_upon_entry} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, attending_school_upon_entry: e.target.value }); setFormInProgress(true); setErrors({...errors, attending_school_upon_entry: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Employment Gained</Text>
-                      <Select placeholder="Select option" value={formData.employement_gained}
-                      isInvalid={errors.employement_gained} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, employement_gained: e.target.value }); setFormInProgress(true); setErrors({...errors, employement_gained: false})}}>
-                          <option value="true">Yes</option>
-                          <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Reason for Leaving</Text>
-                      <Input placeholder="Enter reason" value={formData.reason_for_leaving}
-                      isInvalid={errors.reason_for_leaving} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, reason_for_leaving: e.target.value }); setFormInProgress(true); setErrors({...errors, reason_for_leaving: false})}}/>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Specific Reason for Leaving</Text>
-                      <Input placeholder="Enter specific reason" value={formData.specific_reason_for_leaving}
-                      isInvalid={errors.specific_reason_for_leaving} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, specific_reason_for_leaving: e.target.value }); setFormInProgress(true); setErrors({...errors, specific_reason_for_leaving: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Specific Destination</Text>
-                      <Input placeholder="Enter destination" value={formData.specific_destination}
-                      isInvalid={errors.specific_destination} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, specific_destination: e.target.value }); setFormInProgress(true); setErrors({...errors, specific_destination: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Savings Amount ($)</Text>
-                      <NumberInput
-                        min={0}
-                        step={0.01}
-                        precision={2}
-                        clampValueOnBlur
-                        value={formData.savings_amount}
-                        onChange={(valueString) => {
-                          setFormData({ ...formData, savings_amount: valueString });
-                          setFormInProgress(true);
-                          setErrors({ ...errors, savings_amount: false });
-                        }}
-                      >
-                        <NumberInputField
-                          placeholder="Enter amount"
-                          aria-invalid={!!errors.savings_amount}
-                          _invalid={{ borderColor: "red.500" }}
-                        />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Attending School Upon Exit</Text>
-                      <Select placeholder="Select option" value={formData.attending_school_upon_exit}
-                      isInvalid={errors.attending_school_upon_exit} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, attending_school_upon_exit: e.target.value }); setFormInProgress(true); setErrors({...errors, attending_school_upon_exit: false})}}>
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Reunified</Text>
-                      <Select placeholder="Select option" value={formData.reunified}
-                      isInvalid={errors.reunified} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, reunified: e.target.value }); setFormInProgress(true); setErrors({...errors, reunified: false})}}>
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Successful Completion</Text>
-                      <Select placeholder="Select option" value={formData.successful_completion}
-                      isInvalid={errors.successful_completion} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, successful_completion: e.target.value }); setFormInProgress(true); setErrors({...errors, successful_completion: false})}}>
-                      <option value="true">Yes</option>
-                      <option value="false">No</option>
-                      </Select>
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} borderBottom="1px solid" borderColor="gray.200" >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Destination City</Text>
-                      <Input placeholder="Enter city" value={formData.destination_city}
-                      isInvalid={errors.destination_city} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, destination_city: e.target.value }); setFormInProgress(true); setErrors({...errors, destination_city: false})}}
-                      />
-                    </Grid>
-                  </Box>
-
-                  <Box py={3} >
-                    <Grid templateColumns="1fr 1fr" gap={5} alignItems="center">
-                      <Text fontWeight="medium">Comments</Text>
-                      <Input placeholder="Enter comments" value={formData.comments}
-                      isInvalid={errors.comments} errorBorderColor="red.500"
-                      onChange={(e) => {setFormData({ ...formData, comments: e.target.value }); setFormInProgress(true); setErrors({...errors, comments: false})}}
-                      />
-                    </Grid>
-                  </Box>
-                </Box>
+                  return (
+                    <Box
+                      key={question.id}
+                      py={3}
+                      borderBottom={isLast ? undefined : "1px solid"}
+                      borderColor="gray.200"
+                    >
+                      <Grid templateColumns="1fr 1fr" gap={5} alignItems={question.questionType === "rating_grid" ? "start" : "center"}>
+                        <Text fontWeight="medium">
+                          {question.questionText}
+                          {!question.isRequired && (
+                            <Text as="span" color="gray.500" fontWeight="normal"> (optional)</Text>
+                          )}
+                        </Text>
+                        {renderInput(question)}
+                      </Grid>
+                    </Box>
+                  );
+                })
+              )}
+            </Box>
           </DrawerBody>
+
           <DrawerFooter>
-            <Button
-              variant="outline"
-              mr={3}
-              onClick={openAlert}
-            >
+            <Button variant="outline" mr={3} onClick={openAlert}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              colorScheme="blue"
-              onClick={handleSubmit}
-            >
+            <Button type="submit" colorScheme="blue" onClick={handleSubmit} isDisabled={questionsLoading}>
               Submit
             </Button>
           </DrawerFooter>
@@ -1006,29 +605,15 @@ export const AddClientForm = ({
       >
         <AlertDialogOverlay>
           <AlertDialogContent>
-            <AlertDialogHeader
-              fontSize="lg"
-              fontWeight="bold"
-            >
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Are you sure?
             </AlertDialogHeader>
-
-            <AlertDialogBody>
-              You can't undo this action afterward.
-            </AlertDialogBody>
-
+            <AlertDialogBody>You can't undo this action afterward.</AlertDialogBody>
             <AlertDialogFooter>
-              <Button
-                ref={cancelRef}
-                onClick={closeAlert}
-              >
+              <Button ref={cancelRef} onClick={closeAlert}>
                 No
               </Button>
-              <Button
-                colorScheme="blue"
-                onClick={handleConfirmCancel}
-                ml={3}
-              >
+              <Button colorScheme="blue" onClick={handleConfirmCancel} ml={3}>
                 Yes, Cancel
               </Button>
             </AlertDialogFooter>

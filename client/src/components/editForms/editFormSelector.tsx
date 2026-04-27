@@ -41,6 +41,14 @@ export const EditFormSelector = ({ formType, setFormType }: { formType: FormType
         >
           Random Client Survey Form
         </Button>
+        <Button
+          variant={formType === "Add Client Form" ? "solid" : "outline"}
+          colorScheme="blue"
+          width="100%"
+          onClick={() => setFormType("Add Client Form")}
+        >
+          Add Client Form
+        </Button>
       </Flex>
   );
 };

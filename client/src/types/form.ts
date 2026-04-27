@@ -16,6 +16,7 @@ export type FormType =
   | "Exit Surveys"
   | "Success Stories"
   | "Random Client Surveys"
+  | "Add Client Form"
   | "Front Desk Monthly Statistics"
   | "Case Manager Monthly Statistics"
   | "Client Tracking Statistics (Intake Statistics)"

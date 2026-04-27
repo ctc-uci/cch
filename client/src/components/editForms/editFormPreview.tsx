@@ -225,7 +225,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
       last_name?: string;
     }>
   >([]);
-  const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : 4;
+  const formId = formType === "Initial Screeners" ? 1 : formType === "Exit Surveys" ? 2 : formType === "Success Stories" ? 3 : formType === "Add Client Form" ? 5 : 4;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -345,7 +345,6 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
 
   const ensureUniqueFieldKey = async (fieldKey: string, excludeId?: number): Promise<string> => {
     try {
-      // Check if field key exists in database
       const response = await backend.get("/formQuestions?includeHidden=true");
       const allQuestions = Array.isArray(response.data) ? response.data : [];
       const existingKeys = allQuestions
@@ -989,6 +988,7 @@ export const EditFormPreview = ({ formType }: { formType: FormType | null }) => 
     "Exit Surveys",
     "Success Stories",
     "Random Client Surveys",
+    "Add Client Form",
   ];
 
   // Preview mode view

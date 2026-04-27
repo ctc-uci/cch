@@ -21,10 +21,10 @@ requestRouter.get('/activeRequests', async (req, res) => {
                           u.first_name AS cm_first_name,
                           u.last_name AS cm_last_name,
                           r.comments
-                    FROM clients AS c 
-                      INNER JOIN requests AS r ON r.client_id = c.id 
+                    FROM clients AS c
+                      INNER JOIN requests AS r ON r.client_id = c.id
                       INNER JOIN users AS u ON u.id = r.created_by
-                    WHERE r.status = 'active' ORDER BY created_at DESC`;
+                    WHERE r.status = 'active' ORDER BY r.created_at DESC`;
     const idQuery = `SELECT id FROM requests WHERE status = 'active'`;
     const requests = await db.query(query);
     const ids = await db.query(idQuery);
