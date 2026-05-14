@@ -242,6 +242,26 @@ export const AddClientForm = ({
     return value === null || value === undefined || (typeof value === "string" && value.trim() === "");
   };
 
+  const requiredFields = new Set([
+    "first_name",
+    "last_name",
+    "status",
+    "unit_name",
+    "created_by",
+  ]);
+
+  const toOptionalText = (value: string) =>
+    isFieldEmpty(value) ? null : value.trim();
+
+  const toOptionalInt = (value: string) =>
+    isFieldEmpty(value) ? null : parseInt(value, 10);
+
+  const toOptionalFloat = (value: string) =>
+    isFieldEmpty(value) ? null : parseFloat(value);
+
+  const toOptionalBoolean = (value: string) =>
+    isFieldEmpty(value) ? null : value === "true";
+
   // Load case managers for validation and dropdown
   useEffect(() => {
     const loadReferences = async () => {
@@ -272,10 +292,9 @@ export const AddClientForm = ({
   const handleSubmit = async () => {
     // Validate all fields and track which ones have errors
     const newErrors: Record<string, boolean> = {};
-    
-    const optionalFields = new Set(["grant"]);
+
     Object.entries(formData).forEach(([key, value]) => {
-      if (optionalFields.has(key)) return;
+      if (!requiredFields.has(key)) return;
       if (isFieldEmpty(value)) {
         newErrors[key] = true;
       }
@@ -323,51 +342,54 @@ export const AddClientForm = ({
 
       const clientData = {
         created_by: parseInt(formData.created_by || "0", 10),
-        unit_name: formData.unit_name || "",
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        grant: formData.grant,
+        unit_name: formData.unit_name.trim(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        grant: toOptionalText(formData.grant),
         status: formData.status,
-        date_of_birth: formData.date_of_birth,
-        age: parseInt(formData.age || "0", 10),
-        phone_number: formData.phone_number,
-        email: formData.email,
-        emergency_contact_name: formData.emergency_contact_name,
-        emergency_contact_phone_number: formData.emergency_contact_phone_number,
-        medical: formData.medical === "Yes" ? true : false,
-        entrance_date: formData.entrance_date,
-        estimated_exit_date: formData.estimated_exit_date,
-        exit_date: formData.exit_date,
-        bed_nights: parseInt(formData.bed_nights || "0", 10),
-        bed_nights_children: parseInt(formData.bed_nights_children || "0", 10),
-        pregnant_upon_entry:
-          formData.pregnant_upon_entry === "Yes" ? true : false,
-        disabled_children: formData.disabled_children === "Yes" ? true : false,
-        ethnicity: formData.ethnicity,
-        race: formData.race,
+        date_of_birth: toOptionalText(formData.date_of_birth),
+        age: toOptionalInt(formData.age),
+        phone_number: toOptionalText(formData.phone_number),
+        email: toOptionalText(formData.email),
+        emergency_contact_name: toOptionalText(formData.emergency_contact_name),
+        emergency_contact_phone_number: toOptionalText(
+          formData.emergency_contact_phone_number
+        ),
+        medical: toOptionalBoolean(formData.medical),
+        entrance_date: toOptionalText(formData.entrance_date),
+        estimated_exit_date: toOptionalText(formData.estimated_exit_date),
+        exit_date: toOptionalText(formData.exit_date),
+        bed_nights: toOptionalInt(formData.bed_nights),
+        bed_nights_children: toOptionalInt(formData.bed_nights_children),
+        pregnant_upon_entry: toOptionalBoolean(formData.pregnant_upon_entry),
+        disabled_children: toOptionalBoolean(formData.disabled_children),
+        ethnicity: toOptionalText(formData.ethnicity),
+        race: toOptionalText(formData.race),
         city_of_last_permanent_residence:
-          formData.city_of_last_permanent_residence,
-        prior_living: formData.prior_living,
-        prior_living_city: formData.prior_living_city,
+          toOptionalText(formData.city_of_last_permanent_residence),
+        prior_living: toOptionalText(formData.prior_living),
+        prior_living_city: toOptionalText(formData.prior_living_city),
         shelter_in_last_five_years:
-          formData.shelter_in_last_five_years === "Yes" ? true : false,
-        homelessness_length: parseInt(formData.homelessness_length || "0", 10),
-        chronically_homeless:
-          formData.chronically_homeless === "Yes" ? true : false,
+          toOptionalBoolean(formData.shelter_in_last_five_years),
+        homelessness_length: toOptionalInt(formData.homelessness_length),
+        chronically_homeless: toOptionalBoolean(formData.chronically_homeless),
         attending_school_upon_entry:
-          formData.attending_school_upon_entry === "Yes" ? true : false,
-        employement_gained: formData.employement_gained,
-        reason_for_leaving: formData.reason_for_leaving,
-        specific_reason_for_leaving: formData.specific_reason_for_leaving,
-        specific_destination: formData.specific_destination,
-        savings_amount: parseFloat(formData.savings_amount || "0"),
+          toOptionalBoolean(formData.attending_school_upon_entry),
+        employement_gained: toOptionalBoolean(formData.employement_gained),
+        reason_for_leaving: toOptionalText(formData.reason_for_leaving),
+        specific_reason_for_leaving: toOptionalText(
+          formData.specific_reason_for_leaving
+        ),
+        specific_destination: toOptionalText(formData.specific_destination),
+        savings_amount: toOptionalFloat(formData.savings_amount),
         attending_school_upon_exit:
-          formData.attending_school_upon_exit === "Yes" ? true : false,
-        reunified: formData.reunified === "Yes" ? true : false,
-        successful_completion:
-          formData.successful_completion === "Yes" ? true : false,
-        destination_city: formData.destination_city,
-        comments: formData.comments,
+          toOptionalBoolean(formData.attending_school_upon_exit),
+        reunified: toOptionalBoolean(formData.reunified),
+        successful_completion: toOptionalBoolean(
+          formData.successful_completion
+        ),
+        destination_city: toOptionalText(formData.destination_city),
+        comments: toOptionalText(formData.comments),
       };
       const created = await backend.post("/clients", clientData);
       const newClientId =

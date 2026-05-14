@@ -91,9 +91,20 @@ const applyFilters = (
   filterRows: FormFilter[] = [],
   searchKey: string = ""
 ): Form[] => {
+  const normalizeDateValue = (value: unknown): string => {
+    if (typeof value !== "string") {
+      return "";
+    }
+
+    return value.slice(0, 10);
+  };
+
   return data.filter((form) => {
     const filterMatch = filterRows.reduce<boolean>((acc, row, index) => {
-      if (!row.field || !row.operator || !row.value) return acc;
+      const isIncompleteBetween =
+        row.operator === "between" && !row.secondaryValue;
+
+      if (!row.field || !row.operator || !row.value || isIncompleteBetween) return acc;
 
       const fieldValue = form[row.field as keyof Form];
       const fieldType = row.field === "date" ? "date" : typeof fieldValue;
@@ -101,13 +112,23 @@ const applyFilters = (
 
       if (fieldType === "date" && typeof fieldValue === "string") {
         const value = row.value;
-        const normalized = fieldValue.slice(0, 10);
+        const secondaryValue = row.secondaryValue || "";
+        const normalized = normalizeDateValue(fieldValue);
+        const [rangeStart, rangeEnd] = [value, secondaryValue].sort();
         result =
           row.operator === "contains"
             ? normalized.includes(value)
             : row.operator === "="
               ? normalized === value
-              : normalized !== value;
+              : row.operator === "after"
+                ? normalized > value
+                : row.operator === "before"
+                  ? normalized < value
+                  : row.operator === "between"
+                    ? normalized >= rangeStart && normalized <= rangeEnd
+                    : row.operator === "!="
+                      ? normalized !== value
+                      : true;
       } else if (typeof fieldValue === "string") {
         const value = row.value.toLowerCase();
         const lower = fieldValue.toLowerCase();
@@ -142,6 +163,7 @@ type FormFilter = {
   field: string;
   operator: string;
   value: string;
+  secondaryValue?: string;
   selector?: string;
 };
 
@@ -163,7 +185,7 @@ export const FormTable = () => {
   const [searchKey, setSearchKey] = useState("");
 
   const [filterRows, setFilterRows] = useState<FormFilter[]>([
-    { id: 1, field: "", operator: "", value: "" },
+    { id: 1, field: "", operator: "", value: "", secondaryValue: "" },
   ]);
   const [initialScreenerDate, setInitialScreenerDate] = useState<Date | null>(
     null

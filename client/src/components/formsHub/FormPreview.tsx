@@ -150,6 +150,51 @@ const FormPreview = ({
     return datePart ?? "";
   };
 
+  const normalizeIntakeStatisticsRecord = (
+    data: FormDataRecord
+  ): FormDataRecord => {
+    const normalized = { ...data };
+
+    // Some legacy intake-statistics keys include `_5` from DB camelization.
+    if (normalized.beenInShelterLast_5Years !== undefined) {
+      normalized.beenInShelterLast5Years = normalized.beenInShelterLast_5Years;
+      delete normalized.beenInShelterLast_5Years;
+    }
+
+    if (normalized.numberOfSheltersLast_5Years !== undefined) {
+      normalized.numberOfSheltersLast5Years = normalized.numberOfSheltersLast_5Years;
+      delete normalized.numberOfSheltersLast_5Years;
+    }
+
+    if (
+      normalized.numberofSheltersLast5Years !== undefined &&
+      normalized.numberOfSheltersLast5Years === undefined
+    ) {
+      normalized.numberOfSheltersLast5Years = normalized.numberofSheltersLast5Years;
+    }
+
+    return normalized;
+  };
+
+  const buildIntakeStatisticsPayload = (
+    data: FormDataRecord
+  ): Record<string, unknown> => {
+    const payload = camelToSnakeCase(data);
+
+    if (payload.been_in_shelter_last5_years !== undefined) {
+      payload.been_in_shelter_last_5_years = payload.been_in_shelter_last5_years;
+      delete payload.been_in_shelter_last5_years;
+    }
+
+    if (payload.number_of_shelters_last5_years !== undefined) {
+      payload.number_of_shelters_last_5_years =
+        payload.number_of_shelters_last5_years;
+      delete payload.number_of_shelters_last5_years;
+    }
+
+    return payload;
+  };
+
   const tryMatchExistingClient = async (): Promise<number | null> => {
     // Prefer edited values (newFormData), but fall back to original formData and clickedFormItem
     const merged: Record<string, unknown> = {
@@ -649,9 +694,13 @@ const FormPreview = ({
           return;
         }
 
-        const data = formatDataWithLabels(normalData, formItemTitle);
-        setFormData({ ...normalData });
-        setNewFormData({ ...normalData });
+        const normalizedData =
+          formItemTitle === "Client Tracking Statistics (Intake Statistics)"
+            ? normalizeIntakeStatisticsRecord(normalData)
+            : normalData;
+        const data = formatDataWithLabels(normalizedData, formItemTitle);
+        setFormData({ ...normalizedData });
+        setNewFormData({ ...normalizedData });
         setFormattedFormData(data); // human readable keys
         setFormattedModifiedData(data);
       } catch (error) {
@@ -952,6 +1001,9 @@ const FormPreview = ({
       case "Initial Screeners":
         endpoint = `/initialInterview/${formItemId}`;
         break;
+      case "Client Tracking Statistics (Intake Statistics)":
+        endpoint = `/intakeStatsForm/${formItemId}`;
+        break;
       case "Front Desk Monthly Statistics":
         endpoint = `/frontDesk/${formItemId}`;
         break;
@@ -974,7 +1026,9 @@ const FormPreview = ({
     }
 
     try {
-      if (
+      if (formItemTitle === "Client Tracking Statistics (Intake Statistics)") {
+        await backend.put(endpoint, buildIntakeStatisticsPayload(newFormData));
+      } else if (
         formItemTitle === "Front Desk Monthly Statistics" ||
         formItemTitle === "Initial Screeners" ||
         formItemTitle === "Exit Surveys"
