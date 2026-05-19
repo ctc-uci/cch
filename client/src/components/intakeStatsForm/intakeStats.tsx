@@ -157,7 +157,7 @@ export const IntakeStats = () => {
                 Warning!
               </Text>
               <span>
-                You will not be able to view or edit this form after submission.
+                You can edit this form later from the forms hub after submission.
               </span>
               <HStack>
                 <Button

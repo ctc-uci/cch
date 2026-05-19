@@ -5,6 +5,68 @@ import { db } from "../db/db-pgp";
 
 export const intakeStatsFormRouter = Router();
 
+const intakeStatisticsFields = [
+  "date",
+  "month",
+  "case_manager",
+  "cm_id",
+  "first_name",
+  "last_name",
+  "race",
+  "ethnicity",
+  "birthday",
+  "age",
+  "phone_number",
+  "email",
+  "emergency_contact_name",
+  "emergency_contact_phone_number",
+  "prior_living_situation",
+  "entry_date",
+  "medical",
+  "assigned_case_manager",
+  "site",
+  "client_grant",
+  "cal_optima_funded_site",
+  "unique_id",
+  "disabling_condition_form",
+  "family_size",
+  "number_of_children",
+  "number_of_children_with_disability",
+  "pregnant",
+  "city_last_permanent_address",
+  "where_client_slept_last_night",
+  "last_city_resided",
+  "last_city_homeless",
+  "been_in_shelter_last_5_years",
+  "number_of_shelters_last_5_years",
+  "duration_homeless",
+  "chronically_homeless",
+  "employed_upon_entry",
+  "attending_school_upon_entry",
+  "signed_photo_release",
+  "high_risk",
+  "currently_employed",
+  "date_last_employment",
+  "history_domestic_violence",
+  "history_substance_abuse",
+  "support_system",
+  "support_housing",
+  "support_food",
+  "support_childcare",
+  "diagnosed_mental_health",
+  "undiagnosed_mental_health",
+  "transportation",
+  "convicted_crime",
+] as const;
+
+const normalizeUpdateValue = (value: unknown) => {
+  if (value === undefined || value === "") {
+    return null;
+  }
+
+  return value;
+};
+
 // Get all forms
 intakeStatsFormRouter.get("/", async (req, res) => {
   try {
@@ -202,5 +264,47 @@ intakeStatsFormRouter.post("/", async (req, res) => {
     res.status(201).json({ id: result[0].id });
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+intakeStatsFormRouter.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const payload = { ...req.body };
+
+    if (
+      payload.been_in_shelter_last_5_years === undefined &&
+      payload.been_in_shelter_last5_years !== undefined
+    ) {
+      payload.been_in_shelter_last_5_years =
+        payload.been_in_shelter_last5_years;
+    }
+
+    if (
+      payload.number_of_shelters_last_5_years === undefined &&
+      payload.number_of_shelters_last5_years !== undefined
+    ) {
+      payload.number_of_shelters_last_5_years =
+        payload.number_of_shelters_last5_years;
+    }
+
+    const setClauses = intakeStatisticsFields.map(
+      (field, index) => `${field} = COALESCE($${index + 1}, ${field})`
+    );
+    const values = intakeStatisticsFields.map((field) =>
+      normalizeUpdateValue(payload[field])
+    );
+
+    const query = `
+      UPDATE intake_statistics_form
+      SET ${setClauses.join(",\n          ")}
+      WHERE id = $${intakeStatisticsFields.length + 1}
+      RETURNING id;
+    `;
+
+    const result = await db.query(query, [...values, id]);
+    res.status(200).json({ id: result[0].id });
+  } catch (err) {
+    res.status(400).send(err.message);
   }
 });

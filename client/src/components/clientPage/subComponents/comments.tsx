@@ -5,47 +5,49 @@ import { Box, Textarea, useToast } from "@chakra-ui/react";
 import { useBackendContext } from "../../../contexts/hooks/useBackendContext";
 import toSnakeCase from "../../../utils/snakeCase";
 
+type Nullable<T> = T | null;
+
 interface Client {
-  age: number;
-  attendingSchoolUponEntry: boolean;
-  attendingSchoolUponExit: boolean;
-  bedNights: number;
-  bedNightsChildren: number;
-  chronicallyHomeless: boolean;
-  cityOfLastPermanentResidence: string;
+  age: Nullable<number>;
+  attendingSchoolUponEntry: Nullable<boolean>;
+  attendingSchoolUponExit: Nullable<boolean>;
+  bedNights: Nullable<number>;
+  bedNightsChildren: Nullable<number>;
+  chronicallyHomeless: Nullable<boolean>;
+  cityOfLastPermanentResidence: Nullable<string>;
   createdBy: number;
-  dateOfBirth: string;
-  destinationcity: string;
-  disabledChildren: boolean;
-  email: string;
-  emergencyContactName: string;
-  emergencyContactPhoneNumber: string;
-  employmentGained: boolean;
-  entranceDate: string;
-  estimatedExitDate: string;
-  ethnicity: string;
-  exitDate: string;
+  dateOfBirth: Nullable<string>;
+  destinationcity: Nullable<string>;
+  disabledChildren: Nullable<boolean>;
+  email: Nullable<string>;
+  emergencyContactName: Nullable<string>;
+  emergencyContactPhoneNumber: Nullable<string>;
+  employmentGained: Nullable<boolean>;
+  entranceDate: Nullable<string>;
+  estimatedExitDate: Nullable<string>;
+  ethnicity: Nullable<string>;
+  exitDate: Nullable<string>;
   firstName: string;
-  grant: string;
-  homelessnessLength: number;
+  grant: Nullable<string>;
+  homelessnessLength: Nullable<number>;
   id: number;
   lastName: string;
-  medical: boolean;
-  phoneNumber: string;
-  pregnantUponEntry: boolean;
-  priorLiving: string;
-  priorLivingCity: string;
-  race: string;
-  reasonForLeaving: string;
-  reunified: boolean;
-  savingsAmount: string;
-  shelterInLastFiveYears: boolean;
-  specificDestination: string;
-  specificReasonForLeaving: string;
+  medical: Nullable<boolean>;
+  phoneNumber: Nullable<string>;
+  pregnantUponEntry: Nullable<boolean>;
+  priorLiving: Nullable<string>;
+  priorLivingCity: Nullable<string>;
+  race: Nullable<string>;
+  reasonForLeaving: Nullable<string>;
+  reunified: Nullable<boolean>;
+  savingsAmount: Nullable<string>;
+  shelterInLastFiveYears: Nullable<boolean>;
+  specificDestination: Nullable<string>;
+  specificReasonForLeaving: Nullable<string>;
   status: string;
-  successfulCompletion: boolean;
+  successfulCompletion: Nullable<boolean>;
   unitName: string;
-  comments: string;
+  comments: Nullable<string>;
 }
 
 const emptyClient: Client = {
@@ -206,7 +208,7 @@ function Comments({ clientId }: ClientProps) {
         h="40vh"
         resize="vertical"
         fontSize="md"
-        value={client.comments}
+        value={client.comments ?? ""}
         placeholder="Type Here"
         onChange={handleChange}
         onBlur={handleBlur}
