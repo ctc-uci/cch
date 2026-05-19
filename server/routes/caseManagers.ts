@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { clearClientsCreatedBy } from "../common/clientStore";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
@@ -152,7 +153,7 @@ caseManagersRouter.delete("/:id", async (req, res) => {
       
       // Update clients to set created_by to NULL (or handle as needed)
       // Note: This might need different handling based on business logic
-      await db.query(`UPDATE clients SET created_by = NULL WHERE created_by = $1`, [id]);
+      await clearClientsCreatedBy(Number(id));
       
       // Finally delete the case manager
       const data = await db.query(`DELETE FROM case_managers WHERE id = $1 RETURNING *`, [id]);
