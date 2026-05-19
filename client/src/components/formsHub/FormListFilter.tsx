@@ -141,7 +141,7 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
                     ];
 
               return (
-                <HStack key={row.id} spacing={0} align="center">
+                <HStack key={row.id} spacing={0} align="center" flexWrap="nowrap">
                   {index === 0 ? (
                     <Text fontWeight="medium" fontSize="md" marginRight={"47px"}>Where</Text>
                   ) : (
@@ -185,22 +185,30 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
                       <Input
                         type="date"
                         width="150px"
+                        flexShrink={0}
                         value={row.value}
                         onChange={e => updateValue(row.id, "value", e.target.value)}
-                        borderRadius={row.operator === "between" ? "0" : "0"}
+                        borderRadius="0"
                       />
-                      {row.operator === "between" && (
-                        <>
-                          <Text px={3}>and</Text>
-                          <Input
-                            type="date"
-                            width="150px"
-                            value={row.secondaryValue || ""}
-                            onChange={e => updateValue(row.id, "secondaryValue", e.target.value)}
-                            borderRadius="0"
-                          />
-                        </>
-                      )}
+                      <Text
+                        px={3}
+                        flexShrink={0}
+                        visibility={row.operator === "between" ? "visible" : "hidden"}
+                      >
+                        and
+                      </Text>
+                      <Input
+                        type="date"
+                        width="150px"
+                        flexShrink={0}
+                        value={row.secondaryValue || ""}
+                        onChange={e => updateValue(row.id, "secondaryValue", e.target.value)}
+                        visibility={row.operator === "between" ? "visible" : "hidden"}
+                        pointerEvents={row.operator === "between" ? "auto" : "none"}
+                        aria-hidden={row.operator !== "between"}
+                        tabIndex={row.operator === "between" ? 0 : -1}
+                        borderRadius="0"
+                      />
                     </>
                   ) : (
                     <Input

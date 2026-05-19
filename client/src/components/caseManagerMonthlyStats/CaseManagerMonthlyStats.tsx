@@ -249,7 +249,7 @@ export const CaseManagerMonthlyStats = () => {
         <Text fontSize="14px">Last Updated: {lastUpdated}</Text>
       </VStack>
 
-      <HStack alignSelf="end" spacing={3} wrap="wrap">
+      <HStack alignSelf="end" spacing={3} flexWrap="nowrap">
         <ButtonGroup size="sm">
         {/* <Button
             {...buttonStyle}
@@ -300,39 +300,45 @@ export const CaseManagerMonthlyStats = () => {
             </option>
           ))}
         </Select>
-        <Select
-          value={dateOperator}
-          onChange={(e) => {
-            const nextOperator = e.target.value as DateFilterOperator;
-            setDateOperator(nextOperator);
-            if (nextOperator !== "between") {
-              setEndDate("");
-            }
-          }}
-        >
-          <option value="">All dates in year</option>
-          <option value="after">Is after</option>
-          <option value="before">Is before</option>
-          <option value="between">Is between</option>
-        </Select>
-        {dateOperator !== "" && (
+        <HStack spacing={3} flexWrap="nowrap" flexShrink={0}>
+          <Select
+            value={dateOperator}
+            onChange={(e) => {
+              const nextOperator = e.target.value as DateFilterOperator;
+              setDateOperator(nextOperator);
+              if (nextOperator !== "between") {
+                setEndDate("");
+              }
+            }}
+          >
+            <option value="">All dates in year</option>
+            <option value="after">Is after</option>
+            <option value="before">Is before</option>
+            <option value="between">Is between</option>
+          </Select>
           <Input
             type="date"
             value={startDate}
             min={yearStart}
             max={yearEnd}
             onChange={(e) => setStartDate(e.target.value)}
+            visibility={dateOperator !== "" ? "visible" : "hidden"}
+            pointerEvents={dateOperator !== "" ? "auto" : "none"}
+            aria-hidden={dateOperator === ""}
+            tabIndex={dateOperator === "" ? -1 : 0}
           />
-        )}
-        {dateOperator === "between" && (
           <Input
             type="date"
             value={endDate}
             min={yearStart}
             max={yearEnd}
             onChange={(e) => setEndDate(e.target.value)}
+            visibility={dateOperator === "between" ? "visible" : "hidden"}
+            pointerEvents={dateOperator === "between" ? "auto" : "none"}
+            aria-hidden={dateOperator !== "between"}
+            tabIndex={dateOperator === "between" ? 0 : -1}
           />
-        )}
+        </HStack>
       </HStack>
 
       <Tabs
