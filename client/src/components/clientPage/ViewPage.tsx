@@ -142,6 +142,9 @@ export const ViewPage = () => {
     displayValue: any,
     options?: { isBoolean?: boolean; isNumeric?: boolean; isDate?: boolean }
   ) => {
+    const currentValue =
+      edits[fieldName] !== undefined ? edits[fieldName] : displayValue;
+
     if (isEditing) {
       if (options?.isBoolean) {
         const currentVal = edits[fieldName] !== undefined ? edits[fieldName] : displayValue;
@@ -198,7 +201,7 @@ export const ViewPage = () => {
             m={0}
             border="1px solid"
             borderColor="#3182CE"
-            value={edits[fieldName] !== undefined ? edits[fieldName] : displayValue}
+            value={currentValue ?? ""}
             onChange={(e) => {
               let newValue = e.target.value;
               if (options?.isNumeric) {
@@ -214,10 +217,14 @@ export const ViewPage = () => {
     return (
       <Box w="100%" h={cellHeight} display="flex" alignItems="center" p={0}>
         {options?.isBoolean
-          ? (displayValue ? "Yes" : "No")
+          ? displayValue === null || displayValue === undefined
+            ? ""
+            : displayValue
+              ? "Yes"
+              : "No"
           : options?.isDate
           ? formatDisplayDate(String(displayValue ?? ""))
-          : displayValue}
+          : displayValue ?? ""}
       </Box>
     );
   };

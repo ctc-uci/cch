@@ -21,6 +21,7 @@ interface FormFilter {
   field: string;
   operator: string;
   value: string;
+  secondaryValue?: string;
   selector?: string;
 }
 
@@ -41,7 +42,10 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
 
   const addNewRow = () => {
     const last = filterRows[filterRows.length - 1];
-    if (!last?.field || !last?.operator || !last?.value) {
+    const isBetweenMissingSecondDate =
+      last?.operator === "between" && !last.secondaryValue;
+
+    if (!last?.field || !last?.operator || !last?.value || isBetweenMissingSecondDate) {
       toast({
         title: "Incomplete filter",
         description: "Fill in all fields before adding a new one.",
@@ -54,7 +58,14 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
 
     setFilterRows([
       ...filterRows,
-      { id: nextId, field: "", operator: "", value: "", selector: "AND" },
+      {
+        id: nextId,
+        field: "",
+        operator: "",
+        value: "",
+        secondaryValue: "",
+        selector: "AND",
+      },
     ]);
     setNextId(prev => prev + 1);
   };
@@ -62,7 +73,7 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
   const removeRow = (id: number) => {
     const updated = filterRows.filter(row => row.id !== id);
     if (updated.length === 0) {
-      setFilterRows([{ id: 1, field: "", operator: "", value: "" }]);
+      setFilterRows([{ id: 1, field: "", operator: "", value: "", secondaryValue: "" }]);
     } else {
       setFilterRows(updated.map((row, idx) => ({ ...row, selector: idx === 0 ? undefined : row.selector })));
     }
@@ -70,7 +81,31 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
 
   const updateValue = (id: number, key: keyof FormFilter, value: string) => {
     setFilterRows(prev =>
-      prev.map(row => (row.id === id ? { ...row, [key]: value } : row))
+      prev.map((row) => {
+        if (row.id !== id) {
+          return row;
+        }
+
+        if (key === "field") {
+          return {
+            ...row,
+            field: value,
+            operator: "",
+            value: "",
+            secondaryValue: "",
+          };
+        }
+
+        if (key === "operator") {
+          return {
+            ...row,
+            operator: value,
+            secondaryValue: value === "between" ? row.secondaryValue ?? "" : "",
+          };
+        }
+
+        return { ...row, [key]: value };
+      })
     );
   };
 
@@ -100,10 +135,13 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
                   : [
                       { value: "=", label: "equals" },
                       { value: "!=", label: "not equals" },
+                      { value: "after", label: "is after" },
+                      { value: "before", label: "is before" },
+                      { value: "between", label: "is between" },
                     ];
 
               return (
-                <HStack key={row.id} spacing={0} align="center">
+                <HStack key={row.id} spacing={0} align="center" flexWrap="nowrap">
                   {index === 0 ? (
                     <Text fontWeight="medium" fontSize="md" marginRight={"47px"}>Where</Text>
                   ) : (
@@ -143,13 +181,35 @@ export const FormsListFilter = ({ filterRows, setFilterRows }: FormsListFilterPr
                   </Select>
 
                   {type === "date" ? (
-                    <Input
-                      type="date"
-                      width="150px"
-                      value={row.value}
-                      onChange={e => updateValue(row.id, "value", e.target.value)}
-                      borderRadius="0"
-                    />
+                    <>
+                      <Input
+                        type="date"
+                        width="150px"
+                        flexShrink={0}
+                        value={row.value}
+                        onChange={e => updateValue(row.id, "value", e.target.value)}
+                        borderRadius="0"
+                      />
+                      <Text
+                        px={3}
+                        flexShrink={0}
+                        visibility={row.operator === "between" ? "visible" : "hidden"}
+                      >
+                        and
+                      </Text>
+                      <Input
+                        type="date"
+                        width="150px"
+                        flexShrink={0}
+                        value={row.secondaryValue || ""}
+                        onChange={e => updateValue(row.id, "secondaryValue", e.target.value)}
+                        visibility={row.operator === "between" ? "visible" : "hidden"}
+                        pointerEvents={row.operator === "between" ? "auto" : "none"}
+                        aria-hidden={row.operator !== "between"}
+                        tabIndex={row.operator === "between" ? 0 : -1}
+                        borderRadius="0"
+                      />
+                    </>
                   ) : (
                     <Input
                       placeholder="Enter value"

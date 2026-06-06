@@ -61,9 +61,61 @@ type InterviewsTableData = {
 	"Total Interviews Scheduled": TableRow;
 } & TableData;
 
+type MonthlyStatsFilter = {
+  operator?: "after" | "before" | "between";
+  date?: string;
+  endDate?: string;
+};
+
 export const calculateMonthlyStats = Router();
 
-const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
+const buildMonthlyStatsParams = (
+  year: string,
+  filter?: MonthlyStatsFilter
+): string[] => {
+  const params = [`${year}-01-01`, `${Number(year) + 1}-01-01`];
+
+  if (filter?.operator === "after" && filter.date) {
+    params.push(filter.date);
+  } else if (filter?.operator === "before" && filter.date) {
+    params.push(filter.date);
+  } else if (filter?.operator === "between" && filter.date && filter.endDate) {
+    const rangeStart =
+      filter.date <= filter.endDate ? filter.date : filter.endDate;
+    const rangeEnd =
+      filter.date <= filter.endDate ? filter.endDate : filter.date;
+    params.push(rangeStart, rangeEnd);
+  }
+
+  return params;
+};
+
+const buildDatePredicate = (
+  column: string,
+  filter?: MonthlyStatsFilter
+): string => {
+  const predicates = [`${column} >= $1`, `${column} < $2`];
+
+  if (filter?.operator === "after" && filter.date) {
+    predicates.push(`${column} > $3`);
+  } else if (filter?.operator === "before" && filter.date) {
+    predicates.push(`${column} < $3`);
+  } else if (filter?.operator === "between" && filter.date && filter.endDate) {
+    predicates.push(`${column} >= $3`, `${column} <= $4`);
+  }
+
+  return predicates.join(" AND ");
+};
+
+const isValidDateInput = (value?: string): boolean => {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+};
+
+const getCallsAndOfficeVisitData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const params = buildMonthlyStatsParams(year, filter);
 	const query = `
     SELECT
       m.month,
@@ -73,11 +125,11 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
       COALESCE(SUM(number_of_people), 0) as number_of_people
 	  FROM generate_series(1, 12) AS m(month)
 	  LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
-    AND EXTRACT(YEAR FROM f.date) = $1
+    AND ${buildDatePredicate("f.date", filter)}
 	  GROUP BY m.month
 	  ORDER BY m.month;`;
 
-	const data = await db.any(query, [year]);
+	const data = await db.any(query, params);
 
 	const callsAndOfficeVisitsTable: CallsAndOfficeVisitsTableData = {
 		"Calls (includes dups)": {
@@ -145,7 +197,11 @@ const getCallsAndOfficeVisitData = async (year: string): Promise<Table[]> => {
 	return formattedData;
 };
 
-const getDonationRoomVisitsData = async (year: string): Promise<Table> => {
+const getDonationRoomVisitsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const donationVisitsTable : DonationRoomTableData = {
     "HB Donation Room Visits": {
       "categoryName": "HB Donation Room Visits",
@@ -160,10 +216,10 @@ const getDonationRoomVisitsData = async (year: string): Promise<Table> => {
       COALESCE(SUM(total_visits_hb_donations_room), 0) as total_visits_to_donations_room
     FROM generate_series(1, 12) AS m(month)
     LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
-    AND EXTRACT(YEAR FROM f.date) = $1
+    AND ${buildDatePredicate("f.date", filter)}
     GROUP BY m.month
     ORDER BY m.month;`;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
 
   data.forEach((entry) => {
     const monthName = getMonthName(entry.month)
@@ -186,7 +242,11 @@ const getDonationRoomVisitsData = async (year: string): Promise<Table> => {
   return formattedData;
 }
 
-const getPantryVisitsData = async (year: string): Promise<Table> => {
+const getPantryVisitsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const donationPantryVisitsTable: PantryTableData = {
     "HB Pantry Vists": {
       "categoryName": "HB Pantry Vists",
@@ -212,10 +272,10 @@ const getPantryVisitsData = async (year: string): Promise<Table> => {
       COALESCE(SUM(total_visits_placentia_neighborhood), 0) as total_visits_placentia_neighborhood
     FROM generate_series(1, 12) AS m(month)
     LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
-    AND EXTRACT(YEAR FROM f.date) = $1
+    AND ${buildDatePredicate("f.date", filter)}
     GROUP BY m.month
     ORDER BY m.month;`;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   data.forEach((entry) => {
     const monthName = getMonthName(entry.month)
     const total_visits_hb_pantry = Number(entry.total_visits_hb_pantry)
@@ -244,7 +304,11 @@ const getPantryVisitsData = async (year: string): Promise<Table> => {
   };
   return formattedData;
 }
-const getPeopleServedData = async (year: string): Promise<Table> => {
+const getPeopleServedData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `SELECT
       m.month,
       COALESCE(SUM(total_served_hb_donations_room), 0) as served_hb_donations_room,
@@ -253,10 +317,10 @@ const getPeopleServedData = async (year: string): Promise<Table> => {
       COALESCE(SUM(total_served_placentia_neighborhood), 0) as served_placentia_neighborhood
     FROM generate_series(1, 12) AS m(month)
     LEFT JOIN front_desk_monthly f ON EXTRACT(MONTH FROM f.date) = m.month
-    AND EXTRACT(YEAR FROM f.date) = $1
+    AND ${buildDatePredicate("f.date", filter)}
     GROUP BY m.month
     ORDER BY m.month;`;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const peopleServedTable: PeopleServedData = {
     "HB Donation Room People Served": {
       "categoryName": "HB Donation Room People Served",
@@ -316,10 +380,13 @@ const getPeopleServedData = async (year: string): Promise<Table> => {
   return formattedData;
 }
 
-const getDonationPantryVisitsData = async (year: string): Promise<Table[]> => {
-  const donationRoomVisits = await getDonationRoomVisitsData(year);
-  const donationPantryVisits = await getPantryVisitsData(year);
-  const peopleServed = await getPeopleServedData(year);
+const getDonationPantryVisitsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const donationRoomVisits = await getDonationRoomVisitsData(year, filter);
+  const donationPantryVisits = await getPantryVisitsData(year, filter);
+  const peopleServed = await getPeopleServedData(year, filter);
   const formattedData: Table[] = [
     donationRoomVisits,
     donationPantryVisits,
@@ -328,7 +395,11 @@ const getDonationPantryVisitsData = async (year: string): Promise<Table[]> => {
   return formattedData;
 }
 
-const getInterviewsData = async (year: string): Promise<Table[]> => {
+const getInterviewsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const params = buildMonthlyStatsParams(year, filter);
 	const query = `
     SELECT
 	    m.month,
@@ -342,11 +413,11 @@ const getInterviewsData = async (year: string): Promise<Table[]> => {
         number_of_others), 0) as interviews_scheduled
     FROM generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats c ON EXTRACT(MONTH FROM c.date) = m.month
-	  AND EXTRACT(YEAR FROM c.date) = $1
+	  AND ${buildDatePredicate("c.date", filter)}
     GROUP BY m.month
     ORDER BY m.month;`;
 
-	const data = await db.any(query, [year]);
+	const data = await db.any(query, params);
 
 	const interviewsData: InterviewsTableData = {
 		"Number of Interviews Conducted": {
@@ -426,7 +497,11 @@ const getInterviewsData = async (year: string): Promise<Table[]> => {
 	return formattedData;
 }
 
-const getContactsData = async (year: string): Promise<Table[]> => {
+const getContactsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
       SELECT
         m.month,
@@ -439,18 +514,18 @@ const getContactsData = async (year: string): Promise<Table[]> => {
       JOIN (
           SELECT DISTINCT cm_id
           FROM cm_monthly_stats
-          WHERE EXTRACT(YEAR FROM date) = $1
+          WHERE ${buildDatePredicate("date", filter)}
         ) active ON active.cm_id = cm.id
       CROSS JOIN generate_series(1, 12) AS m(month)
       LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
         AND EXTRACT(MONTH FROM s.date) = m.month
-        AND EXTRACT(YEAR FROM s.date) = $1
+        AND ${buildDatePredicate("s.date", filter)}
       GROUP BY
         cm.id, cm.first_name, cm.last_name, m.month
       ORDER BY
         cm.id, m.month;
     `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const contactsData: TableData = {};
   data.map((entry) => {
     const name = `${entry.first_name} ${entry.last_name}`
@@ -483,7 +558,11 @@ const getContactsData = async (year: string): Promise<Table[]> => {
 }
 
 
-const getFoodCardsData = async (year: string): Promise<TableData> => {
+const getFoodCardsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+    const params = buildMonthlyStatsParams(year, filter);
     const query = `
       SELECT
         m.month,
@@ -496,19 +575,19 @@ const getFoodCardsData = async (year: string): Promise<TableData> => {
       JOIN (
           SELECT DISTINCT cm_id
           FROM cm_monthly_stats
-          WHERE EXTRACT(YEAR FROM date) = $1
+          WHERE ${buildDatePredicate("date", filter)}
         ) active ON active.cm_id = cm.id
       CROSS JOIN generate_series(1, 12) AS m(month)
       LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
         AND EXTRACT(MONTH FROM s.date) = m.month
-        AND EXTRACT(YEAR FROM s.date) = $1
+        AND ${buildDatePredicate("s.date", filter)}
       GROUP BY
         cm.id, cm.first_name, cm.last_name, m.month
       ORDER BY
         cm.id, m.month;
     `;
 
-    const data = await db.any(query, [year]);
+    const data = await db.any(query, params);
     const foodCardsData: TableData = {};
 
     data.forEach((entry) => {
@@ -535,7 +614,11 @@ const getFoodCardsData = async (year: string): Promise<TableData> => {
     return foodCardsData;
 };
 
-const getFoodCardsValueData = async (year: string): Promise<TableData> => {
+const getFoodCardsValueData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
       m.month,
@@ -548,19 +631,19 @@ const getFoodCardsValueData = async (year: string): Promise<TableData> => {
     JOIN (
         SELECT DISTINCT cm_id
         FROM cm_monthly_stats
-        WHERE EXTRACT(YEAR FROM date) = $1
+        WHERE ${buildDatePredicate("date", filter)}
       ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
     GROUP BY
       cm.id, cm.first_name, cm.last_name, m.month
     ORDER BY
       cm.id, m.month;
   `;
 
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const foodCardsData: TableData = {};
 
   data.forEach((entry) => {
@@ -587,7 +670,11 @@ const getFoodCardsValueData = async (year: string): Promise<TableData> => {
   return foodCardsData;
 };
 
-const getBusPassesData = async (year: string): Promise<TableData> => {
+const getBusPassesData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+    const params = buildMonthlyStatsParams(year, filter);
     const query = `
         SELECT
             m.month,
@@ -600,20 +687,20 @@ const getBusPassesData = async (year: string): Promise<TableData> => {
         JOIN (
             SELECT DISTINCT cm_id
             FROM cm_monthly_stats
-            WHERE EXTRACT(YEAR FROM date) = $1
+            WHERE ${buildDatePredicate("date", filter)}
             GROUP BY cm_id
         ) active ON active.cm_id = cm.id
         CROSS JOIN generate_series(1, 12) AS m(month)
         LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
             AND EXTRACT(MONTH FROM s.date) = m.month
-            AND EXTRACT(YEAR FROM s.date) = $1
+            AND ${buildDatePredicate("s.date", filter)}
         GROUP BY
             cm.id, cm.first_name, cm.last_name, m.month
         ORDER BY
             cm.id, m.month;
     `;
 
-    const data = await db.any(query, [year]);
+    const data = await db.any(query, params);
     const busPassesData: TableData = {};
 
     data.forEach((entry) => {
@@ -640,7 +727,11 @@ const getBusPassesData = async (year: string): Promise<TableData> => {
     return busPassesData;
 };
 
-const getBusPassesValueData = async (year: string): Promise<TableData> => {
+const getBusPassesValueData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
       SELECT
           m.month,
@@ -653,20 +744,20 @@ const getBusPassesValueData = async (year: string): Promise<TableData> => {
       JOIN (
           SELECT DISTINCT cm_id
           FROM cm_monthly_stats
-          WHERE EXTRACT(YEAR FROM date) = $1
+          WHERE ${buildDatePredicate("date", filter)}
           GROUP BY cm_id
       ) active ON active.cm_id = cm.id
       CROSS JOIN generate_series(1, 12) AS m(month)
       LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
           AND EXTRACT(MONTH FROM s.date) = m.month
-          AND EXTRACT(YEAR FROM s.date) = $1
+          AND ${buildDatePredicate("s.date", filter)}
       GROUP BY
           cm.id, cm.first_name, cm.last_name, m.month
       ORDER BY
           cm.id, m.month;
   `;
 
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const busPassesData: TableData = {};
 
   data.forEach((entry) => {
@@ -693,7 +784,11 @@ const getBusPassesValueData = async (year: string): Promise<TableData> => {
   return busPassesData;
 };
 
-const getGasCardsData = async (year: string): Promise<TableData> => {
+const getGasCardsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
           m.month,
@@ -706,19 +801,19 @@ const getGasCardsData = async (year: string): Promise<TableData> => {
       JOIN (
           SELECT DISTINCT cm_id
           FROM cm_monthly_stats
-          WHERE EXTRACT(YEAR FROM date) = $1
+          WHERE ${buildDatePredicate("date", filter)}
           GROUP BY cm_id
       ) active ON active.cm_id = cm.id
       CROSS JOIN generate_series(1, 12) AS m(month)
       LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
           AND EXTRACT(MONTH FROM s.date) = m.month
-          AND EXTRACT(YEAR FROM s.date) = $1
+          AND ${buildDatePredicate("s.date", filter)}
       GROUP BY
           cm.id, cm.first_name, cm.last_name, m.month
       ORDER BY
           cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const gasCardsData: TableData = {};
   data.forEach((entry) => {
     const cmId = entry.cm_id;
@@ -741,7 +836,11 @@ const getGasCardsData = async (year: string): Promise<TableData> => {
   return gasCardsData;
 };
 
-const getGasCardsValueData = async (year: string): Promise<TableData> => {
+const getGasCardsValueData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
           m.month,
@@ -754,19 +853,19 @@ const getGasCardsValueData = async (year: string): Promise<TableData> => {
       JOIN (
           SELECT DISTINCT cm_id
           FROM cm_monthly_stats
-          WHERE EXTRACT(YEAR FROM date) = $1
+          WHERE ${buildDatePredicate("date", filter)}
           GROUP BY cm_id
       ) active ON active.cm_id = cm.id
       CROSS JOIN generate_series(1, 12) AS m(month)
       LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
           AND EXTRACT(MONTH FROM s.date) = m.month
-          AND EXTRACT(YEAR FROM s.date) = $1
+          AND ${buildDatePredicate("s.date", filter)}
       GROUP BY
           cm.id, cm.first_name, cm.last_name, m.month
       ORDER BY
           cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const gasCardsData: TableData = {};
   data.forEach((entry) => {
     const cmId = entry.cm_id;
@@ -789,13 +888,16 @@ const getGasCardsValueData = async (year: string): Promise<TableData> => {
   return gasCardsData;
 }
 
-const getFoodBusData = async (year: string): Promise<Table[]> => {
-    const foodCardsData = await getFoodCardsData(year);
-    const busPassesData = await getBusPassesData(year);
-    const foodCardsValueData = await getFoodCardsValueData(year);
-    const busPassesValueData = await getBusPassesValueData(year);
-    const gasCardsData = await getGasCardsData(year);
-    const gasCardsValueData = await getGasCardsValueData(year);
+const getFoodBusData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+    const foodCardsData = await getFoodCardsData(year, filter);
+    const busPassesData = await getBusPassesData(year, filter);
+    const foodCardsValueData = await getFoodCardsValueData(year, filter);
+    const busPassesValueData = await getBusPassesValueData(year, filter);
+    const gasCardsData = await getGasCardsData(year, filter);
+    const gasCardsValueData = await getGasCardsValueData(year, filter);
 
     const formattedData: Table[] = [
         {
@@ -827,7 +929,11 @@ const getFoodBusData = async (year: string): Promise<Table[]> => {
     return formattedData;
 };
 
-const getWomensBirthdaysCelebratedData = async (year: string): Promise<TableData> => {
+const getWomensBirthdaysCelebratedData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
 	// Query to get women's birthdays statistics for case managers who have celebrated women's birthdays that year
   const query = `
     SELECT
@@ -841,20 +947,20 @@ const getWomensBirthdaysCelebratedData = async (year: string): Promise<TableData
     JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
     ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
     GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
     ORDER BY
     cm.id, m.month;
   `;
 
-	const data = await db.any(query, [year]);
+	const data = await db.any(query, params);
 	const womensBirthdaysCelebratedData: TableData = {}
 
 	data.map((entry) => {
@@ -882,7 +988,11 @@ const getWomensBirthdaysCelebratedData = async (year: string): Promise<TableData
 
 }
 
-const getChildrensBirthdaysCelebratedData = async (year: string): Promise<TableData> => {
+const getChildrensBirthdaysCelebratedData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
       m.month,
@@ -895,20 +1005,20 @@ const getChildrensBirthdaysCelebratedData = async (year: string): Promise<TableD
     JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
     ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
     GROUP BY
         m.month, cm.id, cm.first_name, cm.last_name
     ORDER BY
       cm.id, m.month;
     `;
 
-	const data = await db.any(query, [year]);
+	const data = await db.any(query, params);
 	const childrensBirthdaysCelebratedData: TableData = {}
 
 	data.map((entry) => {
@@ -935,9 +1045,12 @@ const getChildrensBirthdaysCelebratedData = async (year: string): Promise<TableD
   return childrensBirthdaysCelebratedData
 }
 
-const getBirthdaysData = async (year: string): Promise<Table[]> => {
-  const womensBirthdaysCelebratedData = await getWomensBirthdaysCelebratedData(year);
-  const childrensBirthdaysCelebratedData = await getChildrensBirthdaysCelebratedData(year);
+const getBirthdaysData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const womensBirthdaysCelebratedData = await getWomensBirthdaysCelebratedData(year, filter);
+  const childrensBirthdaysCelebratedData = await getChildrensBirthdaysCelebratedData(year, filter);
   const formattedData: Table[] = [
     {
       tableName: "Womens Birthdays Celebrated",
@@ -952,7 +1065,11 @@ const getBirthdaysData = async (year: string): Promise<Table[]> => {
 	return formattedData
 }
 
-const getReferralsData = async (year: string): Promise<Table[]> => {
+const getReferralsData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
       m.month,
@@ -968,19 +1085,19 @@ const getReferralsData = async (year: string): Promise<Table[]> => {
     JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
     ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
     GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
     ORDER BY
       cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const womenHealthcareReferralsData: TableData = {};
   const kidHealthcareReferralsData: TableData = {};
   const womenCounselingReferralsData: TableData = {};
@@ -1064,7 +1181,11 @@ const getReferralsData = async (year: string): Promise<Table[]> => {
   return formattedData
 }
 
-const getBabiesBornData = async (year: string): Promise<TableData> => {
+const getBabiesBornData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
     SELECT
       m.month,
@@ -1077,21 +1198,21 @@ const getBabiesBornData = async (year: string): Promise<TableData> => {
     JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
       HAVING SUM(babies_born) > 0
     ) active ON active.cm_id = cm.id
     CROSS JOIN generate_series(1, 12) AS m(month)
     LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
     GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
     ORDER BY
       cm.id, m.month;
   `;
 
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
     const babiesBornData: TableData = {};
 
     data.forEach((entry) => {
@@ -1119,7 +1240,11 @@ const getBabiesBornData = async (year: string): Promise<TableData> => {
 
 }
 
-const getEnrolledData = async (year: string): Promise<TableData> => {
+const getEnrolledData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
   SELECT
       m.month,
@@ -1132,20 +1257,20 @@ const getEnrolledData = async (year: string): Promise<TableData> => {
   JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
   ) active ON active.cm_id = cm.id
   CROSS JOIN generate_series(1, 12) AS m(month)
   LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
   GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
   ORDER BY
       cm.id, m.month;
   `;
 
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
     const enrolledData: TableData = {};
 
     data.forEach((entry) => {
@@ -1173,7 +1298,11 @@ const getEnrolledData = async (year: string): Promise<TableData> => {
 
 }
 
-const getLicenseData = async (year: string): Promise<TableData> => {
+const getLicenseData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
   SELECT
       m.month,
@@ -1186,19 +1315,19 @@ const getLicenseData = async (year: string): Promise<TableData> => {
   JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
   ) active ON active.cm_id = cm.id
   CROSS JOIN generate_series(1, 12) AS m(month)
   LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
   GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
   ORDER BY
       cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const licenseData: TableData = {};
 
   data.forEach((entry) => {
@@ -1225,7 +1354,11 @@ const getLicenseData = async (year: string): Promise<TableData> => {
   return licenseData;
 }
 
-const getReunificationData = async (year: string): Promise<TableData> => {
+const getReunificationData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
   SELECT
       m.month,
@@ -1238,19 +1371,19 @@ const getReunificationData = async (year: string): Promise<TableData> => {
   JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
   ) active ON active.cm_id = cm.id
   CROSS JOIN generate_series(1, 12) AS m(month)
   LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
   GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
   ORDER BY
       cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const reunificationData: TableData = {};
   data.forEach((entry) => {
     const cmId = entry.cm_id;
@@ -1274,7 +1407,11 @@ const getReunificationData = async (year: string): Promise<TableData> => {
   });
   return reunificationData;
 }
-const getDiplomaData = async (year: string): Promise<TableData> => {
+const getDiplomaData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TableData> => {
+  const params = buildMonthlyStatsParams(year, filter);
   const query = `
   SELECT
       m.month,
@@ -1287,19 +1424,19 @@ const getDiplomaData = async (year: string): Promise<TableData> => {
   JOIN (
       SELECT cm_id
       FROM cm_monthly_stats
-      WHERE EXTRACT(YEAR FROM date) = $1
+      WHERE ${buildDatePredicate("date", filter)}
       GROUP BY cm_id
   ) active ON active.cm_id = cm.id
   CROSS JOIN generate_series(1, 12) AS m(month)
   LEFT JOIN cm_monthly_stats s ON s.cm_id = cm.id
       AND EXTRACT(MONTH FROM s.date) = m.month
-      AND EXTRACT(YEAR FROM s.date) = $1
+      AND ${buildDatePredicate("s.date", filter)}
   GROUP BY
       m.month, cm.id, cm.first_name, cm.last_name
   ORDER BY
       cm.id, m.month;
   `;
-  const data = await db.any(query, [year]);
+  const data = await db.any(query, params);
   const diplomaData: TableData = {};
   data.forEach((entry) => {
     const cmId = entry.cm_id;
@@ -1324,12 +1461,15 @@ const getDiplomaData = async (year: string): Promise<TableData> => {
   return diplomaData;
 }
 
-const getMiscData = async (year: string): Promise<Table[]> => {
-  const babiesBornData = await getBabiesBornData(year);
-  const enrolledData = await getEnrolledData(year);
-  const licenseData = await getLicenseData(year);
-  const reunificationData = await getReunificationData(year);
-  const diplomaData = await getDiplomaData(year);
+const getMiscData = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<Table[]> => {
+  const babiesBornData = await getBabiesBornData(year, filter);
+  const enrolledData = await getEnrolledData(year, filter);
+  const licenseData = await getLicenseData(year, filter);
+  const reunificationData = await getReunificationData(year, filter);
+  const diplomaData = await getDiplomaData(year, filter);
   const formattedData: Table[] = [
     {
       tableName: "Babies Born",
@@ -1356,17 +1496,20 @@ const getMiscData = async (year: string): Promise<Table[]> => {
   return formattedData
 }
 
-calculateMonthlyStats.get("/:year", async (req, res) => {
-	const { year } = req.params
-	const callsAndOfficeVisitData = await getCallsAndOfficeVisitData(year);
-	const interviewData = await getInterviewsData(year);
-	const contactsData = await getContactsData(year);
-	const donationPantryVisitsData = await getDonationPantryVisitsData(year);
-	const birthdaysData = await getBirthdaysData(year); // returns 2 tables: womens birthdays and kids birthdays
-  const foodBusData = await getFoodBusData(year); // returns 2 tables: food cards and bus passes
-  const referralsData = await getReferralsData(year); // returns 2 tables: healthcare referrals for women and healthcare referrals for kids
-  const miscData = await getMiscData(year); // returns 2 tables: babies born and women who enroll in school or a trade program while in CCH
-	const response : TabData[] = [
+const getMonthlyStatsResponse = async (
+  year: string,
+  filter?: MonthlyStatsFilter
+): Promise<TabData[]> => {
+	const callsAndOfficeVisitData = await getCallsAndOfficeVisitData(year, filter);
+	const interviewData = await getInterviewsData(year, filter);
+	const contactsData = await getContactsData(year, filter);
+	const donationPantryVisitsData = await getDonationPantryVisitsData(year, filter);
+	const birthdaysData = await getBirthdaysData(year, filter);
+  const foodBusData = await getFoodBusData(year, filter);
+  const referralsData = await getReferralsData(year, filter);
+  const miscData = await getMiscData(year, filter);
+
+	return [
 		{
 			"tabName": "Calls and Office Visits",
 			"tables": callsAndOfficeVisitData
@@ -1399,7 +1542,63 @@ calculateMonthlyStats.get("/:year", async (req, res) => {
 			"tabName": "Misc.",
 			"tables": miscData
 		},
-	]
+	];
+};
 
-	res.status(200).json(response);
+calculateMonthlyStats.get("/", async (req, res) => {
+  try {
+    const year = String(req.query.year || "");
+    const operator = req.query.operator as MonthlyStatsFilter["operator"];
+    const date = req.query.date ? String(req.query.date) : undefined;
+    const endDate = req.query.endDate ? String(req.query.endDate) : undefined;
+
+    if (!/^\d{4}$/.test(year)) {
+      res.status(400).send("A valid year is required.");
+      return;
+    }
+
+    if (operator && !["after", "before", "between"].includes(operator)) {
+      res.status(400).send("Invalid date operator.");
+      return;
+    }
+
+    if ((operator === "after" || operator === "before") && !isValidDateInput(date)) {
+      res.status(400).send("A valid date is required for this filter.");
+      return;
+    }
+
+    if (
+      operator === "between" &&
+      (!isValidDateInput(date) || !isValidDateInput(endDate))
+    ) {
+      res.status(400).send("A valid start and end date are required.");
+      return;
+    }
+
+    if (date && !date.startsWith(`${year}-`)) {
+      res.status(400).send("Date filters must stay within the selected year.");
+      return;
+    }
+
+    if (endDate && !endDate.startsWith(`${year}-`)) {
+      res.status(400).send("Date filters must stay within the selected year.");
+      return;
+    }
+
+    const filter = operator ? { operator, date, endDate } : undefined;
+    const response = await getMonthlyStatsResponse(year, filter);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).send(error instanceof Error ? error.message : "Failed to calculate monthly stats.");
+  }
+});
+
+calculateMonthlyStats.get("/:year", async (req, res) => {
+	try {
+    const { year } = req.params
+    const response = await getMonthlyStatsResponse(year);
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).send(error instanceof Error ? error.message : "Failed to calculate monthly stats.");
+  }
 });

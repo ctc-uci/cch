@@ -1,6 +1,12 @@
 import { Router } from "express";
 
 import { findUnassignedSessionIdsMatchingClient } from "../common/clientMatching";
+import {
+  createClient,
+  deleteClient,
+  type ClientFields,
+  updateClient,
+} from "../common/clientStore";
 import { keysToCamel } from "../common/utils";
 import { db } from "../db/db-pgp";
 
@@ -109,7 +115,7 @@ clientsRouter.get("/email/:email", async (req, res) => {
   try {
     const { email } = req.params;
 
-    let rows = await db.query(
+    let clients = await db.query(
       `SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
        FROM clients c
        LEFT JOIN case_managers cm ON c.created_by = cm.id
@@ -117,7 +123,7 @@ clientsRouter.get("/email/:email", async (req, res) => {
       [email]
     );
 
-    if (rows.length === 0) {
+    if (clients.length === 0) {
       const intakeRows = await db.query(
         `SELECT * FROM intake_statistics_form WHERE email COLLATE "C" = $1 ORDER BY id DESC LIMIT 1`,
         [email]
@@ -128,71 +134,55 @@ clientsRouter.get("/email/:email", async (req, res) => {
         const sub = (s: string | null | undefined, maxLen: number) =>
           (s !== null && s !== undefined ? String(s).trim() : "").slice(0, maxLen);
 
-        const clientResult = await db.query(`INSERT INTO clients_base DEFAULT VALUES RETURNING id`);
-        const newClientId: number = clientResult[0].id;
-
-        const sessionResult = await db.query("SELECT uuid_generate_v4() as session_id");
-        const sessionId: string = sessionResult[0].session_id;
-
-        const fieldToId = await getQuestionMap();
         const priorLiving =
           i.prior_living_situation !== null && i.prior_living_situation !== undefined
             ? String(i.prior_living_situation)
             : "";
         const homelessnessLength = parseInt(String(i.duration_homeless || "0"), 10) || 0;
 
-        const fieldValues: Record<string, string> = {
-          created_by: String(i.cm_id ?? ""),
+        await createClient({
+          created_by: i.cm_id,
           unit_name: "",
           grant:
             i.client_grant !== null && i.client_grant !== undefined
               ? String(i.client_grant)
-              : "",
+              : null,
           status: "Active",
           first_name: sub(i.first_name, 16),
           last_name: sub(i.last_name, 16),
-          date_of_birth: i.birthday ? String(i.birthday).split("T")[0] : "",
-          age: String(i.age ?? ""),
+          date_of_birth: i.birthday,
+          age: i.age ?? 0,
           phone_number: sub(i.phone_number, 10),
           email: sub(i.email, 32),
           emergency_contact_name: sub(i.emergency_contact_name, 32),
           emergency_contact_phone_number: sub(i.emergency_contact_phone_number, 10),
-          medical: String(i.medical ?? false),
-          entrance_date: i.entry_date ? String(i.entry_date).split("T")[0] : "",
-          estimated_exit_date: i.entry_date ? String(i.entry_date).split("T")[0] : "",
-          bed_nights: "0",
-          bed_nights_children: "0",
-          pregnant_upon_entry: String(i.pregnant ?? false),
-          disabled_children: String((i.number_of_children_with_disability ?? 0) > 0),
-          ethnicity: i.ethnicity ? String(i.ethnicity) : "",
-          race: i.race ? String(i.race) : "",
+          medical: i.medical ?? false,
+          entrance_date: i.entry_date,
+          estimated_exit_date: i.entry_date,
+          exit_date: null,
+          bed_nights: 0,
+          bed_nights_children: 0,
+          pregnant_upon_entry: i.pregnant ?? false,
+          disabled_children: (i.number_of_children_with_disability ?? 0) > 0,
+          ethnicity: i.ethnicity,
+          race: i.race,
           city_of_last_permanent_residence: sub(i.city_last_permanent_address, 256),
           prior_living: sub(priorLiving, 256),
           prior_living_city: sub(i.last_city_resided, 256),
-          shelter_in_last_five_years: String(i.been_in_shelter_last_5_years ?? false),
-          homelessness_length: String(homelessnessLength),
-          chronically_homeless: String(i.chronically_homeless ?? false),
-          attending_school_upon_entry: String(i.attending_school_upon_entry ?? false),
-          employement_gained: "false",
-        };
-
-        for (const [fieldKey, value] of Object.entries(fieldValues)) {
-          const questionId = fieldToId.get(fieldKey);
-          if (!questionId || !value || value.trim() === "") continue;
-          await upsertResponse(newClientId, questionId, value, sessionId);
-        }
-
-        rows = await db.query(
-          `SELECT c.*, cm.first_name AS case_manager_first_name, cm.last_name AS case_manager_last_name
-           FROM clients c
-           LEFT JOIN case_managers cm ON c.created_by = cm.id
-           WHERE c.email COLLATE "C" = $1`,
+          shelter_in_last_five_years: i.been_in_shelter_last_5_years ?? false,
+          homelessness_length: homelessnessLength,
+          chronically_homeless: i.chronically_homeless ?? false,
+          attending_school_upon_entry: i.attending_school_upon_entry ?? false,
+          employement_gained: false,
+        });
+        clients = await db.query(
+          `SELECT * FROM clients WHERE email COLLATE "C" = $1`,
           [email]
         );
       }
     }
 
-    res.status(200).json(keysToCamel(rows));
+    res.status(200).json(keysToCamel(clients));
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -259,42 +249,52 @@ clientsRouter.post("/from-form", async (req, res) => {
   }
 });
 
-// Legacy create route — body field keys must match form_questions field_keys for form_id=5.
 clientsRouter.post("/", async (req, res) => {
   try {
-    const body = req.body as Record<string, unknown>;
+    const {
+      created_by, unit_name, grant, status, first_name, last_name,
+      date_of_birth, age, phone_number, email,
+      emergency_contact_name, emergency_contact_phone_number, medical,
+      entrance_date, estimated_exit_date, exit_date,
+      bed_nights, bed_nights_children, pregnant_upon_entry, disabled_children,
+      ethnicity, race, city_of_last_permanent_residence, prior_living, prior_living_city,
+      shelter_in_last_five_years, homelessness_length, chronically_homeless,
+      attending_school_upon_entry, employement_gained, reason_for_leaving,
+      specific_reason_for_leaving, specific_destination, savings_amount,
+      attending_school_upon_exit, reunified, successful_completion, destination_city, comments,
+    } = req.body;
 
-    const clientResult = await db.query(`INSERT INTO clients_base DEFAULT VALUES RETURNING id`);
-    const newClientId: number = clientResult[0].id;
+    const newClientId = await createClient({
+      created_by, unit_name,
+      grant: grant !== null && grant !== undefined && String(grant).trim() !== "" ? String(grant).trim() : null,
+      status, first_name, last_name, date_of_birth, age, phone_number, email,
+      emergency_contact_name, emergency_contact_phone_number, medical,
+      entrance_date, estimated_exit_date, exit_date,
+      bed_nights, bed_nights_children, pregnant_upon_entry, disabled_children,
+      ethnicity, race, city_of_last_permanent_residence, prior_living, prior_living_city,
+      shelter_in_last_five_years, homelessness_length, chronically_homeless,
+      attending_school_upon_entry, employement_gained, reason_for_leaving,
+      specific_reason_for_leaving, specific_destination, savings_amount,
+      attending_school_upon_exit, reunified, successful_completion, destination_city, comments,
+    });
 
-    const sessionResult = await db.query("SELECT uuid_generate_v4() as session_id");
-    const sessionId: string = sessionResult[0].session_id;
-
-    const fieldToId = await getQuestionMap();
-
-    for (const [fieldKey, value] of Object.entries(body)) {
-      const questionId = fieldToId.get(fieldKey);
-      if (!questionId) continue;
-      await upsertResponse(newClientId, questionId, value, sessionId);
-    }
-
-    try {
-      const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
-        firstName: (body["first_name"] as string) ?? null,
-        lastName: (body["last_name"] as string) ?? null,
-        phoneNumber: (body["phone_number"] as string) ?? null,
-        dateOfBirth: (body["date_of_birth"] as string) ?? null,
-      });
-      if (matchingSessionIds.length > 0) {
-        await db.query(
-          `UPDATE intake_responses
-           SET client_id = $1, updated_at = CURRENT_TIMESTAMP
-           WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
-          [newClientId, matchingSessionIds]
-        );
+    if (newClientId) {
+      try {
+        const matchingSessionIds = await findUnassignedSessionIdsMatchingClient({
+          firstName: first_name,
+          lastName: last_name,
+          phoneNumber: phone_number,
+          dateOfBirth: date_of_birth,
+        });
+        if (matchingSessionIds.length > 0) {
+          await db.query(
+            `UPDATE intake_responses SET client_id = $1, updated_at = CURRENT_TIMESTAMP WHERE client_id IS NULL AND session_id = ANY($2::uuid[])`,
+            [newClientId, matchingSessionIds]
+          );
+        }
+      } catch (linkErr) {
+        console.error("Link surveys to new client failed (non-fatal):", linkErr);
       }
-    } catch (linkErr) {
-      console.error("Link surveys to new client failed (non-fatal):", linkErr);
     }
 
     res.status(200).json({ id: newClientId });
@@ -306,18 +306,8 @@ clientsRouter.post("/", async (req, res) => {
 clientsRouter.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const body = req.body as Record<string, unknown>;
-
-    const sessionId = await getOrCreateSession(id);
-    const fieldToId = await getQuestionMap();
-
-    for (const [fieldKey, value] of Object.entries(body)) {
-      const questionId = fieldToId.get(fieldKey);
-      if (!questionId) continue;
-      await upsertResponse(id, questionId, value, sessionId);
-    }
-
-    res.status(200).json({ id: parseInt(id) });
+    await updateClient(Number(id), req.body as ClientFields);
+    res.status(200).json({ id: Number(id) });
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -326,7 +316,7 @@ clientsRouter.put("/:id", async (req, res) => {
 clientsRouter.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    await db.query("DELETE FROM clients_base WHERE id = $1", [id]);
+    await deleteClient(Number(id));
     res.status(200).json();
   } catch (err) {
     res.status(500).send(err.message);

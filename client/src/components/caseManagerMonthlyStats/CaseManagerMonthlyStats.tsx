@@ -5,6 +5,7 @@ import {
   ButtonGroup,
   Heading,
   HStack,
+  Input,
   Select,
   Tab,
   TabList,
@@ -20,6 +21,8 @@ import type { TabData, TableRow } from "../../types/monthlyStat.ts";
 import { StatsTable } from "./StatsTable.tsx";
 import { LoadingWheel } from ".././loading/loading.tsx"
 
+type DateFilterOperator = "" | "after" | "before" | "between";
+
 export const CaseManagerMonthlyStats = () => {
 
   const { backend } = useBackendContext();
@@ -27,17 +30,40 @@ export const CaseManagerMonthlyStats = () => {
   const currentYear = new Date().getFullYear();
   const [allTabData, setAllTabData] = useState<TabData[]>([]);
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [dateOperator, setDateOperator] = useState<DateFilterOperator>("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [lastUpdated, setLastUpdated] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [hiddenFields, setHiddenFields] = useState<string[]>([]);
   const [pinnedFields, setPinnedFields] = useState<string[]>([]);
   const [tabIndex, setTabIndex] = useState(0);
+  const yearStart = `${selectedYear}-01-01`;
+  const yearEnd = `${selectedYear}-12-31`;
+
+  useEffect(() => {
+    setStartDate("");
+    setEndDate("");
+    setDateOperator("");
+  }, [selectedYear]);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      const params: Record<string, string | number> = { year: selectedYear };
+
+      if ((dateOperator === "after" || dateOperator === "before") && startDate) {
+        params.operator = dateOperator;
+        params.date = startDate;
+      } else if (dateOperator === "between" && startDate && endDate) {
+        params.operator = "between";
+        params.date = startDate;
+        params.endDate = endDate;
+      }
+
       try {
         const [monthlyStatsResponse, frontDeskResponse, cmResponse] = await Promise.all([
-          backend.get(`/calculateMonthlyStats/${selectedYear}`),
+          backend.get(`/calculateMonthlyStats`, { params }),
           backend.get(`/lastUpdated/front_desk_monthly`),
           backend.get(`/lastUpdated/cm_monthly_stats`)
         ]);
@@ -68,7 +94,7 @@ export const CaseManagerMonthlyStats = () => {
     };
   
     fetchData();
-  }, [backend, selectedYear]);
+  }, [backend, selectedYear, dateOperator, startDate, endDate]);
   
 
   const buttonStyle = {
@@ -174,13 +200,30 @@ export const CaseManagerMonthlyStats = () => {
     document.body.removeChild(link);
   };
 
+  const getExportSuffix = () => {
+    if (dateOperator === "after" && startDate) {
+      return `${selectedYear}_after_${startDate}`;
+    }
+
+    if (dateOperator === "before" && startDate) {
+      return `${selectedYear}_before_${startDate}`;
+    }
+
+    if (dateOperator === "between" && startDate && endDate) {
+      const [rangeStart, rangeEnd] = [startDate, endDate].sort();
+      return `${selectedYear}_${rangeStart}_to_${rangeEnd}`;
+    }
+
+    return `${selectedYear}`;
+  };
+
   const handleExportAll = () => {
     const allTables = allTabData.flatMap((tab) => tab.tables);
     const filteredAndSortedTables = filterAndSortTables(allTables);
     const timestamp = new Date().toISOString().split('T')[0];
     createMultiTableCSV(
       filteredAndSortedTables,
-      `MonthlyStats_All_${selectedYear}_${timestamp}.csv`
+      `MonthlyStats_All_${getExportSuffix()}_${timestamp}.csv`
     );
   };
 
@@ -189,7 +232,7 @@ export const CaseManagerMonthlyStats = () => {
     const timestamp = new Date().toISOString().split('T')[0];
     createMultiTableCSV(
       filteredAndSortedTables,
-      `MonthlyStats_${selectedYear}_${timestamp}.csv`
+      `MonthlyStats_${getExportSuffix()}_${timestamp}.csv`
     );
   };
 
@@ -206,7 +249,7 @@ export const CaseManagerMonthlyStats = () => {
         <Text fontSize="14px">Last Updated: {lastUpdated}</Text>
       </VStack>
 
-      <HStack alignSelf="end">
+      <HStack alignSelf="end" spacing={3} flexWrap="nowrap">
         <ButtonGroup size="sm">
         {/* <Button
             {...buttonStyle}
@@ -257,6 +300,45 @@ export const CaseManagerMonthlyStats = () => {
             </option>
           ))}
         </Select>
+        <HStack spacing={3} flexWrap="nowrap" flexShrink={0}>
+          <Select
+            value={dateOperator}
+            onChange={(e) => {
+              const nextOperator = e.target.value as DateFilterOperator;
+              setDateOperator(nextOperator);
+              if (nextOperator !== "between") {
+                setEndDate("");
+              }
+            }}
+          >
+            <option value="">All dates in year</option>
+            <option value="after">Is after</option>
+            <option value="before">Is before</option>
+            <option value="between">Is between</option>
+          </Select>
+          <Input
+            type="date"
+            value={startDate}
+            min={yearStart}
+            max={yearEnd}
+            onChange={(e) => setStartDate(e.target.value)}
+            visibility={dateOperator !== "" ? "visible" : "hidden"}
+            pointerEvents={dateOperator !== "" ? "auto" : "none"}
+            aria-hidden={dateOperator === ""}
+            tabIndex={dateOperator === "" ? -1 : 0}
+          />
+          <Input
+            type="date"
+            value={endDate}
+            min={yearStart}
+            max={yearEnd}
+            onChange={(e) => setEndDate(e.target.value)}
+            visibility={dateOperator === "between" ? "visible" : "hidden"}
+            pointerEvents={dateOperator === "between" ? "auto" : "none"}
+            aria-hidden={dateOperator !== "between"}
+            tabIndex={dateOperator === "between" ? 0 : -1}
+          />
+        </HStack>
       </HStack>
 
       <Tabs

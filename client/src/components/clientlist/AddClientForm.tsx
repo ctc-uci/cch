@@ -225,7 +225,6 @@ export const AddClientForm = ({
     setErrors((prev) => ({ ...prev, [fieldKey]: false }));
   };
 
-  // Auto-populate age whenever date_of_birth changes
   useEffect(() => {
     const dob = formData["date_of_birth"];
     if (!dob) return;
@@ -286,7 +285,6 @@ export const AddClientForm = ({
         return;
       }
 
-      // Core identity fields stay in the clients row
       const clientCore = {
         created_by: createdById,
         unit_name: formData.unit_name,
