@@ -1,0 +1,21 @@
+client/src/components/caseManagerMonthlyStats/CaseManagerMonthlyStats.tsx
+  s_3e359a3735210a::t_9e7f3cb39f15eb 253
+  s_3e359a3735210a::t_6a6c3beb1cf7a6 320-337
+  s_3e359a3735210a::t_64cd4db4b451c6 242
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "77f39532343cdc45bd51b448fa3a787307bfb2f1",
+  "prompts": {},
+  "sessions": {
+    "s_3e359a3735210a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ba035981-8b92-4223-bae5-dd53c76323ee",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Brendan Lieu <brendanlieu05@gmail.com>"
+    }
+  }
+}
