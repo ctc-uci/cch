@@ -6,9 +6,6 @@ import { db } from "../db/db-pgp";
 
 export const clientsRouter = Router();
 
-// clients is now a VIEW over intake_responses (see migration 011).
-// INSERT and DELETE must target the base table directly.
-
 async function getQuestionMap(): Promise<Map<string, number>> {
   const questions = await db.query(`SELECT id, field_key FROM form_questions WHERE form_id = 5`);
   return new Map<string, number>(
@@ -39,7 +36,8 @@ async function upsertResponse(
     `INSERT INTO intake_responses (client_id, question_id, response_value, session_id, form_id)
      VALUES ($1, $2, $3, $4, 5)
      ON CONFLICT (client_id, question_id) WHERE form_id = 5 AND client_id IS NOT NULL
-     DO UPDATE SET response_value = EXCLUDED.response_value`,
+     DO UPDATE SET response_value = EXCLUDED.response_value
+     WHERE EXCLUDED.response_value IS NOT NULL`,
     [clientId, questionId, val, sessionId]
   );
 }

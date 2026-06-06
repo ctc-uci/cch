@@ -29,6 +29,7 @@ import {
 import { useParams } from "react-router-dom";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { calculateAge } from "../../utils/dateUtils";
 import toSnakeCase from "../../utils/snakeCase";
 import ChildrenCards from "./subComponents/childrenCards";
 import Comments from "./subComponents/comments";
@@ -104,10 +105,42 @@ export const ViewPage = () => {
   const cellHeight = "40px";
   const toast = useToast();
 
+  // Auto-populate age whenever the user changes the date of birth while editing
+  useEffect(() => {
+    if (edits.dateOfBirth === undefined) return;
+    const iso = String(edits.dateOfBirth).trim();
+    if (!iso) return;
+    const age = calculateAge(iso);
+    if (!isNaN(age)) setEdits((prev) => ({ ...prev, age }));
+  }, [edits.dateOfBirth]);
+
+  // Converts any stored date string to YYYY-MM-DD for <input type="date">
+  const toIsoDate = (raw: string | undefined | null): string => {
+    if (!raw) return "";
+    const s = String(raw).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+    if (/^\d{4}-\d{2}-\d{2}T/.test(s)) return s.split("T")[0];
+    const parts = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (parts) {
+      const [, m, d, y] = parts;
+      return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+    }
+    return "";
+  };
+
+  // Converts any stored date string to M/D/YYYY for display
+  const formatDisplayDate = (raw: string | undefined | null): string => {
+    if (!raw) return "";
+    const iso = toIsoDate(raw);
+    if (!iso) return String(raw);
+    const [y, m, d] = iso.split("-");
+    return `${parseInt(m)}/${parseInt(d)}/${y}`;
+  };
+
   const renderField = (
     fieldName: keyof Client,
     displayValue: any,
-    options?: { isBoolean?: boolean; isNumeric?: boolean }
+    options?: { isBoolean?: boolean; isNumeric?: boolean; isDate?: boolean }
   ) => {
     if (isEditing) {
       if (options?.isBoolean) {
@@ -122,6 +155,28 @@ export const ViewPage = () => {
               <Radio value="false">No</Radio>
             </HStack>
           </RadioGroup>
+        );
+      }
+
+      if (options?.isDate) {
+        const isoValue = edits[fieldName] !== undefined
+          ? String(edits[fieldName])
+          : toIsoDate(String(displayValue ?? ""));
+        return (
+          <Box w="100%" h={cellHeight} bg="#EDF2F7" display="flex" alignItems="center" p={0} m={0}>
+            <Input
+              type="date"
+              variant="unstyled"
+              size="sm"
+              w="100%"
+              p={3}
+              m={0}
+              border="1px solid"
+              borderColor="#3182CE"
+              value={isoValue}
+              onChange={(e) => setEdits({ ...edits, [fieldName]: e.target.value })}
+            />
+          </Box>
         );
       }
 
@@ -158,7 +213,11 @@ export const ViewPage = () => {
 
     return (
       <Box w="100%" h={cellHeight} display="flex" alignItems="center" p={0}>
-        {options?.isBoolean ? (displayValue ? "Yes" : "No") : displayValue}
+        {options?.isBoolean
+          ? (displayValue ? "Yes" : "No")
+          : options?.isDate
+          ? formatDisplayDate(String(displayValue ?? ""))
+          : displayValue}
       </Box>
     );
   };
@@ -242,13 +301,12 @@ export const ViewPage = () => {
 
   const handleSaveChanges = async () => {
     try {
-      if (!client) {
+      if (!client || Object.keys(edits).length === 0) {
         return;
       }
-      const updatedClient = { ...client, ...edits };
-      const clientDataSnakeCase = toSnakeCase(updatedClient);
+      const clientDataSnakeCase = toSnakeCase(edits);
       await backend.put(`/clients/${client.id}`, clientDataSnakeCase);
-      setClient(updatedClient);
+      setClient({ ...client, ...edits });
       setEdits({});
       SaveEditToast();
       setIsEditing(false);
@@ -391,26 +449,16 @@ export const ViewPage = () => {
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("lastName", client.lastName)}</Td>
                 </Tr>
                 <Tr>
-                  <Td>Age</Td>
-                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField( "age", client.age, { isNumeric: true })}
+                  <Td>Date of Birth</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("dateOfBirth", client.dateOfBirth, { isDate: true })}
                   </Td>
                 </Tr>
                 <Tr>
-                {/* probably need to check this updates backend correctly and maintains date form it */}
-                <Td>Date of Birth</Td>
-                <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
-                  {renderField(
-                    "dateOfBirth",
-                    client.dateOfBirth
-                      ? new Date(client.dateOfBirth).toLocaleDateString("en-US", {
-                          month: "numeric",
-                          day: "numeric",
-                          year: "numeric",
-                        })
-                      : ""
-                  )}
-                </Td>
-              </Tr>
+                  <Td>Age</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("age", client.age, { isNumeric: true })}
+                  </Td>
+                </Tr>
 
                 <Tr>
                   <Td>Email</Td>
@@ -540,12 +588,14 @@ export const ViewPage = () => {
                 <Tr>
                   <Td>Estimated Exit Date</Td>
                   <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
-                    {renderField("estimatedExitDate", client.estimatedExitDate)}
+                    {renderField("estimatedExitDate", client.estimatedExitDate, { isDate: true })}
                   </Td>
                 </Tr>
                 <Tr>
                   <Td>Exit Date</Td>
-                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>{renderField("exitDate", client.exitDate)}</Td>
+                  <Td bgColor={isEditing ? "#EDF2F7" : "white"} p={4}>
+                    {renderField("exitDate", client.exitDate, { isDate: true })}
+                  </Td>
                 </Tr>
                 <Tr>
                   <Td>Unit Name</Td>

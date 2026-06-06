@@ -34,3 +34,18 @@ export const formatDateString = (dateString: string): string => {
 export const formatDateStringForAPI = (date: Date): string => {
   return date.toLocaleDateString("en-US", { timeZone: "UTC" });
 }
+
+/**
+ * Returns the current age in whole years from an ISO date string (YYYY-MM-DD).
+ * Returns NaN if the input is invalid or represents a future date.
+ */
+export const calculateAge = (dobIso: string): number => {
+  if (!dobIso) return NaN;
+  const birth = parseAsLocalDate(dobIso);
+  if (isNaN(birth.getTime())) return NaN;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age >= 0 ? age : NaN;
+};

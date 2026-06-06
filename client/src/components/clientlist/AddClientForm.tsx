@@ -43,6 +43,7 @@ import {
 import { LOCATION_OPTIONS } from "../../constants/locations";
 
 import { useBackendContext } from "../../contexts/hooks/useBackendContext";
+import { calculateAge } from "../../utils/dateUtils";
 import { BackArrowIcon } from "../donations/addDonations/BackArrowIcon";
 
 interface FormOption {
@@ -223,6 +224,17 @@ export const AddClientForm = ({
     setShowUnfinishedAlert(true);
     setErrors((prev) => ({ ...prev, [fieldKey]: false }));
   };
+
+  // Auto-populate age whenever date_of_birth changes
+  useEffect(() => {
+    const dob = formData["date_of_birth"];
+    if (!dob) return;
+    const age = calculateAge(dob);
+    if (!isNaN(age)) {
+      setFormData((prev) => ({ ...prev, age: String(age) }));
+      setErrors((prev) => ({ ...prev, age: false }));
+    }
+  }, [formData["date_of_birth"]]);
 
   const handleSubmit = async () => {
     const newErrors: Record<string, boolean> = {};

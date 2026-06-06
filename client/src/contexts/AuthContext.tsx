@@ -187,29 +187,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const authenticate = async ({ code }: Authenticate) => {
-    if (authCredential && email) {
-      const response = await backend.post(
-        `/authentification/verify?email=${encodeURIComponent(email)}&code=${code}`
-      );
-      if (response.data.length === 0) {
-        throw new Error("Invalid code. Try again.");
-      }
+    if (!authCredential || !email) {
+      throw new Error("Session expired. Please return to the login page and sign in again.");
+    }
 
-      const userCredential = await signInWithCredential(auth, authCredential);
-      // Set access token in cookie before any further API calls so /users requests are authenticated
-      const idToken = await userCredential.user.getIdToken();
-      setCookie({
-        key: cookieKeys.ACCESS_TOKEN,
-        value: idToken,
-      });
-      // Update current user role so the app knows what role we are
-      const userData = await backend.get(`/users/${userCredential.user.uid}`);
-      setCurrentUserRole(userData.data[0]?.role);
+    const response = await backend.post(
+      `/authentification/verify?email=${encodeURIComponent(email)}&code=${code}`
+    );
+    if (response.data.length === 0) {
+      throw new Error("Invalid code. Try again.");
+    }
 
-      setAuthCredential(null);
-      setEmail(null);
-      return userCredential;
-    } 
+    const userCredential = await signInWithCredential(auth, authCredential);
+    // Set access token in cookie before any further API calls so /users requests are authenticated
+    const idToken = await userCredential.user.getIdToken();
+    setCookie({
+      key: cookieKeys.ACCESS_TOKEN,
+      value: idToken,
+    });
+    // Update current user role so the app knows what role we are
+    const userData = await backend.get(`/users/${userCredential.user.uid}`);
+    setCurrentUserRole(userData.data[0]?.role);
+
+    setAuthCredential(null);
+    setEmail(null);
+    return userCredential;
   };
 
   const logout = async () => {

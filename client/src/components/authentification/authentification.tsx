@@ -72,13 +72,6 @@ export const Authentification = () => {
         navigate("/choose-form");
       }
     } catch (error) {
-      // toast({
-      //   title: "Authentication Failed",
-      //   description: "The entered PIN is incorrect. Please try again.",
-      //   status: "error",
-      //   duration: 5000,
-      //   isClosable: true,
-      // });
       onOpen();
       setPin("");
     }
@@ -193,7 +186,7 @@ export const Authentification = () => {
                   lineHeight={'24px'}
                   color={'var(--gray-700, #2D3748)'}
                 >
-                  Authorization failed due to incorrect code or timeout error.
+                  Authorization failed. The code may be incorrect, or your session expired (e.g. the page was refreshed). Please return to login and try again.
                 </Text>
               </ModalBody>
               <ModalFooter

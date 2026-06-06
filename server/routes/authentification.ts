@@ -51,7 +51,7 @@ authentificationRouter.post("/", async (req, res) => {
     const data = await db.query(
       `
       INSERT INTO auth_codes (code, email, valid_until, created_at)
-      VALUES ($1, $2, CURRENT_TIMESTAMP, $3)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
       ON CONFLICT (email)
       DO UPDATE SET code = $1, created_at = CURRENT_TIMESTAMP, valid_until = $3;`,
       [code, email, validUntil]
