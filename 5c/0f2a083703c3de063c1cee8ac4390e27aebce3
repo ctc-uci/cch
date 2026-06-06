@@ -1,0 +1,9 @@
+server/routes/clients.ts
+  ai_agent 4-9,118,126,143-144,149,153-154,159-168,172-179,185,254-296,309-310,319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "5c0f2a083703c3de063c1cee8ac4390e27aebce3",
+  "prompts": {}
+}
