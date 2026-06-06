@@ -239,6 +239,7 @@ export const CaseManagerMonthlyStats = () => {
   return (
     <VStack
       align="start"
+      w="full"
       sx={{ maxWidth: "100%", padding: "4%" }}
     >
       <VStack
@@ -249,7 +250,7 @@ export const CaseManagerMonthlyStats = () => {
         <Text fontSize="14px">Last Updated: {lastUpdated}</Text>
       </VStack>
 
-      <HStack alignSelf="end" spacing={3} flexWrap="nowrap">
+      <HStack alignSelf="flex-end" spacing={3} flexWrap="nowrap">
         <ButtonGroup size="sm">
         {/* <Button
             {...buttonStyle}
@@ -316,28 +317,24 @@ export const CaseManagerMonthlyStats = () => {
             <option value="before">Is before</option>
             <option value="between">Is between</option>
           </Select>
-          <Input
-            type="date"
-            value={startDate}
-            min={yearStart}
-            max={yearEnd}
-            onChange={(e) => setStartDate(e.target.value)}
-            visibility={dateOperator !== "" ? "visible" : "hidden"}
-            pointerEvents={dateOperator !== "" ? "auto" : "none"}
-            aria-hidden={dateOperator === ""}
-            tabIndex={dateOperator === "" ? -1 : 0}
-          />
-          <Input
-            type="date"
-            value={endDate}
-            min={yearStart}
-            max={yearEnd}
-            onChange={(e) => setEndDate(e.target.value)}
-            visibility={dateOperator === "between" ? "visible" : "hidden"}
-            pointerEvents={dateOperator === "between" ? "auto" : "none"}
-            aria-hidden={dateOperator !== "between"}
-            tabIndex={dateOperator === "between" ? 0 : -1}
-          />
+          {dateOperator !== "" && (
+            <Input
+              type="date"
+              value={startDate}
+              min={yearStart}
+              max={yearEnd}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          )}
+          {dateOperator === "between" && (
+            <Input
+              type="date"
+              value={endDate}
+              min={yearStart}
+              max={yearEnd}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          )}
         </HStack>
       </HStack>
 
