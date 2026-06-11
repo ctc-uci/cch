@@ -1,0 +1,26 @@
+package.json
+  s_700a280bd1dde5::t_93d08faabf4f72 44-69,71
+  s_700a280bd1dde5::t_285cd9d44aee6c 70
+client/package.json
+  s_700a280bd1dde5::t_4c65e0d6129b88 27
+  s_700a280bd1dde5::t_7cd496dfd19f40 36
+server/package.json
+  s_700a280bd1dde5::t_abc63abb793ab5 25
+  s_700a280bd1dde5::t_f1679394726e57 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "894c0218c499acd779651310a2d3855ff5cbb08a",
+  "prompts": {},
+  "sessions": {
+    "s_700a280bd1dde5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "543b0672-0952-4320-88bb-9cc322b109b5",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Brendan Lieu <brendanlieu05@gmail.com>"
+    }
+  }
+}
