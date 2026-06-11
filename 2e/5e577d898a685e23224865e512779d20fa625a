@@ -1,0 +1,19 @@
+package.json
+  s_700a280bd1dde5::t_28f2c9114d2a81 70-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.6",
+  "base_commit_sha": "2e5e577d898a685e23224865e512779d20fa625a",
+  "prompts": {},
+  "sessions": {
+    "s_700a280bd1dde5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "543b0672-0952-4320-88bb-9cc322b109b5",
+        "model": "claude-sonnet-4-6"
+      },
+      "human_author": "Brendan Lieu <brendanlieu05@gmail.com>"
+    }
+  }
+}
