@@ -96,6 +96,23 @@ function resolveFormFieldKey(apiField: string, questionMap: Map<string, Question
   return null;
 }
 
+function normalizeDateString(raw: string): string | null {
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  // ISO timestamp: 2026-02-23T00:00:00.000Z → 2026-02-23
+  if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0, 10);
+  // M/D/YYYY or M-D-YYYY
+  const mdy = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (mdy) return `${mdy[3]}-${mdy[1].padStart(2, "0")}-${mdy[2].padStart(2, "0")}`;
+  // Full JS Date string: "Mon Feb 23 2026 00:00:00 GMT-0800 (...)"
+  const jsDateMatch = raw.match(/^(\w{3} \w{3} \d{1,2} \d{4})/);
+  if (jsDateMatch) {
+    const d = new Date(jsDateMatch[1]);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  }
+  return null;
+}
+
 function valueToString(value: unknown, questionType: string): string | null {
   if (value === undefined || value === null || value === "") {
     return null;
@@ -113,7 +130,13 @@ function valueToString(value: unknown, questionType: string): string | null {
     return value === "true" ? "yes" : "no";
   }
 
-  return String(value);
+  const str = String(value);
+
+  if (questionType === "date") {
+    return normalizeDateString(str.trim());
+  }
+
+  return str;
 }
 
 async function newSessionId(): Promise<string> {
